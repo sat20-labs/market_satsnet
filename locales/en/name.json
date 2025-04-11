@@ -1,0 +1,62 @@
+{
+  "category": {
+    "number": {
+      "1_digit": "1 Digit",
+      "2_digit": "2 Digits",
+      "3_digit": "3 Digits",
+      "4_digit": "4 Digits",
+      "5_digit": "5 Digits",
+      "6_digit": "6 Digits",
+      "7_digit": "7 Digits",
+      "8_digit": "8 Digits",
+      "11_digit": "11 Digits",
+      "12_digit": "12 Digits"
+    },
+    "letter": {
+      "1_letter": "1 Letter",
+      "2_letters": "2 Letters",
+      "3_letters": "3 Letters",
+      "4_letters": "4 Letters",
+      "cvcv": "CVCV",
+      "same_letters": "Same Letters"
+    },
+    "chinese": {
+      "1_han": "1 Han",
+      "2_han": "2 Han",
+      "3_han": "3 Han",
+      "4_han": "4 Han"
+    },
+    "nav": {
+      "2_han": {
+        "label": "2 Han"
+      },
+      "dal3": {
+        "label": "3Mix",
+        "tooltip": "3char, digits and letters"
+      },
+      "cvcv": {
+        "label": "CVCV"
+      },
+      "date": {
+        "label": "Date/Birthday",
+        "tooltip": "YYMMDD, YYYYMM"
+      },
+      "lucky": {
+        "label": " Luck-Digi"
+      }
+    },
+    "other": {
+      "date": "Date (YYMMDD, YYYYMM)",
+      "symmetric_digit": "Symmetric",
+      "consecutive_digit": "Consecutive",
+      "luck_digit": "Luck Digit",
+      "full_date": "Full Date (YYYYMMDD)",
+      "did": "DID (10-digit Web3DID)",
+      "c_mobile_number": "CMobileNumber (11-digit)",
+      "dal2": "2Mix: 2char, digits and letters",
+      "dal3": "3Mix: 3char, digits and letters",
+      "char2": "2Symbol Name",
+      "unclassified_digit_names": "Other unclassified digit names"
+    }
+  }
+}

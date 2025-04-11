@@ -1,0 +1,21 @@
+{
+  "connect": "Connect",
+  "my_assets": "My Assets",
+  "disconnect": "Disconnect",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "buy": "Buy",
+  "close": "Close",
+  "inscribe": "Inscribe",
+  "start_inscribe": "Start Inscribing",
+  "talk_later": "Talk Later",
+  "update_now": "Update Now",
+  "list_sale": "List",
+  "remove_sale": "Unlist",
+  "next": "Next",
+  "pay_wallet": "Pay with Wallet",
+  "submit_payment": "Submit & Pay invoice",
+  "back": "Back",
+  "remove_all": "Remove All",
+  "to_history": "Tx History"
+}

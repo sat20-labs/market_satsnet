@@ -1,0 +1,193 @@
+{
+  "app": {
+    "title": "Sat20 Market",
+    "version_update_title": "有新版本，您想更新吗？"
+  },
+  "home": {
+    "title": "首页"
+  },
+  "market": {
+    "title": "市场"
+  },
+  "tools": {
+    "title": "工具箱",
+    "transaction": {
+      "title": "拆分、合并 & 转移",
+      "description": "提供批量拆分、合并及转移功能。",
+      "btn_split": "马上使用",
+      "input": "输入(UTXO)",
+      "output": "输出(UTXO)",
+      "available_utxo": "Plain UTXO",
+      "rare_sats": "Rare Sats",
+      "balance": "余额",
+      "balance_des": "余额小于546 sats时，会将余额转给矿工。",
+      "network_fee": "网络费用",
+      "btn_send": "发送"
+    },
+    "btc_transfer": "转移",
+    "search_sat": {
+      "title": "搜索聪",
+      "description": "搜索特殊聪",
+      "btn_search": "搜索",
+      "table_title": "搜索结果",
+      "table_col1": "UTXO",
+      "table_col2": "Sats/BTC",
+      "table_col3": "Sat",
+      "table_col4": "Sat Ranges"
+    }
+  },
+  "my_assets": {
+    "title": "我的资产"
+  },
+  "order": {
+    "title": "订单",
+    "modal_title": "购买订单"
+  },
+  "explorer": {
+    "title": "浏览器",
+    "subtitle": "查看地址的 OrdX 余额",
+    "des": "识别包括部署、铸造和转账在内的所有操作。",
+    "list_title": "OrdX 的完整列表",
+    "not_support": "暂时不支持查看转移后的余额。",
+    "ordx_version": "OrdX 版本"
+  },
+  "transfer": {
+    "title": "转移",
+    "error_1": "请提供一个接收地址。",
+    "error_2": "提供的接收地址数量与转移数量不匹配。"
+  },
+  "inscribe": {
+    "title": "铭文",
+    "name": {
+      "title": "名字",
+      "input_name": "名字",
+      "description": "在BTC上注册一个名字",
+      "description_1": "支持后缀：例如 .btc、.x、.pizza，以及无后缀。",
+      "description_2": "免费铸造：到达区块856000之前你可以免费铸造以上支持的名字类型。",
+      "description_3": "截止到区块861778，剩下可铸造的名字。",
+      "name_placeholder": "名字必须是3-32字节长",
+      "select_placeholder": "选择后缀",
+      "error_1": "名字必须是3-32字节长",
+      "error_2": "{{name}} 已被铸造",
+      "error_3": "批量铸造数量不能超过2000个"
+    },
+    "files": {
+      "name": "文件",
+      "upload_title": "上传文件以开始",
+      "upload_des_1": "拖放文件到此处，或点击选择文件",
+      "upload_des_2": ".jpg、.webp、.png、.gif、.txt、.mp3、.mp4(h264) + 更多!"
+    },
+    "text": {
+      "name": "文本",
+      "single_des": "输入你想刻在BTC上的内容",
+      "bulk_des": "如果是批量，我们将为每一行铭刻一个铭文。",
+      "single": "单个",
+      "bulk": "批量",
+      "textarea_placeholder": "在此输入任何文本"
+    },
+    "ordx": {
+      "name": "OrdX",
+      "current_height": "当前高度: {{height}}",
+      "deploy_file": "Ticker的显示资源文件",
+      "deploy_mode": "Mode",
+      "deploy_mode_fair": "公平发射",
+      "deploy_mode_project": "项目主导",
+      "tick_placeholder": "Tick必须是3、5-16字节长",
+      "reg_placeholder": "如\"^[1-9][0-9]*0{n}$\"",
+      "cn_placeholder": "如cn=1000，1000个连续编号的sat",
+      "trz_placeholder": "如trz=8，说明该sat的编号的尾部有8个零",
+      "block_helper": "铸造的有效时间大致为{{start}}至{{end}}。",
+      "error_1": "Tick必须是3、5-16字节长",
+      "error_2": "部署必须有区块、稀有度或正则表达式",
+      "error_3": "{{tick}} 已被部署",
+      "error_4": "{{tick}} 未被部署",
+      "error_5": "铸造数量必须少于{{limit}}",
+      "error_6": "{{tick}} 还未开始铸造",
+      "error_7": "{{tick}} 已铸造完",
+      "error_8": "{{tick}} 含有特殊sat属性，无法铸造",
+      "error_9": "区块的开始高度小于{{block}}, 该ticker无效，不会被索引器索引",
+      "error_10": "区块的开始高度必须小于结束高度",
+      "error_11": "稀有度不能为空",
+      "error_12": "数量不能为空",
+      "error_13": "区块、稀有度的数量必须设置一项",
+      "error_14": "总量必须设置",
+      "error_15": "区块必须设置",
+      "error_16": "总量必须大于每次铸造限制",
+      "error_17": "{{tick}} 无法铸造",
+      "error_18": "没有足够的余额",
+      "error_19": "数量过大，请先进行拆分",
+      "rarity_helper": "铸造需要特殊的 sat 属性。"
+    },
+    "step_two": {
+      "title": "在继续之前，请仔细检查下面的文本:",
+      "des": "您即将铭文{{num}}个{{type}}。"
+    },
+    "step_three": {
+      "items": "项目",
+      "select_fee": "选择要支付的网络费用:",
+      "address_hint": "请注意，铭文交易会将铭文直接发送到接收地址。",
+      "to_single": "至单个地址",
+      "to_multiple": "至多个地址",
+      "output_one_utxo": "是否把批量铭文铭刻输出一个UTXO",
+      "tight_one_utxo": "是否把批量铭文紧密铭刻输出一个UTXO",
+      "cycle_fill": "循环上面地址至{{len}}个",
+      "error_1": "请提供一个接收地址。",
+      "error_2": "提供的接收地址数量与铸造数量不匹配。",
+      "error_3": "钱包地址格式不符合，请更改为Taproot地址"
+    },
+    "fee": {
+      "fee_rate": "费率",
+      "inscription_size": "铭文大小",
+      "network_fee": "网络费用",
+      "service_fee": "服务费",
+      "service_hint": "最低值{{max}}",
+      "high_hint": "当前比特币网络拥堵，请耐心等待。",
+      "total_fee": "总费用",
+      "no_fee": "推广期免费。"
+    },
+    "order": {
+      "name": "订单列表",
+      "local": "本地订单",
+      "id": "订单编号",
+      "status": "状态",
+      "created": "创建日期",
+      "continue": "(如果过程中出现错误提示，请点击按钮继续重试。)"
+    },
+    "pay": {
+      "title": "铭文订单",
+      "created_text": "订单创建于",
+      "files": "文件",
+      "step_one": {
+        "name": "支付"
+      },
+      "step_two": {
+        "name": "支付结果",
+        "des": "请等待支付确认。"
+      },
+      "step_three": {
+        "name": "开始铭文",
+        "hint": "铸造中，请勿关闭！",
+        "des": "请等待铭文确认。"
+      },
+      "step_four": {
+        "name": "铭文结果",
+        "des": "祝贺您成功完成铭文。",
+        "genesis_tx": "创世交易"
+      }
+    }
+  },
+  "blog": {
+    "title": "博客",
+    "step_1": "1. 选择博客名字：",
+    "step_2": "2. 铭刻模板：",
+    "step_3": "3. 铭刻路由：",
+    "step_4": "4. 设置个人信息：",
+    "step_5": "5. 发布内容："
+  },
+  "event": {
+    "totast": {
+      "success": "恭喜，你已符合抽奖！中间名单将在活动结束后在推特公布，敬请留意！",
+      "error": "对不起，你需要继续完成任务！"
+    }
+  }
+}

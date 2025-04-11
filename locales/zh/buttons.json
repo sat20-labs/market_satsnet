@@ -1,0 +1,21 @@
+{
+  "connect": "连接",
+  "my_assets": "我的资产",
+  "disconnect": "断开连接",
+  "cancel": "取消",
+  "confirm": "确认",
+  "inscribe": "铸造",
+  "start_inscribe": "开始铸造",
+  "buy": "购买",
+  "close": "关闭",
+  "talk_later": "稍后再谈",
+  "update_now": "现在更新",
+  "list_sale": "上架",
+  "remove_sale": "下架",
+  "next": "下一步",
+  "back": "返回",
+  "pay_wallet": "使用钱包支付",
+  "submit_payment": "提交并支付发票",
+  "remove_all": "移除所有",
+  "to_history": "交易历史"
+}

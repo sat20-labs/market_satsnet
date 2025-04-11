@@ -1,0 +1,12 @@
+<svg id="copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300.8 300.5">  
+  <path
+    d="M222.52,121H139.74a9.47,9.47,0,0,0-9.48,9.47v82.79a9.48,9.48,0,0,0,9.48,9.48h43V178.87a9.09,9.09,0,0,1,9.09-9.09H232V130.43A9.47,9.47,0,0,0,222.52,121Z"
+    transform="translate(-51.09 -48.18)"
+    style="fill:none;stroke:#0fc;stroke-miterlimit:10;stroke-width:15px"
+  />
+  <path
+    d="M276,170.72H192.13A9.09,9.09,0,0,0,183,179.8v83a9.7,9.7,0,0,0,9.7,9.7h82.48a9.57,9.57,0,0,0,9.56-9.57V179.54A8.82,8.82,0,0,0,276,170.72Z"
+    transform="translate(-51.09 -48.18)"
+    style="fill:none;stroke:#0fc;stroke-miterlimit:10;stroke-width:15px"
+  />
+</svg>

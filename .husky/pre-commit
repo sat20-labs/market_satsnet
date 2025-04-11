@@ -1,0 +1,2 @@
+node updateVersion.js
+npm run pre-commit

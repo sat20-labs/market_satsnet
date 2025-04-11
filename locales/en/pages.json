@@ -1,0 +1,193 @@
+{
+  "app": {
+    "title": "SAT20 Market",
+    "version_update_title": "There is a new version, do you want to update it?"
+  },
+  "home": {
+    "title": "Home"
+  },
+  "market": {
+    "title": "MarketPlace"
+  },
+  "tools": {
+    "title": "Toolbox",
+    "transaction": {
+      "title": "Split, Merge & Transfer",
+      "description": "Batch Split and Transfer Tool",
+      "btn_split": "Use Now",
+      "input": "Input",
+      "output": "Output",
+      "available_utxo": "Plain UTXO",
+      "rare_sats": "Rare Sats",
+      "balance": "Balance",
+      "balance_des": "When the balance is less than 546 sats, the remaining balance is transferred to the miners.",
+      "network_fee": "Network Fee",
+      "btn_send": "Send"
+    },
+    "btc_transfer": "Transfer",
+    "search_sat": {
+      "title": "Sat Hunting",
+      "description": "Search Rare Sats",
+      "btn_search": "Search",
+      "table_title": "Search Result",
+      "table_col1": "UTXO",
+      "table_col2": "Sats/BTC",
+      "table_col3": "Sat",
+      "table_col4": "Sat Ranges"
+    }
+  },
+  "my_assets": {
+    "title": "My Assets"
+  },
+  "order": {
+    "title": "Order",
+    "modal_title": "Buy Order"
+  },
+  "explorer": {
+    "title": "Explorer",
+    "subtitle": "Check out OrdX balance of the address.",
+    "des": "Recognize all operations including DEPLOY, MINT and TRANSFER.",
+    "list_title": "The full list of ordx",
+    "not_support": "Viewing the transferred balance is temporarily unavailable.",
+    "ordx_version": "OrdX Version"
+  },
+  "transfer": {
+    "title": "Transfer",
+    "error_1": "Please provide a receiving address.",
+    "error_2": "The number of provided receiving addresses does not match the transfer quantity. "
+  },
+  "inscribe": {
+    "title": "Inscribe",
+    "name": {
+      "title": "Name",
+      "input_name": "Name",
+      "description": "Register a name on BTC",
+      "description_1": "Supports suffixes: for example, .btc, .x, .pizza, and no suffix. ",
+      "description_2": "Free minting: you can free mint names with the supported suffixes above until block 861778.",
+      "description_3": "Names left to minted after block 861778",
+      "name_placeholder": "Name must be 3-32 bytes long",
+      "select_placeholder": "Select Suffix",
+      "error_1": "Name must be 3-32 bytes long",
+      "error_2": "{{name}} has been minted",
+      "error_3": "The batch casting quantity cannot exceed 2000"
+    },
+    "files": {
+      "name": "Files",
+      "upload_title": "Upload your files to begin",
+      "upload_des_1": "Drag and drop your files here, or click to select files",
+      "upload_des_2": ".jpg, .webp, .png, .gif, .txt, .mp3, .mp4(h264) + more!"
+    },
+    "text": {
+      "name": "Text",
+      "single_des": "Input what you want to inscribe on BTC",
+      "bulk_des": "If bulk, we will inscribe one for every new line.",
+      "single": "Single",
+      "bulk": "bulk",
+      "textarea_placeholder": "any text here"
+    },
+    "ordx": {
+      "name": "OrdX",
+      "current_height": "Current Hieght: {{height}}",
+      "deploy_file": "Ticker display resource file",
+      "deploy_mode": "Mode",
+      "deploy_mode_fair": "Fair Launch",
+      "deploy_mode_project": "Project-Led",
+      "tick_placeholder": "Tick must be 3, 5-32 byte long",
+      "reg_placeholder": "like \"^[1-9][0-9]*0{n}$\"",
+      "cn_placeholder": "For example, cn=1000, 1000 consecutively numbered sats",
+      "trz_placeholder": "For example, trz=8, it means that the sat number has 8 zeros at the end.",
+      "block_helper": "The effective time of mint is approximately from {{start}} to {{end}}.",
+      "error_1": "Tick must be 3, 5-16 byte long",
+      "error_2": "Deploy must have Block or Rarity or Regular Expression",
+      "error_3": "{{tick}} has been deployed",
+      "error_4": "{{tick}}  has not been deployed",
+      "error_5": "Mint amount must be less than {{limit}}",
+      "error_6": "{{tick}} has not started mint yet",
+      "error_7": "{{tick}} has been minted",
+      "error_8": "{{tick}} contains special sat and cannot be cast",
+      "error_9": "The minimum height of the block is less than {{block}}, the ticker is invalid and will not be indexed by the indexer",
+      "error_10": "The starting height of the block must be less than the ending height",
+      "error_11": "Rarity cannot be empty",
+      "error_12": "Quantity cannot be empty",
+      "error_13": "Block, rarity must be set.",
+      "error_14": "The Max must be set",
+      "error_15": "The Block must be set",
+      "error_16": "The Max must must greater than limit",
+      "error_17": "{{tick}} cannot minted",
+      "error_18": "Not enough balance",
+      "error_19": "The quantity is too large, please split it first",
+      "rarity_helper": "Special sat attributes required for mint."
+    },
+    "step_two": {
+      "title": "Please double check your text below before continuing:",
+      "des": "You are about to inscribe {{num}} {{type}}."
+    },
+    "step_three": {
+      "items": "Items",
+      "select_fee": "Select the network fee you want to pay:",
+      "address_hint": "Please note the inscribing transaction delivers the inscription to the receiving address directly.",
+      "to_single": "To Single Address",
+      "to_multiple": "To to_multiple Addresses",
+      "output_one_utxo": "Whether to output a UTXO for batch inscriptions",
+      "tight_one_utxo": "Whether tight to output a UTXO for batch inscriptions",
+      "cycle_fill": "Loop through the above addresses to {{len}}",
+      "error_1": "Please provide a receiving address.",
+      "error_2": "The number of provided receiving addresses does not match the minting quantity. ",
+      "error_3": "Wallet address format is incorrect, please change it to a Taproot address."
+    },
+    "fee": {
+      "fee_rate": "Fee Rate",
+      "inscription_size": "Inscription Size",
+      "network_fee": "Network Fee",
+      "service_fee": "Service Fee",
+      "service_hint": "Minimum value {{max}}",
+      "high_hint": "The current Bitcoin network is highly congested. please be patient and wait.",
+      "total_fee": "Total Fee",
+      "no_fee": "Free during the promotion period."
+    },
+    "order": {
+      "name": "Order List",
+      "local": "Local Order",
+      "id": "Order Id",
+      "status": "Status",
+      "created": "Create Date",
+      "continue": "(If an error message appears during the process, please click the button to continue trying again.)"
+    },
+    "pay": {
+      "title": "Inscribing Order",
+      "created_text": "Order created at",
+      "files": "Files",
+      "step_one": {
+        "name": "Payment"
+      },
+      "step_two": {
+        "name": "Payment Result",
+        "des": "Please wait for the payment to be confirmed."
+      },
+      "step_three": {
+        "name": "Start Inscribing",
+        "hint": "Minting in progress, please do not close!",
+        "des": "Please wait for the inscription to be confirmed."
+      },
+      "step_four": {
+        "name": "Inscribe Result",
+        "des": "Congratulations on your successful inscription.",
+        "genesis_tx": "Genesis Transaction"
+      }
+    }
+  },
+  "blog": {
+    "title": "Blog",
+    "step_1": "1. Select Blog Name:",
+    "step_2": "2. Inscribe Template: ",
+    "step_3": "3. Inscribe  Routing:",
+    "step_4": "4. Set Personal Information:",
+    "step_5": "5. Publish Content"
+  },
+  "event": {
+    "totast": {
+      "success": "Congratulations, you are eligible for the lottery! The list of winners will be announced on Twitter after the event, please stay tuned!",
+      "error": "Sorry, you need to continue to complete the task!"
+    }
+  }
+}

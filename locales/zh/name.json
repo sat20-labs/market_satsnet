@@ -1,0 +1,63 @@
+{
+  "category": {
+    "number": {
+      "1_digit": "1位数字",
+      "2_digit": "2位数字",
+      "3_digit": "3位数字",
+      "4_digit": "4位数字",
+      "5_digit": "5位数字",
+      "6_digit": "6位数字",
+      "7_digit": "7位数字",
+      "8_digit": "8位数字",
+      "11_digit": "11位数字",
+      "12_digit": "12位数字"
+    },
+    "letter": {
+      "1_letter": "1个字母",
+      "2_letters": "2个字母",
+      "3_letters": "3个字母",
+      "4_letters": "4个字母",
+      "cvcv": "辅元音组合（CVCV）",
+      "same_letters": "相同字母"
+    },
+    "chinese": {
+      "1_han": "1汉字",
+      "2_han": "2汉字",
+      "3_han": "3汉字",
+      "4_han": "4汉字"
+    },
+    "nav": {
+      "2_han": {
+        "label": "2汉字"
+      },
+      "dal3": {
+        "label": "3杂",
+        "tooltip": "三个字符，必须有数字和字母"
+      },
+      "cvcv": {
+        "label": "辅元音组合",
+        "tooltip": "CVCV"
+      },
+      "date": {
+        "label": "日期/生日",
+        "tooltip": "YYMMDD, YYYYMM"
+      },
+      "lucky": {
+        "label": "幸运数"
+      }
+    },
+    "other": {
+      "date": "日期（YYMMDD, YYYYMM）",
+      "symmetric_digit": "对称数字（123321）",
+      "consecutive_digit": "连续数",
+      "luck_digit": "幸运数（689）",
+      "full_date": "完整日期（YYYYMMDD）",
+      "did": "10位数字Web3DID",
+      "c_mobile_number": "中国11位手机号",
+      "dal2": "2杂（两个字符，必须有数字和字母）",
+      "dal3": "3杂（三个字符，必须有数字和字母）",
+      "char2": "2符号名字",
+      "unclassified_digit_names": "其他数字组合"
+    }
+  }
+}
