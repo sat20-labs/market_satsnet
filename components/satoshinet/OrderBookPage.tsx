@@ -24,14 +24,14 @@ interface AssetInfoProps {
 }
 
 const orders = [
-    { quantity: 20000, price: 0.000000265, totalBTC: 0.0053, totalUSD: 444.38 },
-    { quantity: 30000, price: 0.000000268, totalBTC: 0.00804, totalUSD: 674.11 },
-    { quantity: 50000, price: 0.000000290, totalBTC: 0.0145, totalUSD: 1215.75 },
-    { quantity: 10551, price: 0.000000295, totalBTC: 0.003112, totalUSD: 260.93 },
-    { quantity: 10551, price: 0.000000299, totalBTC: 0.003154, totalUSD: 264.45 },
-    { quantity: 10551, price: 0.000000300, totalBTC: 0.003165, totalUSD: 265.37 },
-    { quantity: 10876, price: 0.000000300, totalBTC: 0.003262, totalUSD: 273.50 },
-    { quantity: 6547, price: 0.000000310, totalBTC: 0.002029, totalUSD: 170.12 },
+    { quantity: 20000, price: 26.5, totalBTC: 0.0053, totalUSD: 444.38 },
+    { quantity: 30000, price: 26.8, totalBTC: 0.00804, totalUSD: 674.11 },
+    { quantity: 50000, price: 29.0, totalBTC: 0.0145, totalUSD: 1215.75 },
+    { quantity: 10551, price: 29.5, totalBTC: 0.003112, totalUSD: 260.93 },
+    { quantity: 10551, price: 29.9, totalBTC: 0.003154, totalUSD: 264.45 },
+    { quantity: 10551, price: 30.0, totalBTC: 0.003165, totalUSD: 265.37 },
+    { quantity: 10876, price: 30.0, totalBTC: 0.003262, totalUSD: 273.50 },
+    { quantity: 6547, price: 31.0, totalBTC: 0.002029, totalUSD: 170.12 },
 ];
 
 const OrderBookPage = ({ assetData }: AssetInfoProps) => {

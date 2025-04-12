@@ -12,8 +12,11 @@ const OrderRow = ({ order, selected, onClick }: { order: any; selected: boolean;
                 <input type="checkbox" checked={selected} readOnly className="form-checkbox h-4 w-4 mr-2  mx-auto text-zinc-600" />{order.quantity.toLocaleString()}             
             </div>
             
-            <div className="flex-1 justify-items-end">{order.price.toFixed(10)} BTC</div>
-            <div className="flex-1 justify-items-end">{order.totalBTC} BTC</div>
+            <div className="flex-1 justify-items-end">{order.price.toFixed(2)} <span className="text-zinc-400">sats</span></div>
+            <div className="flex-1 justify-items-end">
+                {order.totalBTC}<span className="text-zinc-400"> BTC</span>
+                <span className="text-zinc-400 text-xs"> ${order.totalUSD.toFixed(2)}</span>
+            </div>
         </div>
 
       

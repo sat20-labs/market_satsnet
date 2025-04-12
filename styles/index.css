@@ -150,3 +150,26 @@ input:focus {
 * {
   border: 0 solid #e5e7eb;
 }
+
+/* PC 端样式 */
+@media (min-width: 640px) {
+  .settings-popup {
+    position: fixed;
+    top: 20%;
+    right: 50%;
+    transform: translate(-50%, -50%);
+    width: 18rem; /* 固定宽度 */
+    border-radius: 0.5rem;
+  }
+}
+
+/* 移动端样式 */
+@media (max-width: 639px) {
+  .settings-popup {
+    position: fixed;
+    bottom: 3rem;
+    left: 0;
+    width: 100%; /* 占满宽度 */
+    border-radius: 0.5rem 0.5rem 0 0; /* 圆角顶部 */
+  }
+}

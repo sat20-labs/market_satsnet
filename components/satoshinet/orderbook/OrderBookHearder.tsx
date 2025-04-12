@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
+import { Divider } from 'antd';
 
 interface OrderBookHeaderProps {
   activeTab: "takeOrder" | "makeOrder";
@@ -25,17 +26,15 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
       {/* Tab 切换按钮 */}
       <div className="flex gap-4">
         <button
-          className={`text-sm sm:text-base font-medium ${
-            activeTab === "takeOrder" ? "text-blue-500 border-b-2 border-blue-500" : "text-gray-400"
-          }`}
+          className={`text-sm sm:text-base font-medium pb-2 ${activeTab === "takeOrder" ? "text-blue-500 border-b-2 border-blue-500" : "text-gray-400"
+            }`}
           onClick={() => onTabChange("takeOrder")}
         >
           Take Order
         </button>
         <button
-          className={`text-sm sm:text-base font-medium ${
-            activeTab === "makeOrder" ? "text-blue-500 border-b-2 border-blue-500" : "text-gray-400"
-          }`}
+          className={`text-sm sm:text-base font-medium pb-2 ${activeTab === "makeOrder" ? "text-blue-500 border-b-2 border-blue-500" : "text-gray-400"
+            }`}
           onClick={() => onTabChange("makeOrder")}
         >
           Make Order
@@ -44,13 +43,15 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
 
       {/* 设置和刷新图标 */}
       <div className="flex gap-4 items-center">
-        <button
-          className="text-gray-400 hover:text-white transition-colors"
-          onClick={() => setIsSettingsOpen(true)} // 打开设置弹窗
-          aria-label="Settings"
-        >
-          <Icon icon="mdi:cog-outline" className="text-lg sm:text-xl" />
-        </button>
+        {activeTab === "takeOrder" && ( // 仅在 Take Order 下显示 Settings 图标
+          <button
+            className="text-gray-400 hover:text-white transition-colors"
+            onClick={() => setIsSettingsOpen(true)} // 打开设置弹窗
+            aria-label="Settings"
+          >
+            <Icon icon="mdi:cog-outline" className="text-lg sm:text-xl" />
+          </button>
+        )}
         <button
           className="text-gray-400 hover:text-white transition-colors"
           onClick={onRefresh}
@@ -62,9 +63,15 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
 
       {/* 设置弹窗 */}
       {isSettingsOpen && (
-        <div className="absolute top-16 right-4 bg-zinc-900 text-zinc-300 p-4 rounded-lg shadow-xl w-72">
-          <h3 className="text-sm font-medium mb-4">Settings</h3>
-          <div className="flex items-center justify-between mb-4">
+        <div
+          className={`bg-zinc-800 text-zinc-300 p-4 rounded-xl shadow-xl z-20 transition-transform duration-300 ease-in-out ${window.innerWidth >= 640
+              ? "absolute top-16 right-4 w-72" // PC 靠右上弹出
+              : "fixed bottom-0 left-2 w-[96%] rounded-t-lg" // 移动端从底部弹出
+            }`}
+        >
+          <h3 className="flex justify-start items-center text-base font-medium mb-2 gap-1"> <Icon icon="mdi:cog-outline" className="text-lg sm:text-xl" />Settings</h3>
+          
+          <div className="flex items-center justify-between mb-4 border-t-1 border-zinc-700 pt-2">
             <label className="text-sm">Show pending transactions</label>
             <input
               type="checkbox"
@@ -75,7 +82,7 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
           </div>
           <div className="mb-4">
             <label className="text-sm">Max price per item</label>
-            <div className="flex items-center bg-zinc-800 rounded px-2 py-1">              
+            <div className="flex items-center bg-zinc-800 rounded px-2 py-1">
               <input
                 type="number"
                 value={maxBidPrice}
