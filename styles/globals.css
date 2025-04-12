@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@layer base {
+  /* Webkit 浏览器（Chrome, Edge, Safari）支持 */
+  ::-webkit-scrollbar {
+    width: 8px; /* 垂直滚动条宽度 */
+    height: 8px; /* 水平滚动条高度 */
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #3a3a3a; /* 滚动条轨道颜色 */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #000000; /* 滚动条滑块颜色 */
+    border-radius: 6px;
+    border: 2px solid #303030; /* 滑块边缘留空心效果 */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #424242; /* 滑块 hover 颜色 */
+  }
+
+  /* Firefox 支持（需要设置 scrollbar-width） */
+  * {
+    scrollbar-width: thin; /* "auto" | "thin" | "none" */
+    scrollbar-color: #1f1f1f #3d3d3d; /* thumb color + track color */
+  }
+}

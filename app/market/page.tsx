@@ -73,7 +73,8 @@ export default function Market() {
     return data?.data || [];
   }, [data]);
   const toDetail = (e) => {
-    router.push(`/ordx/ticker?ticker=${e}&assets_type=${type}`);
+    // router.push(`/ordx/ticker?ticker=${e}&assets_type=${type}`);
+    router.push(`/satoshinet/market?ticker=${e}&assets_type=${type}`); // change to satoshinet
   };
   const typeChange = (e: string) => {
     setType(e);
