@@ -1,7 +1,8 @@
 'use client';
 
-import { getTopAssets } from '@/api';
-import useSWR from 'swr';
+import { marketApi } from '@/api';
+import { useQuery } from '@tanstack/react-query';
+import type { SortDescriptor as NextUISortDescriptor } from '@nextui-org/react';
 import {
   Table,
   TableBody,
@@ -11,32 +12,53 @@ import {
   TableColumn,
   Spinner,
   getKeyValue,
-  SortDescriptor,
   Avatar,
   Image,
 } from '@nextui-org/react';
+import type { Key as ReactKey } from 'react';
+import type { Key } from '@react-types/shared';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Icon } from '@iconify/react';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-import { thousandSeparator, getTickLabel } from '@/lib/utils';
+import { getTickLabel } from '@/lib/utils';
 import { SortDropdown } from '@/components/SortDropdown';
-import { BtcPrice } from '@/components/BtcPrice';
 import { useCommonStore } from '@/store';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
 import { NameMarketNav } from '@/components/market/NameMarketNav';
 
+interface AssetItem {
+  assets_name: string;
+  assets_type: string;
+  nickname?: string;
+  logo?: string;
+  lowest_price: number;
+  lowest_price_change: number;
+  tx_total_volume: number;
+  market_cap: number;
+  tx_order_count: number;
+  holder_count: number;
+  onsell_order_count: number;
+}
+
+// 定义一个严格的 SortDescriptor 类型，column 必须是 Key
+type StrictSortDescriptor = {
+  column: Key;
+  direction: 'ascending' | 'descending';
+};
+
 export default function Market() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useSearchParams();
-  const { chain } = useCommonStore();
+  const { chain, network } = useCommonStore();
   const paramType = params.get('type') || 'ticker';
+  const paramProtocol = params.get('protocol') || 'ordinals';
   const [type, setType] = useState<string>(paramType);
-  const [interval, setInterval] = useState<any>(1);
-  const [sortField, setSortField] = useState<any>('');
-  const [sortOrder, setSortOrder] = useState<any>(0);
+  const [protocol, setProtocol] = useState<string>(paramProtocol);
+  const [interval, setInterval] = useState<number>(1);
+  const [sortField, setSortField] = useState<Key>('assets_name');
+  const [sortOrder, setSortOrder] = useState<0 | 1>(0);
 
   const sortList = useMemo(
     () => [
@@ -44,54 +66,107 @@ export default function Market() {
       { label: t('common.time_7D'), value: 7 },
       { label: t('common.time_30D'), value: 30 },
     ],
-    [i18n.language],
+    [t],
   );
-  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: '',
+
+  // 使用 StrictSortDescriptor 类型初始化状态
+  const [sortDescriptor, setSortDescriptor] = useState<StrictSortDescriptor>({
+    column: 'assets_name',
     direction: 'ascending',
   });
-  const { network } = useReactWalletStore();
-  const { data, error, isLoading } = useSWR(
-    `/ordx/getTopTickers-${chain}-${network}-${type}-${interval}-${sortField}-${sortOrder}-${chain}`,
-    () => {
-      let res = getTopAssets({
-        assets_type: type,
+
+  const queryKey = [
+    'topAssets',
+    chain,
+    network,
+    protocol,
+    type,
+    interval,
+    sortField,
+    sortOrder,
+  ];
+
+  const {
+    data: queryData,
+    error,
+    isLoading,
+  } = useQuery<AssetItem[], Error>({
+    queryKey,
+    queryFn: async () => {
+      const response = await marketApi.getTopAssets({
+        assets_protocol: protocol,
         interval,
         top_count: 200,
         top_name: '',
-        sort_field: sortField,
+        sort_field: String(sortField),
         sort_order: sortOrder,
       });
-      return res;
+      return response?.data || [];
     },
-  );
+    enabled: !!chain && !!network,
+  });
+
   const onSortChange = (i?: number) => {
-    setInterval(i);
+    if (typeof i === 'number') {
+      setInterval(i);
+    }
   };
-  console.log('data', data);
+
   const list = useMemo(() => {
-    return data?.data || [];
-  }, [data]);
-  const toDetail = (e) => {
-    // router.push(`/ordx/ticker?ticker=${e}&assets_type=${type}`);
-    router.push(`/satoshinet/market?ticker=${e}&assets_type=${type}`); // change to satoshinet
+    return queryData || [];
+  }, [queryData]);
+
+  const toDetail = (key: ReactKey) => {
+    const assetName = String(key);
+    router.push(`/satoshinet/market?ticker=${assetName}&assets_type=${type}`);
   };
+
   const typeChange = (e: string) => {
     setType(e);
     setSortOrder(0);
-    setSortField('');
-    setSortDescriptor({ column: '', direction: 'ascending' });
+    setSortField('assets_name');
+    setSortDescriptor({ column: 'assets_name', direction: 'ascending' });
 
-    // Update the URL without refreshing the page
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('type', e);
     window.history.replaceState({}, '', newUrl.toString());
   };
-  const onTableSortChange = (e: SortDescriptor) => {
-    setSortDescriptor(e);
-    setSortField(e.column);
-    setSortOrder(e.direction === 'ascending' ? 0 : 1);
+
+  const protocolChange = (e: string) => {
+    setProtocol(e);
+    setSortOrder(0);
+    setSortField('assets_name');
+    setSortDescriptor({ column: 'assets_name', direction: 'ascending' });
+
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('protocol', e);
+    window.history.replaceState({}, '', newUrl.toString());
   };
+
+  const onTableSortChange = (descriptor: NextUISortDescriptor) => {
+    if (descriptor.column !== undefined) {
+      const newDescriptor: StrictSortDescriptor = {
+        column: descriptor.column,
+        direction: descriptor.direction || 'ascending',
+      };
+      setSortDescriptor(newDescriptor);
+      setSortField(descriptor.column);
+      setSortOrder(descriptor.direction === 'ascending' ? 0 : 1);
+    } else {
+      console.warn(
+        'onTableSortChange received descriptor with undefined column:',
+        descriptor,
+      );
+      const defaultDescriptor: StrictSortDescriptor = {
+        column: 'assets_name',
+        direction: 'ascending',
+      };
+      setSortDescriptor(defaultDescriptor);
+      setSortField(defaultDescriptor.column);
+      setSortOrder(0);
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
@@ -136,44 +211,49 @@ export default function Market() {
         allowsSorting: true,
       },
     ],
-    [i18n.language, type],
+    [t, type],
   );
+
+  if (error) {
+    console.error('Error fetching assets:', error);
+  }
 
   return (
     <div className="bg-transparent p-0 sm:pt-2 w-full">
       <div className="my-2 flex justify-between items-center gap-1">
-        <HomeTypeTabs value={type} onChange={typeChange} />
+        <HomeTypeTabs value={protocol} onChange={protocolChange} />
         <SortDropdown
           sortList={sortList}
           value={interval}
           disabled={!list.length}
-          onChange={onSortChange}         
+          onChange={onSortChange}
         ></SortDropdown>
       </div>
       {type === 'ns' && <NameMarketNav />}
       <div className="overflow-x-auto w-full">
         <Table
           isHeaderSticky
-          // isStriped
-          sortDescriptor={sortDescriptor}
+          sortDescriptor={sortDescriptor as StrictSortDescriptor}
           onSortChange={onTableSortChange}
           color="primary"
           selectionMode="single"
           onRowAction={toDetail}
           aria-label="Table with infinite pagination"
-          className='w-full'
+          className="w-full"
           classNames={{
-            tr: "border-b border-zinc-800", // 为每一行添加下边框
+            tr: 'border-b border-zinc-800',
           }}
-          removeWrapper={true} // 移除外层 div          
+          removeWrapper={true}
         >
-          <TableHeader className='bg-zinc-800 h-16'>
+          <TableHeader className="bg-zinc-800 h-16">
             {columns.map((column) => (
               <TableColumn
                 key={column.key}
                 allowsSorting={column.allowsSorting}
                 className={`bg-zinc-900 h-14 text-lg font-medium sm:pb-3 sm:pt-3 ${
-                  column.key === 'assets_name' ? 'sticky left-0 pl-5 bg-zinc-900 z-10' : ''
+                  column.key === 'assets_name'
+                    ? 'sticky left-0 pl-5 bg-zinc-900 z-10'
+                    : ''
                 }`}
               >
                 {column.label}
@@ -183,34 +263,37 @@ export default function Market() {
           <TableBody
             isLoading={isLoading}
             items={list}
-            emptyContent={'No Data.'}
+            emptyContent={!isLoading ? 'No Data.' : ' '}
             loadingContent={<Spinner />}
           >
-            {(item: any) => (
+            {(item: AssetItem) => (
               <TableRow
                 key={item.assets_name}
                 className="cursor-pointer text-sm md:text-base"
               >
                 {(columnKey) => {
+                  const value = item[columnKey as keyof AssetItem];
+
                   if (columnKey === 'assets_name') {
-                    const tick = getKeyValue(item, 'assets_name');
-                    const tick_type = getKeyValue(item, 'assets_type');
-                    const nickname = getKeyValue(item, 'nickname');
-                    const logo = getKeyValue(item, 'logo');
+                    const tick = item.assets_name;
+                    const tick_type = item.assets_type;
+                    const nickname = item.nickname;
+                    const logo = item.logo;
                     return (
-                      <TableCell className="flex items-center sticky left-0 bg-zinc-900/90 z-10">
-                        <div className="flex items-center text-sm md:text-base items-left">
+                      <TableCell className="flex items-center sticky left-0 bg-zinc-900/90 z-10 pl-5">
+                        <div className="flex items-center text-sm md:text-base">
                           {logo ? (
                             <Image
-                              src={`${process.env.NEXT_PUBLIC_HOST}${network === 'testnet' ? '/testnet' : ''}${logo}`}
+                              src={`${process.env.NEXT_PUBLIC_HOST}${network === 'Testnet' ? '/testnet' : ''}${logo}`}
                               alt="logo"
                               className="w-9 h-9 min-w-[2.25rem] p-0"
                             />
                           ) : tick_type === 'exotic' ? (
                             <Image
-                              src={`/raresats/${nickname ? nickname : getTickLabel(tick)}.svg`}
+                              src={`/raresats/${nickname || getTickLabel(tick)}.svg`}
                               alt="logo"
                               className="w-9 h-9 min-w-[2.25rem] p-0"
+                              fallbackSrc="/placeholder-avatar.png"
                             />
                           ) : (
                             <Avatar
@@ -224,27 +307,35 @@ export default function Market() {
                         </div>
                       </TableCell>
                     );
-                  } else if (columnKey === 'lowest_price') {
+                  }
+
+                  if (columnKey === 'lowest_price') {
                     return (
-                      <TableCell className='bg-zinc-900/90'>
+                      <TableCell className="bg-zinc-900/90">
                         <div className="flex text-sm md:text-base">
-                          {getKeyValue(item, columnKey).toFixed(2) + ' sats'}
+                          {`${Number(value).toFixed(2)} sats`}
                         </div>
                       </TableCell>
                     );
-                  } else {
-                    // Other columns
-                    return (
-                      <TableCell className="bg-zinc-900/90 font-light text-sm md:text-base">
-                        {getKeyValue(item, columnKey)}
-                      </TableCell>
-                    );
                   }
+
+                  return (
+                    <TableCell className="bg-zinc-900/90 font-light text-sm md:text-base">
+                      {typeof value === 'number'
+                        ? value.toLocaleString()
+                        : value}
+                    </TableCell>
+                  );
                 }}
               </TableRow>
             )}
           </TableBody>
         </Table>
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
+            <Spinner />
+          </div>
+        )}
       </div>
     </div>
   );

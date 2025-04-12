@@ -1,51 +1,3 @@
-// 'use client';
-
-// import { useCommonStore } from '@/store';
-// import { Icon } from '@iconify/react'; // 引入 Iconify 图标
-// import { green, orange } from '@mui/material/colors';
-// import { useState as reactUseState } from 'react';
-
-// const tabs = [
-//     { name: 'MainNet', value: 'mainnet', icon: 'bitcoin-icons:bitcoin-circle-filled', color: orange[500] }, // 使用 Material-UI 的颜色
-//     { name: 'TestNet', value: 'testnet', icon: 'bitcoin-icons:bitcoin-circle-filled', color: green[500] }, // 使用 Material-UI 的颜色
-//   ];
-
-// export default function CardTabs() {
-//   const [activeTab, setActiveTab] = reactUseState('mainnet');
-
-//   return (
-//     <div className="w-full">
-//       {/* Tabs Header */}
-//       <div className="flex bg-black p-2 rounded-lg">
-//         {tabs.map((tab, index) => (
-//           <button
-//             key={tab.value}
-//             onClick={() => setActiveTab(tab.value)}
-//             className={`flex items-center gap-[2px] px-2 py-2 text-sm border ${
-//               activeTab === tab.value
-//                 ? 'bg-purple-500/60 text-white border-purple-500/60'
-//                 : 'bg-gray-800 text-gray-400 border-purple-500/60 hover:bg-gray-600 hover:text-white'
-//             } ${
-//               index === 0
-//                 ? 'rounded-l-lg' // 左侧按钮圆角
-//                 : index === tabs.length - 1
-//                 ? 'rounded-r-lg' // 右侧按钮圆角
-//                 : '' // 中间按钮无圆角
-//             }`}
-//           >
-//             <Icon
-//               icon={tab.icon}
-//               className="text-xl"
-//               style={{ color: tab.color }} // 动态设置图标颜色
-//             />
-//             {tab.name}
-//           </button>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
-
 'use client';
 
 import { useState, useRef } from 'react';
@@ -54,7 +6,7 @@ import type { Network } from '@/store';
 import { Icon } from '@iconify/react'; // 引入 Iconify 图标
 
 export const NetworkSelect = () => {
-  const { network, changeNetwork } = useCommonStore(); // 假设 store 中有 network 和 setNetwork
+  const { network, setNetwork } = useCommonStore(); // 假设 store 中有 network 和 setNetwork
   const [isOpen, setIsOpen] = useState(false);
   const closeTimeout = useRef<NodeJS.Timeout | null>(null); // 用于存储关闭菜单的定时器
 
@@ -84,7 +36,7 @@ export const NetworkSelect = () => {
   };
 
   const handleSelectionChange = (value: Network) => {
-      changeNetwork(value); // 更新网络的值
+      setNetwork(value); // 更新网络的值
       setIsOpen(false); // 选择后关闭菜单
   };
 
@@ -119,13 +71,13 @@ export const NetworkSelect = () => {
           <ul>
             <li
               className="px-2 py-2 hover:bg-gray-700/50 text-gray-400 text-sm sm:text-base cursor-pointer rounded-t-xl"
-              onClick={() => handleSelectionChange('MainNet')}
+              onClick={() => handleSelectionChange('Mainnet')}
             >
               MainNet
             </li>
             <li
               className="px-2 py-2 hover:bg-gray-700/50 text-gray-400 text-sm sm:text-base cursor-pointer rounded-b-xl"
-              onClick={() => handleSelectionChange('TestNet')}
+              onClick={() => handleSelectionChange('Testnet')}
             >
               TestNet
             </li>

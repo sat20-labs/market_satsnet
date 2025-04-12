@@ -1,45 +1,40 @@
 'use client';
 
-import useSWR from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Empty, notification } from 'antd';
 import { getOrders, cancelOrder } from '@/api';
-import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-import { use, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pagination } from '@/components/Pagination';
 import { Content } from '@/components/Content';
 import { OrdxFtOrderItem } from '@/components/order/OrdxFtOrderItemBack';
 import { useCommonStore } from '@/store';
-import { useTranslation } from 'react-i18next';
-import { useList } from 'react-use';
 
 interface OrdxOrderListProps {
   address?: string;
 }
 export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
-  const { t } = useTranslation();
-  const { address: storeAddress, network } = useReactWalletStore(
-    (state) => state,
-  );
-  const { chain } = useCommonStore();
+  const { chain, network } = useCommonStore();
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(12);
-  const swrKey = useMemo(() => {
-    if (address) {
-      return `/ordx/getOrders-${address}-${chain}-${network}-${page}-${size}`;
-    }
-    return `/ordx/getOrders-${chain}-${network}-${page}-${size}`;
-  }, [address, page, size, network]);
-  const { data, isLoading, mutate } = useSWR(swrKey, () =>
-    getOrders({ offset: (page - 1) * size, size, address }),
+  const queryClient = useQueryClient();
+
+  const queryKey = useMemo(
+    () => ['ordxOrders', address, chain, network, page, size],
+    [address, chain, network, page, size],
   );
-  const [list, { set, reset: resetList, updateAt, removeAt }] = useList<any>(
-    [],
+
+  const { data, isLoading } = useQuery({
+    queryKey: queryKey,
+    queryFn: () => getOrders({ offset: (page - 1) * size, size, address }),
+    placeholderData: (previousData) => previousData,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const orderList = useMemo(
+    () => data?.data?.order_list ?? [],
+    [data],
   );
-  useEffect(() => {
-    if (data) {
-      set(data.data?.order_list || []);
-    }
-  }, [data, set]);
+
   const onCancelOrder = async (item: any) => {
     if (item.locker === '1') {
       notification.error({
@@ -48,31 +43,40 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
       });
       return;
     }
-    const res = await cancelOrder({ address, order_id: item.order_id });
-    if (res.code === 200) {
-      notification.success({
-        message: 'Cancel order successfully',
-        description: `The order has been canceled successfully`,
-      });
-      const index = list.findIndex((i) => i.utxo === item.utxo);
-      removeAt(index);
-    } else {
-      notification.error({
-        message: 'Cancel order failed',
-        description: res.msg,
-      });
+    try {
+      const res = await cancelOrder({ address, order_id: item.order_id });
+      if (res.code === 200) {
+        notification.success({
+          message: 'Cancel order successfully',
+          description: `The order has been canceled successfully`,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['ordxOrders', address, chain, network],
+        });
+      } else {
+        notification.error({
+          message: 'Cancel order failed',
+          description: res.msg,
+        });
+      }
+    } catch (error) {
+        notification.error({
+            message: 'Cancel order failed',
+            description: error instanceof Error ? error.message : 'Unknown error',
+        });
     }
   };
-  const total = useMemo(
+
+  const totalPages = useMemo(
     () => (data?.data?.total ? Math.ceil(data?.data?.total / size) : 0),
     [data, size],
   );
   return (
     <div className="">
       <Content loading={isLoading}>
-        {!list.length && <Empty className="mt-10" />}
+        {!isLoading && !orderList.length && <Empty className="mt-10" />}
         <div className="min-h-[30rem] flex flex-wrap justify-center gap-8 mb-4">
-          {list.map((item: any, i) => (
+          {orderList.map((item: any, i) => (
             <div key={item.utxo}>
               <OrdxFtOrderItem
                 item={item}
@@ -83,14 +87,14 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
           ))}
         </div>
       </Content>
-      {total > 1 && (
+      {totalPages > 1 && (
         <div className="flex justify-center">
           <Pagination
-            total={total}
+            total={totalPages}
             page={page}
             size={size}
-            onChange={(offset, size) => {
-              setPage(offset);
+            onChange={(newPage) => {
+              setPage(newPage);
             }}
           />
         </div>

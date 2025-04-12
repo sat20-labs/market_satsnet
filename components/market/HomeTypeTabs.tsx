@@ -6,29 +6,13 @@ interface HomeTypeTabsProps {
 }
 export const HomeTypeTabs = ({ value, onChange }: HomeTypeTabsProps) => {
   const list = [
-    // {
-    //   label: 'Token',
-    //   key: 'ticker',
-    // },
-    // {
-    //   label: 'Names',
-    //   key: 'ns',
-    // },
-    // {
-    //   label: 'Rare',
-    //   key: 'exotic',
-    // },
-    // {
-    //   label: 'Collection',
-    //   key: 'nft',
-    // },
     {
       label: 'OrdX',
-      key: 'ticker',
+      key: 'ordx',
     },
     {
       label: 'Runes',
-      key: 'nft',
+      key: 'runes',
     },
     {
       label: 'Names',

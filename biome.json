@@ -40,7 +40,8 @@
         "noSvgWithoutTitle": "off"
       },
       "suspicious": {
-        "noArrayIndexKey": "off"
+        "noArrayIndexKey": "off",
+        "noExplicitAny": "off"
       },
       "style": {
         "useSelfClosingElements": "off"

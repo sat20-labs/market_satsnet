@@ -7,15 +7,12 @@ import {
   PopoverContent,
   Snippet,
 } from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   WalletConnectReact,
   useReactWalletStore,
 } from '@sat20/btc-connect/dist/react';
 import { Icon } from '@iconify/react';
-import { useAssets } from '@/lib/hooks';
-import { usePlainUtxo } from '@/lib/hooks/usePlainUtxo';
 import { useTheme } from 'next-themes';
 import { hideStr, satsToBitcoin, formatBtcAmount } from '@/lib/utils';
 import { message } from '@/lib/wallet-sdk';
@@ -23,11 +20,19 @@ import { notification } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/store';
 import { generateMempoolUrl } from '@/lib/utils';
-import { useUtxoStore } from '@/store';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+const fetchUtxos = async (address: string | null, network: string | null): Promise<{ value: number }[]> => {
+  if (!address || !network) {
+    return [];
+  }
+  console.log(`Fetching UTXOs for ${address} on ${network}...`);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return [];
+};
+
 const WalletConnectButton = () => {
-  // const { loading } = useAssets();
   const { t } = useTranslation();
-  const router = useRouter();
   const { theme } = useTheme();
   const {
     connected,
@@ -38,23 +43,27 @@ const WalletConnectButton = () => {
     btcWallet,
     network,
   } = useReactWalletStore((state) => state);
-  usePlainUtxo();
-  const { reset, getUnspendUtxos, list: UtxoList } = useUtxoStore();
   const { setSignature, signature } = useCommonStore((state) => state);
-  const [utxoAmount, setUtxoAmount] = useState(0);
+
+  const queryClient = useQueryClient();
+
+  const { data: utxoList = [], isLoading: isLoadingUtxos } = useQuery({
+    queryKey: ['utxos', address, network],
+    queryFn: () => fetchUtxos(address, network),
+    enabled: connected && !!address && !!network,
+  });
+
+  const utxoAmount = useMemo(() => {
+    return utxoList.reduce((acc, cur) => acc + cur.value, 0);
+  }, [utxoList]);
 
   const initCheck = async () => {
     await check();
-    // await checkSignature();
   };
   useEffect(() => {
     initCheck();
   }, []);
-  useEffect(() => {
-    const unspendUtxos = getUnspendUtxos();
-    const amount = unspendUtxos.reduce((acc, cur) => acc + cur.value, 0);
-    setUtxoAmount(amount);
-  }, [UtxoList]);
+
   const onConnectSuccess = async (wallet: any) => {
     if (!signature) {
       console.log('signature text', process.env.NEXT_PUBLIC_SIGNATURE_TEXT);
@@ -86,11 +95,14 @@ const WalletConnectButton = () => {
     console.log('disconnect success');
     setSignature('');
     await disconnect();
+    queryClient.invalidateQueries({ queryKey: ['utxos'] });
+    queryClient.removeQueries({ queryKey: ['utxos'] });
   };
   const accountAndNetworkChange = async () => {
     console.log('accountAndNetworkChange');
     console.log('connected', connected);
-    reset();
+    queryClient.invalidateQueries({ queryKey: ['utxos'] });
+
     const windowState =
       document.visibilityState === 'visible' || !document.hidden;
     try {
@@ -105,6 +117,8 @@ const WalletConnectButton = () => {
             );
             if (_s) {
               setSignature(_s);
+            } else {
+              await handlerDisconnect();
             }
           } else {
             handlerDisconnect();
@@ -114,7 +128,7 @@ const WalletConnectButton = () => {
         }
       }
     } catch (error) {
-      console.log(error);
+      console.log('Account/Network change check error:', error);
     }
   };
   const showAmount = useMemo(() => {
@@ -167,7 +181,8 @@ const WalletConnectButton = () => {
       btcWallet?.removeListener('accountsChanged', accountAndNetworkChange);
       btcWallet?.removeListener('networkChanged', accountAndNetworkChange);
     };
-  }, [connected]);
+  }, [connected, address, network, publicKey, signature]);
+
   return (
     <WalletConnectReact
       config={{
@@ -178,50 +193,55 @@ const WalletConnectButton = () => {
       onConnectError={onConnectError}
     >
       <>
-        <Popover placement="bottom">
-          <PopoverTrigger>
-            <Button
-              className="px-0 bg-[#181819]"
-              endContent={
-                <div className="px-2 h-full flex justify-center items-center text-gray-300 bg-[#282828]">
-                 {/* <Icon icon="mdi-light:wallet" className="w-5 h-5 text-gray-400" /> */}
-                 {address?.slice(-4)}<Icon icon="mdi-light:chevron-down" className=" text-gray-400 text-sm" />
-                </div>
-              }
-            >
-              <div className="flex items-center gap-1 pl-2">
-                <Icon icon="cryptocurrency-color:btc" className="w-4 h-4" />
-                <span className='text-gray-200 text-xs sm:text-sm'>{showAmount}</span> 
-              </div>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="p-2">
-            <div className="flex flex-col gap-2">
-              <div>
-                <Snippet
-                  codeString={address}
-                  className="bg-transparent text-lg md:text-2xl font-thin items-center"
-                  symbol=""
-                  variant="flat"
-                >
-                  <span className="text-base font-thin text-slate-400">
-                    {hideStr(address, 4)}
-                  </span>
-                </Snippet>
-              </div>
-              <Button className="w-full" onClick={toHistory}>
-                {t('buttons.to_history')}
-              </Button>
+        {connected && address ? (
+          <Popover placement="bottom">
+            <PopoverTrigger>
               <Button
-                color="danger"
-                variant="ghost"
-                onClick={handlerDisconnect}
+                className="px-0 bg-[#181819]"
+                endContent={
+                  <div className="px-2 h-full flex justify-center items-center text-gray-300 bg-[#282828]">
+                    {address?.slice(-4)}<Icon icon="mdi-light:chevron-down" className=" text-gray-400 text-sm" />
+                  </div>
+                }
               >
-                {t('buttons.disconnect')}
+                <div className="flex items-center gap-1 pl-2">
+                  <Icon icon="cryptocurrency-color:btc" className="w-4 h-4" />
+                  <span className='text-gray-200 text-xs sm:text-sm'>
+                    {isLoadingUtxos ? '...' : showAmount}
+                  </span>
+                </div>
               </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+            </PopoverTrigger>
+            <PopoverContent className="p-2">
+              <div className="flex flex-col gap-2">
+                <div>
+                  <Snippet
+                    codeString={address}
+                    className="bg-transparent text-lg md:text-2xl font-thin items-center"
+                    symbol=""
+                    variant="flat"
+                  >
+                    <span className="text-base font-thin text-slate-400">
+                      {hideStr(address, 4)}
+                    </span>
+                  </Snippet>
+                </div>
+                <Button className="w-full" onClick={toHistory}>
+                  {t('buttons.to_history')}
+                </Button>
+                <Button
+                  color="danger"
+                  variant="ghost"
+                  onClick={handlerDisconnect}
+                >
+                  {t('buttons.disconnect')}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <Button>Connect Wallet</Button>
+        )}
       </>
     </WalletConnectReact>
   );

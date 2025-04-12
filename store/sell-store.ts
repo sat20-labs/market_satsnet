@@ -218,18 +218,16 @@ export const useSellStore = create<SellState>()(
     add: (item) => {
       const { list, assets_type, assets_name } = get();
       if (!list.find((i) => i.utxo === item.utxo)) {
-        let amount = 0;
-        if (assets_type === 'ns') {
-          amount = 1;
-        } else if (assets_type === 'exotic') {
-          amount =
-            item.assets_list?.find((v) => v.assets_type === 'exotic')?.amount ||
-            0;
-        } else {
-          amount =
+        console.log('add: item.assets_list: ', item.assets_list);
+        console.log('add: assets_name: ', assets_name);
+        console.log('add: assets_type: ', assets_type);
+        console.log('add: item: ', item);
+        console.log('add: item.assets_list?.find((v) => v.assets_name === assets_name): ', item.assets_list?.find((v) => v.assets_name === assets_name));
+        const amount =
             item.assets_list?.find((v) => v.assets_name === assets_name)
               ?.amount || 0;
-        }
+        console.log('add: amount: ', amount);
+              
         let amountPrice = new Decimal(item.unit_price)
           .mul(new Decimal(amount))
           .toString();

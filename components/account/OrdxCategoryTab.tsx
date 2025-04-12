@@ -1,10 +1,9 @@
 import { Card, CardHeader, CardBody, Divider } from '@nextui-org/react';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { Icon } from '@iconify/react';
-import { getAddressAssetsSummary } from '@/api';
+import { marketApi } from '@/api';
 import { useCommonStore } from '@/store';
 import { BtcPrice } from '@/components/BtcPrice';
 
@@ -12,14 +11,13 @@ interface IOrdxCategoryTabProps {
   onChange?: (key: string) => void;
 }
 export const OrdxCategoryTab = ({ onChange }: IOrdxCategoryTabProps) => {
-  const { t } = useTranslation();
-  const { address, balance, network } = useReactWalletStore((state) => state);
-  const { chain } = useCommonStore();
+  const { address } = useReactWalletStore((state) => state);
+  const { chain, network} = useCommonStore();
   const isFirstRender = useRef(true);
 
   const { data, isLoading } = useQuery({
     queryKey: ['addressAssetsSummary', address, chain, network],
-    queryFn: () => getAddressAssetsSummary(address),
+    queryFn: () => marketApi.getAddressAssetsSummary(address),
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     enabled: !!address,

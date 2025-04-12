@@ -2,11 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { notification, Empty } from 'antd';
-import { getOrdxAssets, cancelOrder, ordx } from '@/api';
+import { getOrdxAssets, cancelOrder, marketApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSellStore, useUtxoStore, useCommonStore } from '@/store';
 import { splitAsset } from '@/lib/utils/asset';
+import { getLabelForAssets } from '@/lib/utils';
 import { AssetsItem } from '@/components/assets/AssetsItem';
 import { BatchSellFooter } from '@/components/BatchSellFooter';
 import { useRouter } from 'next/navigation';
@@ -27,7 +28,7 @@ export const AssetsList = ({
 }: Props) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { address, network, btcWallet } = useReactWalletStore((state) => state);
+  const { address, btcWallet } = useReactWalletStore((state) => state);
   const {
     add: addSell,
     changeAssetsName,
@@ -59,7 +60,7 @@ export const AssetsList = ({
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey,
     queryFn: () =>
-      getOrdxAssets({
+      marketApi.getOrdxAssets({
         address,
         assets_name,
         category: assets_category,
@@ -69,10 +70,6 @@ export const AssetsList = ({
       }),
     enabled: !!(address && (assets_type || assets_name)),
   });
-  console.log('assets_type', assets_type);
-  console.log('assets_name', assets_name);
-  
-  console.log('React Query State:', { isLoading, isFetching, data, error });
 
   useEffect(() => {
     if (error) {
@@ -86,15 +83,21 @@ export const AssetsList = ({
 
   const [list, { set, reset: resetList, push: pushToList, updateAt }] =
     useList<any>([]);
-  console.log('getOrdxAssets data received in useEffect:', data);
 
   useEffect(() => {
     if (data) {
       const { assets = [] } = data?.data || {};
+      const _assets = assets.map((item: any) => ({
+        ...item,
+        assets_list: item.assets_list.map((v: any) => ({
+          ...v,
+          assets_name: getLabelForAssets(v.assets_name),
+        })),
+      }));
       if (page === 1) {
-        set(assets);
+        set(_assets);
       } else {
-        pushToList(...assets);
+        pushToList(..._assets);
       }
     }
   }, [data]);
@@ -148,16 +151,8 @@ export const AssetsList = ({
     setCanSelect(true);
   };
   const addHandler = (item: any) => {
-    let tickerAmount = 0;
-    if (assets_type === 'exotic') {
-      tickerAmount =
-        item.assets_list?.find((v) => v.assets_type === 'exotic')?.amount || 0;
-    } else {
-      tickerAmount =
-        item.tickers?.find((v) => v.ticker === assets_name)?.amount || 0;
-    }
-    console.log(new Decimal('2').mul(new Decimal(tickerAmount)).toString());
-    changeAssetsType(assets_type);
+    console.log('addHandler: item: ', item);
+    
     changeAssetsName(assets_name);
     addSell({
       ...item,
@@ -188,7 +183,7 @@ export const AssetsList = ({
       return;
     }
     try {
-      const res = await cancelOrder({ address, order_id: item.order_id });
+      const res = await marketApi.cancelOrder({ address, order_id: item.order_id });
       if (res.code === 200) {
         notification.success({
           message: 'Cancel order successfully',
@@ -275,18 +270,6 @@ export const AssetsList = ({
           ))}
         </div>
       </InfiniteScroll>
-      {/* {total > 1 && (
-        <div className="flex justify-center">
-          <Pagination
-            total={total}
-            size={size}
-            page={page}
-            onChange={(offset, size) => {
-              setPage(offset);
-            }}
-          />
-        </div>
-      )} */}
       {canSelect && (
         <BatchSellFooter
           actionType={type}

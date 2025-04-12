@@ -13,9 +13,9 @@ import { Icon } from '@iconify/react';
 import { useEffect, useState, useMemo } from 'react';
 import { useCommonStore } from '@/store';
 import { BtcFeeRate } from './BtcFeeRate';
-import useSWR from 'swr';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { getRecommendedFees } from '@/api';
+import { marketApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 export const FeerateSelectButton = () => {
@@ -24,21 +24,20 @@ export const FeerateSelectButton = () => {
   const { chain } = useCommonStore();
   const { isOpen, onClose, onOpenChange, onOpen } = useDisclosure();
   const [fee, setFee] = useState({ value: 1, type: 'Normal' });
-
-  const { data, isLoading } = useSWR(
-    `getRecommendedFees-${chain}-${network}`,
-    () => getRecommendedFees(),
-    {
-      refreshInterval: 1000 * 60 * 10, // 10 minutes
-    },
-  );
-  const feeRateData = useMemo(() => {
-    if (data?.code === 200) {
-      return data.data;
-    } 
-      return {};
-  }, [data]);
   const { setFeeRate, feeRate } = useCommonStore((state) => state);
+
+  const { data: feeRateData, isLoading } = useQuery({
+    queryKey: ['getRecommendedFees', chain, network],
+    queryFn: marketApi.getRecommendedFees,
+    refetchInterval: 1000 * 60 * 10,
+    select: (data) => {
+      if (data?.code === 200) {
+        return data.data;
+      }
+      return {};
+    },
+  });
+
   const handleOk = () => {
     setFeeRate({ value: fee.value, type: fee.type });
     onClose();
@@ -47,19 +46,17 @@ export const FeerateSelectButton = () => {
   const handleCancel = () => {
     onClose();
   };
+
   const feeChange = (fee: any) => {
     console.log('fee', fee);
     setFee(fee);
   };
+
   useEffect(() => {
     if (feeRateData?.halfHourFee) {
-      let feeRate = feeRateData?.halfHourFee;
-      if (feeRate) {
-        feeRate = feeRateData?.halfHourFee;
-        setFeeRate({ value: feeRate || 1, type: 'Normal' });
-      }
+      setFeeRate({ value: feeRateData.halfHourFee, type: 'Normal' });
     }
-  }, [feeRateData]);
+  }, [feeRateData, setFeeRate]);
 
   return (
     <div>

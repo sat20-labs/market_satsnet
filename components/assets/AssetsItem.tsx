@@ -95,17 +95,11 @@ export const AssetsItem = ({
     if (assets_type !== 'ticker') return false;
     return !isSat20Content;
   }, [asset, isSat20Content]);
-  let tickContent =
-    "{'p':'ordx','op':'mint','tick':'" +
-    asset?.assets_name +
-    "','amt':'" +
-    asset?.amount +
-    "'}";
+
   if (
     asset?.assets_type === 'exotic' ||
     showContent(item?.assets?.[0]?.content_type, item?.assets?.[0]?.delegate)
   ) {
-    tickContent = '';
     isText = false;
   }
   const splitHandler = async (item: any) => {
