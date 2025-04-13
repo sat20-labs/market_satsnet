@@ -7,10 +7,10 @@ import { marketApi } from '@/api';
 import { useCommonStore } from '@/store';
 import { BtcPrice } from '@/components/BtcPrice';
 
-interface IOrdxCategoryTabProps {
+interface IOrdxProtocolTabProps {
   onChange?: (key: string) => void;
 }
-export const OrdxCategoryTab = ({ onChange }: IOrdxCategoryTabProps) => {
+export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
   const { address } = useReactWalletStore((state) => state);
   const { chain, network} = useCommonStore();
   const isFirstRender = useRef(true);

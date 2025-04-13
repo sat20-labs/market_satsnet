@@ -1,5 +1,6 @@
 export * from './useCalcFee';
 export * from './useAssets';
+export * from './useAssetsByType';
 import { useCommonStore } from '@/store';
 import { useMemo } from 'react';
 import { Decimal } from 'decimal.js';

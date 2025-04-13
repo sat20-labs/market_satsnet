@@ -10,21 +10,21 @@ import { useCommonStore } from '@/store';
 
 interface AssetsTypeListProps {
   onChange?: (ticker: string) => void;
-  assets_type: string;
+  assets_name: string;
 }
-export const AssetsTypeList = ({
+export const AssetsNameSelect = ({
   onChange,
-  assets_type,
+  assets_name,
 }: AssetsTypeListProps) => {
   const { address } = useReactWalletStore((state) => state);
   const { chain, network } = useCommonStore();
   const [selectKey, setSelectKey] = useState('');
 
-  const queryKey = useMemo(() => ['addressAssetsList', address, chain, network, assets_type], [address, chain, network, assets_type]);
+  const queryKey = useMemo(() => ['addressAssetsList', address, chain, network, assets_name], [address, chain, network, assets_name]);
 
   const { data, isLoading } = useQuery({
     queryKey: queryKey,
-    queryFn: () => marketApi.getAddressAssetsList(address, assets_type),
+    queryFn: () => marketApi.getAddressAssetsList(address, assets_name),
     enabled: !!address,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -65,24 +65,22 @@ export const AssetsTypeList = ({
   };
   return (
     <>
-      {assets_type !== 'nft' && (
-        <div className="mb-4">
-          <Select
-            showScrollIndicators={false}
-            isLoading={isLoading}
-            className="w-full max-w-sm"
-            selectionMode="single"
-            selectedKeys={selectKey ? [selectKey] : []}
-            onSelectionChange={onSelectionChange}
-          >
-            {list.map((item) => (
-              <SelectItem key={item.name} value={item.name}>
-                {`${item.name}${!!item.balance ? ` (${item.balance})` : ''}`}
-              </SelectItem>
-            ))}
-          </Select>
-        </div>
-      )}
+      <div className="mb-4">
+        <Select
+          showScrollIndicators={false}
+          isLoading={isLoading}
+          className="w-full max-w-sm"
+          selectionMode="single"
+          selectedKeys={selectKey ? [selectKey] : []}
+          onSelectionChange={onSelectionChange}
+        >
+          {list.map((item) => (
+            <SelectItem key={item.name} value={item.name}>
+              {`${item.name}${!!item.balance ? ` (${item.balance})` : ''}`}
+            </SelectItem>
+          ))}
+        </Select>
+      </div>
     </>
   );
 };

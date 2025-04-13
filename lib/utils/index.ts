@@ -20,7 +20,7 @@ interface AssetsName {
 }
 export const getLabelForAssets = (assets_name: AssetsName) => {
   const { Protocol, Ticker, Type } = assets_name;
-  return `${Protocol}::${Ticker}::${Type}`;
+  return `${Protocol}:${Type}:${Ticker}`;
 };
 export const getTickLabel = (tick?: string, type?: string) => {
   if (tick === undefined) return undefined;

@@ -1,15 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AssetsTypeList } from '@/components/account/AssetsTypeList';
-import { OrdxCategoryTab } from './OrdxCategoryTab';
+import { AssetsNameSelect } from '@/components/account/AssetsNameSelect';
+import { OrdxProtocolTab } from './OrdxProtocolTab';
 import { AssetsList } from './AssetsList';
 import { RuneAssets } from './RuneAssets';
 import { NameCategoryList } from './NameCategoryList';
 // import { OrdxUtxoList } from './OrdxUtxoList';
 
 export const OrdxAssetsUtxoList = () => {
-  const [assertType, setAssertType] = useState<string>('ticker');
   const [assertName, setAssertName] = useState<string>('');
   const [assertCategory, setAssertCategory] = useState<string | undefined>();
 
@@ -21,8 +20,7 @@ export const OrdxAssetsUtxoList = () => {
 
   const onCategoryChange = (t: string) => {
     console.log('onCategoryChange', t);
-    if (t !== assertType) {
-      setAssertType(t);
+    if (t !== assertName) {
       setAssertCategory('');
       if (t === 'rune') {
         setAssertName('');
@@ -35,32 +33,23 @@ export const OrdxAssetsUtxoList = () => {
     setAssertCategory(t);
   };
 
-  console.log('assertType', assertType);
-  console.log('assertName', assertName);
-  console.log('assertCategory', assertCategory);
-
   return (
     <div className="py-4">
       <div className="mb-4">
-        <OrdxCategoryTab onChange={onCategoryChange} />
+        <OrdxProtocolTab onChange={onCategoryChange} />
       </div>
-      {assertType !== 'rune' && (
         <div>
-          <AssetsTypeList onChange={onAssertChange} assets_type={assertType} />
+          <AssetsNameSelect onChange={onAssertChange} assets_name={assertName} />
         </div>
-      )}
-      {assertType === 'ns' && (
-        <NameCategoryList
+        {/* <NameCategoryList
           name={assertCategory}
           onChange={onAssertCategoryChange}
-        />
-      )}
-      {assertType === 'rune' && <RuneAssets />}
+        /> */}
+      {/* {assertType === 'rune' && <RuneAssets />} */}
 
-      {!!assertType && !!assertName && (
+      {!!assertName && (
         <AssetsList
           assets_name={assertName}
-          assets_type={assertType}
           assets_category={assertCategory}
         />
       )}

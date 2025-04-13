@@ -18,12 +18,10 @@ import { InfiniteScroll } from '@/components/InfiniteScroll';
 
 interface Props {
   assets_name: string;
-  assets_type: string;
   assets_category?: string;
 }
 export const AssetsList = ({
   assets_name,
-  assets_type,
   assets_category,
 }: Props) => {
   const { t } = useTranslation();
@@ -49,13 +47,12 @@ export const AssetsList = ({
       'ordxAssets',
       address,
       chain,
-      assets_type,
       assets_name,
       assets_category,
       page,
       size,
     ];
-  }, [address, page, size, assets_name, assets_type, assets_category, chain]);  
+  }, [address, page, size, assets_name, assets_category, chain]);  
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey,
@@ -64,11 +61,10 @@ export const AssetsList = ({
         address,
         assets_name,
         category: assets_category,
-        assets_type: assets_type,
         offset: (page - 1) * size,
         size,
       }),
-    enabled: !!(address && (assets_type || assets_name)),
+    enabled: !!(address && (assets_name)),
   });
 
   useEffect(() => {
@@ -91,7 +87,7 @@ export const AssetsList = ({
         ...item,
         assets_list: item.assets_list.map((v: any) => ({
           ...v,
-          assets_name: getLabelForAssets(v.assets_name),
+          _assets_name: getLabelForAssets(v.assets_name),
         })),
       }));
       if (page === 1) {
@@ -223,19 +219,19 @@ export const AssetsList = ({
   }, []);
 
   useEffect(() => {
-    if (assets_type || assets_name) {
+    if (assets_name) {
       // refetch(); // 如果 queryKey 包含了 page 和 size，React Query 会在它们变化时自动重新查询，可能不再需要手动 refetch
     }
   }, [page, size]); // 移除了 refetch 依赖
 
   useEffect(() => {
-    if (assets_type || assets_name) {
+    if ( assets_name) {
       resetList();
       setCanSelect(false);
       setPage(1); // 重置页面为 1
       // refetch(); // queryKey 变化会自动触发查询
     }
-  }, [assets_type, assets_name, assets_category, resetList]);
+  }, [ assets_name, assets_category, resetList]);
   return (
     <div className={`${canSelect ? 'pb-20' : ''}`}>
       <InfiniteScroll
