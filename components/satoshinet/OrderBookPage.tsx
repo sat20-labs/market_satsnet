@@ -3,6 +3,8 @@ import OrderBookHeader from "@/components/satoshinet/orderbook/OrderBookHearder"
 import BuySellToggle from "@/components/satoshinet/orderbook/BuySellToggle";
 import TakeOrder from "@/components/satoshinet/orderbook/TakeOrder";
 import MakeOrder from "@/components/satoshinet/orderbook/MakeOrder";
+import BuyOrder from './orderbook/BuyOrder';
+import SellOrder from './orderbook/SellOrder';
 
 interface AssetInfoProps {
     assetData: {
@@ -87,17 +89,28 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
             {activeTab === "takeOrder" ? (
                 <TakeOrder mode={mode} setMode={setMode} userWallet={userWallet} orders={orders} />
             ) : (
-                <MakeOrder
-                    mode={mode}
-                    setMode={setMode}
-                    userWallet={userWallet}
-                    assetInfo={{
-                        assetLogo: assetData.assetLogo,
-                        assetName: assetData.assetName,
-                        AssetId: assetData.assetId,
-                        floorPrice: parseFloat(assetData.floorPrice),
-                    }}
-                />
+                <div>
+                    {mode === "buy" ? (
+                        <BuyOrder
+                            userWallet={userWallet}
+                            assetInfo={{
+                                assetLogo: assetData.assetLogo,
+                                assetName: assetData.assetName,
+                                AssetId: assetData.assetId,
+                                floorPrice: parseFloat(assetData.floorPrice),
+                            }}
+                        />
+                    ) : (
+                        <SellOrder
+                            assetInfo={{
+                                assetLogo: assetData.assetLogo,
+                                assetName: assetData.assetName,
+                                AssetId: assetData.assetId,
+                                floorPrice: parseFloat(assetData.floorPrice),
+                            }}
+                        />
+                    )}
+                </div>
             )}
             <div className="mt-4 text-sm text-gray-400">
                 {/* 根据 settings 过滤订单簿 */}

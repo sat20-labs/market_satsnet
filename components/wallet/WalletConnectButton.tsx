@@ -18,7 +18,7 @@ import { hideStr, satsToBitcoin, formatBtcAmount } from '@/lib/utils';
 import { message } from '@/lib/wallet-sdk';
 import { notification } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { useCommonStore } from '@/store';
+import { useCommonStore, useAssetStore } from '@/store';
 import { generateMempoolUrl } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -32,6 +32,9 @@ const fetchUtxos = async (address: string | null, network: string | null): Promi
 };
 
 const WalletConnectButton = () => {
+
+  const { network } = useCommonStore();
+  
   const { t } = useTranslation();
   const { theme } = useTheme();
   const {
@@ -41,8 +44,14 @@ const WalletConnectButton = () => {
     publicKey,
     disconnect,
     btcWallet,
-    network,
   } = useReactWalletStore((state) => state);
+  const { loadSummaryData } = useAssetStore();
+
+  useEffect(() => {
+    if (address && network) {
+      loadSummaryData();
+    }
+  }, [address, network, loadSummaryData]);
   const { setSignature, signature } = useCommonStore((state) => state);
 
   const queryClient = useQueryClient();

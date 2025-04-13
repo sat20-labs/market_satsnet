@@ -8,14 +8,14 @@
   "files": {
     "ignoreUnknown": false,
     "include": [
-      "app/**/*.ts",
-      "app/**/*.tsx",
-      "server/src/**/*.ts"
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx"
     ],
     "ignore": [
       "node_modules",
-      "app/components/ui",
-      "server/node_modules",
+      "components/ui",
       "build",
       "dist",
       "out",

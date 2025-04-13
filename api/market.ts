@@ -223,11 +223,9 @@ export const getAddressOrdxList = async ({ address }: any) => {
 
 interface GetAssetsSummary {
   assets_name?: string;
-  assets_type?: string;
 }
 export const getAssetsSummary = async ({
   assets_name,
-  assets_type,
 }: GetAssetsSummary) => {
   // Fetch context from stores
   const { publicKey, connected } = useReactWalletStore.getState();
@@ -236,7 +234,7 @@ export const getAssetsSummary = async ({
   const context: RequestContext = { publicKey, signature, chain, network, connected };
 
   const res = await request('/ordx/GetAssetsSummary', context, { // Pass context
-    data: { assets_name, assets_type },
+    data: { assets_name },
   });
   return res;
 };

@@ -14,14 +14,6 @@ export const HomeTypeTabs = ({ value, onChange }: HomeTypeTabsProps) => {
       label: 'Runes',
       key: 'runes',
     },
-    {
-      label: 'Names',
-      key: 'ns',
-    },
-    {
-      label: 'Rare',
-      key: 'exotic',
-    },
     
   ];
   const changeHandler = (key: any) => {

@@ -4,14 +4,13 @@ import type React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { Tabs, Tab } from '@nextui-org/react';
 import { useQuery } from '@tanstack/react-query';
-import { OrdxAssetsUtxoList } from '@/components/account/OrdxAssetsUtxoList';
+import { Assets } from '@/components/account/Assets';
 import { OrdxOrderHistoryList } from '@/components/order/OrdxOrderHistoryList';
 import { OrdxOrderList } from '@/components/account/OrdxOrderList';
 import { useSearchParams } from 'next/navigation';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useTranslation } from 'react-i18next';
 import { OrdxBillList } from '@/components/account/OrdxBillList';
-import { BlogCreate } from '@/components/account/BlogCreate';
 import { marketApi } from '@/api';
 import { useCommonStore } from '@/store';
 
@@ -66,7 +65,7 @@ export default function AccountPage() {
         style={{ width: '100%' }}
       >
         <Tab key="utxo" title={t('buttons.my_assets')}>
-          <OrdxAssetsUtxoList />
+          <Assets />
         </Tab>
         <Tab key="history" title={t('common.tx_history')}>
           <OrdxOrderHistoryList address={address} />
@@ -76,9 +75,6 @@ export default function AccountPage() {
         </Tab>
         <Tab key="bill" title={t('common.my_biils')}>
           <OrdxBillList />
-        </Tab>
-        <Tab key="blog" title={t('common.my_blog')}>
-          <BlogCreate />
         </Tab>
       </Tabs>
     </div>
