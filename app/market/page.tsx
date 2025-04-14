@@ -20,6 +20,7 @@ import type { Key } from '@react-types/shared';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getLabelForAssets } from '@/lib/utils';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { getTickLabel } from '@/lib/utils';
 import { SortDropdown } from '@/components/SortDropdown';
@@ -113,12 +114,19 @@ export default function Market() {
   };
 
   const list = useMemo(() => {
-    return queryData || [];
+    return queryData?.map(
+      (item) => {
+        return {
+          ...item,
+          assets_name: getLabelForAssets(item.assets_name as any),
+        };
+      }
+    ) || [];
   }, [queryData]);
 
   const toDetail = (key: ReactKey) => {
     const assetName = String(key);
-    router.push(`/satoshinet/market?ticker=${assetName}&assets_type=${type}`);
+    router.push(`/order?asset=${assetName}`);
   };
 
   const typeChange = (e: string) => {

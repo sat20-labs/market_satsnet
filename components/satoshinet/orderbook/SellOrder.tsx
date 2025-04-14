@@ -1,29 +1,68 @@
 import React, { useState, useMemo } from "react";
-import { Icon } from "@iconify/react";
+import { SellUtxoInfo } from "@/types";
 import { useAssetStore } from '@/store/asset';
 import { AssetItem } from "@/store/asset";
+import { clientApi, marketApi } from "@/api";
+import { useCommonStore } from "@/store";
+import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 
 interface SellOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
 }
 
+// Helper function for retrying async operations
+async function retryAsyncOperation<T>(
+  asyncFn: (...args: any[]) => Promise<{ data: T }>,
+  args: any[],
+  options: { delayMs: number; maxAttempts: number }
+): Promise<T> {
+  const { delayMs, maxAttempts } = options;
+  let attempts = 0;
+  let lastError: any = null;
+
+  while (attempts < maxAttempts) {
+    attempts++;
+    try {
+      const result = await asyncFn(...args);
+
+      if (result?.data) {
+        return result.data;
+      } else {
+        lastError = new Error(`${asyncFn.name} returned successfully but without expected data format on attempt ${attempts}.`);
+        console.warn(lastError.message + ` Retrying in ${delayMs}ms...`);
+      }
+
+    } catch (error) {
+      lastError = error;
+      console.warn(`Attempt ${attempts} failed for ${asyncFn.name}. Error: ${error}. Retrying in ${delayMs}ms...`);
+    }
+
+    if (attempts >= maxAttempts) {
+      console.error(`${asyncFn.name} failed after ${maxAttempts} attempts.`);
+      throw lastError || new Error(`${asyncFn.name} failed after ${maxAttempts} attempts.`);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+
+  throw new Error('Retry logic failed unexpectedly.');
+}
+
 const SellOrder = ({ assetInfo }: SellOrderProps) => {
-  const assetsState = useAssetStore(state => state.assets);
-  const isLoading = useAssetStore(state => state.loading);
-
+  const { loading, assets } = useAssetStore();
+  const { address } = useReactWalletStore();
+  const { network } = useCommonStore();
   const userAssetBalance = useMemo(() => {
-    if (!assetInfo.assetName || isLoading) return 0;
-    console.log(assetInfo.assetName);
+    if (!assetInfo.assetName || loading) return 0;
     const [protocol = 'plain', , ticker] = assetInfo.assetName.split(':');
-    const protocolKey = protocol as keyof typeof assetsState;
+    const protocolKey = protocol as keyof typeof assets;
 
-    const protocolAssets = Array.isArray(assetsState[protocolKey]) ? assetsState[protocolKey] : [];
+    const protocolAssets = Array.isArray(assets[protocolKey]) ? assets[protocolKey] : [];
 
     const userAsset = protocolAssets.find((asset: AssetItem) => asset.key === assetInfo.assetName);
-    console.log(userAsset);
     return userAsset ? userAsset.amount : 0;
 
-  }, [assetInfo.assetName, assetsState, isLoading]);
+  }, [assetInfo.assetName, assets, loading]);
 
   const [quantity, setQuantity] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
@@ -41,10 +80,63 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
     setQuantity(userAssetBalance);
   };
 
-  const displayBalance = isLoading ? "Loading..." : userAssetBalance;
+  const displayBalance = loading ? "Loading..." : userAssetBalance;
 
-  const handleSell = () => {
-    console.log("Sell order submitted");
+  const handleSell = async () => {
+    console.log("Initiating sell for quantity:", quantity, "at price:", price);
+    if (!address || !network) {
+      console.error("Address or network not available");
+      return;
+    }
+
+    let psbt: string | undefined;
+    try {
+      console.log(`Splitting asset ${assetInfo.assetName} for quantity ${quantity}`);
+      const splitRes = await window.sat20.splitAsset(assetInfo.assetName, quantity as number);
+      if (!splitRes?.txId) {
+        throw new Error('Failed to split asset or txId missing.');
+      }
+      const txid = splitRes.txId;
+      const vout = 0;
+      const utxo = `${txid}:${vout}`;
+      console.log(`Asset split successful. UTXO created: ${utxo}`);
+
+      console.log(`Attempting to fetch UTXO info for ${utxo}...`);
+      const utxoData: any = await retryAsyncOperation(
+        clientApi.getUtxoInfo,
+        [utxo],
+        { delayMs: 2000, maxAttempts: 5 }
+      );
+      const sellUtxoInfos: SellUtxoInfo[] = [{
+        ...utxoData,
+        Price: price,
+      }];
+      const sat20SellOrder = await window.sat20.buildBatchSellOrder(
+        sellUtxoInfos.map((v) => JSON.stringify(v)),
+        address,
+        network,
+      );
+      const psbt = sat20SellOrder?.data?.psbt;
+      console.log('Successfully fetched UTXO info:', psbt);
+      const orders = [{
+        assets_name: assetInfo.assetName,
+        raw: psbt,
+      }];
+
+      const res = await marketApi.submitBatchOrders({
+        address,
+        orders: orders,
+      });
+      if (res.code === 200) {
+        console.log('Sell order submitted successfully');
+      } else {
+        console.error('Failed to submit sell order:', res.message);
+      }
+
+    } catch (error) {
+      console.error("Error during sell process:", error);
+      return;
+    }
   };
 
   return (
@@ -76,12 +168,12 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
             placeholder="Enter quantity"
             className="w-full bg-zinc-800 text-zinc-200 p-2 rounded"
             min="0"
-            disabled={isLoading}
+            disabled={loading}
           />
           <button
             onClick={handleMaxClick}
-            className={`px-2 py-2 h-10 bg-zinc-800 text-zinc-300 text-sm rounded whitespace-nowrap ${isLoading ? 'cursor-not-allowed opacity-50' : 'hover:bg-zinc-600'}`}
-            disabled={isLoading}
+            className={`px-2 py-2 h-10 bg-zinc-800 text-zinc-300 text-sm rounded whitespace-nowrap ${loading ? 'cursor-not-allowed opacity-50' : 'hover:bg-zinc-600'}`}
+            disabled={loading}
           >
             Max
           </button>
@@ -106,7 +198,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
             placeholder="Enter price"
             className="w-full bg-zinc-800 text-white p-2 rounded"
             min="0"
-            disabled={isLoading}
+            disabled={loading}
           />
           <span className="text-sm text-gray-400">sats/{assetInfo.assetName}</span>
         </div>
@@ -135,7 +227,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
         )}
 
 
-        {quantity && price && calculatedBTC > 0 && !isLoading && (
+        {quantity && price && calculatedBTC > 0 && !loading && (
           <div className="mt-4 pt-4 border-t border-zinc-700">
             <p className="font-medium text-gray-400 text-sm">
               You will receive: <span className="font-semibold text-zinc-200">{calculatedBTC} sats</span>
@@ -146,13 +238,13 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
 
       <button
         onClick={handleSell}
-        className={`w-full mt-4 py-3 rounded-xl text-zinc-200 text-sm font-semibold ${!isSellValid || isLoading
+        className={`w-full mt-4 py-3 rounded-xl text-zinc-200 text-sm font-semibold ${!isSellValid || loading
           ? "bg-gray-700 cursor-not-allowed opacity-50"
           : "btn-gradient-sell"
           }`}
-        disabled={!isSellValid || isLoading}
+        disabled={!isSellValid || loading}
       >
-        {isLoading ? "Loading Balance..." : `Sell ${assetInfo.assetName}`}
+        {loading ? "Loading Balance..." : `Sell ${assetInfo.assetName}`}
       </button>
     </div>
   );

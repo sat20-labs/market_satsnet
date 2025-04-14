@@ -173,7 +173,6 @@ export const getOrdxAssets = async ({
   address,
   assets_type,
   assets_name,
-  type,
   utxo,
   offset,
   size,
@@ -198,7 +197,6 @@ export const getOrdxAssets = async ({
       address,
       offset,
       size,
-      type,
       assets_type,
       assets_name,
       category,
@@ -240,7 +238,7 @@ export const getAssetsSummary = async ({
 };
 interface GetOrders {
   assets_name?: string;
-  assets_type?: string;
+  assets_protocol?: string;
   address?: string;
   category?: string;
   offset: number;
@@ -251,7 +249,7 @@ interface GetOrders {
 }
 export const getOrders = async ({
   assets_name,
-  assets_type,
+  assets_protocol,
   offset,
   size,
   sort = 0,
@@ -269,7 +267,7 @@ export const getOrders = async ({
   const res = await request('/ordx/GetOrders', context, { // Pass context
     data: {
       assets_name,
-      assets_type,
+      assets_protocol,
       offset,
       size,
       sort,
@@ -304,6 +302,7 @@ export const getHistory = async ({
 
 interface GetTopAssets {
   assets_protocol?: string;
+  assets_type?: string;
   interval?: number;
   top_count?: number;
   top_name?: ''; //'recommend' | 'tx_count' | 'tx_amount' | 'tx_volume';
@@ -312,6 +311,7 @@ interface GetTopAssets {
 }
 export const getTopAssets = async ({
   assets_protocol = '',
+  assets_type = '',
   interval = 1,
   top_count = 20,
   top_name = '',
@@ -328,6 +328,7 @@ export const getTopAssets = async ({
   const res = await request('/ordx/GetTopAssets', context, { // Pass context
     data: {
       assets_protocol,
+      assets_type,
       interval: _interval,
       top_count,
       top_name,
@@ -457,32 +458,6 @@ export const getAssetsAnalytics = async ({ assets_name, assets_type }: any) => {
   return res;
 };
 
-export const addChargedTask = async ({ address, fee, txid, type }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/AddChargedTask', context, { // Pass context
-    method: 'POST',
-    data: { address, fees: fee, txid, type },
-  });
-  return res;
-};
-
-export const getChargedTask = async (tx_id: string) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetChargedTask', context, { // Pass context
-    data: { tx_id },
-  });
-  return res;
-};
 export const getRecommendedFees = async () => {
   // Fetch context from stores
   const { publicKey, connected } = useReactWalletStore.getState();
@@ -494,79 +469,8 @@ export const getRecommendedFees = async () => {
   return res;
 };
 
-export const getChargedTaskList = async ({
-  address,
-  offset,
-  size,
-  sort_field,
-  sort_order,
-}: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
 
-  const res = await request('/ordx/GetChargedTaskList', context, { // Pass context
-    data: { address, offset, size, sort_field, sort_order },
-  });
-  return res;
-};
 
-export const addOrderTask = async ({
-  address,
-  fees,
-  parameters,
-  txid,
-  type,
-}: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/AddOrderTask', context, { // Pass context
-    method: 'POST',
-    data: { address, fees, parameters, txid, type },
-  });
-  return res;
-};
-
-export const addMintRecord = async ({ address, txid, record_data }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const formData = new FormData();
-  formData.append('address', address);
-  formData.append('txid', txid);
-  formData.append('record_data', record_data);
-  const res = await request('/ordx/AddMintRecord', context, { // Pass context
-    method: 'POST',
-    formData, // Use formData option
-  });
-  return res;
-};
-
-export const deleteMintRecord = async ({ address, txid }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/DeleteMintRecord', context, { // Pass context
-    method: 'POST',
-    data: {
-      address,
-      txid,
-    },
-  });
-  return res;
-};
 export const lockBulkOrder = async ({ address, orderIds }: any) => {
   // Fetch context from stores
   const { publicKey, connected } = useReactWalletStore.getState();
@@ -600,45 +504,8 @@ export const unlockBulkOrder = async ({ address, orderIds }: any) => {
   });
   return res;
 };
-export const bulkBuyingThirdOrder = async ({
-  address,
-  publickey, // Note: This publickey seems redundant if it's the same as context.publicKey
-  order_ids,
-  fee_rate_tier,
-  receiver_address,
-}: any) => {
-  // Fetch context from stores
-  const storePublicKey = useReactWalletStore.getState().publicKey;
-  const { connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey: storePublicKey, signature, chain, network, connected };
 
-  const res = await request('/ordx/BulkBuyingThirdOrder', context, { // Pass context
-    method: 'POST',
-    data: {
-      address,
-      publickey: publickey || storePublicKey, // Use passed publickey or fallback to context's
-      order_ids,
-      fee_rate_tier,
-      receiver_address,
-    },
-  });
-  return res;
-};
 
-export const getOrderTask = async (tx_id: string) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetOrderTask', context, { // Pass context
-    data: { tx_id },
-  });
-  return res;
-};
 export const getAddressAssetsValue = async (address: string) => {
   // Fetch context from stores
   const { publicKey, connected } = useReactWalletStore.getState();
@@ -667,7 +534,7 @@ export const getAddressAssetsSummary = async (address: string) => {
 
 export const getAddressAssetsList = async (
   address: string,
-  assets_type: string,
+  assets_protocol: string,
 ) => {
   // Fetch context from stores
   const { publicKey, connected } = useReactWalletStore.getState();
@@ -676,7 +543,7 @@ export const getAddressAssetsList = async (
   const context: RequestContext = { publicKey, signature, chain, network, connected };
 
   const res = await request('/ordx/GetAddressAssetsList', context, { // Pass context
-    data: { address, assets_type },
+    data: { address, assets_protocol },
   });
   return res;
 };
