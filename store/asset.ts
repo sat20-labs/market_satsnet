@@ -13,14 +13,14 @@ export interface AssetItem {
   type: string;
   label: string;
   ticker: string;
-  utxos: UtxoItem[];
+  utxos: AssetUtxoItem[];
   amount: number;
 }
 
 /**
  * UTXO 项目接口定义
  */
-export interface UtxoItem {
+export interface AssetUtxoItem {
   Outpoint: string;
   Value: number;
   Assets: {
@@ -76,7 +76,7 @@ interface AssetState {
   };
   
   // UTXO 数据
-  plainUtxos: UtxoItem[];
+  plainUtxos: AssetUtxoItem[];
   
   // 可用资产类型
   availableAssetTypes: AssetTypeOption[];
@@ -90,7 +90,7 @@ interface AssetState {
   setError: (error: Error | null) => void;
   setRawAssetList: (list: AssetItem[]) => void;
   updateAssetsByProtocol: (protocol: string, assets: AssetItem[]) => void;
-  setPlainUtxos: (utxos: UtxoItem[]) => void;
+  setPlainUtxos: (utxos: AssetUtxoItem[]) => void;
   setAvailableAssetTypes: (types: AssetTypeOption[]) => void;
   setSummaryData: (data: any) => void;
   setIsSummaryLoading: (loading: boolean) => void;
@@ -98,7 +98,7 @@ interface AssetState {
   
   // 业务方法
   loadSummaryData: () => Promise<any>;
-  loadUtxoData: (assetKeys?: string[]) => Promise<UtxoItem[][]>;
+  loadUtxoData: (assetKeys?: string[]) => Promise<AssetUtxoItem[][]>;
   refreshAssets: (options?: RefreshOptions) => Promise<boolean>;
   reset: () => void;
 }
@@ -111,7 +111,7 @@ const processAssetUtxo = async (
   key: string,
   start = 0,
   limit = 100,
-): Promise<UtxoItem[]> => {
+): Promise<AssetUtxoItem[]> => {
   const result = await clientApi.getOrdxAddressHolders(address, key, start, limit);
   return result?.data || [];
 };
@@ -122,7 +122,7 @@ const processAssetUtxo = async (
 const processAllUtxos = async (
   address: string,
   tickers: string[],
-): Promise<UtxoItem[][]> => {
+): Promise<AssetUtxoItem[][]> => {
   if (!tickers.length) return [];
   return await parallel(3, tickers, (ticker) =>
     processAssetUtxo(address, ticker, 0, 100)

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import OrderRow from "@/components/satoshinet/orderbook/OrderRow";
 import OrderSummary from "@/components/satoshinet/orderbook/OrderSummary";
 import { Button } from "@nextui-org/react";
-import { useCommonStore } from "@/store";
+import { useCommonStore, useAssetStore,useUtxoStore } from "@/store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { tryit } from "radash";
 import { clientApi, marketApi } from "@/api";
@@ -46,11 +46,16 @@ interface TakeOrderProps {
 const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => {
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
   const { chain, network } = useCommonStore();
+  const { assets } = useAssetStore();
+  const { list: utxoList } = useUtxoStore();
+  console.log('assets', assets);
+  
   const { address, btcWallet } = useReactWalletStore();
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(12);
   const queryClient = useQueryClient();
-
+  console.log('utxoList', utxoList);
+  
   const queryKey = useMemo(() => {
     return ['orders', assetInfo.assetName, chain, network, page, size, mode];
   }, [assetInfo.assetName, page, size, network, chain, mode]);
@@ -114,8 +119,8 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         })
         const serviceFee = 0
         const networkFee = 10
-        for (let i = 0; i < selectedOrdersData.length; i++) {
-          const { utxo, order_id } = selectedOrdersData[i];
+        for (let i = 0; i < utxoList.length; i++) {
+          const { utxo } = utxoList[i];
           const [error2, utxoInfo] = await tryit(clientApi.getUtxoInfo)(utxo);
           if (error2) {
             throw error2;

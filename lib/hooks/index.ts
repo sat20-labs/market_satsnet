@@ -1,6 +1,7 @@
 export * from './useAssets';
 import { useCommonStore } from '@/store';
 import { useMemo } from 'react';
+export * from './usePlainUtxo';
 import { Decimal } from 'decimal.js';
 
 export const useBtcPrice = (btc: string | number) => {

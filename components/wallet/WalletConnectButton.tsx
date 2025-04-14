@@ -17,8 +17,9 @@ import { useTheme } from 'next-themes';
 import { hideStr, satsToBitcoin, formatBtcAmount } from '@/utils';
 import { notification } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { useCommonStore, useAssetStore } from '@/store';
+import { useCommonStore, useAssetStore, useUtxoStore } from '@/store';
 import { generateMempoolUrl } from '@/lib/utils';
+import { usePlainUtxo } from '@/lib/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const fetchUtxos = async (address: string | null, network: string | null): Promise<{ value: number }[]> => {
@@ -33,7 +34,7 @@ const fetchUtxos = async (address: string | null, network: string | null): Promi
 const WalletConnectButton = () => {
 
   const { network } = useCommonStore();
-  
+  const { list: utxoList } = useUtxoStore();
   const { t } = useTranslation();
   const { theme } = useTheme();
   const {
@@ -45,7 +46,7 @@ const WalletConnectButton = () => {
     btcWallet,
   } = useReactWalletStore((state) => state);
   const { loadSummaryData } = useAssetStore();
-
+  const { data: plainUtxos } = usePlainUtxo();
   useEffect(() => {
     if (address && network) {
       loadSummaryData();
@@ -54,12 +55,6 @@ const WalletConnectButton = () => {
   const { setSignature, signature } = useCommonStore((state) => state);
 
   const queryClient = useQueryClient();
-
-  const { data: utxoList = [], isLoading: isLoadingUtxos } = useQuery({
-    queryKey: ['utxos', address, network],
-    queryFn: () => fetchUtxos(address, network),
-    enabled: connected && !!address && !!network,
-  });
 
   const utxoAmount = useMemo(() => {
     return utxoList.reduce((acc, cur) => acc + cur.value, 0);
@@ -215,7 +210,7 @@ const WalletConnectButton = () => {
                 <div className="flex items-center gap-1 pl-2">
                   <Icon icon="cryptocurrency-color:btc" className="w-4 h-4" />
                   <span className='text-gray-200 text-xs sm:text-sm'>
-                    {isLoadingUtxos ? '...' : showAmount}
+                    {showAmount}
                   </span>
                 </div>
               </Button>

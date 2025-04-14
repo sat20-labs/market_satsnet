@@ -1,2 +1,2 @@
-export const version = 7;
+export const version = 8;
     

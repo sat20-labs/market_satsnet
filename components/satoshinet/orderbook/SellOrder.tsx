@@ -3,7 +3,7 @@ import { SellUtxoInfo } from "@/types";
 import { useAssetStore } from '@/store/asset';
 import { AssetItem } from "@/store/asset";
 import { clientApi, marketApi } from "@/api";
-import { useCommonStore } from "@/store";
+import { useCommonStore, useUtxoStore } from "@/store";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 
 interface SellOrderProps {
@@ -52,6 +52,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
   const { loading, assets } = useAssetStore();
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
+  
   const userAssetBalance = useMemo(() => {
     if (!assetInfo.assetName || loading) return 0;
     const [protocol = 'plain', , ticker] = assetInfo.assetName.split(':');
@@ -89,7 +90,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
       return;
     }
 
-    let psbt: string | undefined;
+
     try {
       console.log(`Splitting asset ${assetInfo.assetName} for quantity ${quantity}`);
       const splitRes = await window.sat20.splitAsset(assetInfo.assetName, quantity as number);
