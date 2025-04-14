@@ -50,7 +50,7 @@ async function retryAsyncOperation<T>(
 
 const SellOrder = ({ assetInfo }: SellOrderProps) => {
   const { loading, assets } = useAssetStore();
-  const { address } = useReactWalletStore();
+  const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const userAssetBalance = useMemo(() => {
     if (!assetInfo.assetName || loading) return 0;
@@ -105,7 +105,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
       const utxoData: any = await retryAsyncOperation(
         clientApi.getUtxoInfo,
         [utxo],
-        { delayMs: 2000, maxAttempts: 5 }
+        { delayMs: 2000, maxAttempts: 20 }
       );
       const sellUtxoInfos: SellUtxoInfo[] = [{
         ...utxoData,
@@ -117,12 +117,13 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
         network,
       );
       const psbt = sat20SellOrder?.data?.psbt;
+      const signedPsbts = await btcWallet?.signPsbt(psbt, { chain: 'sat20' });
       console.log('Successfully fetched UTXO info:', psbt);
       const orders = [{
         assets_name: assetInfo.assetName,
-        raw: psbt,
+        raw: signedPsbts,
       }];
-
+      
       const res = await marketApi.submitBatchOrders({
         address,
         orders: orders,
