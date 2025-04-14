@@ -119,7 +119,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
       );
       const psbt = sat20SellOrder?.data?.psbt;
       const signedPsbts = await btcWallet?.signPsbt(psbt, { chain: 'sat20' });
-      console.log('Successfully fetched UTXO info:', psbt);
+      console.log('Successfully fetched UTXO info:', signedPsbts);
       const orders = [{
         assets_name: assetInfo.assetName,
         raw: signedPsbts,

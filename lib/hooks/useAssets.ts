@@ -4,7 +4,7 @@ import { parallel } from 'radash';
 import { useAssetStore } from '@/store';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useState, useCallback } from 'react';
-import type { AssetItem, UtxoItem } from '@/store/asset';
+import type { AssetItem, AssetUtxoItem } from '@/store/asset';
 
 /**
  * 刷新选项接口
@@ -23,7 +23,7 @@ const processAssetUtxo = async (
   key: string,
   start = 0,
   limit = 100,
-): Promise<UtxoItem[]> => {
+): Promise<AssetUtxoItem[]> => {
   const result = await clientApi.getOrdxAddressHolders(address, key, start, limit);
   return result?.data || [];
 };
@@ -34,7 +34,7 @@ const processAssetUtxo = async (
 const processAllUtxos = async (
   address: string,
   tickers: string[],
-): Promise<UtxoItem[][]> => {
+): Promise<AssetUtxoItem[][]> => {
   if (!tickers.length) return [];
   return await parallel(3, tickers, (ticker) =>
     processAssetUtxo(address, ticker, 0, 100)

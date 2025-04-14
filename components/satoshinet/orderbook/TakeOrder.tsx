@@ -121,6 +121,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         const networkFee = 10
         for (let i = 0; i < utxoList.length; i++) {
           const { utxo } = utxoList[i];
+          console.log('utxo', utxo);
           const [error2, utxoInfo] = await tryit(clientApi.getUtxoInfo)(utxo);
           if (error2) {
             throw error2;
