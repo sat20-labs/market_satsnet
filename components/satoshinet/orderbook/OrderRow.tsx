@@ -13,9 +13,13 @@ const OrderRow = ({ order, selected, onClick }: { order: any; selected: boolean;
             </div>
             
             <div className="flex-1 justify-items-end">{order.price.toFixed(2)} <span className="text-zinc-400">sats</span></div>
-            <div className="flex-1 justify-items-end">
-                {order.totalBTC}<span className="text-zinc-400"> BTC</span>
-                <span className="text-zinc-400 text-xs"> ${order.totalUSD.toFixed(2)}</span>
+            <div className="flex-1 text-left text-zinc-200">
+                <div>
+                    {order.totalBTC}<span className="text-zinc-400"> BTC</span>
+                </div>
+                <div className="text-zinc-400 text-xs">
+                    ${order.totalUSD.toFixed(2)}
+                </div>
             </div>
         </div>
 
