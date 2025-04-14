@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { OrdxCategoryTab } from './OrdxCategoryTab';
 import { NewAssetsList } from './NewAssetsList';
 
 export const OrdxAssetsUtxoList = () => {
@@ -39,7 +38,6 @@ export const OrdxAssetsUtxoList = () => {
   return (
     <div className="py-4 rounded-lg">
       <div className="mb-4">
-        <OrdxCategoryTab onChange={onCategoryChange} />
       </div>
       {assertType !== 'rune' && (
         // <div>
