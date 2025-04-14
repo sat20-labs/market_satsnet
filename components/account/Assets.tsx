@@ -7,10 +7,12 @@ import { AssetsList } from './AssetsList';
 import { useAssetStore } from '@/store/asset';
 
 export const Assets = () => {
-  const [protocol, setProtocol] = useState<string>('');   
+  const [protocol, setProtocol] = useState<string>('ordx');   
   const { assets } = useAssetStore();
   const router = useRouter();
   const onProtocolChange = (t: string) => {
+    console.log('t', t);
+    
     if (t !== protocol) {
       setProtocol(t);
     }
@@ -26,7 +28,7 @@ export const Assets = () => {
       <div className="mb-4">
         <OrdxProtocolTab onChange={onProtocolChange} />
       </div>
-      {!!protocol && (
+      {!!protocol && currentAssets?.length&& (
         <AssetsList
           onListClick={onListClick}
           assets={currentAssets}

@@ -29,7 +29,7 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
       },
     ];
   }, [assets]);
-
+  
   const [selected, setSelected] = useState(list[0].key);
 
   useEffect(() => {
