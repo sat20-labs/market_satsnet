@@ -14,8 +14,7 @@ import {
 } from '@sat20/btc-connect/dist/react';
 import { Icon } from '@iconify/react';
 import { useTheme } from 'next-themes';
-import { hideStr, satsToBitcoin, formatBtcAmount } from '@/lib/utils';
-import { message } from '@/lib/wallet-sdk';
+import { hideStr, satsToBitcoin, formatBtcAmount } from '@/utils';
 import { notification } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore, useAssetStore } from '@/store';
@@ -149,21 +148,21 @@ const WalletConnectButton = () => {
       console.log('checkSignature', signature);
 
       try {
-        const bol = message.verifyMessageOfECDSA(
-          publicKey,
-          process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
-          signature,
-        );
-        console.log('publicKey', publicKey);
-        console.log('bol', bol);
+        // const bol = message.verifyMessageOfECDSA(
+        //   publicKey,
+        //   process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
+        //   signature,
+        // );
+        // console.log('publicKey', publicKey);
+        // console.log('bol', bol);
 
-        if (!bol) {
-          notification.warning({
-            message: 'Signature Verification Failed',
-            description: 'Please check your signature and try connect again',
-          });
-          handlerDisconnect();
-        }
+        // if (!bol) {
+        //   notification.warning({
+        //     message: 'Signature Verification Failed',
+        //     description: 'Please check your signature and try connect again',
+        //   });
+        //   handlerDisconnect();
+        // }
       } catch (error) {
         console.log('checkSignature', error);
         notification.warning({

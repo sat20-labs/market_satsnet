@@ -6,7 +6,6 @@ import { Tabs, Tab } from '@nextui-org/react';
 import { useQuery } from '@tanstack/react-query';
 import { Assets } from '@/components/account/Assets';
 import { OrdxOrderHistoryList } from '@/components/order/OrdxOrderHistoryList';
-import { OrdxOrderList } from '@/components/account/OrdxOrderList';
 import { useSearchParams } from 'next/navigation';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useTranslation } from 'react-i18next';
@@ -71,7 +70,7 @@ export default function AccountPage() {
           <OrdxOrderHistoryList address={address} />
         </Tab>
         <Tab key="order" title={t('common.my_listings')}>
-          <OrdxOrderList address={address} />
+          {/* <OrdxOrderList address={address} /> */}
         </Tab>
         <Tab key="bill" title={t('common.my_biils')}>
           <OrdxBillList />

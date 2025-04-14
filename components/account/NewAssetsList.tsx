@@ -3,18 +3,12 @@
 import useSWR from 'swr';
 import { useMemo, useState } from 'react';
 import { Button } from '@nextui-org/react';
-import { getAddressAssetsList, splitUtxo, submitSellOrder } from '@/api'; // 引入拆分和挂单的 API
+import { getAddressAssetsList } from '@/api'; // 引入拆分和挂单的 API
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 import { useCommonStore } from '@/store';
 import SellOrderModal from './SellOrderModal'; // 引入挂单弹窗组件
-import {
-  satsToBitcoin,
-  splitBatchSignedPsbt,
-  buildBatchSellOrder,
-  hideStr,
-  btcToSats,
-} from '@/lib/utils';
+
 
 interface NewAssetListProps {
   assets_type: string; // 资产类型
@@ -59,57 +53,57 @@ export const NewAssetsList = ({ assets_type }: NewAssetListProps) => {
         return;
       }
 
-      if (item.balance > quantity) {
-        console.log('Splitting UTXO...');
-        const splitResponse = await splitUtxo({
-          utxo: item.utxo,
-          quantity,
-          address,
-          chain,
-          network,
-        });
+      // if (item.balance > quantity) {
+      //   console.log('Splitting UTXO...');
+      //   const splitResponse = await splitUtxo({
+      //     utxo: item.utxo,
+      //     quantity,
+      //     address,
+      //     chain,
+      //     network,
+      //   });
 
-        if (!splitResponse.success) {
-          console.error('Failed to split UTXO:', splitResponse.message);
-          return;
-        }
+      //   if (!splitResponse.success) {
+      //     console.error('Failed to split UTXO:', splitResponse.message);
+      //     return;
+      //   }
 
-        // 用户签名拆分交易
-        const signedSplitTx = await btcWallet?.signPsbt(splitResponse.psbt, { chain });
-        if (!signedSplitTx) {
-          console.error('Failed to sign split transaction');
-          return;
-        }
+      //   // 用户签名拆分交易
+      //   const signedSplitTx = await btcWallet?.signPsbt(splitResponse.psbt, { chain });
+      //   if (!signedSplitTx) {
+      //     console.error('Failed to sign split transaction');
+      //     return;
+      //   }
 
-        console.log('Split transaction signed:', signedSplitTx);
-      }
+      //   console.log('Split transaction signed:', signedSplitTx);
+      // }
 
       // 提交挂单
       console.log('Submitting sell order...');
-      const sellResponse = await submitSellOrder({
-        utxo: item.utxo,
-        unit_price: price.toString(),
-        address,
-        chain,
-        network,
-      });
+      // const sellResponse = await submitSellOrder({
+      //   utxo: item.utxo,
+      //   unit_price: price.toString(),
+      //   address,
+      //   chain,
+      //   network,
+      // });
 
-      if (!sellResponse.success) {
-        console.error('Failed to submit sell order:', sellResponse.message);
-        return;
-      }
+      // if (!sellResponse.success) {
+      //   console.error('Failed to submit sell order:', sellResponse.message);
+      //   return;
+      // }
 
-      // 用户签名挂单交易
-      const signedSellTx = await btcWallet?.signPsbt(sellResponse.psbt, { chain });
-      if (!signedSellTx) {
-        console.error('Failed to sign sell transaction');
-        return;
-      }
+      // // 用户签名挂单交易
+      // const signedSellTx = await btcWallet?.signPsbt(sellResponse.psbt, { chain });
+      // if (!signedSellTx) {
+      //   console.error('Failed to sign sell transaction');
+      //   return;
+      // }
 
-      console.log('Sell transaction signed:', signedSellTx);
+      // console.log('Sell transaction signed:', signedSellTx);
 
-      // 刷新列表
-      mutate();
+      // // 刷新列表
+      // mutate();
     } catch (error) {
       console.error('Error during sell process:', error);
     }

@@ -51,7 +51,7 @@ export const NetworkSelect = () => {
         className="flex items-center px-4 py-2 bg-[#181819] text-gray-300 text-sm sm:text-base rounded-xl"
         onClick={handleClick}
       >
-        {network === ('mainNet' as Network) ? 'mainNet' : 'TestNet'}
+        {network === ('mainnet' as Network) ? 'mainnet' : 'TestNet'}
         <span className="ml-2">
           {isOpen ? (
             <Icon icon="mdi-light:chevron-up" className="text-gray-400 text-lg" />
@@ -73,7 +73,7 @@ export const NetworkSelect = () => {
               className="px-2 py-2 hover:bg-gray-700/50 text-gray-400 text-sm sm:text-base cursor-pointer rounded-t-xl"
               onClick={() => handleSelectionChange('mainnet')}
             >
-              mainNet
+              mainnet
             </li>
             <li
               className="px-2 py-2 hover:bg-gray-700/50 text-gray-400 text-sm sm:text-base cursor-pointer rounded-b-xl"

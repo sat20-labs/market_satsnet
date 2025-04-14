@@ -1,12 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AssetsTypeList } from '@/components/account/AssetsTypeList';
 import { OrdxCategoryTab } from './OrdxCategoryTab';
 import { NewAssetsList } from './NewAssetsList';
-import { RuneAssets } from './RuneAssets';
-import { NameCategoryList } from './NameCategoryList';
-// import { OrdxUtxoList } from './OrdxUtxoList';
 
 export const OrdxAssetsUtxoList = () => {
   const [assertType, setAssertType] = useState<string>('ticker');
@@ -53,13 +49,6 @@ export const OrdxAssetsUtxoList = () => {
           <NewAssetsList  assets_type={assertType} />
         </div>
       )}
-      {assertType === 'ns' && (
-        <NameCategoryList
-          name={assertCategory}
-          onChange={onAssertCategoryChange}
-        />
-      )}
-      {assertType === 'rune' && <RuneAssets />}
 
       {/* {!!assertType && !!assertName && (
         <AssetsList

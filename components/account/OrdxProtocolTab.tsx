@@ -1,7 +1,6 @@
 import { Card, CardHeader, CardBody, Divider } from '@nextui-org/react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-import { satsToBitcoin } from '@/lib';
 import { Icon } from '@iconify/react';
 import { useCommonStore } from '@/store';
 import { BtcPrice } from '@/components/BtcPrice';
