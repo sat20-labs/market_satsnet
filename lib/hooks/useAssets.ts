@@ -1,241 +1,221 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { clientApi } from '@/api';
 import { parallel } from 'radash';
-import { useAssetStore, useCommonStore } from '@/store';
+import { useAssetStore } from '@/store';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import type { AssetItem, UtxoItem } from '@/store/asset';
 
-interface UtxoItem {
-  Outpoint: string;
-  Value: number;
-  Assets: {
-    Name: {
-      Protocol: string;
-      Type: string;
-      Ticker: string;
-    };
-    Amount: string;
-    BindingSat: number;
-    Offsets: {
-      Start: number;
-      End: number;
-    }[];
-  }[];
-}
-
-interface AssetItem {
-  id: string;
-  key: string;
-  protocol: string;
-  type: string;
-  label: string;
-  ticker: string;
-  utxos: UtxoItem[];
-  amount: number;
-}
-
-// 定义刷新选项接口
-interface RefreshOptions {
+/**
+ * 刷新选项接口
+ */
+export interface RefreshOptions {
   resetState?: boolean;
-  refreshNs?: boolean;
   refreshSummary?: boolean;
-  refreshUtxos?: boolean;
   clearCache?: boolean;
 }
 
+/**
+ * 处理单个资产的UTXO数据
+ */
+const processAssetUtxo = async (
+  address: string,
+  key: string,
+  start = 0,
+  limit = 100,
+): Promise<UtxoItem[]> => {
+  const result = await clientApi.getOrdxAddressHolders(address, key, start, limit);
+  return result?.data || [];
+};
+
+/**
+ * 并行处理多个资产的UTXO数据
+ */
+const processAllUtxos = async (
+  address: string,
+  tickers: string[],
+): Promise<UtxoItem[][]> => {
+  if (!tickers.length) return [];
+  return await parallel(3, tickers, (ticker) =>
+    processAssetUtxo(address, ticker, 0, 100)
+  );
+};
+
+/**
+ * 资产钩子 - 用于获取和管理用户的资产数据
+ */
 export const useAssets = () => {
-  const assetsStore = useAssetStore();
-  const { chain } = useCommonStore();
+  const {
+    rawAssetList,
+    setRawAssetList,
+    updateAssetsByProtocol,
+    setPlainUtxos,
+    setAvailableAssetTypes,
+  } = useAssetStore();
+  
   const { address, network } = useReactWalletStore();
   const queryClient = useQueryClient();
 
-  // 将 ref 转换为 useState
-  const [allAssetList, setAllAssetList] = useState<AssetItem[]>([]);
+  // 错误状态
+  const [error, setError] = useState<Error | null>(null);
 
-  // 将 computed 转换为 useMemo
-
-  const nsQuery = useQuery({
-    queryKey: ['ns', chain, address, network],
-    queryFn: () =>
-      clientApi.getNsListByAddress(address),
-    enabled: !!address && !!network,
-  });
-
+  // 资产摘要查询
   const summaryQuery = useQuery({
-    queryKey: ['summary', chain, address, network],
-    queryFn: () =>
-      clientApi.getAddressSummary(address),
-    enabled: !!address && !!network,
-  });
-
-  // Asset Processing Functions
-  const processAssetUtxo = async (key: string, start = 0, limit = 100) => {
-    const result = await clientApi.getOrdxAddressHolders(address, key, start, limit);
-
-    if (result?.data?.length) {
-      setAllAssetList(prevList => {
-        const newList = [...prevList];
-        console.log('result.data', result.data);
-        const findItemIndex = newList.findIndex((a) => a.key === key);
-        if (findItemIndex > 0 && result.data) {
-          newList[findItemIndex] = {
-            ...newList[findItemIndex],
-            utxos: result.data
-          };
-        }
-        return newList;
-      });
-    }
-  };
-
-  const processAllUtxos = async (tickers: string[]) => {
-    if (!tickers.length) return;
-    await parallel(3, tickers, (ticker) => processAssetUtxo(ticker));
-  };
-
-  const parseAssetSummary = async () => {
-    console.log('summaryQuery.data', summaryQuery.data);
-
-    const assets = summaryQuery.data?.data || [];
-    const newAssetList: AssetItem[] = [];
-    
-    assets.forEach((item: any) => {
-      const key = item.Name.Protocol
-        ? `${item.Name.Protocol}:${item.Name.Type}:${item.Name.Ticker}`
-        : '::';
-
-      if (!allAssetList.find((v) => v?.key === key)) {
-        newAssetList.push({
-          id: key,
-          key,
-          protocol: item.Name.Protocol,
-          type: item.Name.Type,
-          label:
-            item.Name.Type === 'e'
-              ? `${item.Name.Ticker}（raresats）`
-              : item.Name.Ticker,
-          ticker: item.Name.Ticker,
-          utxos: [],
-          amount: item.Amount,
-        });
+    queryKey: ['summary', address, network],
+    queryFn: async () => {
+      try {
+        return await clientApi.getAddressSummary(address);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch summary data'));
+        throw err;
       }
-    });
-
-    if (newAssetList.length > 0) {
-      setAllAssetList(prev => [...prev, ...newAssetList]);
-    }
-  };
-
-  // Store Updates
-  const updateStoreAssets = (list: AssetItem[]) => {
-    assetsStore.setSat20List(list.filter((item) => item?.protocol === 'ordx'));
-    assetsStore.setRunesList(list.filter((item) => item?.protocol === 'runes'));
-    assetsStore.setBrc20List(list.filter((item) => item?.protocol === 'brc20'));
-    assetsStore.setOrdList(list.filter((item) => item?.protocol === 'ord'));
-
-    const plain = list.filter((item) => item?.protocol === '');
-    assetsStore.setPlainList(plain);
-    assetsStore.setPlainUtxos(plain?.[0]?.utxos || []);
-
-    const uniqueTypes = [
-      ...(plain?.length ? [{ label: 'Btc', value: 'btc' }] : []),
-      ...(list.some((item) => item?.protocol === 'ordx')
-        ? [{ label: 'SAT20', value: 'ordx' }]
-        : []),
-      ...(list.some((item) => item?.protocol === 'runes')
-        ? [{ label: 'Runes', value: 'runes' }]
-        : []),
-    ];
-    assetsStore.setUniqueAssetList(uniqueTypes);
-  };
-
-  // 将 watch 转换为 useEffect
-  useEffect(() => {
-    if (summaryQuery.data) {
-      console.log('newData', summaryQuery.data.data);
-      parseAssetSummary();
-      console.log('allAssetList', allAssetList);
-      processAllUtxos(allAssetList.map((item) => item.key));
-      assetsStore.setAssetList(summaryQuery.data?.data || []);
-    }
-  }, [summaryQuery.data]);
-
-  useEffect(() => {
-    updateStoreAssets(allAssetList);
-  }, [allAssetList]);
-
-  useEffect(() => {
-    if (address && network && chain) {
-      summaryQuery.refetch();
-      nsQuery.refetch();
-    }
-  }, [address, network, chain]);
+    },
+    enabled: false,
+  });
 
   /**
-   * 刷新所有资产数据
-   * @param {RefreshOptions} options - 刷新选项
+   * 解析资产摘要数据并更新状态
    */
-  const refreshL1Assets = async (options: RefreshOptions = {}) => {
+  const parseAssetSummary = useCallback(async () => {
+    if (!summaryQuery.data) return;
+
+    try {
+      const assets = summaryQuery.data?.data || [];
+      const newAssetList: AssetItem[] = [];
+      console.log('assets', assets);
+      
+      assets.forEach((item: any) => {
+        const key = item.Name.Protocol
+          ? `${item.Name.Protocol}:${item.Name.Type}:${item.Name.Ticker}`
+          : '::';
+
+        if (!rawAssetList.find((v) => v?.key === key)) {
+          newAssetList.push({
+            id: key,
+            key,
+            protocol: item.Name.Protocol,
+            type: item.Name.Type,
+            label: item.Name.Type === 'e'
+              ? `${item.Name.Ticker}（raresats）`
+              : item.Name.Ticker,
+            ticker: item.Name.Ticker,
+            utxos: [],
+            amount: item.Amount,
+          });
+        }
+      });
+
+      if (newAssetList.length > 0) {
+        setRawAssetList([...rawAssetList, ...newAssetList]);
+      }
+
+      // 更新各类资产列表
+      const protocols = ['ordx', 'runes', 'brc20', 'ord', ''];
+      protocols.forEach(protocol => {
+        const filteredAssets = newAssetList.filter(item => item.protocol === protocol);
+        if (filteredAssets.length > 0) {
+          const protocolKey = protocol || 'plain';
+          updateAssetsByProtocol(protocolKey, filteredAssets);
+        }
+      });
+
+      // 更新可用资产类型
+      const uniqueTypes = [
+        ...(newAssetList.some(item => !item.protocol) ? [{ label: 'BTC', value: 'btc' }] : []),
+        ...(newAssetList.some(item => item.protocol === 'ordx') ? [{ label: 'SAT20', value: 'ordx' }] : []),
+        ...(newAssetList.some(item => item.protocol === 'runes') ? [{ label: 'Runes', value: 'runes' }] : []),
+      ];
+      setAvailableAssetTypes(uniqueTypes);
+
+      return newAssetList;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to parse asset summary'));
+      throw err;
+    }
+  }, [summaryQuery.data, rawAssetList, setRawAssetList, updateAssetsByProtocol, setAvailableAssetTypes]);
+
+  /**
+   * 加载资产摘要数据
+   */
+  const loadSummaryData = useCallback(async () => {
+    try {
+      const result = await summaryQuery.refetch();
+      if (result.data) {
+        await parseAssetSummary();
+        return result.data;
+      }
+      return null;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to load summary data'));
+      return null;
+    }
+  }, [summaryQuery, parseAssetSummary]);
+
+  /**
+   * 加载资产的UTXO数据
+   */
+  const loadUtxoData = useCallback(async (assetKeys?: string[]) => {
+    try {
+      const keys = assetKeys || rawAssetList.map(item => item.key);
+      const utxos = await processAllUtxos(address, keys);
+      
+      // 更新 UTXO 数据
+      const plainAssets = rawAssetList.filter(item => !item.protocol);
+      if (plainAssets.length > 0) {
+        setPlainUtxos(plainAssets[0]?.utxos || []);
+      }
+      
+      return utxos;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to load UTXO data'));
+      return [];
+    }
+  }, [address, rawAssetList, setPlainUtxos]);
+
+  /**
+   * 刷新资产数据
+   */
+  const refreshAssets = useCallback(async (options: RefreshOptions = {}) => {
     const {
       resetState = true,
-      refreshNs = true,
       refreshSummary = true,
-      refreshUtxos = true,
       clearCache = true,
     } = options;
 
-    // 清除缓存
-    if (clearCache) {
-      if (refreshNs) {
+    try {
+      if (clearCache && refreshSummary) {
         queryClient.invalidateQueries({
-          queryKey: ['ns', chain, address, network],
+          queryKey: ['summary', address, network],
         });
       }
+
+      if (resetState) {
+        setRawAssetList([]);
+      }
+
       if (refreshSummary) {
-        queryClient.invalidateQueries({
-          queryKey: ['summary', chain, address, network],
-        });
+        await loadSummaryData();
       }
+
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to refresh assets'));
+      return false;
     }
-
-    // 重置状态
-    if (resetState) {
-      setAllAssetList([]);
-    }
-
-    // 创建一个 Promise 数组来收集所有需要等待的请求
-    const refreshPromises: Promise<any>[] = [];
-
-    // 刷新命名空间数据
-    if (refreshNs) {
-      refreshPromises.push(nsQuery.refetch());
-    }
-
-    // 刷新摘要数据
-    if (refreshSummary) {
-      const summaryPromise = summaryQuery.refetch();
-      refreshPromises.push(summaryPromise);
-
-      // 如果需要刷新 UTXO，等待摘要数据加载完成后处理
-      if (refreshUtxos) {
-        summaryPromise.then(async (result) => {
-          if (result.data) {
-            await parseAssetSummary();
-            await processAllUtxos(allAssetList.map((item) => item.key));
-          }
-        });
-      }
-    }
-
-    // 等待所有刷新操作完成
-    await Promise.all(refreshPromises);
-  };
+  }, [address, network, queryClient, loadSummaryData, setRawAssetList]);
 
   return {
-    loading: useMemo(
-      () => summaryQuery.isLoading || nsQuery.isLoading,
-      [summaryQuery.isLoading, nsQuery.isLoading]
-    ),
-    refreshL1Assets,
+    // 状态
+    loading: summaryQuery.isLoading,
+    error,
+    isSummaryLoading: summaryQuery.isLoading,
+    summaryData: summaryQuery.data,
+    assetList: rawAssetList,
+
+    // 方法
+    loadSummaryData,
+    loadUtxoData,
+    refreshAssets,
+    clearError: () => setError(null),
   };
 };

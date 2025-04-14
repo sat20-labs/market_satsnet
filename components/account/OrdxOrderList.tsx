@@ -1,6 +1,6 @@
 'use client';
 
-import useSWR from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Empty, notification } from 'antd';
 import { getOrders, cancelOrder } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
@@ -19,11 +19,7 @@ interface OrdxOrderListProps {
 }
 
 export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
-  const { t } = useTranslation();
-  const { address: storeAddress, network } = useReactWalletStore(
-    (state) => state,
-  );
-  const { chain } = useCommonStore();
+  const { chain, network } = useCommonStore();
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(12);
 
@@ -120,19 +116,27 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
       });
       return;
     }
-    const res = await cancelOrder({ address, order_id: item.order_id });
-    if (res.code === 200) {
-      notification.success({
-        message: 'Cancel order successfully',
-        description: `The order has been canceled successfully`,
-      });
-      const index = list.findIndex((i) => i.utxo === item.utxo);
-      removeAt(index);
-    } else {
-      notification.error({
-        message: 'Cancel order failed',
-        description: res.msg,
-      });
+    try {
+      const res = await cancelOrder({ address, order_id: item.order_id });
+      if (res.code === 200) {
+        notification.success({
+          message: 'Cancel order successfully',
+          description: `The order has been canceled successfully`,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['ordxOrders', address, chain, network],
+        });
+      } else {
+        notification.error({
+          message: 'Cancel order failed',
+          description: res.msg,
+        });
+      }
+    } catch (error) {
+        notification.error({
+            message: 'Cancel order failed',
+            description: error instanceof Error ? error.message : 'Unknown error',
+        });
     }
   };
 

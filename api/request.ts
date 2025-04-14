@@ -9,19 +9,19 @@ export const request = async (
     timeout: 10000,
   },
 ) => {
-  const { publicKey, connected, network, disconnect } =
+  const { publicKey, connected, disconnect } =
     useReactWalletStore.getState();
   const { signature, reset, setSignature } = useCommonStore.getState();
   const { headers = {}, method = 'GET', data, formData } = options;
-  const { chain } = useCommonStore.getState();
+  const { chain, network } = useCommonStore.getState();
   let baseUrl = ''; 
   console.log('request chain/network:', chain, network);
   if (chain === 'Bitcoin') {
     baseUrl = process.env.NEXT_PUBLIC_HOST as string;
-    baseUrl += network === 'testnet' ? '/testnet' : '';
+    baseUrl += network === 'Testnet' ? '/testnet' : '';
   } else if (chain === 'SatoshiNet') {
     baseUrl = process.env.NEXT_PUBLIC_SATESTNET_HOST as string;
-    baseUrl += network === 'testnet' ? '/satstestnet' : '/satsnet';
+    baseUrl += network === 'Testnet' ? '/satstestnet' : '/satsnet';
   }
   let url = `${baseUrl}${path}`;
   if (location.hostname.indexOf('test') > -1) {

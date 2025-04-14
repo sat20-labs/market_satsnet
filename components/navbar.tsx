@@ -13,92 +13,38 @@ import {
   NavbarMenuItem,
   Divider,
 } from '@nextui-org/react';
-import dynamic from 'next/dynamic';
 import { LanguageSelect } from '@/components/LanguageSelect';
 import NextLink from 'next/link';
 import { UpdateVersionModal } from './UpdateVersionModal';
 import { FeerateSelectButton } from '@/components/fee/FeerateSelectButton';
-import { SearchIcon } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import useSWR from 'swr';
-import useSWRMutation from 'swr/mutation';
-import { getUtxoByValue, ordxSWR, getBTCPrice } from '@/api';
-import { useCommonStore, useUtxoStore } from '@/store';
+import { useQuery } from '@tanstack/react-query';
+import { clientApi, marketApi } from '@/api';
+import { useCommonStore } from '@/store';
 import { Icon } from '@iconify/react';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { ChainSelect } from '@/components/ChainSelect';
 import { NetworkSelect } from '@/components/NetworkSelect';
 import  WalletConnectButton  from '@/components/wallet/WalletConnectButton';
 
-// const WalletButton = dynamic(
-//   () => import('../components/wallet/WalletConnectButton') as any,
-//   { ssr: false },
-// );
 
 export const Navbar = () => {
   const { address, network } = useReactWalletStore();
   const { setHeight, setBtcPrice, runtimeEnv, setEnv, chain } = useCommonStore();
-  const { setList } = useUtxoStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t, i18n } = useTranslation();
   const pathname = usePathname();
-  const { data: heightData } = ordxSWR.useBtcHeight(network as any);
-  const { data, trigger: getUtxos } = useSWRMutation(
-    `getUtxoByValue-${address}-${chain}-${network}`,
-    () => getUtxoByValue({ address, network, value: 500 }),
-  );
-  const { data: btcData } = useSWR(`getBTCPrice`, () => getBTCPrice());
-
-  useEffect(() => {
-    if (data?.data?.length) {
-      const list = data.data?.map((item: any) => ({
-        status: 'unspend',
-        location: 'remote',
-        utxo: `${item.txid}:${item.vout}`,
-        ...item,
-      }));
-      setList(list);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    const height = heightData?.data?.height;
-    if (height) {
-      setHeight(height);
-    }
-  }, [heightData]);
+  const { data: btcData } = useQuery({
+    queryKey: ['btcPrice'],
+    queryFn: marketApi.getBTCPrice,
+  });
   useEffect(() => {
     if (btcData?.data?.amount) {
       setBtcPrice(btcData?.data?.amount);
     }
-  }, [btcData]);
-  useEffect(() => {
-    if (address && network) {
-      getUtxos();
-    }
-  }, [address, network]);
-  const searchInput = (
-    <Input
-      aria-label="Search"
-      classNames={{
-        inputWrapper: 'bg-default-100',
-        input: 'text-sm',
-      }}
-      endContent={
-        <Kbd className="hidden lg:inline-block" keys={['command']}>
-          K
-        </Kbd>
-      }
-      labelPlacement="outside"
-      placeholder="Search..."
-      startContent={
-        <SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
-      }
-      type="search"
-    />
-  );
+  }, [btcData, setBtcPrice]);
 
   const isActive = (href: string) => {
     return pathname === href;
@@ -176,9 +122,6 @@ export const Navbar = () => {
         <NavbarItem className="sm:hidden flex">
           <FeerateSelectButton />
         </NavbarItem>
-        {/* <NavbarItem className="sm:hidden flex">
-          <LanguageSelect />
-        </NavbarItem> */}
        
 
        <ul className="hidden lg:flex gap-4 justify-start ml-2">
@@ -232,8 +175,6 @@ export const Navbar = () => {
           <div className="flex flex-col gap-2">
             <NavbarMenuItem>
               <div className="flex items-center gap-2 sm:gap-4">
-                {/* <FeerateSelectButton /> */}
-                {/* <LanguageSelect />                 */}                
                 <NetworkSelect />
                 <ChainSelect />
                 <LanguageSelect /> 

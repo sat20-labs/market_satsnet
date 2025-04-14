@@ -13,14 +13,14 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-export const getLabelForAssets = (assets_name: string, assets_type: string) => {
-  const assetsMap = {
-    ns: {
-      un: 'Pure Name',
-    },
-  };
-  return assetsMap[assets_type]?.[assets_name] || assets_name;
+interface AssetsName {
+  Protocol: string;
+  Ticker: string;
+  Type: string;
+}
+export const getLabelForAssets = (assets_name: AssetsName) => {
+  const { Protocol, Ticker, Type } = assets_name;
+  return `${Protocol}:${Type}:${Ticker}`;
 };
 export const getTickLabel = (tick?: string, type?: string) => {
   if (tick === undefined) return undefined;
