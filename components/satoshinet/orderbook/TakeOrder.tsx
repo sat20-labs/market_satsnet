@@ -137,10 +137,6 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         );
         console.log('finalizeSellOrder res', res);
         
-        if (res.code !== 200) {
-          console.log('res', res);
-          return;
-        }
         const signedPsbt = await btcWallet?.signPsbt(res.psbt, { chain: 'sat20' });
         if (!signedPsbt) {
           throw new Error('signPsbt failed');
