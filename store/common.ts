@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 export type Chain = 'Bitcoin' | 'SatoshiNet';
-export type Network = 'Mainnet' | 'Testnet';
+export type Network = 'mainnet' | 'testnet';
 
 interface CommonState {
   feeRate: {
@@ -36,7 +36,7 @@ export const useCommonStore = create<CommonState>()(
           type: 'custom',
         },
         chain: 'SatoshiNet',
-        network: 'Testnet', // 默认值改为 MainNet
+        network: 'testnet', // 默认值改为 mainNet
         btcHeight: 0,
         runtimeEnv: 'dev',
         btcPrice: 0,

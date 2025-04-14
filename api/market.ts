@@ -7,7 +7,7 @@ interface RequestContext {
   publicKey?: string | null;
   signature?: string | null;
   chain: 'Bitcoin' | 'SatoshiNet'; // Use specific types if possible
-  network: 'Mainnet' | 'Testnet';
+  network: 'mainnet' | 'testnet';
   connected: boolean;
 }
 
@@ -24,10 +24,10 @@ const getBaseUrl = (chain: RequestContext['chain'], network: RequestContext['net
   console.log('request chain/network:', chain, network);
   if (chain === 'Bitcoin') {
     baseUrl = process.env.NEXT_PUBLIC_HOST as string;
-    baseUrl += network === 'Testnet' ? '/testnet' : '';
+    baseUrl += network === 'testnet' ? '/testnet' : '';
   } else if (chain === 'SatoshiNet') {
     baseUrl = process.env.NEXT_PUBLIC_SATESTNET_HOST as string;
-    baseUrl += network === 'Testnet' ? '/satsnet/testnet' : '/satsnet';
+    baseUrl += network === 'testnet' ? '/satsnet/testnet' : '/satsnet';
   }
 
   // Environment-specific adjustments (consider moving this logic elsewhere if complex)

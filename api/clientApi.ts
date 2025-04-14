@@ -128,7 +128,7 @@ class ClientApi {
     const store = useCommonStore.getState();
     const { network } = store;
     const url = `https://apiprd.ordx.market/${
-      network === 'MainNet' ? 'btc' : 'testnet/'
+      network === 'mainNet' ? 'btc' : 'testnet/'
     }ordx/GetRecommendedFees`;
     const response = await fetch(url);
     return response.json();

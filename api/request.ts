@@ -18,10 +18,10 @@ export const request = async (
   console.log('request chain/network:', chain, network);
   if (chain === 'Bitcoin') {
     baseUrl = process.env.NEXT_PUBLIC_HOST as string;
-    baseUrl += network === 'Testnet' ? '/testnet' : '';
+    baseUrl += network === 'testnet' ? '/testnet' : '';
   } else if (chain === 'SatoshiNet') {
     baseUrl = process.env.NEXT_PUBLIC_SATESTNET_HOST as string;
-    baseUrl += network === 'Testnet' ? '/satstestnet' : '/satsnet';
+    baseUrl += network === 'testnet' ? '/satstestnet' : '/satsnet';
   }
   let url = `${baseUrl}${path}`;
   if (location.hostname.indexOf('test') > -1) {

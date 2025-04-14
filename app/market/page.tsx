@@ -292,7 +292,7 @@ export default function Market() {
                         <div className="flex items-center text-sm md:text-base">
                           {logo ? (
                             <Image
-                              src={`${process.env.NEXT_PUBLIC_HOST}${network === 'Testnet' ? '/testnet' : ''}${logo}`}
+                              src={`${process.env.NEXT_PUBLIC_HOST}${network === 'testnet' ? '/testnet' : ''}${logo}`}
                               alt="logo"
                               className="w-9 h-9 min-w-[2.25rem] p-0"
                             />
