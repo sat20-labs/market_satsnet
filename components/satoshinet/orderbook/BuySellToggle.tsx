@@ -4,15 +4,18 @@ const BuySellToggle = ({
   mode,
   onChange,
   disableSell = false, // 新增参数，用于禁用 Sell 按钮
+  disableBuy = false, // 新增参数，用于禁用 Buy 按钮
 }: {
   mode: "buy" | "sell";
   onChange: (val: "buy" | "sell") => void;
   disableSell?: boolean;
+  disableBuy?: boolean;
 }) => {
+  console.log('disableBuy', disableBuy);
   return (
     <div className="inline-flex my-6 rounded-lg overflow-hidden border border-gray-600 w-full">
       <button
-        onClick={() => onChange("buy")}
+        onClick={() => !disableBuy && onChange("buy")} // 禁用时不触发 onChange
         className={`w-full px-4 py-2 text-sm font-medium ${
           mode === "buy" ? "bg-zinc-600 text-white" : "bg-zinc-800 text-zinc-400"
         }`}

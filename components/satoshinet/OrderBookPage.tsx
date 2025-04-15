@@ -79,11 +79,9 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
       {activeTab === "takeOrder" ? (
         <BuySellToggle mode={mode} onChange={setMode} disableSell={true} />
       ) : (
-        <BuySellToggle mode={mode} onChange={setMode} disableSell={false} />)
+        <BuySellToggle mode={'sell'} onChange={setMode} disableBuy={true} />)
 
       }
-
-      {/* Conditional Rendering for TakeOrder and MakeOrder */}
       {activeTab === "takeOrder" ? (
         <TakeOrder mode={mode} setMode={setMode} assetInfo={{
           assetLogo: assetData.assetLogo,
