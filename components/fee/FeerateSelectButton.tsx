@@ -58,13 +58,30 @@ export const FeerateSelectButton = () => {
     }
   }, [feeRateData, setFeeRate]);
 
+   // 如果 chain 是 SatoshiNet，直接显示固定费用
+   if (chain === 'SatoshiNet') {
+    return (
+      <div>
+        <Button
+          variant="ghost"
+          className="bg-transparent sm:px-2 px-[6px] sm:gap-2 gap-[1px] text-xs sm:text-base text-white border border-zinc-500"
+          isDisabled
+        >
+          <Icon icon="mdi:gas-station" className="text-xl0" />
+          10 sat
+          <span className="hidden sm:inline dark:text-gray-100 text-slate-600">/Tx</span>
+        </Button>
+      </div>
+    );
+  } 
+
   return (
     <div>
       <Button
         variant="ghost"
         isLoading={isLoading}
         className="bg-transparent sm:px-2 px-[6px] sm:gap-2 gap-[1px] text-xs sm:text-base text-zinc-300 border border-zinc-700"
-        onClick={() => onOpen()}
+        onPress={() => onOpen()}
       >
         <Icon icon="mdi:gas-station" className="text-xl0" />
         {feeRate.value}{' sat'}

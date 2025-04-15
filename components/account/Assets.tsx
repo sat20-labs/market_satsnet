@@ -5,6 +5,7 @@ import { OrdxProtocolTab } from './OrdxProtocolTab';
 import { useRouter } from 'next/navigation';
 import { AssetsList } from './AssetsList';
 import { useAssetStore } from '@/store/asset';
+import { NewAssetsList } from './NewAssetsList';
 
 export const Assets = () => {
   const [protocol, setProtocol] = useState<string>('ordx');   
@@ -33,6 +34,10 @@ export const Assets = () => {
           onListClick={onListClick}
           assets={currentAssets}
         />
+        // <NewAssetsList
+        //   assets={currentAssets}
+        //   // onListClick={onListClick}
+        // />
       )}
     </div>
   );
