@@ -1,10 +1,8 @@
-import { Card, CardHeader, CardBody, Divider } from '@nextui-org/react';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { Icon } from '@iconify/react';
-import { useCommonStore } from '@/store';
-import { BtcPrice } from '@/components/BtcPrice';
 import { useAssetStore } from '@/store/asset';
+import { cn } from '@/lib/utils';
 
 interface IOrdxProtocolTabProps {
   onChange?: (key: string) => void;
@@ -43,23 +41,23 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
     <div className="grid grid-cols-2 max-w-4xl md:grid-cols-4 gap-2 md:gap-4">
       {list.map((item) => (
         <Card
-          isHoverable
-          isPressable
-          className={`px-2 w-full h-[90px] max-w-full ${selected === item.key
-            ? 'bg-zinc-900/60 border border-purple-600/80'
-            : 'bg-transparent border border-zinc-800'
-            }`}
           key={item.key}
-          onPress={() => {
+          className={cn(
+            'w-full h-[90px] max-w-full cursor-pointer hover:bg-zinc-800/80',
+            selected === item.key
+              ? 'bg-zinc-900/60 border border-purple-600/80'
+              : 'bg-transparent border border-zinc-800'
+          )}
+          onClick={() => {
             item.key !== 'nft' && setSelected(item.key);
           }}
         >
-          <CardHeader className='px-3 pt-2 pb-0'>
+          <CardHeader className='p-3 pb-0'>
             <span className="text-sm sm:text-sm font-mono text-gray-400">
               {item.label}
             </span>
           </CardHeader>
-          <CardBody className="text-left py-1 leading-8">
+          <CardContent className="p-3 pt-1 leading-8">
             <div className="flex items-center text-base sm:text-md">
               <Icon icon="cryptocurrency-color:btc" className="mr-1" />
               <span className='font-extrabold text-zinc-200'>{item.value}</span>
@@ -70,7 +68,7 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
                 {/* <BtcPrice btc={item.value} /> */}
               </span>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       ))}
     </div>

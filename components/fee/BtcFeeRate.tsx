@@ -1,12 +1,19 @@
-import { Input, Slider } from '@nextui-org/react';
-import { useState, useMemo, useEffect, use } from 'react';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
+import { useState, useMemo, useEffect } from 'react';
 import { BtcFeeRateItem } from './BtcFeeRateItem';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useTranslation } from 'react-i18next';
 
 interface BtcFeeRate {
-  onChange?: ({ value, type }: any) => void;
-  feeRateData?: any;
+  onChange?: ({ value, type }: { value: number; type: string }) => void;
+  feeRateData?: {
+    fastestFee?: number;
+    halfHourFee?: number;
+    hourFee?: number;
+    economyFee?: number;
+    minimumFee?: number;
+  };
   value?: number;
   feeType?: string;
 }
@@ -42,31 +49,13 @@ export const BtcFeeRate = ({
       value,
     });
   };
-  const setRecommendFee = async () => {
+  const setRecommendFee = () => {
     console.log('setRecommendFee', feeRateData);
     const defaultFee = network === 'testnet' ? 1 : 10;
-    setEconomyValue(feeRateData?.economyFee || defaultFee);
-    setNormalValue(feeRateData?.halfHourFee || defaultFee);
-    setCustomValue(feeRateData?.fastestFee || defaultFee);
-    setMinFee(feeRateData?.minimumFee || 1);
-    // feeRateData?.forEach(({ title, feeRate }) => {
-    //   if (feeRate) {
-    //     feeRate = Number(feeRate);
-    //   }
-    //   if (feeRate < 1.02) {
-    //     feeRate = 1.02;
-    //   }
-    //   if (title === 'Slow') {
-    //     setEconomyValue(feeRate || defaultFee);
-    //   } else if (title === 'Normal') {
-    //     setNormalValue(feeRate || defaultFee);
-    //     console.log(feeRate);
-    //     onChange?.(feeRate || defaultFee);
-    //   } else if (title === 'Fast') {
-    //     // setMaxFee(Number(parseInt(feeRate || defaultFee)));
-    //     setCustomValue(Math.ceil(feeRate || defaultFee));
-    //   }
-    // });
+    setEconomyValue(feeRateData?.economyFee ?? defaultFee);
+    setNormalValue(feeRateData?.halfHourFee ?? defaultFee);
+    setCustomValue(feeRateData?.fastestFee ?? defaultFee);
+    setMinFee(feeRateData?.minimumFee ?? 1);
 
     setType('Normal');
   };
@@ -88,7 +77,7 @@ export const BtcFeeRate = ({
         value: customValue,
       },
     ];
-  }, [economyValue, normalValue, customValue, i18n.language]);
+  }, [economyValue, normalValue, customValue, i18n.language, t]);
 
   useEffect(() => {
     setRecommendFee();
@@ -98,10 +87,10 @@ export const BtcFeeRate = ({
     if (type === 'Custom') {
       onChange?.({ value: customValue, type: 'Custom' });
     }
-  }, [customValue]);
+  }, [customValue, type, onChange]);
 
   useEffect(() => {
-    if (feeType === 'Custom' && value) {
+    if (feeType === 'Custom' && value !== undefined) {
       setCustomValue(value);
       setType(feeType);
     } else if (feeType) {
@@ -135,18 +124,22 @@ export const BtcFeeRate = ({
             className="w-30"
             placeholder="1"
             value={customValue.toString()}
-            onChange={(e) => setCustomValue(Number(e.target.value))}
+            onChange={(e) => {
+                const numValue = Number(e.target.value);
+                setCustomValue(isNaN(numValue) ? 0 : numValue);
+            }}
+            min={minFee}
+            max={maxFee}
           />
           <Slider
-            size="sm"
             step={1}
-            maxValue={maxFee}
-            minValue={minFee}
+            max={maxFee}
+            min={minFee}
             className="flex-1"
             value={[customValue]}
-            onChange={(e) => {
-              console.log(e);
-              setCustomValue(isNaN(e[0]) ? 0 : e[0]);
+            onValueChange={(value) => {
+              console.log(value);
+              setCustomValue(isNaN(value[0]) ? 0 : value[0]);
             }}
           />
         </div>

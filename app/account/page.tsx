@@ -2,7 +2,12 @@
 
 import type React from 'react';
 import { useState, useEffect, useMemo } from 'react';
-import { Tabs, Tab } from '@nextui-org/react';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { Assets } from '@/components/account/Assets';
 import { OrdxOrderHistoryList } from '@/components/order/OrdxOrderHistoryList';
@@ -30,8 +35,8 @@ export default function AccountPage() {
     refetchOnReconnect: false,
   });
 
-  const onTabChange = (k: React.Key) => {
-    setTabKey(k as string);
+  const onTabChange = (k: string) => {
+    setTabKey(k);
     history.replaceState(null, '', `?source=${k}`);
   };
 
@@ -45,37 +50,30 @@ export default function AccountPage() {
   console.log('totalSatValue', totalSatValue);
 
   return (
-    <div className="py-2">
-      <Tabs
-        aria-label="Options"
-        color="default"
-        size="lg"
-        selectedKey={tabKey}
-        variant="underlined"
-        onSelectionChange={onTabChange}
-        classNames={{
-          tabList:
-            'gap-2 py-2 w-full relative rounded-none border-b border-divider',
-          tab: 'max-w-fit px-0 sm:px-2 h-12 text-sm font-medium rounded-lg transition-colors',
-          tabContent:
-            'group-data-[selected=true]:bg-zinc-800 group-data-[selected=true]:text-white group-data-[selected=true]:rounded-lg group-data-[selected=true]:px-4 group-data-[selected=true]:py-2',
-          cursor: 'hidden',
-        }}
-        style={{ width: '100%' }}
-      >
-        <Tab key="utxo" title={t('buttons.my_assets')}>
-          <Assets />
-        </Tab>
-        <Tab key="history" title={t('common.tx_history')}>
-          <OrdxOrderHistoryList address={address} />
-        </Tab>
-        <Tab key="order" title={t('common.my_listings')}>
-          {/* <OrdxOrderList address={address} /> */}
-        </Tab>
-        <Tab key="bill" title={t('common.my_biils')}>
-          <OrdxBillList />
-        </Tab>
-      </Tabs>
-    </div>
+    <Tabs
+      value={tabKey}
+      defaultValue={paramTab}
+      onValueChange={onTabChange}
+      className="py-2 w-full"
+    >
+      <TabsList>
+        <TabsTrigger value="utxo">{t('buttons.my_assets')}</TabsTrigger>
+        <TabsTrigger value="history">{t('common.tx_history')}</TabsTrigger>
+        <TabsTrigger value="order">{t('common.my_listings')}</TabsTrigger>
+        <TabsTrigger value="bill">{t('common.my_biils')}</TabsTrigger>
+      </TabsList>
+      <TabsContent value="utxo">
+        <Assets />
+      </TabsContent>
+      <TabsContent value="history">
+        <OrdxOrderHistoryList address={address} />
+      </TabsContent>
+      <TabsContent value="order">
+        {/* <OrdxOrderList address={address} /> */}
+      </TabsContent>
+      <TabsContent value="bill">
+        <OrdxBillList />
+      </TabsContent>
+    </Tabs>
   );
 }

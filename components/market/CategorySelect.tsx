@@ -1,6 +1,12 @@
 'use client';
 
-import { Select, SelectItem, SelectedItems } from '@nextui-org/react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useEffect, useMemo, useState } from 'react';
 
 interface NameCategoryListProps {
@@ -18,46 +24,42 @@ export const CategorySelect = ({
   list = [],
   placeholder,
 }: NameCategoryListProps) => {
-  const onSelectionChange = (keys: any) => {
-    const _v = Array.from(keys.values())[0] as string;
-    onChange?.(_v);
-  };
-
-  const selectKeys = useMemo(() => {
-    return s !== undefined ? [s] : undefined;
-  }, [s]);
+  const selectedItem = useMemo(() => {
+    return list.find(item => item.value === s);
+  }, [s, list]);
 
   return (
     <Select
-      items={list}
-      size="sm"
-      showScrollIndicators={false}
-      isLoading={isLoading}
-      className="w-60 max-w-full"
-      label={placeholder}
-      // placeholder={placeholder}
-      selectionMode="single"
-      selectedKeys={selectKeys}
-      onSelectionChange={onSelectionChange}
-      renderValue={(items: SelectedItems<any>) => {
-        return items.map((item) => (
-          <div key={item.key} className="flex items-center gap-2">
-            <span>{item.data?.label}</span>
-            {!!item.data?.count && (
-              <span className="">({item.data?.count})</span>
-            )}
-          </div>
-        ));
-      }}
+      value={s}
+      onValueChange={onChange}
+      disabled={isLoading}
     >
-      {(item) => (
-        <SelectItem key={item.value}>
-          {item.label}
-          {!!item?.count && (
-            <span className="text-xs text-gray-500">({item?.count})</span>
+      <SelectTrigger className="w-60 max-w-full">
+        <SelectValue placeholder={placeholder}>
+          {selectedItem ? (
+            <div className="flex items-center gap-1">
+              <span>{selectedItem.label}</span>
+              {!!selectedItem.count && (
+                <span className="text-xs text-gray-500">({selectedItem.count})</span>
+              )}
+            </div>
+          ) : (
+            placeholder
           )}
-        </SelectItem>
-      )}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {list.map((item) => (
+          <SelectItem key={item.value} value={item.value}>
+            <div className="flex items-center justify-between w-full">
+              <span>{item.label}</span>
+              {!!item?.count && (
+                <span className="text-xs text-gray-500 ml-2">({item?.count})</span>
+              )}
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
     </Select>
   );
 };
