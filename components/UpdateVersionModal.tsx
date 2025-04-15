@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  Button,
-} from '@nextui-org/react';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { version } from '@/assets/version';
 import { getAppVersion } from '@/api';
-import useSWR from 'swr';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/store';
 
@@ -19,15 +20,24 @@ export const UpdateVersionModal = () => {
   const showModal = () => {
     setOpen(true);
   };
-  useSWR(`getAppVersion-${version}`, () => getAppVersion(), {
-    refreshInterval: 1000 * 60 * 2,
-    onSuccess: (appVersion) => {
+
+  // Get data from useQuery
+  const { data: appVersion } = useQuery({
+    queryKey: ['getAppVersion', version],
+    queryFn: getAppVersion,
+    refetchInterval: 1000 * 60 * 2,
+  });
+
+  // Handle side effect in useEffect
+  useEffect(() => {
+    if (appVersion) {
       console.log(appVersion);
-      if (appVersion && Number(appVersion) > version) {
+      if (Number(appVersion) > version) {
         showModal();
       }
-    },
-  });
+    }
+  }, [appVersion]); // Depend on appVersion data
+
   const timer = useRef<any>();
 
   const refresh = () => {
@@ -46,27 +56,22 @@ export const UpdateVersionModal = () => {
   };
   useEffect(() => {
     setAppVersion(version);
-  }, []);
+  }, [setAppVersion]); // Added dependency
   return (
-    <Modal
-      backdrop="blur"
-      isDismissable={false}
-      isOpen={open}
-      onClose={hideModal}
-    >
-      <ModalContent>
-        <ModalHeader className="">
-          {t('pages.app.version_update_title')}
-        </ModalHeader>
-        <ModalFooter>
-          <Button color="primary" variant="light" onPress={hideModal}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && hideModal()}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{t('pages.app.version_update_title')}</DialogTitle>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="ghost" onClick={hideModal}>
             {t('buttons.talk_later')}
           </Button>
-          <Button color="danger" onPress={refresh}>
+          <Button variant="destructive" onClick={refresh}>
             {t('buttons.update_now')}
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

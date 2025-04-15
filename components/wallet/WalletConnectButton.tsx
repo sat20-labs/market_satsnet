@@ -2,34 +2,27 @@
 
 import {
   Button,
+} from '@/components/ui/button';
+import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-  Snippet,
-} from '@nextui-org/react';
-import { useEffect, useMemo } from 'react';
+} from '@/components/ui/popover';
+import { useEffect, useMemo, useState } from 'react';
 import {
   WalletConnectReact,
   useReactWalletStore,
 } from '@sat20/btc-connect/dist/react';
-import { Icon } from '@iconify/react';
+import { Copy, ChevronDown, Bitcoin } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { hideStr, satsToBitcoin, formatBtcAmount } from '@/utils';
 import { notification } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore, useAssetStore, useUtxoStore } from '@/store';
-import { generateMempoolUrl } from '@/lib/utils';
+import { generateMempoolUrl } from '@/utils';
 import { usePlainUtxo } from '@/lib/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const fetchUtxos = async (address: string | null, network: string | null): Promise<{ value: number }[]> => {
-  if (!address || !network) {
-    return [];
-  }
-  console.log(`Fetching UTXOs for ${address} on ${network}...`);
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return [];
-};
 
 const WalletConnectButton = () => {
 
@@ -47,19 +40,18 @@ const WalletConnectButton = () => {
   } = useReactWalletStore((state) => state);
   const { loadSummaryData } = useAssetStore();
   const { data: plainUtxos } = usePlainUtxo();
-  useEffect(() => {
-    if (address && network) {
-      loadSummaryData();
-    }
-  }, [address, network, loadSummaryData]);
+  const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
-
   const queryClient = useQueryClient();
 
   const utxoAmount = useMemo(() => {
     return utxoList.reduce((acc, cur) => acc + cur.value, 0);
   }, [utxoList]);
-
+  useEffect(() => {
+    if (address && connected) {
+      loadSummaryData();
+    }
+  }, [address, connected]);
   const initCheck = async () => {
     await check();
   };
@@ -186,6 +178,14 @@ const WalletConnectButton = () => {
     };
   }, [connected, address, network, publicKey, signature]);
 
+  const copyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 1500);
+    }
+  };
+
   return (
     <WalletConnectReact
       config={{
@@ -197,53 +197,51 @@ const WalletConnectButton = () => {
     >
       <>
         {connected && address ? (
-          <Popover placement="bottom">
-            <PopoverTrigger>
-              <Button
-                className="px-0 bg-[#181819]"
-                endContent={
-                  <div className="px-2 h-full flex justify-center items-center text-gray-300 bg-[#282828]">
-                    {address?.slice(-4)}<Icon icon="mdi-light:chevron-down" className=" text-gray-400 text-sm" />
-                  </div>
-                }
-              >
-                <div className="flex items-center gap-1 pl-2">
-                  <Icon icon="cryptocurrency-color:btc" className="w-4 h-4" />
-                  <span className='text-gray-200 text-xs sm:text-sm'>
-                    {showAmount}
-                  </span>
-                </div>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-2">
-              <div className="flex flex-col gap-2">
-                <div>
-                  <Snippet
-                    codeString={address}
-                    className="bg-transparent text-lg md:text-2xl font-thin items-center"
-                    symbol=""
-                    variant="flat"
-                  >
-                    <span className="text-base font-thin text-slate-400">
-                      {hideStr(address, 4)}
-                    </span>
-                  </Snippet>
-                </div>
-                <Button className="w-full" onClick={toHistory}>
-                  {t('buttons.to_history')}
-                </Button>
+          <Popover>
+            <div className="relative">
+              <PopoverTrigger>
                 <Button
-                  color="danger"
-                  variant="ghost"
-                  onClick={handlerDisconnect}
+                  variant="outline"
+                  className="px-0 bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-gray-200 focus:ring-0 focus-visible:ring-0"
                 >
-                  {t('buttons.disconnect')}
+                  <div className="flex items-center gap-1 pl-2">
+                    <Bitcoin className="w-4 h-4 text-orange-400" />
+                    <span className='text-gray-200 text-xs sm:text-sm'>
+                      {showAmount}
+                    </span>
+                  </div>
+                  <div className="px-2 h-full flex justify-center items-center text-gray-300 bg-[#282828] ml-2">
+                    {address?.slice(-4)}
+                    <ChevronDown className="text-gray-400 text-sm w-4 h-4 ml-1" />
+                  </div>
                 </Button>
-              </div>
-            </PopoverContent>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2 bg-background border-border z-[100]">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted">
+                     <span className="text-base font-thin text-muted-foreground">
+                        {hideStr(address, 4)}
+                      </span>
+                     <Button variant="ghost" size="icon" onClick={copyAddress} className="h-6 w-6">
+                       <Copy className="h-4 w-4" />
+                     </Button>
+                  </div>
+                  <Button variant="outline" className="w-full" onClick={toHistory}>
+                    {t('buttons.to_history')}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={handlerDisconnect}
+                  >
+                    {t('buttons.disconnect')}
+                  </Button>
+                </div>
+              </PopoverContent>
+            </div>
           </Popover>
         ) : (
-          <Button>Connect Wallet</Button>
+          <Button>{t('buttons.connect_wallet')} 12</Button>
         )}
       </>
     </WalletConnectReact>

@@ -37,9 +37,9 @@ export default function SatoshiNetMarket({ asset, assetData }: SatoshiNetMarketP
       </div>
 
       {/* ActivityLog */}
-      {/* <div className="col-span-1 sm:col-span-3 flex items-center justify-center w-full">
-        <ActivityLog ticker={ticker} activityLogData={mockActivityLogData} />
-      </div> */}
+      <div className="col-span-1 sm:col-span-3 flex items-center justify-center w-full">
+        <ActivityLog assets_name={asset} />
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Button } from '@nextui-org/react';
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
 export const NameMarketNav = () => {
@@ -26,7 +26,7 @@ export const NameMarketNav = () => {
     },
   ];
 
-  const handlerClick = (item) => {
+  const handlerClick = (item: { path: string }) => {
     nav.push(item.path);
   };
   return (
@@ -34,9 +34,7 @@ export const NameMarketNav = () => {
       {list.map((item) => (
         <Button
           key={item.label}
-          variant="ghost"
-          color="default"
-          radius="full"
+          variant="outline"
           onClick={() => handlerClick(item)}
           className="border border-gray-700/90 rounded-xl"
         >

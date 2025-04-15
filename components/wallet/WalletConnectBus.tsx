@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@nextui-org/react';
+import { Button } from '@/components/ui/button';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -29,13 +29,8 @@ export const WalletConnectBus = ({
   ) : (
     <>
       <Button
-        // fullWidth
-        variant="ghost"
-        size="md"
         onClick={() => setModalVisible(true)}
-        radius="sm"
         className={className}
-        color="primary"
       >
         {text || t('buttons.connect')}
       </Button>

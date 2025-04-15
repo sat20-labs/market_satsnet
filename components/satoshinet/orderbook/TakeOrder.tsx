@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import OrderRow from "@/components/satoshinet/orderbook/OrderRow";
 import OrderSummary from "@/components/satoshinet/orderbook/OrderSummary";
-import { Button } from "@nextui-org/react";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { useCommonStore, useAssetStore,useUtxoStore } from "@/store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { tryit } from "radash";
@@ -104,7 +105,10 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       };
     });
   }, [selectedOrdersData]);
+  const [isLoadingState, setIsLoadingState] = useState(false);
+
   const handleBuyOrder = async () => {
+    setIsLoadingState(true);
     console.log(selectedOrdersData);
         const NEXT_PUBLIC_SERVICE_ADDRESS =
           network === 'testnet'
@@ -153,20 +157,29 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
           throw new Error('extractTxFromPsbt failed');
         }
         const order_ids = selectedOrdersData.map((v) => v.order_id);
-        const buyRes = await marketApi.bulkBuyOrder({
-          address,
-          order_ids,
-          raw: buyRaw,
-        });
-        console.log('buyRes', buyRes);
-        if (buyRes.code === 200) {
-           queryClient.invalidateQueries({ queryKey: queryKey });
-           setSelectedIndexes([]);
-           refetch();
-        } else {
-          console.error('bulkBuyOrder failed:', buyRes);
+        try {
+          const buyRes = await marketApi.bulkBuyOrder({
+            address,
+            order_ids,
+            raw: buyRaw,
+          });
+          console.log('buyRes', buyRes);
+          if (buyRes.code === 200) {
+             queryClient.invalidateQueries({ queryKey: queryKey });
+             setSelectedIndexes([]);
+             refetch();
+          } else {
+            console.error('bulkBuyOrder failed:', buyRes);
+          }
+        } catch (error) {
+           console.error("Error during buy order process:", error);
+        } finally {
+           setIsLoadingState(false);
         }
   }
+
+  const isProcessing = isLoading || isLoadingState;
+
   return (
     <div>
       <div className="grid grid-cols-3 text-sm font-semibold text-zinc-500 bg-transparent border-b border-zinc-800 px-2 py-3 rounded">
@@ -202,13 +215,10 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
 
       <Button
         onClick={handleBuyOrder}
-        className={`w-full mt-4 py-2 rounded-xl text-white text-sm font-semibold ${selectedIndexes.length === 0 || !isBalanceSufficient
-          ? "bg-gray-700 cursor-not-allowed"
-          : "btn-gradient"
-          }`}
-        disabled={selectedIndexes.length === 0 || !isBalanceSufficient || isLoading }
-        isLoading={isLoading}
+        className={`w-full mt-4 ${!(selectedIndexes.length === 0 || !isBalanceSufficient) ? "btn-gradient" : ""}`}
+        disabled={selectedIndexes.length === 0 || !isBalanceSufficient || isProcessing}
       >
+        {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {mode === 'buy' ? 'Buy' : 'Sell'}
       </Button>
     </div>

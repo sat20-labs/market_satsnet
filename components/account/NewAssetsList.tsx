@@ -2,7 +2,7 @@
 
 import useSWR from 'swr';
 import { useMemo, useState } from 'react';
-import { Button } from '@nextui-org/react';
+import { Button } from '@/components/ui/button';
 import { getAddressAssetsList } from '@/api'; // 引入拆分和挂单的 API
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
@@ -167,10 +167,9 @@ export const NewAssetsList = ({ assets_type }: NewAssetListProps) => {
               {/* 挂单按钮 */}
               <div className="text-center">
                 <Button
-                  className="text-tiny h-8 btn-gradient"
-                  variant="flat"
-                  radius="sm"
-                  onPress={() => handleSellClick(item)} // 打开挂单弹窗
+                  className="btn-gradient"
+                  size="sm"
+                  onClick={() => handleSellClick(item)}
                 >
                   List
                 </Button>

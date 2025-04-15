@@ -1,38 +1,42 @@
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  useDisclosure,
-} from '@nextui-org/react';
-import { useEffect } from 'react';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export function SystemNoticeModal() {
   const { t } = useTranslation();
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
+
   useEffect(() => {
-    onOpen();
+    setIsOpen(true);
   }, []);
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+  };
+
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-      <ModalContent>
-        {(onClose) => (
-          <>
-            <ModalHeader className="flex justify-center text-red-600">
-              {t('common.notice')}
-            </ModalHeader>
-            <ModalBody>{t('notification.website_notice')}</ModalBody>
-            <ModalFooter>
-              <Button color="primary" onPress={onClose}>
-                Close
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-center text-red-600">
+            {t('common.notice')}
+          </DialogTitle>
+        </DialogHeader>
+        <DialogDescription className="py-4">
+          {t('notification.website_notice')}
+        </DialogDescription>
+        <DialogFooter>
+          <Button onClick={() => setIsOpen(false)}>{t('common.close')}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

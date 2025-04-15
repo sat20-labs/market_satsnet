@@ -1,14 +1,5 @@
 'use client';
 
-import {
-  Button,
-  Modal,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalBody,
-  useDisclosure,
-} from '@nextui-org/react';
 import { Icon } from '@iconify/react';
 import { useEffect, useState, useMemo } from 'react';
 import { useCommonStore } from '@/store';
@@ -17,12 +8,21 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { marketApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 export const FeerateSelectButton = () => {
   const { t } = useTranslation();
   const { network } = useReactWalletStore((state) => state);
   const { chain } = useCommonStore();
-  const { isOpen, onClose, onOpenChange, onOpen } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
   const [fee, setFee] = useState({ value: 1, type: 'Normal' });
   const { setFeeRate, feeRate } = useCommonStore((state) => state);
 
@@ -40,11 +40,11 @@ export const FeerateSelectButton = () => {
 
   const handleOk = () => {
     setFeeRate({ value: fee.value, type: fee.type });
-    onClose();
+    setIsOpen(false);
   };
 
   const handleCancel = () => {
-    onClose();
+    setIsOpen(false);
   };
 
   const feeChange = (fee: any) => {
@@ -53,46 +53,55 @@ export const FeerateSelectButton = () => {
   };
 
   useEffect(() => {
-    if (feeRateData?.halfHourFee) {
+    if (feeRateData?.halfHourFee && !feeRate.value) {
+      setFee({ value: feeRateData.halfHourFee, type: 'Normal' });
       setFeeRate({ value: feeRateData.halfHourFee, type: 'Normal' });
     }
-  }, [feeRateData, setFeeRate]);
+  }, [feeRateData, setFeeRate, feeRate.value]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFee({ value: feeRate.value, type: feeRate.type ?? 'Normal' });
+    }
+  }, [isOpen, feeRate]);
 
   return (
-    <div>
-      <Button
-        variant="ghost"
-        isLoading={isLoading}
-        className="bg-transparent sm:px-2 px-[6px] sm:gap-2 gap-[1px] text-xs sm:text-base text-zinc-300 border border-zinc-700"
-        onClick={() => onOpen()}
-      >
-        <Icon icon="mdi:gas-station" className="text-xl0" />
-        {feeRate.value}{' sat'}
-        <span  className="hidden sm:inline dark:text-gray-400 text-slate-600">/vB</span>
-      </Button>
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-2">
-            {t('common.gas_fee')}
-          </ModalHeader>
-          <ModalBody>
-            <BtcFeeRate
-              onChange={feeChange}
-              value={feeRate.value}
-              feeType={feeRate.type}
-              feeRateData={feeRateData}
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button color="danger" variant="light" onPress={handleCancel}>
-              {t('common.close')}
-            </Button>
-            <Button color="primary" onPress={handleOk}>
-              {t('common.ok')}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </div>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild disabled>
+        <Button
+          variant="ghost"
+          disabled={isLoading}
+          className="bg-transparent sm:px-2 px-[6px] sm:gap-2 gap-[1px] text-xs sm:text-base text-zinc-300 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
+        >
+          {isLoading ? (
+            <Icon icon="eos-icons:loading" className="text-xl0" />
+          ) : (
+            <Icon icon="mdi:gas-station" className="text-xl0" />
+          )}
+          10 sats
+          {/* {feeRate.value}{' sat'}
+          <span className="hidden sm:inline dark:text-gray-400 text-slate-600">/vB</span> */}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('common.gas_fee')}</DialogTitle>
+        </DialogHeader>
+        <BtcFeeRate
+          onChange={feeChange}
+          value={fee.value}
+          feeType={fee.type}
+          feeRateData={feeRateData}
+        />
+        <DialogFooter>
+          <Button variant="ghost" onClick={handleCancel}>
+            {t('common.close')}
+          </Button>
+          <Button onClick={handleOk}>
+            {t('common.ok')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
