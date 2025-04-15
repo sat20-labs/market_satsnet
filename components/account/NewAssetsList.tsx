@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react';
 import SellOrderModal from './SellOrderModal'; // 引入挂单弹窗组件
 import { AssetItem } from '@/store/asset';
+import { Button } from "@/components/ui/button";
 
 import {
   Table,
@@ -12,7 +13,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Button,
 } from '@nextui-org/react';
 
 
@@ -64,13 +64,13 @@ export const NewAssetsList = ({ assets }: NewAssetListProps) => {
   return (
 
     <div>
-    <Table aria-label="Assets List Table">
-      <TableHeader columns={columns}>
+    <Table aria-label="Assets List Table" className="w-full bg-zinc-900 rounded-xl  shadow-md">
+      <TableHeader columns={columns} >
         {(column) => (
           <TableColumn
             key={column.key}
             align={column.key === 'action' || column.key === 'price' ? 'end' : 'start'}
-            className={column.key === 'action' || column.key === 'price' ? 'text-right' : ''}
+            className={column.key === 'action' || column.key === 'price' ? 'text-right bg-accent' : 'text-left bg-accent'}
           >
             {column.label}
           </TableColumn>
@@ -78,7 +78,8 @@ export const NewAssetsList = ({ assets }: NewAssetListProps) => {
       </TableHeader>
       <TableBody items={assets} emptyContent={'No assets found.'}>
         {(asset) => (
-          <TableRow key={asset.id}>
+          
+          <TableRow key={asset.id} className="hover:bg-zinc-700/50 text-gray-300">
             <TableCell>
               <div className="flex flex-col">
                 <span className="font-medium text-white">{asset.label}</span>
@@ -93,10 +94,11 @@ export const NewAssetsList = ({ assets }: NewAssetListProps) => {
             <TableCell className="text-right">
               <Button
                 size="sm"
-                color="primary"
+                color="primary"      
                 variant="ghost"
+                className="text-sm text-gray-400 btn-gradient rounded-xl"
                 // onPress={() => onListClick?.(asset.key)}
-                onPress={() => handleSellClick(asset)} // 打开挂单弹窗
+                onClick={() => handleSellClick(asset)} // 打开挂单弹窗
               >
                 List
               </Button>

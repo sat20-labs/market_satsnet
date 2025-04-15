@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import { BtcPrice } from '../BtcPrice';
 import { clientApi, marketApi } from '@/api'; // 假设 API 方法在此路径
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import { Input } from "@/components/ui/input";
 
 interface SellOrderModalProps {
   assetInfo: { assetName: string; assetBalance: number };
@@ -189,7 +190,7 @@ const SellOrderModal = ({
         <div className="mb-4">
           <label className="block text-sm text-gray-400 mb-1">Quantity to Sell:</label>
           <div className="flex items-center gap-0">
-            <input
+            <Input
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
@@ -198,7 +199,7 @@ const SellOrderModal = ({
             />
             <button
               onClick={handleMaxClick}
-              className="px-2 py-2 h-[42px] border-1 border-l-zinc-800 border-zinc-700 bg-zinc-900 text-zinc-300 text-sm rounded hover:bg-zinc-800"
+              className="px-2 py-2 h-[36px] border-1 border-l-zinc-800 border-zinc-700 bg-zinc-900 text-zinc-300 text-sm rounded hover:bg-zinc-800"
             >
               Max
             </button>
@@ -212,7 +213,7 @@ const SellOrderModal = ({
         <div className="mb-6">
           <label className="block text-sm text-gray-400 mb-1">Unit Price:</label>
           <div className="flex items-center gap-2">
-            <input
+            <Input
               type="number"
               value={price}
               onChange={(e) => setPrice(Number(e.target.value))}
@@ -227,7 +228,7 @@ const SellOrderModal = ({
         <div className="mb-4">
           <label className="block text-sm text-gray-400 mb-1">Batch Quantity:</label>
           <div className="flex items-center gap-4">
-            <input
+            <Input
               type="range"
               min="1"
               max={maxBatchQuantity} // 动态设置最大值
