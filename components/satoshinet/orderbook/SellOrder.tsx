@@ -110,7 +110,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
       );
       const sellUtxoInfos: SellUtxoInfo[] = [{
         ...utxoData,
-        Price: price,
+        Price: Number(price) * Number(quantity),
       }];
       const sat20SellOrder = await window.sat20.buildBatchSellOrder(
         sellUtxoInfos.map((v) => JSON.stringify(v)),
