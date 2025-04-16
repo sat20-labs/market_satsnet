@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@source "../node_modules/@sat20/btc-connect/dist/style/index.css";
 @custom-variant dark (&:is(.dark *));
 
 @layer base {

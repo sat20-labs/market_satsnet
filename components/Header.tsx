@@ -141,7 +141,7 @@ export const Header = () => {
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-full max-w-xs sm:max-w-sm">
+              <SheetContent side="right" className="w-full max-w-xs sm:max-w-sm">
                 <div className="flex flex-col gap-4 pt-8 h-full">
                   <div className="flex flex-col gap-3 px-4">
                      <p className="text-sm font-medium text-muted-foreground">{t('settings')}</p>
@@ -149,6 +149,7 @@ export const Header = () => {
                        <NetworkSelect />
                        <ChainSelect />
                      </div>
+                       <FeerateSelectButton />
                      <LanguageSelect />
                   </div>
                   <Separator className="my-2"/>

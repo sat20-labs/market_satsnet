@@ -16,7 +16,7 @@ import {
 import { Copy, ChevronDown, Bitcoin } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { hideStr, satsToBitcoin, formatBtcAmount } from '@/utils';
-import { notification } from 'antd';
+import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore, useAssetStore, useUtxoStore } from '@/store';
 import { generateMempoolUrl } from '@/utils';
@@ -55,6 +55,11 @@ const WalletConnectButton = () => {
   const initCheck = async () => {
     await check();
   };
+  const getWalletUtxos = async () => {
+    const utxos = await window.sat20.getUtxos_SatsNet()
+    console.log('utxos', utxos);
+    
+  };
   useEffect(() => {
     initCheck();
   }, []);
@@ -74,8 +79,7 @@ const WalletConnectButton = () => {
   };
   const onConnectError = (error: any) => {
     console.error('Connect Wallet Failed', error);
-    notification.error({
-      message: 'Connect Wallet Failed',
+    toast.error('Connect Wallet Failed', {
       description: error.message,
     });
   };
@@ -152,8 +156,7 @@ const WalletConnectButton = () => {
         // }
       } catch (error) {
         console.log('checkSignature', error);
-        notification.warning({
-          message: 'Signature Verification Failed',
+        toast.warning('Signature Verification Failed', {
           description: 'Please check your signature and try connect again',
         });
         handlerDisconnect();
@@ -165,7 +168,8 @@ const WalletConnectButton = () => {
     if (connected) {
       setTimeout(() => {
         checkSignature();
-      }, 2000);
+        getWalletUtxos();
+      }, 1000);
       btcWallet?.on('accountsChanged', accountAndNetworkChange);
       btcWallet?.on('networkChanged', accountAndNetworkChange);
     } else {
@@ -188,8 +192,12 @@ const WalletConnectButton = () => {
 
   return (
     <WalletConnectReact
+  
       config={{
         network: 'mainnet' as any,
+      }}
+      ui={{
+        connectClass: 'bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-red-500 focus:ring-0 focus-visible:ring-0',
       }}
       theme={theme === 'dark' ? 'dark' : 'light'}
       onConnectSuccess={onConnectSuccess}
