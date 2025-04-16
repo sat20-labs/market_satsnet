@@ -8,10 +8,10 @@ interface OrderRowProps {
 }
 
 const OrderRow = ({ order, selected, onClick }: OrderRowProps) => {
-    const quantity = parseInt(order.assets[0]?.amount ?? '0', 10);
+    const quantity = parseInt(order.assets?.amount ?? '0', 10);
     const priceInSats = order.price;
     console.log(priceInSats);
-    
+    const unitPrice = order.assets?.unit_price;
     const totalBTC = order.value;
     
     return (
@@ -32,11 +32,11 @@ const OrderRow = ({ order, selected, onClick }: OrderRowProps) => {
             </div>
             
             <div className="flex-1 justify-items-end">
-                {priceInSats.toLocaleString()} <span className="text-zinc-400">sats</span>
+                {unitPrice.toLocaleString()} <span className="text-zinc-400">sats</span>
             </div>
             <div className="flex-1 text-left text-zinc-200">
                 <div>
-                    {totalBTC}<span className="text-zinc-400"> Sats</span>
+                    {priceInSats}<span className="text-zinc-400"> sats</span>
                 </div>
             </div>
         </div>

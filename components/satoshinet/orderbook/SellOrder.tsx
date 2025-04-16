@@ -5,6 +5,7 @@ import { AssetItem } from "@/store/asset";
 import { clientApi, marketApi } from "@/api";
 import { useCommonStore } from "@/store";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
+import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -55,112 +56,107 @@ async function retryAsyncOperation<T>(
 
 // Helper function: Handle numeric input changes
 const handleNumericInput = (
-    value: string,
-    setter: React.Dispatch<React.SetStateAction<number | "">>
+  value: string,
+  setter: React.Dispatch<React.SetStateAction<number | "">>
 ) => {
-    // Allow empty string, integers, and decimals
-    if (value === "" || /^\d*\.?\d*$/.test(value)) {
-        // Prevent leading zeros unless it's "0." or just "0"
-         if (value.length > 1 && value.startsWith('0') && !value.startsWith('0.')) {
-             setter(Number(value.substring(1)));
-         } else {
-            // Store as number if valid and not empty, otherwise store empty string
-            setter(value === "" ? "" : Number(value) >= 0 ? Number(value) : "");
-         }
+  // Allow empty string, integers, and decimals
+  if (value === "" || /^\d*\.?\d*$/.test(value)) {
+    // Prevent leading zeros unless it's "0." or just "0"
+    if (value.length > 1 && value.startsWith('0') && !value.startsWith('0.')) {
+      setter(Number(value.substring(1)));
+    } else {
+      // Store as number if valid and not empty, otherwise store empty string
+      setter(value === "" ? "" : Number(value) >= 0 ? Number(value) : "");
     }
+  }
 };
 
 // Helper function: Prepare sell data (split UTXO and get info)
 const prepareSellData = async (assetName: string, quantity: number, price: number): Promise<SellUtxoInfo[]> => {
-    console.log(`Splitting asset ${assetName} for quantity ${quantity}`);
-    const splitRes = await window.sat20.splitAsset(assetName, quantity);
-    if (!splitRes?.txId) {
-        toast.error('Failed to split asset.');
-        throw new Error('Failed to split asset or txId missing.');
-    }
-    const txid = splitRes.txId;
-    const vout = 0;
-    const utxo = `${txid}:${vout}`;
-    console.log(`Asset split successful. UTXO created: ${utxo}`);
+  console.log(`Splitting asset ${assetName} for quantity ${quantity}`);
+  const splitRes = await window.sat20.splitAsset(assetName, quantity);
+  if (!splitRes?.txId) {
+    toast.error('Failed to split asset.');
+    throw new Error('Failed to split asset or txId missing.');
+  }
+  const txid = splitRes.txId;
+  const vout = 0;
+  const utxo = `${txid}:${vout}`;
+  console.log(`Asset split successful. UTXO created: ${utxo}`);
 
-    console.log(`Attempting to fetch UTXO info for ${utxo}...`);
-    const utxoData: any = await retryAsyncOperation(
-        clientApi.getUtxoInfo,
-        [utxo],
-        { delayMs: 2000, maxAttempts: 15 }
-    );
+  console.log(`Attempting to fetch UTXO info for ${utxo}...`);
+  const utxoData: any = await retryAsyncOperation(
+    clientApi.getUtxoInfo,
+    [utxo],
+    { delayMs: 2000, maxAttempts: 15 }
+  );
 
-    if (!utxoData) {
-        throw new Error(`Failed to fetch UTXO info for ${utxo} after multiple attempts.`);
-    }
+  if (!utxoData) {
+    throw new Error(`Failed to fetch UTXO info for ${utxo} after multiple attempts.`);
+  }
 
-    if (!utxoData.script || !utxoData.value) {
-       toast.error('Received invalid UTXO data format.');
-       throw new Error('Invalid UTXO data format received.');
-    }
-
-    const sellUtxoInfos: SellUtxoInfo[] = [{
-        ...utxoData,
-        Price: Number(price) * Number(quantity),
-    }];
-    console.log('Successfully fetched UTXO info:', sellUtxoInfos);
-    return sellUtxoInfos;
+  const sellUtxoInfos: SellUtxoInfo[] = [{
+    ...utxoData,
+    Price: Number(price) * Number(quantity),
+  }];
+  console.log('Successfully fetched UTXO info:', sellUtxoInfos);
+  return sellUtxoInfos;
 };
 
 // Helper function: Build and sign the order
 const buildAndSignOrder = async (
-    sellUtxoInfos: SellUtxoInfo[],
-    address: string,
-    network: string,
-    btcWallet: any
+  sellUtxoInfos: SellUtxoInfo[],
+  address: string,
+  network: string,
+  btcWallet: any
 ): Promise<string> => {
-    console.log('Building sell order...');
-    const sat20SellOrder = await window.sat20.buildBatchSellOrder(
-        sellUtxoInfos.map((v) => JSON.stringify(v)),
-        address,
-        network,
-    );
-    const psbt = sat20SellOrder?.data?.psbt;
-    if (!psbt) {
-        toast.error('Failed to build the sell order.');
-        throw new Error('Failed to build sell order or PSBT missing.');
-    }
-    console.log('Sell order built, signing PSBT...');
-    toast.info("Please sign the transaction in your wallet.");
-    const signedPsbts = await btcWallet.signPsbt(psbt, { chain: 'sat20' });
-    if (!signedPsbts) {
-         toast.error('Transaction signing failed or was cancelled.');
-        throw new Error('Failed to sign PSBT.');
-    }
-    console.log('PSBT signed successfully:', signedPsbts);
-    return signedPsbts;
+  console.log('Building sell order...');
+  const sat20SellOrder = await window.sat20.buildBatchSellOrder(
+    sellUtxoInfos.map((v) => JSON.stringify(v)),
+    address,
+    network,
+  );
+  const psbt = sat20SellOrder?.data?.psbt;
+  if (!psbt) {
+    toast.error('Failed to build the sell order.');
+    throw new Error('Failed to build sell order or PSBT missing.');
+  }
+  console.log('Sell order built, signing PSBT...');
+  toast.info("Please sign the transaction in your wallet.");
+  const signedPsbts = await btcWallet.signPsbt(psbt, { chain: 'sat20' });
+  if (!signedPsbts) {
+    toast.error('Transaction signing failed or was cancelled.');
+    throw new Error('Failed to sign PSBT.');
+  }
+  console.log('PSBT signed successfully:', signedPsbts);
+  return signedPsbts;
 };
 
 // Helper function: Submit the signed order
 const submitSignedOrder = async (
-    address: string,
-    assetName: string,
-    signedPsbts: string
+  address: string,
+  assetName: string,
+  signedPsbts: string
 ): Promise<void> => {
-    console.log('Submitting signed order...');
-    const orders = [{
-        assets_name: assetName,
-        raw: signedPsbts,
-    }];
-    const res = await marketApi.submitBatchOrders({
-        address,
-        orders: orders,
-    });
+  console.log('Submitting signed order...');
+  const orders = [{
+    assets_name: assetName,
+    raw: signedPsbts,
+  }];
+  const res = await marketApi.submitBatchOrders({
+    address,
+    orders: orders,
+  });
 
-    if (res.code === 200) {
-        console.log('Sell order submitted successfully');
-        toast.success('Sell order submitted successfully!');
-    } else {
-        const errorMsg = res.message || 'Failed to submit sell order';
-        console.error('Failed to submit sell order:', errorMsg);
-        toast.error(`Order submission failed: ${errorMsg}`);
-        throw new Error(errorMsg);
-    }
+  if (res.code === 200) {
+    console.log('Sell order submitted successfully');
+    toast.success('Sell order submitted successfully!');
+  } else {
+    const errorMsg = res.message || 'Failed to submit sell order';
+    console.error('Failed to submit sell order:', errorMsg);
+    toast.error(`Order submission failed: ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
 };
 
 const SellOrder = ({ assetInfo }: SellOrderProps) => {
@@ -168,7 +164,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const [isSelling, setIsSelling] = useState(false);
-  
+
   const userAssetBalance = useMemo(() => {
     if (!assetInfo.assetName || balanceLoading) return 0;
     const parts = assetInfo.assetName.split(':');
@@ -183,12 +179,12 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
   const [price, setPrice] = useState<number | "">("");
 
   const calculatedBTC = useMemo(() => {
-      const numQuantity = Number(quantity);
-      const numPrice = Number(price);
-      if (numQuantity > 0 && numPrice > 0) {
-          return numQuantity * numPrice;
-      }
-      return 0;
+    const numQuantity = Number(quantity);
+    const numPrice = Number(price);
+    if (numQuantity > 0 && numPrice > 0) {
+      return numQuantity * numPrice;
+    }
+    return 0;
   }, [quantity, price]);
 
   const isSellValid = useMemo(() =>
@@ -198,29 +194,29 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
     Number(price) > 0 &&
     Number(quantity) <= userAssetBalance &&
     !balanceLoading,
-   [quantity, price, userAssetBalance, balanceLoading]);
+    [quantity, price, userAssetBalance, balanceLoading]);
 
   const handleMaxClick = () => {
     if (!balanceLoading) {
-        setQuantity(userAssetBalance);
+      setQuantity(userAssetBalance);
     }
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      handleNumericInput(e.target.value, setQuantity);
+    handleNumericInput(e.target.value, setQuantity);
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      handleNumericInput(e.target.value, setPrice);
+    handleNumericInput(e.target.value, setPrice);
   };
 
   const handleSell = async () => {
     if (!isSellValid) {
-        console.warn("Sell attempt with invalid input or state.");
-        if (Number(quantity) > userAssetBalance) toast.error("Insufficient balance.");
-        else if (Number(quantity) <= 0) toast.error("Quantity must be positive.");
-        else if (Number(price) <= 0) toast.error("Price must be positive.");
-        return;
+      console.warn("Sell attempt with invalid input or state.");
+      if (Number(quantity) > userAssetBalance) toast.error("Insufficient balance.");
+      else if (Number(quantity) <= 0) toast.error("Quantity must be positive.");
+      else if (Number(price) <= 0) toast.error("Price must be positive.");
+      return;
     }
     if (!address || !network || !btcWallet) {
       console.error("Missing address, network, or wallet connection.");
@@ -257,7 +253,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
         <img src={assetInfo.assetLogo} alt={ticker} className="w-10 h-10 rounded-full object-cover" />
         <div className="leading-relaxed min-w-0">
           <p className="text-sm sm:text-base text-zinc-200 font-medium break-all">
-             {ticker} <span className="text-zinc-500 text-xs">({assetInfo.AssetId})</span>
+            {ticker}
           </p>
           <p className="text-sm text-gray-400">
             Your Balance: {displayBalance}
@@ -332,7 +328,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
           </p>
         )}
         {price !== "" && Number(price) <= 0 && (
-           <p className="text-red-500 font-medium mt-2">
+          <p className="text-red-500 font-medium mt-2">
             Price must be positive.
           </p>
         )}
@@ -345,19 +341,20 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
           </div>
         )}
       </div>
-
-      <Button
-        type="button"
-        onClick={handleSell}
-        className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${!isSellValid || isLoading
-          ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60"
-          : "btn-gradient-sell hover:opacity-90 active:opacity-80"
-          }`}
-        disabled={!isSellValid || isLoading}
-        size="lg"
-      >
-        {isSelling ? "Processing..." : `Sell ${ticker}`}
-      </Button>
+      <WalletConnectBus asChild>
+        <Button
+          type="button"
+          onClick={handleSell}
+          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${!isSellValid || isLoading
+            ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60"
+            : "btn-gradient-sell hover:opacity-90 active:opacity-80"
+            }`}
+          disabled={(!isSellValid || isLoading)}
+          size="lg"
+        >
+          {isSelling ? "Processing..." : `Sell ${ticker}`}
+        </Button>
+      </WalletConnectBus>
     </div>
   );
 };

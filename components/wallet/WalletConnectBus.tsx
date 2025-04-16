@@ -8,32 +8,57 @@ interface WalletConnectBusProps {
   children: React.ReactNode;
   className?: string;
   text?: string;
-  keepStyle?: boolean;
+  asChild?: boolean;
 }
+
 export const WalletConnectBus = ({
   children,
   className,
   text,
-  keepStyle,
+  asChild,
 }: WalletConnectBusProps) => {
-  const buttonCLick = (children as any)?.props?.onClick;
-  // if (keepStyle) {
-  //   (children as any)?.props?.onClick = async () => {
-
-  //   }
-  // }
   const { t } = useTranslation();
   const { connected, setModalVisible } = useReactWalletStore((state) => state);
-  return connected || keepStyle ? (
-    <>{children}</>
-  ) : (
-    <>
-      <Button
-        onClick={() => setModalVisible(true)}
-        className={className}
-      >
-        {text || t('buttons.connect')}
-      </Button>
-    </>
+
+  const handleConnectClick = (event: React.MouseEvent<any>) => {
+    // Prevent default behavior if it's wrapping a link, for example.
+    // event.preventDefault(); // Optional: uncomment if needed
+    setModalVisible(true);
+  };
+
+  if (connected) {
+    return <>{children}</>;
+  }
+
+  if (asChild) {
+    if (React.Children.count(children) !== 1 || !React.isValidElement(children)) {
+      console.warn(
+        'WalletConnectBus: The `asChild` prop requires a single valid React element child.'
+      );
+      // Fallback or throw error if necessary, returning null for now
+      return null;
+    }
+
+    const child = children as React.ReactElement<any>; // Type assertion
+
+    // Clone the child and merge props, ensuring our onClick is added
+    // without necessarily overwriting an existing one (though typically asChild implies the child handles display only).
+    // A more robust merge might check child.props.onClick and call it too if needed.
+    return React.cloneElement(child, {
+      onClick: (e: React.MouseEvent<any>) => {
+        handleConnectClick(e); // Call our connect logic
+        child.props.onClick?.(e); // Call original onClick if it exists
+      },
+      // Merge className if provided to the wrapper
+      className: className ? `${child.props.className || ''} ${className}`.trim() : child.props.className,
+      // Add other props like 'ref' if necessary, though onClick is the primary focus
+    });
+  }
+
+  // Default case: not connected and not asChild
+  return (
+    <Button onClick={() => setModalVisible(true)} className={className}>
+      {text || t('buttons.connect')}
+    </Button>
   );
 };
