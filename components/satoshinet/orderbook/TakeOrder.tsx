@@ -32,7 +32,7 @@ export interface MarketOrder {
   price: number;
   utxo: string;
   value: number;
-  assets: MarketOrderAsset[];
+  assets: MarketOrderAsset;
   order_time: number;
   locked: number;
   order_source: string;
@@ -230,6 +230,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     }
   }
   console.log('selectedIndexes', selectedIndexes);
+  console.log('orders', orders);
   
   const isProcessing = isLoading || isLoadingState;
 

@@ -28,7 +28,7 @@ const OrderSummary = ({ selectedOrders }: OrderSummaryProps) => {
           Total Quantity: <span className="font-medium">{totalQuantity}</span>
         </div>
         <div className="flex justify-between py-1">
-          Total Sats: <span className="font-medium">{totalBTC.toFixed(6)} sats</span>
+          Total Sats: <span className="font-medium">{totalBTC} sats</span>
         </div>
 
         <div className="flex justify-between py-2">
