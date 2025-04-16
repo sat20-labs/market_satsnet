@@ -1,0 +1,37 @@
+body {
+  background: linear-gradient(180deg,
+      rgb(18, 18, 18) 100%,
+      rgb(30, 30, 30) 0%,
+      rgb(18, 18, 18) 100%);
+  color: #e1e1e1;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+/* 通用渐变按钮样式 */
+.btn-gradient {
+  background: linear-gradient(to right, #5b00d3, #7b00ac);
+  /* 渐变背景色 */
+  color: #e2e2e2;
+  /* 按钮文字颜色 */
+  border: 1;
+  /* 移除边框 */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  /* 添加过渡效果 */
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(to right, #5b00d3, #7b00ac);
+  /* 悬停时反转渐变色 */
+  transform: scale(1.05);
+  /* 悬停时放大 */
+}
+
+.btn-gradient:disabled {
+  background: #505050;
+  /* 禁用状态的背景色 */
+  color: #a1a1a1;
+  /* 禁用状态的文字颜色 */
+  cursor: not-allowed;
+  /* 禁用状态的鼠标样式 */
+  opacity: 0.6;
+  /* 禁用状态的透明度 */
+}
