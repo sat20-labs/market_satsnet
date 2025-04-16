@@ -73,6 +73,9 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         hide_locked: false,
       }),
     enabled: !!assetInfo.assetName,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
+    staleTime: 10000,
   });
 
   const orders: MarketOrder[] = useMemo(() => data?.data?.order_list ?? [], [data]);
@@ -151,7 +154,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       console.log("Fetching UTXO info for:", utxoList);
       for (const { utxo } of utxoList) {
         const [error2, utxoInfo] = await tryit(clientApi.getUtxoInfo)(utxo);
-        if (error2 || !utxoInfo || utxoInfo.code !== 200) {
+        if (error2 || !utxoInfo || utxoInfo.code !== 0) {
           throw new Error(`Failed to get UTXO info for ${utxo}: ${error2 || utxoInfo?.msg}`);
         }
         buyUtxoInfos.push({ ...utxoInfo.data });

@@ -9,6 +9,7 @@ import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SellOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
@@ -164,6 +165,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const [isSelling, setIsSelling] = useState(false);
+  const queryClient = useQueryClient();
 
   const userAssetBalance = useMemo(() => {
     if (!assetInfo.assetName || balanceLoading) return 0;
@@ -232,6 +234,9 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
       const sellUtxoInfos = await prepareSellData(assetInfo.assetName, sellQuantity, sellPrice);
       const signedPsbts = await buildAndSignOrder(sellUtxoInfos, address, network, btcWallet);
       await submitSignedOrder(address, assetInfo.assetName, signedPsbts);
+
+      // 成功售出后，使所有订单查询缓存失效
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
 
       setQuantity("");
       setPrice("");
