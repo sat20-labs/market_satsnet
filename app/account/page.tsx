@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { Assets } from '@/components/account/Assets';
+import { OrdxOrderList } from '@/components/account/OrdxOrderList';
 import { OrdxOrderHistoryList } from '@/components/order/OrdxOrderHistoryList';
 import { useSearchParams } from 'next/navigation';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
@@ -69,7 +70,7 @@ export default function AccountPage() {
         <OrdxOrderHistoryList address={address} />
       </TabsContent>
       <TabsContent value="order">
-        {/* <OrdxOrderList address={address} /> */}
+        <OrdxOrderList address={address} />
       </TabsContent>
       <TabsContent value="bill">
         <OrdxBillList />

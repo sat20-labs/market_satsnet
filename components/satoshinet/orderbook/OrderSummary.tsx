@@ -38,7 +38,7 @@ interface OrderSummaryProps {
 
     // Service Fee 计算 (假设费率为 0.8%)
     const serviceFeeRate = 0.008; // 0.8%
-    const serviceFee = totalBTC * serviceFeeRate;
+    const serviceFee = Math.floor(totalBTC * serviceFeeRate); // 向下取整
     
     const networkFee = 10; // 假设网络费用为 10 sats
     const networkFeeBTC = networkFee / 1e8; // 转换为 BTC

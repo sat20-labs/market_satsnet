@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
-import { Divider } from 'antd';
+import { Button } from "@/components/ui/button"; 
+import { Input } from "@/components/ui/input";
 
 interface OrderBookHeaderProps {
   activeTab: "takeOrder" | "makeOrder";
@@ -63,8 +64,9 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
 
       {/* 设置弹窗 */}
       {isSettingsOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 z-30">
         <div
-          className={`bg-zinc-800 text-zinc-300 p-4 rounded-xl shadow-xl z-20 transition-transform duration-300 ease-in-out ${window.innerWidth >= 640
+          className={`bg-zinc-900 text-zinc-300 p-4 rounded-xl z-40 shadow-2xl transition-transform duration-300 ease-in-out ${window.innerWidth >= 640
               ? "absolute top-16 right-4 w-72" // PC 靠右上弹出
               : "fixed bottom-0 left-2 w-[96%] rounded-t-lg" // 移动端从底部弹出
             }`}
@@ -82,8 +84,8 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
           </div>
           <div className="mb-4">
             <label className="text-sm">Max price per item</label>
-            <div className="flex items-center bg-zinc-800 rounded px-2 py-1">
-              <input
+            <div className="flex items-center rounded  py-1">
+              <Input
                 type="number"
                 value={maxBidPrice}
                 onChange={(e) => setMaxBidPrice(Number(e.target.value))}
@@ -93,23 +95,26 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
               <span className="text-sm text-gray-400 ml-2">sats</span>
             </div>
           </div>
-          <div className="flex justify-end gap-2">
-            <button
+          <div className="flex justify-start gap-2">
+            <Button
               onClick={() => setIsSettingsOpen(false)} // 关闭弹窗
-              className="px-4 py-2 text-sm bg-gray-700 rounded hover:bg-gray-600"
+              className="px-4 py-2 text-sm w-1/2"
+              variant={"outline"}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSettingsSave} // 保存设置
-              className="px-4 py-2 text-sm bg-blue-500 rounded hover:bg-blue-600"
+              className="px-4 py-2 text-sm btn-gradient w-1/2"
             >
               Save
-            </button>
+            </Button>
           </div>
         </div>
+        </div> // 背景遮罩
       )}
     </div>
+    
   );
 };
 

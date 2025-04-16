@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button"; 
+import { Input } from "@/components/ui/input";
 import { Icon } from "@iconify/react";
 import { BtcPrice } from '../BtcPrice';
 import { clientApi, marketApi } from '@/api'; // 假设 API 方法在此路径
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-import { Input } from "@/components/ui/input";
 
 interface SellOrderModalProps {
   assetInfo: { assetName: string; assetBalance: number };
@@ -164,7 +165,7 @@ const SellOrderModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end md:items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-end sm:items-center z-50">
       <div className="bg-zinc-900 p-6 rounded-t-lg md:rounded-lg w-full max-w-md relative">
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -173,22 +174,22 @@ const SellOrderModal = ({
           <Icon icon="mdi:close" className="text-xl" />
         </button>
         {/* 资产信息展示 */}
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-white">Asset Information</h3>
-          <p className="text-sm text-gray-400">
+        <div className="my-5 font-mono rounded-lg border-1 border-zinc-800 p-4">
+          <h3 className="text-xl text-zinc-400 first-letter:uppercase">{assetInfo.assetName} Information</h3>
+          {/* <p className="text-sm text-zinc-400">
             <strong>Asset Name:</strong> {assetInfo.assetName}
+          </p> */}
+          <p className="text-lg text-zinc-400">
+            Asset Balance: {assetInfo.assetBalance}
           </p>
-          <p className="text-sm text-gray-400">
-            <strong>Asset Balance:</strong> {assetInfo.assetBalance}
-          </p>
-          <p className="text-sm text-gray-400">
-            <strong>Available Balance:</strong> {availableBalance}
+          <p className="text-lg text-zinc-400">
+            Available Balance: {availableBalance}
           </p>
         </div>
 
         {/* 数量输入 */}
         <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-1">Quantity to Sell:</label>
+          <label className="block text-sm text-gray-400 mb-1">Quantity to Sell :</label>
           <div className="flex items-center gap-0">
             <Input
               type="number"
@@ -197,12 +198,12 @@ const SellOrderModal = ({
               placeholder="Enter quantity"
               className="w-full bg-zinc-800 text-zinc-200 p-2 rounded"
             />
-            <button
+            <Button
               onClick={handleMaxClick}
               className="px-2 py-2 h-[36px] border-1 border-l-zinc-800 border-zinc-700 bg-zinc-900 text-zinc-300 text-sm rounded hover:bg-zinc-800"
             >
               Max
-            </button>
+            </Button>
             <span className="text-sm text-gray-400">{assetInfo.assetName}</span>
           </div>
         </div>
@@ -211,7 +212,7 @@ const SellOrderModal = ({
 
         {/* 单价输入 */}
         <div className="mb-6">
-          <label className="block text-sm text-gray-400 mb-1">Unit Price:</label>
+          <label className="block text-sm text-gray-400 mb-1">Unit Price :</label>
           <div className="flex items-center gap-2">
             <Input
               type="number"
@@ -226,7 +227,7 @@ const SellOrderModal = ({
 
         {/* 批量挂单数量滑动条 */}
         <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-1">Batch Quantity:</label>
+          <label className="block text-sm text-gray-400 mb-1">Repeat :</label>
           <div className="flex items-center gap-4">
             <Input
               type="range"
@@ -264,7 +265,7 @@ const SellOrderModal = ({
         )}
 
         {/* 提交按钮 */}
-        <button
+        <Button
           className={`w-full py-3 rounded-xl text-zinc-200 text-sm font-semibold ${
             isSellValid && !loading ? "btn-gradient hover:bg-zinc-700" : "bg-gray-700 cursor-not-allowed"
           }`}
@@ -272,7 +273,7 @@ const SellOrderModal = ({
           onClick={handleSellSubmit}
         >
           {loading ? "Submitting..." : "Submit"}
-        </button>
+        </Button>
       </div>
     </div>
   );

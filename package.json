@@ -61,7 +61,7 @@
     "react-use": "^17.5.0",
     "rollup": "^2.79.2",
     "sonner": "^2.0.3",
-    "swr": "^2.2.5",
+    "swr": "^2.3.3",
     "tailwind-merge": "^3.2.0",
     "tailwind-variants": "^0.1.18",
     "tailwindcss": "^4.1.4",

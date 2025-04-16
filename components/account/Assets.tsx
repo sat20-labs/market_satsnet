@@ -36,6 +36,9 @@ export const Assets = () => {
         />
         // <NewAssetsList
         //   assets={currentAssets}
+        // />
+        // <NewAssetsList
+        //   assets={currentAssets}
         //   // onListClick={onListClick}
         // />
       )}
