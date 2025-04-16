@@ -7,8 +7,6 @@ import { marketApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/satoshinet/DataTable";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,130 +16,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from 'react-i18next';
+import { Activity, Order, ApiResponse } from './types';
+import { ActivityTable } from './ActivityTable';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 
-// --- Define API Response Types ---
-interface AssetDetails {
-  assets_name: {
-    Protocol: string;
-    Type: string;
-    Ticker: string;
-  };
-  content_type: string;
-  delegate: string;
-  amount: string; // Needs conversion to number
-  unit_price: string; // Needs conversion to number and currency check
-  unit_amount: number;
-}
-
-interface Order {
-  order_id: number;
-  address: string; // Maker address
-  order_type: number; // e.g., 1 for Sell listing?
-  currency: 'SAT' | 'BTC';
-  price: number; // Total order price (in currency unit)
-  utxo: string;
-  value: number; // satoshis value in utxo?
-  assets: AssetDetails;
-  order_time: number; // Timestamp ms
-  result: number;
-  txaddress: string; // Taker address (if filled)
-  txid: string; // Transaction ID (if filled)
-  txprice: number; // Filled price (total)
-  txtime: number; // Transaction timestamp ms (if filled)
-  sourcename: string;
-}
-
-interface HistoryData {
-  total: number;
-  offset: number;
-  order_list: Order[];
-}
-
-interface ApiResponse {
-  code: number;
-  msg: string;
-  data: HistoryData;
-}
-
-// --- Component Props ---
 interface ActivityLogProps {
   assets_name: string | null;
-  // activityLogData prop is likely no longer needed if fetching internally
 }
 
-// --- Target Activity Structure ---
-interface Activity {
-  order_id: number;
-  eventTypeLabel: string; // New field for display label matching filter
-  quantity: number;
-  price: number; // Unit price in BTC
-  totalValue: number; // Total value in BTC
-  time: string; // Relative time string
-  txid?: string; // Optional txid for linking
-}
-
-// --- Column Definitions for DataTable ---
-const columns: ColumnDef<Activity>[] = [
-  {
-    accessorKey: "eventTypeLabel",
-    header: "Event",
-    cell: ({ row }) => {
-      const activity = row.original;
-      const label = activity.eventTypeLabel;
-      let className = "px-2 py-1 rounded text-xs font-semibold";
-      return <span className={className}>{label}</span>;
-    },
-  },
-  {
-    accessorKey: "quantity",
-    header: "Quantity",
-    cell: ({ row }) => row.original.quantity.toLocaleString(),
-  },
-  {
-    accessorKey: "price",
-    header: "Unit Price (BTC)",
-    cell: ({ row }) => row.original.price.toFixed(8),
-  },
-  {
-    accessorKey: "totalValue",
-    header: "Total Value (BTC)",
-    cell: ({ row }) => row.original.totalValue.toFixed(8),
-  },
-  {
-    id: "time",
-    header: "Time",
-    cell: ({ row }) => {
-      const activity = row.original;
-      return (
-        <div className="flex items-center justify-start gap-2">
-          {activity.time}
-          {activity.txid && (
-            <a
-              href={`https://mempool.space/testnet/tx/${activity.txid}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View transaction"
-              className="text-gray-400 hover:text-white"
-            >
-              <Icon icon="mdi:open-in-new" className="text-base" />
-            </a>
-          )}
-        </div>
-      );
-    },
-  },
-];
+const PAGE_SIZES = [10, 20, 50, 100];
 
 export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { chain } = useCommonStore();
   const { address } = useReactWalletStore();
   const [page, setPage] = useState(1);
-  const [size, setSize] = useState(12);
+  const [pageSize, setPageSize] = useState(20);
   const [sort, setSort] = useState(0);
   const [apiFilter, setApiFilter] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<'activities' | 'myActivities'>('activities');
 
-  // Dynamic filter list based on address and translation (used for mapping labels)
+  // Dynamic filter list based on address and translation
   const filterList = useMemo(() => {
     const _list = [
       { label: t('common.filter_all'), value: 0 },
@@ -160,27 +62,39 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
     }
     _list.sort((a, b) => a.value - b.value);
     return _list;
-  }, [t, i18n.language, address]);
+  }, [t, address]);
 
-  const { data: apiResponse, isLoading, error, refetch } = useQuery<ApiResponse>({
-    queryKey: ['history', assets_name, page, size, sort, apiFilter, chain],
+  // Query for all activities
+  const allActivitiesQuery = useQuery<ApiResponse>({
+    queryKey: ['history', assets_name, page, pageSize, sort, apiFilter, chain, 'all'],
     queryFn: () =>
       marketApi.getHistory({
-        offset: (page - 1) * size,
-        size,
+        offset: (page - 1) * pageSize,
+        size: pageSize,
         assets_name,
         sort,
         filter: apiFilter === 0 ? undefined : apiFilter,
       }),
-    enabled: !!assets_name,
+    enabled: !!assets_name && activeTab === 'activities',
   });
 
-  const activities = useMemo((): Activity[] => {
-    if (!apiResponse?.data?.order_list) {
-      return [];
-    }
+  // Query for my activities
+  const myActivitiesQuery = useQuery<ApiResponse>({
+    queryKey: ['history', assets_name, page, pageSize, sort, apiFilter, chain, 'my', address],
+    queryFn: () =>
+      marketApi.getHistory({
+        offset: (page - 1) * pageSize,
+        size: pageSize,
+        assets_name,
+        sort,
+        filter: apiFilter === 0 ? undefined : apiFilter,
+        address,
+      }),
+    enabled: !!assets_name && !!address && activeTab === 'myActivities',
+  });
 
-    return apiResponse.data.order_list
+  const transformOrders = (orders: Order[]): Activity[] => {
+    return orders
       .map((order): Activity | null => {
         try {
           const quantity = Number(order.assets.amount);
@@ -191,60 +105,50 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
             return null;
           }
 
-          let priceInBtc: number;
+          // Keep price in original unit (SAT or BTC)
+          let priceInSats: number;
           if (order.currency === 'SAT') {
-            priceInBtc = unitPrice / 100_000_000;
+            priceInSats = unitPrice;
           } else if (order.currency === 'BTC') {
-            priceInBtc = unitPrice;
+            priceInSats = unitPrice * 100_000_000;
           } else {
             console.warn(`Skipping order ${order.order_id}: Unsupported currency ${order.currency}`);
             return null;
           }
 
-          const totalValue = quantity * priceInBtc;
+          const totalValue = quantity * priceInSats;
           const timeMs = order.txid ? order.txtime : order.order_time;
           const time = formatDistanceToNowStrict(new Date(timeMs), { addSuffix: true });
 
-          // --- Determine Event Type Label --- 
-          let eventTypeLabel = t('common.unknown'); // Default label
-          let eventTypeStatus = order.result; // Assuming order.result maps to filter values 0-4
+          let eventTypeLabel = t('common.unknown');
+          let eventTypeStatus = order.result;
 
-          // If user is logged in and order is executed (result=1), determine if it's buy/sell history
           if (address && order.result === 1) {
-            if (order.address === address) { // User was the maker (original seller/buyer)
+            if (order.address === address) {
               eventTypeStatus = order.order_type === 1 ? 10 : 11;
-            } else if (order.txaddress === address) { // User was the taker
-               // If user was taker of a sell list (order_type=1), they bought -> history_buy (value 11)
-               // If user was taker of a buy list (order_type=2), they sold -> history_sell (value 10)
+            } else if (order.txaddress === address) {
               eventTypeStatus = order.order_type === 1 ? 11 : 10;
             } else {
-              // User not involved, show standard 'Executed'
               eventTypeStatus = 1;
             }
           } else if (order.result === undefined || order.result === null) {
-            // Handle cases where result might be missing, maybe default to 'List'?
-             eventTypeStatus = 4; // Default to 'List' if result is missing? Needs confirmation.
+            eventTypeStatus = 4;
           } else if (order.result === 0) {
-             eventTypeStatus = 4; // Map result 0 to 'List' (value 4)
+            eventTypeStatus = 4;
           }
-          // Assuming result 1, 2, 3 directly map to filter values 1, 2, 3 otherwise
 
           const foundFilter = filterList.find(f => f.value === eventTypeStatus);
           if (foundFilter) {
             eventTypeLabel = foundFilter.label;
           } else {
-             // Fallback if status doesn't match any known filter value
-             console.warn(`Order ${order.order_id}: Unknown event status ${eventTypeStatus}, result: ${order.result}`);
-             // Optionally use a more specific label based on result if possible
-             eventTypeLabel = `${t('common.unknown')} (${eventTypeStatus})`;
+            eventTypeLabel = `${t('common.unknown')} (${eventTypeStatus})`;
           }
-          // --- End Determine Event Type Label ---
 
           return {
             order_id: order.order_id,
-            eventTypeLabel: eventTypeLabel, // Use the determined label
+            eventTypeLabel,
             quantity,
-            price: priceInBtc,
+            price: priceInSats,
             totalValue,
             time,
             txid: order.txid || undefined,
@@ -255,27 +159,31 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
         }
       })
       .filter((activity): activity is Activity => activity !== null);
-  }, [apiResponse, address, filterList, t]); // Add dependencies: address, filterList, t
-
-  const [activeTab, setActiveTab] = useState<'activities' | 'myActivities'>('activities');
-
-  const handleRefresh = () => {
-    refetch();
   };
 
-  if (isLoading) {
-    return <div className="text-center p-10">Loading activities...</div>;
-  }
+  const currentQuery = activeTab === 'activities' ? allActivitiesQuery : myActivitiesQuery;
+  const activities = useMemo(() => {
+    if (!currentQuery.data?.data?.order_list) return [];
+    return transformOrders(currentQuery.data.data.order_list);
+  }, [currentQuery.data]);
 
-  if (error) {
-    return <div className="text-center p-10 text-red-500">Error loading activities: {error.message}</div>;
-  }
+  const totalPages = useMemo(() => {
+    if (!currentQuery.data?.data?.total) return 1;
+    return Math.ceil(currentQuery.data.data.total / pageSize);
+  }, [currentQuery.data?.data?.total, pageSize]);
 
-  // --- Determine Empty State Message ---
-  // This logic might need refinement or could be passed to DataTable if made customizable
-  const emptyMessage = apiResponse && activities.length === 0
-    ? (apiFilter === 0 ? 'No activities found.' : `No activities match filter '${filterList.find(f => f.value === apiFilter)?.label || apiFilter}'.`)
-    : 'No activities match the current filters.';
+  const handleRefresh = () => {
+    currentQuery.refetch();
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setPage(1); // Reset to first page when changing page size
+  };
 
   return (
     <div className="bg-zinc-900/90 sm:p-6 rounded-lg text-zinc-200 w-full">
@@ -290,7 +198,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
             }`}
             onClick={() => setActiveTab('activities')}
           >
-            Activity
+            {t('common.activity')}
           </Button>
           <Button
             variant="ghost"
@@ -302,7 +210,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
             onClick={() => setActiveTab('myActivities')}
             disabled={!address}
           >
-            My Activities
+            {t('common.my_activities')}
           </Button>
         </div>
 
@@ -331,7 +239,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
             variant="ghost"
             size="icon"
             className="text-gray-400 hover:text-white transition-colors h-8 w-8"
-            aria-label={t('common.refresh') || "Refresh"}
+            aria-label={t('common.refresh')}
             onClick={handleRefresh}
           >
             <Icon icon="mdi:refresh" className="h-5 w-5" />
@@ -339,9 +247,83 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
         </div>
       </div>
 
-      <div className="mt-4">
-        <DataTable columns={columns} data={activities} />
-      </div>
+      {activeTab === 'myActivities' && !address ? (
+        <div className="flex flex-col items-center justify-center py-10 gap-4">
+          <p className="text-gray-400">{t('common.connect_wallet_to_view')}</p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Trigger wallet connect action
+              // This should be implemented based on your wallet connection logic
+            }}
+          >
+            {t('common.connect_wallet')}
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="mt-4">
+            <ActivityTable
+              activities={activities}
+              isLoading={currentQuery.isLoading}
+              error={currentQuery.error as Error}
+            />
+          </div>
+          
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(page - 1)}
+                    className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNumber = i + 1;
+                  return (
+                    <PaginationItem key={pageNumber}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(pageNumber)}
+                        isActive={page === pageNumber}
+                      >
+                        {pageNumber}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(page + 1)}
+                    className={page >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+
+          <div className="mt-4 flex justify-end items-center gap-2">
+            <span className="text-sm text-gray-400">{t('common.items_per_page')}</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(value) => handlePageSizeChange(Number(value))}
+            >
+              <SelectTrigger className="w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZES.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -99,5 +99,14 @@
   "filter_all": "全部",
   "inscription_id": "铭文ID",
   "split_dummy_hint": "虚拟Utxo数量不够，会自动分割",
-  "select_option": "选择选项"
+  "select_option": "选择选项",
+  "activity": "活动",
+  "my_activities": "我的活动",
+  "items_per_page": "每页项目",
+  "unit_price_btc": "单价(BTC)",
+  "total_value_btc": "总价(BTC)",
+  "quantity": "数量",
+  "total_value": "总价",
+  "unknown": "未知",
+  "unknown_status": "未知状态"
 }

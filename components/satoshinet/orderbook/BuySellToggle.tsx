@@ -11,7 +11,6 @@ const BuySellToggle = ({
   disableSell?: boolean;
   disableBuy?: boolean;
 }) => {
-  console.log('disableBuy', disableBuy);
   return (
     <div className="inline-flex my-6 rounded-lg overflow-hidden border border-gray-600 w-full">
       <button

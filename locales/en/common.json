@@ -95,5 +95,15 @@
   "filter_all": "All",
   "inscription_id": "Inscription ID",
   "split_dummy_hint": "If the number of virtual Utxo is not enough, it will be automatically divided.",
-  "select_option": "Select Option"
+  "select_option": "Select Option",
+  "activity": "Activity",
+  "my_activities": "My Activities",
+  "items_per_page": "Items per page",
+  "unit_price_btc": "Unit Price(BTC)",
+  "total_value_btc": "Total Value(BTC)",
+  "quantity": "Quantity",
+  "total_value": "Total Value",
+  "unknown": "Unknown",
+  "unknown_status": "Unknown Status",
+  "event": "Event"
 }
