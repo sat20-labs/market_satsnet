@@ -1,5 +1,4 @@
 'use client';
-import '@sat20/btc-connect/dist/style/index.css';
 import '@/styles/globals.css';
 import '@/styles/index.css';
 import { Providers } from './providers';

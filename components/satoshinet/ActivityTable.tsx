@@ -14,7 +14,6 @@ interface ActivityTableProps {
 
 export const ActivityTable = ({ activities, isLoading, error }: ActivityTableProps) => {
   const { t } = useTranslation();
-
   const columns: ColumnDef<Activity>[] = [
     {
       accessorKey: "eventTypeLabel",
@@ -34,7 +33,7 @@ export const ActivityTable = ({ activities, isLoading, error }: ActivityTablePro
       accessorKey: "price",
       header: t('common.unit_price_sats'),
       cell: ({ row }) => {
-        const satsPrice = Math.round(row.original.price * 100_000_000);
+        const satsPrice = Math.round(row.original.price);
         return satsPrice.toLocaleString() + ' sats';
       },
     },
@@ -42,7 +41,7 @@ export const ActivityTable = ({ activities, isLoading, error }: ActivityTablePro
       accessorKey: "totalValue",
       header: t('common.total_value_sats'),
       cell: ({ row }) => {
-        const satsTotalValue = Math.round(row.original.totalValue * 100_000_000);
+        const satsTotalValue = Math.round(row.original.totalValue);
         return satsTotalValue.toLocaleString() + ' sats';
       },
     },
@@ -78,6 +77,6 @@ export const ActivityTable = ({ activities, isLoading, error }: ActivityTablePro
   if (error) {
     return <div className="text-center p-10 text-red-500">{t('common.error_loading_activities')}: {error.message}</div>;
   }
-
+  console.log('activities', activities);
   return <DataTable columns={columns} data={activities} />;
 }; 

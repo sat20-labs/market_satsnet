@@ -18,14 +18,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Activity, Order, ApiResponse } from './types';
 import { ActivityTable } from './ActivityTable';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
+import { CustomPagination } from "@/components/ui/CustomPagination";
 
 interface ActivityLogProps {
   assets_name: string | null;
@@ -107,14 +100,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
 
           // Keep price in original unit (SAT or BTC)
           let priceInSats: number;
-          if (order.currency === 'SAT') {
-            priceInSats = unitPrice;
-          } else if (order.currency === 'BTC') {
-            priceInSats = unitPrice * 100_000_000;
-          } else {
-            console.warn(`Skipping order ${order.order_id}: Unsupported currency ${order.currency}`);
-            return null;
-          }
+          priceInSats = unitPrice;
 
           const totalValue = quantity * priceInSats;
           const timeMs = order.txid ? order.txtime : order.order_time;
@@ -167,17 +153,14 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
     return transformOrders(currentQuery.data.data.order_list);
   }, [currentQuery.data]);
 
+  const totalCount = currentQuery.data?.data?.total ?? 0;
   const totalPages = useMemo(() => {
-    if (!currentQuery.data?.data?.total) return 1;
-    return Math.ceil(currentQuery.data.data.total / pageSize);
-  }, [currentQuery.data?.data?.total, pageSize]);
+    if (totalCount === 0) return 1;
+    return Math.ceil(totalCount / pageSize);
+  }, [totalCount, pageSize]);
 
   const handleRefresh = () => {
     currentQuery.refetch();
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
   };
 
   const handlePageSizeChange = (newSize: number) => {
@@ -191,22 +174,20 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
         <div className="flex gap-1 w-full sm:w-auto">
           <Button
             variant="ghost"
-            className={`text-sm sm:text-base font-medium h-auto px-3 py-1.5 ${
-              activeTab === 'activities'
+            className={`text-sm sm:text-base font-medium h-auto px-3 py-1.5 ${activeTab === 'activities'
                 ? 'text-blue-500 border-b-2 border-blue-500 rounded-none'
                 : 'text-gray-400 border-b-2 border-transparent rounded-none'
-            }`}
+              }`}
             onClick={() => setActiveTab('activities')}
           >
             {t('common.activity')}
           </Button>
           <Button
             variant="ghost"
-            className={`text-sm sm:text-base font-medium h-auto px-3 py-1.5 ${
-              activeTab === 'myActivities'
+            className={`text-sm sm:text-base font-medium h-auto px-3 py-1.5 ${activeTab === 'myActivities'
                 ? 'text-blue-500 border-b-2 border-blue-500 rounded-none'
                 : 'text-gray-400 border-b-2 border-transparent rounded-none'
-            }`}
+              }`}
             onClick={() => setActiveTab('myActivities')}
             disabled={!address}
           >
@@ -269,59 +250,18 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
               error={currentQuery.error as Error}
             />
           </div>
-          
-          <div className="mt-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => handlePageChange(page - 1)}
-                    className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNumber = i + 1;
-                  return (
-                    <PaginationItem key={pageNumber}>
-                      <PaginationLink
-                        onClick={() => handlePageChange(pageNumber)}
-                        isActive={page === pageNumber}
-                      >
-                        {pageNumber}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
-                
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => handlePageChange(page + 1)}
-                    className={page >= totalPages ? 'pointer-events-none opacity-50' : ''}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
 
-          <div className="mt-4 flex justify-end items-center gap-2">
-            <span className="text-sm text-gray-400">{t('common.items_per_page')}</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(value) => handlePageSizeChange(Number(value))}
-            >
-              <SelectTrigger className="w-[70px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZES.map((size) => (
-                  <SelectItem key={size} value={String(size)}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {totalCount > 0 && (
+              <CustomPagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  pageSize={pageSize}
+                  onPageSizeChange={handlePageSizeChange}
+                  availablePageSizes={PAGE_SIZES}
+                  isLoading={currentQuery.isLoading}
+              />
+          )}
         </>
       )}
     </div>

@@ -72,7 +72,7 @@ export const Header = () => {
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="max-w-6xl mx-auto flex h-16 items-center space-x-4 px-2 sm:px-6 sm:justify-between sm:space-x-0">
+      <div className="max-w-8xl mx-auto flex h-16 items-center space-x-4 px-2 sm:px-6 sm:justify-between sm:space-x-0">
         <div className="flex gap-2 sm:gap-4 items-center">
           <div className="flex items-center gap-[2px] sm:gap-2 mr-4">
             <NextLink
@@ -141,7 +141,7 @@ export const Header = () => {
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-full max-w-xs sm:max-w-sm">
+              <SheetContent side="right" className="w-full max-w-xs sm:max-w-sm">
                 <div className="flex flex-col gap-4 pt-8 h-full">
                   <div className="flex flex-col gap-3 px-4">
                      <p className="text-sm font-medium text-muted-foreground">{t('settings')}</p>
@@ -149,6 +149,7 @@ export const Header = () => {
                        <NetworkSelect />
                        <ChainSelect />
                      </div>
+                       <FeerateSelectButton />
                      <LanguageSelect />
                   </div>
                   <Separator className="my-2"/>

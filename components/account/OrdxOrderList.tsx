@@ -1,6 +1,5 @@
 'use client';
 
-import { notification } from 'antd';
 import { getOrders, cancelOrder } from '@/api';
 import { useEffect, useMemo, useState } from 'react';
 import { Pagination } from '@/components/Pagination';
@@ -9,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useList } from 'react-use';
 
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
-import { Icon } from '@iconify/react';
+import { toast } from 'sonner';
 import { BtcPrice } from '../BtcPrice';
 import useSWR from 'swr';
 import { Button } from "@/components/ui/button"; 
@@ -109,8 +108,7 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
   // Cancel order handler
   const onCancelOrder = async (item: any) => {
     if (item.locker === '1') {
-      notification.error({
-        message: 'Cancel order failed',
+      toast.error('Cancel order failed', {
         description: `The order is locked, please wait unlock it first`,
       });
       return;
@@ -118,20 +116,15 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
     try {
       const res = await cancelOrder({ address, order_id: item.order_id });
       if (res.code === 200) {
-        notification.success({
-          message: 'Cancel order successfully',
+        toast.success('Cancel order successfully', {
           description: `The order has been canceled successfully`,
         });
         mutate(); // Refresh data after canceling the order
       } else {
-        notification.error({
-          message: 'Cancel order failed',
-          description: res.msg,
-        });
+        toast.error('Cancel order failed', { description: res.msg });
       }
     } catch (error) {
-      notification.error({
-        message: 'Cancel order failed',
+      toast.error('Cancel order failed', {
         description: error instanceof Error ? error.message : 'Unknown error',
       });
     }
