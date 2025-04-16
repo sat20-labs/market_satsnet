@@ -81,11 +81,7 @@ export const OrderAnalyze = ({
     for (const item of dataSource) {
       if (item.date) {
         sat20_count += item.sat20.order_count;
-        me_count += item.magic_eden.order_count;
-        okx_count += item.okx.order_count;
         sat20_volume += item.sat20.volume;
-        me_volume += item.magic_eden.volume;
-        okx_volume += item.okx.volume;
       }
     }
     return [
@@ -141,8 +137,8 @@ export const OrderAnalyze = ({
             ))}
           </div>
         </div>        <div className="flex flex-col md:flex-row justify-between items-center gap-2">
-          {/* <OrderLineChart data={lineChartData || []} /> */}
-          <OrderPieChart data={marketData || []} />
+          <OrderLineChart data={lineChartData || []} />
+          {/* <OrderPieChart data={marketData || []} /> */}
         </div>
       </ContentLoading>
     </div>

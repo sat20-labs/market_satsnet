@@ -91,7 +91,7 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
         }} userWallet={userWallet} />
       ) : (
         <div>
-          {mode === "buy" ? (
+          {mode !== "buy" ? (
             <BuyOrder
               userWallet={userWallet}
               assetInfo={{

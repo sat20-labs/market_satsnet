@@ -95,11 +95,6 @@ const prepareSellData = async (assetName: string, quantity: number, price: numbe
     throw new Error(`Failed to fetch UTXO info for ${utxo} after multiple attempts.`);
   }
 
-  if (!utxoData.script || !utxoData.value) {
-    toast.error('Received invalid UTXO data format.');
-    throw new Error('Invalid UTXO data format received.');
-  }
-
   const sellUtxoInfos: SellUtxoInfo[] = [{
     ...utxoData,
     Price: Number(price) * Number(quantity),
