@@ -32,7 +32,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
   const { address } = useReactWalletStore();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sort, setSort] = useState(0);
+  const [sort, setSort] = useState(1);
   const [apiFilter, setApiFilter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'activities' | 'myActivities'>('activities');
 
@@ -69,6 +69,9 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
         filter: apiFilter === 0 ? undefined : apiFilter,
       }),
     enabled: !!assets_name && activeTab === 'activities',
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
+    staleTime: 10000,
   });
 
   // Query for my activities

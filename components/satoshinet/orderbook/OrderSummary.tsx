@@ -16,9 +16,8 @@ const OrderSummary = ({ selectedOrders }: OrderSummaryProps) => {
     const serviceFee = Math.floor(totalBTC * serviceFeeRate); // 向下取整
     
     const networkFee = 10; // 假设网络费用为 10 sats
-    const networkFeeBTC = networkFee / 1e8; // 转换为 BTC
     // 总支付金额计算
-    const totalPay = totalBTC + serviceFee + networkFeeBTC;
+    const totalPay = Math.floor(totalBTC + serviceFee + networkFee);
 
 
   return (

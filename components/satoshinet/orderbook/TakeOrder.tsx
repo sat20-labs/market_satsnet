@@ -69,6 +69,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       marketApi.getOrders({
         offset: (page - 1) * size,
         size,
+        sort: 1,
         assets_name: assetInfo.assetName,
         hide_locked: false,
       }),
