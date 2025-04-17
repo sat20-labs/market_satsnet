@@ -11,7 +11,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Assets } from '@/components/account/Assets';
 import { OrdxOrderList } from '@/components/account/OrdxOrderList';
-import { OrdxOrderHistoryList } from '@/components/order/OrdxOrderHistoryList';
+import { MyActivitiesLog } from '@/components/satoshinet/MyActivitiesLog';
 import { useSearchParams } from 'next/navigation';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useTranslation } from 'react-i18next';
@@ -61,19 +61,15 @@ export default function AccountPage() {
         <TabsTrigger value="utxo">{t('buttons.my_assets')}</TabsTrigger>
         <TabsTrigger value="history">{t('common.tx_history')}</TabsTrigger>
         <TabsTrigger value="order">{t('common.my_listings')}</TabsTrigger>
-        <TabsTrigger value="bill">{t('common.my_biils')}</TabsTrigger>
       </TabsList>
       <TabsContent value="utxo">
         <Assets />
       </TabsContent>
       <TabsContent value="history">
-        <OrdxOrderHistoryList address={address} />
+        <MyActivitiesLog address={address} />
       </TabsContent>
       <TabsContent value="order">
         <OrdxOrderList address={address} />
-      </TabsContent>
-      <TabsContent value="bill">
-        <OrdxBillList />
       </TabsContent>
     </Tabs>
   );
