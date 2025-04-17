@@ -43,7 +43,7 @@ export default function RootLayout({
             {/* <ParticleEffect /> Add the ParticleEffect component here */}
             <Header />
             {/* <SystemNoticeModal /> */}
-            <main className="mx-auto w-full px-0 md:px-4 flex-grow">
+            <main className="mx-auto w-full px-0 sm:px-4 flex-grow">
               {children}
             </main>
             <footer id="footer">
