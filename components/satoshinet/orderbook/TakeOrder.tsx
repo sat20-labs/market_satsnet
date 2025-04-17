@@ -42,7 +42,7 @@ export interface MarketOrder {
 interface TakeOrderProps {
   mode: "buy" | "sell";
   setMode: (mode: "buy" | "sell") => void;
-  userWallet: { btcBalance: number; assetBalance: number };
+  userWallet: { btcBalance: number; assetBalance: number , address: string };
   assetInfo: { assetName: string; assetLogo: string; AssetId: string; floorPrice: number };
 }
 
@@ -270,6 +270,7 @@ const summarySelectedOrders = useMemo(() => {
               order={order}
               selected={selectedIndexes.includes(idx)}
               onClick={() => handleOrderClick(idx)}
+              currentWalletAddress={address} // 传递当前钱包地址
             />
           ))
         )}

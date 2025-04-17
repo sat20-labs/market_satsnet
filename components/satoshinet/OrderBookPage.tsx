@@ -35,6 +35,7 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
   const userWallet = {
     btcBalance: 0.5, // 用户钱包中的 BTC 余额
     assetBalance: 1000, // 用户持有的资产数量
+    address: '', // 用户钱包地址'';
   };
 
   const handleTabChange = (tab: "takeOrder" | "makeOrder") => {
