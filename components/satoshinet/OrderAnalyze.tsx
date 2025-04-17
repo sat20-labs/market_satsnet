@@ -58,7 +58,7 @@ export const OrderAnalyze = ({
       const item = dataSource[i];
       const label =
         type === '24h' ? item.time : item.date?.replace(/^\d{4}-/, '');
-      let value = item.avg_price;
+      let value = Math.floor(item.avg_price);
       const volume = item.volume;
       let realValue = value;
       if (i > 0 && (value === undefined || value <= 0)) {

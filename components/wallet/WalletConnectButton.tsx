@@ -56,7 +56,7 @@ const WalletConnectButton = () => {
     await check();
   };
   const getWalletUtxos = async () => {
-    const utxos = await window.sat20.getUtxos_SatsNet()
+    const utxos = await window.sat20.getAssetAmount_SatsNet(address, '::')
     console.log('utxos', utxos);
     
   };

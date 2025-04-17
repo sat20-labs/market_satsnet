@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { getHistory } from '@/api';
+import { marketApi } from '@/api';
 import { useMemo, useState } from 'react';
 import { hideStr, resolveMempoolTxLink } from '@/lib/utils';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
@@ -79,7 +79,7 @@ export const OrdxOrderHistoryList = ({
   const { data, isLoading } = useQuery<HistoryApiResponse, Error>({
     queryKey,
     queryFn: () =>
-      getHistory({
+      marketApi.getHistory({
         offset: (page - 1) * size,
         size,
         assets_name,
