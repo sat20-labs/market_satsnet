@@ -81,7 +81,10 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   const orders: MarketOrder[] = useMemo(() => data?.data?.order_list ?? [], [data]);
   console.log(orders);
 
-  const selectedOrdersData = selectedIndexes.map((index) => orders[index]).filter(Boolean);
+  const selectedOrdersData = selectedIndexes
+  .map((index) => orders[index])
+  .filter((order) => order !== undefined && order !== null);
+
   const totalBTC = selectedOrdersData.reduce((sum, order) => {
     return sum + order.value / 100_000_000;
   }, 0);
@@ -96,18 +99,27 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     }
   };
 
-  const summarySelectedOrders = useMemo(() => {
-    return selectedOrdersData.map(order => {
-      const quantity = parseInt(order.assets[0]?.amount ?? '0', 10);
-      const pricePerUnitSats = order.price;
-      const totalSats = order.price;
-      return {
-        quantity,
-        price: pricePerUnitSats,
-        totalSats: totalSats,
-      };
-    });
-  }, [selectedOrdersData]);
+
+
+console.log("selectedOrdersData:", selectedOrdersData);
+
+const summarySelectedOrders = useMemo(() => {
+  return selectedOrdersData.map(order => {    
+    const ticker = typeof order.assets?.assets_name === 'string'
+      ? order.assets.assets_name
+      : order.assets?.assets_name?.Ticker || 'Unknown';
+    const quantity = parseInt(order.assets?.amount ?? '0', 10); 
+    const pricePerUnitSats = order.price;
+    const totalSats = order.price;
+    return {
+      ticker,
+      quantity,
+      price: pricePerUnitSats,
+      totalSats: totalSats,
+    };
+  });
+}, [selectedOrdersData]);
+
   const [isLoadingState, setIsLoadingState] = useState(false);
 
   const handleBuyOrder = async () => {
@@ -241,7 +253,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     <div>
       <div className="grid grid-cols-3 text-sm font-semibold text-zinc-500 bg-transparent border-b border-zinc-800 px-2 py-3 rounded">
         <div className="ml-1">Quantity</div>
-        <div>Price (sats/unit)</div>
+        <div>Price (unit)</div>
         <div>Total</div>
       </div>
 

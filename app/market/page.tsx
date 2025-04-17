@@ -51,7 +51,7 @@ export default function Market() {
   const params = useSearchParams();
   const { chain, network } = useCommonStore();
   const paramType = params.get('type') || 'ticker';
-  const paramProtocol = params.get('protocol') || 'ordinals';
+  const paramProtocol = params.get('protocol') || 'ordx';
   const [type, setType] = useState<string>(paramType);
   const [protocol, setProtocol] = useState<string>(paramProtocol);
   const [interval, setInterval] = useState<number>(1);
@@ -267,6 +267,12 @@ export default function Market() {
                       const nickname = item.nickname;
                       const logo = item.logo;
                       const displayTick = nickname || tick;
+                      console.log('displayTick:', displayTick);
+
+                      // 直接在回调函数中计算 ticker
+                    const ticker = typeof displayTick === 'string'
+                    ? displayTick.split(':').pop() || displayTick
+                    : '';
 
                       return (
                         <TableCell
@@ -294,12 +300,12 @@ export default function Market() {
                             ) : (
                               <Avatar className="w-9 h-9 flex-shrink-0">
                                 <AvatarFallback className="text-xl text-gray-300 font-black bg-zinc-700">
-                                  {typeof displayTick === 'string' ? displayTick.slice(0, 1).toUpperCase() : '?'}
+                                  {typeof ticker === 'string' ? ticker.slice(0, 1).toUpperCase() : '?'}
                                 </AvatarFallback>
                               </Avatar>
                             )}
                             <span className="pt-0 ml-2 break-keep whitespace-nowrap">
-                              {displayTick}
+                              {ticker}
                             </span>
                           </div>
                         </TableCell>

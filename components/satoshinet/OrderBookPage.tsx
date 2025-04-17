@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import OrderBookHeader from "@/components/satoshinet/orderbook/OrderBookHearder";
 import BuySellToggle from "@/components/satoshinet/orderbook/BuySellToggle";
 import TakeOrder from "@/components/satoshinet/orderbook/TakeOrder";
@@ -25,18 +25,11 @@ interface AssetInfoProps {
   };
 }
 
-const orders = [
-  { quantity: 20000, price: 26.5, totalBTC: 0.0053, totalUSD: 444.38 },
-  { quantity: 30000, price: 26.8, totalBTC: 0.00804, totalUSD: 674.11 },
-  { quantity: 50000, price: 29.0, totalBTC: 0.0145, totalUSD: 1215.75 },
-  { quantity: 10551, price: 29.5, totalBTC: 0.003112, totalUSD: 260.93 },
-  { quantity: 10551, price: 29.9, totalBTC: 0.003154, totalUSD: 264.45 },
-  { quantity: 10551, price: 30.0, totalBTC: 0.003165, totalUSD: 265.37 },
-  { quantity: 10876, price: 30.0, totalBTC: 0.003262, totalUSD: 273.50 },
-  { quantity: 6547, price: 31.0, totalBTC: 0.002029, totalUSD: 170.12 },
-];
 
 const OrderBookPage = ({ assetData }: AssetInfoProps) => {
+  //const { asset, activeTab, mode } = router.query; // 获取 URL 中的参数
+  const [query, setQuery] = useState<Record<string, string | undefined>>({});  
+
   const [activeTab, setActiveTab] = useState<"takeOrder" | "makeOrder">("takeOrder");
   const [mode, setMode] = useState<"buy" | "sell">("buy");
   const userWallet = {
@@ -59,6 +52,36 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
     console.log("Updated Settings:", newSettings);
   };
 
+  useEffect(() => {
+    // 解析 URL 参数
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      setQuery({
+        asset: searchParams.get("asset") ?? undefined,
+        activeTabSet: searchParams.get("activeTabSet") ?? undefined,
+        modeSet: searchParams.get("modeSet") ?? undefined,
+      });
+    }
+  }, []);
+
+  const { asset, activeTabSet, modeSet } = query;
+
+  useEffect(() => {
+    console.log("URL Parameters:", query);
+  
+    // 更新 activeTab
+    if (activeTabSet === "makeOrder" || activeTabSet === "takeOrder") {
+      setActiveTab(activeTabSet as "takeOrder" | "makeOrder");
+    }
+  }, [activeTabSet]);
+  
+  useEffect(() => {
+    // 更新 mode
+    if (modeSet === "sell" || modeSet === "buy") {
+      setMode(modeSet as "sell" | "buy");
+    }
+  }, [modeSet]);
+  
   <div>
     {/* 根据 settings 过滤订单簿 */}
     {settings.showOngoingTrades && <p>显示进行中交易...</p>}
@@ -91,7 +114,7 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
         }} userWallet={userWallet} />
       ) : (
         <div>
-          {mode !== "buy" ? (
+          {mode === "buy" ? (
             <BuyOrder
               userWallet={userWallet}
               assetInfo={{

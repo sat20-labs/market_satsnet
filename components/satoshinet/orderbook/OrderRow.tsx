@@ -9,7 +9,7 @@ interface OrderRowProps {
 
 const OrderRow = ({ order, selected, onClick }: OrderRowProps) => {
     const quantity = parseInt(order.assets?.amount ?? '0', 10);
-    const priceInSats = order.price;
+    const priceInSats = order.price;    //
     console.log(priceInSats);
     const unitPrice = order.assets?.unit_price;
     const totalBTC = order.value;
@@ -28,7 +28,7 @@ const OrderRow = ({ order, selected, onClick }: OrderRowProps) => {
                     readOnly 
                     className="form-checkbox h-4 w-4 mr-2 mx-auto text-zinc-600" 
                 />
-                {quantity.toLocaleString()}             
+                {quantity.toLocaleString()}         
             </div>
             
             <div className="flex-1 justify-items-end">

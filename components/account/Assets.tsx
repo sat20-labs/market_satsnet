@@ -22,7 +22,7 @@ export const Assets = () => {
   const currentAssets = assets[protocol as keyof typeof assets];
   const onListClick = (key: string) => {
     console.log('List clicked for asset:', key);
-    router.push(`/order?asset=${key}`);
+    router.push(`/order?asset=${key}&activeTabSet=makeOrder&modeSet=sell`); // 传递 activeTab 和 mode 参数
   };
   return (
     <div className="py-4">

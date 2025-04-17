@@ -8,6 +8,7 @@ import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -255,7 +256,21 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
   return (
     <div>
       <div className="flex items-center gap-4 mb-6 p-4 bg-zinc-800/50 rounded-lg">
-        <img src={assetInfo.assetLogo} alt={ticker} className="w-10 h-10 rounded-full object-cover" />
+          {assetInfo.assetLogo ? (
+         <img
+              src={assetInfo.assetLogo}
+              alt={ticker}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+          ) : (
+            <Avatar className="w-12 h-12 flex-shrink-0">
+              <AvatarFallback className="text-xl text-gray-300 font-black bg-zinc-800">
+                {typeof ticker === 'string'
+                  ? ticker.slice(0, 1).toUpperCase()
+                  : '?'}
+              </AvatarFallback>
+            </Avatar>
+          )}
         <div className="leading-relaxed min-w-0">
           <p className="text-sm sm:text-base text-zinc-200 font-medium break-all">
             {ticker}
