@@ -36,8 +36,15 @@ export const ChainSelect = () => {
   };
 
   const handleSelectionChange = (value: Chain) => {
-    setChain(value); // 更新链的值
-    setIsOpen(false); // 选择后关闭菜单
+    if (value === 'Bitcoin') {
+      // Redirect to the external URL for Bitcoin
+      window.location.href = 'https://test.ordx.market/';
+      // No need to set state or close the menu as we are navigating away
+    } else {
+      // For other chains (like SatoshiNet), update the state and close the menu
+      setChain(value);
+      setIsOpen(false); 
+    }
   };
 
   return (
