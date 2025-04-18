@@ -16,9 +16,6 @@ interface OrderRowProps {
   currentWalletAddress: string;
   isLocked?: boolean;
   isProcessingLock?: boolean;
-  currentWalletAddress: string;
-  isLocked?: boolean;
-  isProcessingLock?: boolean;
 }
 
 const OrderRow = React.memo(function OrderRow({

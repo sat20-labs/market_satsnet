@@ -135,13 +135,13 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
 
       setAllOrders(prevOrders => {
         if (page === 1) {
-           console.log("Setting orders for page 1");
-           return newOrders;
+          console.log("Setting orders for page 1");
+          return newOrders;
         } else {
-           const existingOrderIds = new Set(prevOrders.map(o => o.order_id));
-           const uniqueNewOrders = newOrders.filter(o => !existingOrderIds.has(o.order_id));
-           console.log(`Appending ${uniqueNewOrders.length} new unique orders for page ${page}`);
-           return [...prevOrders, ...uniqueNewOrders];
+          const existingOrderIds = new Set(prevOrders.map(o => o.order_id));
+          const uniqueNewOrders = newOrders.filter(o => !existingOrderIds.has(o.order_id));
+          console.log(`Appending ${uniqueNewOrders.length} new unique orders for page ${page}`);
+          return [...prevOrders, ...uniqueNewOrders];
         }
       });
       setTotalOrders(total);
@@ -156,9 +156,6 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       setIsLoadingMore(false);
     }
   }, [error]);
-
-  // const orders: MarketOrder[] = useMemo(() => data?.data?.order_list ?? [], [data]);
-  // console.log(orders);
 
   const currentWalletAddress = address;
 
@@ -187,20 +184,14 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     return count;
   }, [sortedOrders, userWallet.btcBalance]);
 
-  // 当滑动条值变化时，更新滑动条选中的挂单
-  useEffect(() => {
-    if (sliderValue > 0) {
-      const selected = sortedOrders.slice(0, sliderValue).map(order => allOrders.indexOf(order));
-      setSliderSelectedIndexes(selected);
-    }
-  }, [sliderValue, sortedOrders, allOrders]);
+  
 
   // 合并手动选中和滑动条选中
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
-  
+
   useEffect(() => {
-      setSelectedIndexes(Array.from(new Set([...manualSelectedIndexes, ...sliderSelectedIndexes])));
-    }, [manualSelectedIndexes, sliderSelectedIndexes]);
+    setSelectedIndexes(Array.from(new Set([...manualSelectedIndexes, ...sliderSelectedIndexes])));
+  }, [manualSelectedIndexes, sliderSelectedIndexes]);
 
   const selectedOrdersData = selectedIndexes
     .map((index) => allOrders[index])
@@ -215,7 +206,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   const debouncedLock = useMemo(
     () => debounce({ delay: 300 }, async (orderIds: number[]) => {
       if (!address || orderIds.length === 0) return;
-      
+
       const ordersToLock = allOrders.filter(order => orderIds.includes(order.order_id));
       if (ordersToLock.length !== orderIds.length) {
         console.warn("Some orders to lock were not found in allOrders");
@@ -224,7 +215,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       setIsProcessingLock(true);
       try {
         const lockData = await marketApi.lockBulkOrder({ address, orderIds });
-        
+
         if (lockData.code === 200 && lockData.data) {
           const newLockedOrders = new Map(lockedOrders);
           const failedOrderIndexes: number[] = [];
@@ -243,7 +234,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
           setLockedOrders(newLockedOrders);
 
           if (failedOrderIndexes.length > 0) {
-            setSelectedIndexes(prev => 
+            setSelectedIndexes(prev =>
               prev.filter(index => !failedOrderIndexes.includes(index))
             );
             toast.error("Some orders are already locked by others");
@@ -272,9 +263,9 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         const newLockedOrders = new Map(lockedOrders);
         orderIds.forEach(id => newLockedOrders.delete(id));
         setLockedOrders(newLockedOrders);
-        
+
         const unlockResult = await marketApi.unlockBulkOrder({ address, orderIds });
-        
+
         if (unlockResult.code !== 200) {
           setLockedOrders(prev => {
             const revertedMap = new Map(prev);
@@ -294,11 +285,27 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     [address, lockedOrders, queryClient, queryKey]
   );
 
+  // 当滑动条值变化时，更新滑动条选中的挂单
+  useEffect(() => {
+    if (sliderValue > 0) {
+      const selected = sortedOrders.slice(0, sliderValue).map(order => allOrders.indexOf(order));
+      setSliderSelectedIndexes(selected);
+      
+      // 获取需要锁定的订单 ID
+    const orderIdsToLock = sortedOrders.slice(0, sliderValue).map(order => order.order_id);
+
+    // 调用锁定逻辑
+    if (orderIdsToLock.length > 0) {
+      debouncedLock(orderIdsToLock);
+    }
+    }
+  }, [sliderValue, sortedOrders, allOrders, debouncedLock]);
+
   const handleOrderClick = useCallback(async (index: number) => {
     const order = allOrders[index];
-    if (!order || order.locked === 1 && !lockedOrders.has(order.order_id) || order.address === address ) {
-        console.warn("Clicked on a disabled or invalid order row.");
-        return;
+    if (!order || order.locked === 1 && !lockedOrders.has(order.order_id) || order.address === address) {
+      console.warn("Clicked on a disabled or invalid order row.");
+      return;
     };
 
     const orderId = order.order_id;
@@ -307,18 +314,18 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       console.log('handleOrderClick 取消选择', order);
       setSelectedIndexes(prev => prev.filter(i => i !== index));
       if (lockedOrders.has(orderId)) {
-         debouncedUnlock([orderId]);
+        debouncedUnlock([orderId]);
       }
     } else {
       console.log('handleOrderClick 新选择', order);
       setSelectedIndexes(prev => [...prev, index]);
-       debouncedLock([orderId]);
+      debouncedLock([orderId]);
     }
   }, [allOrders, selectedIndexes, lockedOrders, debouncedLock, debouncedUnlock, address]);
 
   useEffect(() => {
     const initialLockedIds = Array.from(lockedOrders.keys());
-    
+
     return () => {
       console.log('Component unmounting, attempting to unlock orders locked during this session.');
       const finalLockedIds = Array.from(lockedOrders.keys());
@@ -359,7 +366,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       toast.warning("No orders selected.");
       return;
     }
-    
+
     setIsLoadingState(true);
     const toastId = toast.loading("Processing your order...");
 
@@ -382,28 +389,28 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
 
       const rawMap: { [key: number]: string } = {};
       const failedToLockIds: number[] = [];
-      
+
       lockData.data.forEach((item) => {
         if (intendedOrderIds.includes(item.order_id)) {
-            if (item.raw) {
-              rawMap[item.order_id] = item.raw;
-              successfullyLockedIds.push(item.order_id);
-            } else {
-               failedToLockIds.push(item.order_id);
-               console.warn(`Order ${item.order_id} lock confirmed but no raw data returned.`);
-            }
+          if (item.raw) {
+            rawMap[item.order_id] = item.raw;
+            successfullyLockedIds.push(item.order_id);
+          } else {
+            failedToLockIds.push(item.order_id);
+            console.warn(`Order ${item.order_id} lock confirmed but no raw data returned.`);
+          }
         }
       });
-      
+
       if (successfullyLockedIds.length !== intendedOrderIds.length) {
-          const missingLocks = intendedOrderIds.filter(id => !successfullyLockedIds.includes(id));
-          console.error("Could not successfully lock all intended orders:", missingLocks);
-          if (successfullyLockedIds.length > 0) {
-             await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => {
-               console.error("Failed to unlock orders after partial lock failure during buy:", unlockError);
-             });
-          }
-          throw new Error(`Failed to lock orders: ${missingLocks.join(', ')}. Please try again.`);
+        const missingLocks = intendedOrderIds.filter(id => !successfullyLockedIds.includes(id));
+        console.error("Could not successfully lock all intended orders:", missingLocks);
+        if (successfullyLockedIds.length > 0) {
+          await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => {
+            console.error("Failed to unlock orders after partial lock failure during buy:", unlockError);
+          });
+        }
+        throw new Error(`Failed to lock orders: ${missingLocks.join(', ')}. Please try again.`);
       }
 
       const buyUtxoInfos: any[] = [];
@@ -434,14 +441,14 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       );
       console.log('finalizeSellOrder res', finalizeRes);
       if (!finalizeRes || !finalizeRes.psbt) {
-         await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => console.error("Unlock failed in finalizeSellOrder error path:", unlockError));
+        await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => console.error("Unlock failed in finalizeSellOrder error path:", unlockError));
         throw new Error("Failed to finalize sell order.");
       }
 
       console.log("Signing PSBT...");
       const signedPsbt = await btcWallet?.signPsbt(finalizeRes.psbt, { chain: 'sat20' });
       if (!signedPsbt) {
-         await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => console.error("Unlock failed in signPsbt error path:", unlockError));
+        await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => console.error("Unlock failed in signPsbt error path:", unlockError));
         throw new Error('Failed to sign PSBT.');
       }
       console.log("PSBT signed.");
@@ -449,7 +456,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       console.log("Extracting transaction from PSBT...");
       const buyRaw = await window.sat20?.extractTxFromPsbt(signedPsbt, chain);
       if (!buyRaw) {
-         await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => console.error("Unlock failed in extractTx error path:", unlockError));
+        await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => console.error("Unlock failed in extractTx error path:", unlockError));
         throw new Error('Failed to extract transaction from PSBT.');
       }
       console.log('buyRaw extracted:', buyRaw);
@@ -468,7 +475,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         setPage(1);
         queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });
       } else {
-         await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => {
+        await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => {
           console.error("Failed to unlock orders after bulk buy failure:", unlockError);
         });
         throw new Error(buyRes.msg || "Failed to place order.");
@@ -487,9 +494,9 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         }
       }
       setLockedOrders(prev => {
-          const newMap = new Map(prev);
-          successfullyLockedIds.forEach(id => newMap.delete(id));
-          return newMap;
+        const newMap = new Map(prev);
+        successfullyLockedIds.forEach(id => newMap.delete(id));
+        return newMap;
       })
     } finally {
       setIsLoadingState(false);
@@ -507,7 +514,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       </div>
 
       <div className="space-y-0 max-h-80 text-sm overflow-y-auto pt-2 w-full scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200">
-      {isListLoading ? (
+        {isListLoading ? (
           <div className="text-center py-4">Loading orders...</div>
         ) : allOrders.length === 0 && !isFetching ? (
           <div className="text-center py-4 text-zinc-500">No orders found.</div>
@@ -525,24 +532,24 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
           ))
         )}
         {isLoadingMore && (
-             <div className="text-center py-2"><Loader2 className="h-4 w-4 animate-spin inline-block" /> Loading more...</div>
-         )}
+          <div className="text-center py-2"><Loader2 className="h-4 w-4 animate-spin inline-block" /> Loading more...</div>
+        )}
       </div>
 
       {!isListLoading && !isLoadingMore && allOrders.length < totalOrders && (
-         <Button
-           variant="outline"
-           className="w-full mt-2"
-           onClick={() => {
-             setIsLoadingMore(true);
-             setPage(prevPage => prevPage + 1);
-           }}
-           disabled={isFetching}
-         >
-           {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-           Load More ({allOrders.length} / {totalOrders})
-         </Button>
-       )}
+        <Button
+          variant="outline"
+          className="w-full mt-2"
+          onClick={() => {
+            setIsLoadingMore(true);
+            setPage(prevPage => prevPage + 1);
+          }}
+          disabled={isFetching}
+        >
+          {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Load More ({allOrders.length} / {totalOrders})
+        </Button>
+      )}
 
       {selectedIndexes.length > 0 && (
         <div className="mt-4">
@@ -569,10 +576,10 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         </p>
       )}
       <WalletConnectBus asChild>
-      <Button
+        <Button
           onClick={handleBuyOrder}
-           className={`w-full mt-4 ${!(selectedIndexes.length === 0 || !isBalanceSufficient) ? "btn-gradient" : ""}`}
-           disabled={selectedIndexes.length === 0 || !isBalanceSufficient || isLoadingState || isFetching}
+          className={`w-full mt-4 ${!(selectedIndexes.length === 0 || !isBalanceSufficient) ? "btn-gradient" : ""}`}
+          disabled={selectedIndexes.length === 0 || !isBalanceSufficient || isLoadingState || isFetching}
         >
           {(isLoadingState || (isFetching && !isLoadingMore)) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isLoadingState ? "Processing..." : (mode === 'buy' ? 'Buy' : 'Sell')}
