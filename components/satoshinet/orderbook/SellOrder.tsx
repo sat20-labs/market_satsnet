@@ -143,7 +143,8 @@ const buildAndSignOrder = async (
   return batchSignedPsbts?.data?.psbts;
 };
 
-// Helper function: Submit the signed order
+
+
 const submitSignedOrder = async (
   address: string,
   assetName: string,

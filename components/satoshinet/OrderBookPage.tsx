@@ -38,9 +38,16 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
     address: '', // 用户钱包地址'';
   };
 
+  // const handleTabChange = (tab: "takeOrder" | "makeOrder") => {
+  //   setActiveTab(tab);
+  //   setMode("buy"); // 切换标签时默认选中 "Buy"
+  // };
+
   const handleTabChange = (tab: "takeOrder" | "makeOrder") => {
     setActiveTab(tab);
-    setMode("buy"); // 切换标签时默认选中 "Buy"
+    if (tab === "makeOrder") {
+      setMode("sell"); // 切换到 makeOrder 时强制设置为 sell
+    }
   };
 
   const [settings, setSettings] = useState({
