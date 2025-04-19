@@ -30,17 +30,14 @@ export const Assets = () => {
         <OrdxProtocolTab onChange={onProtocolChange} />
       </div>
       {!!protocol && currentAssets?.length&& (
-        <AssetsList
-          onListClick={onListClick}
+        // <AssetsList
+        //   onListClick={onListClick}
+        //   assets={currentAssets}
+        // />
+
+        <NewAssetsList
           assets={currentAssets}
         />
-        // <NewAssetsList
-        //   assets={currentAssets}
-        // />
-        // <NewAssetsList
-        //   assets={currentAssets}
-        //   // onListClick={onListClick}
-        // />
       )}
     </div>
   );

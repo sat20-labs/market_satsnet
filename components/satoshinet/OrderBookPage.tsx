@@ -83,11 +83,6 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
     }
   }, [modeSet]);
   
-  <div>
-    {/* 根据 settings 过滤订单簿 */}
-    {settings.showOngoingTrades && <p>显示进行中交易...</p>}
-    {settings.maxBidPrice > 0 && <p>最高报价价格: {settings.maxBidPrice} sats</p>}
-  </div>
 
   return (
     <div className="max-w-full mx-auto p-4 bg-[#0E0E10] text-zinc-200 rounded-2xl shadow-lg border border-zinc-700 w-full h-full">

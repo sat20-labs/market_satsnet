@@ -1,10 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { SellUtxoInfo } from "@/types";
 import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input";
 import { Icon } from "@iconify/react";
+import { toast } from "sonner";
 import { BtcPrice } from '../BtcPrice';
 import { clientApi, marketApi } from '@/api'; // 假设 API 方法在此路径
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+
+import { useAssetStore } from '@/store/asset';
+import { AssetItem } from "@/store/asset";
+import { useCommonStore } from "@/store";
+import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SellOrderModalProps {
   assetInfo: { assetName: string; assetBalance: number };
@@ -51,9 +60,114 @@ async function retryAsyncOperation<T>(
     throw new Error('Retry logic failed unexpectedly.');
   }
 
+  // Helper function: Handle numeric input changes
+  const handleNumericInput = (
+    value: string,
+    setter: React.Dispatch<React.SetStateAction<number | "">>
+  ) => {
+    // Allow empty string, integers, and decimals
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      // Prevent leading zeros unless it's "0." or just "0"
+      if (value.length > 1 && value.startsWith('0') && !value.startsWith('0.')) {
+        setter(Number(value.substring(1)));
+      } else {
+        // Store as number if valid and not empty, otherwise store empty string
+        setter(value === "" ? "" : Number(value) >= 0 ? Number(value) : "");
+      }
+    }
+  };
+
+  // Helper function: Prepare sell data (split UTXO and get info)
+const prepareSellData = async (assetName: string, quantity: number, price: number): Promise<SellUtxoInfo[]> => {
+  console.log(`Splitting asset ${assetName} for quantity ${quantity}`);
+  const splitRes = await window.sat20.splitBatchAsset(assetName, quantity);
+  if (!splitRes?.txId) {
+    toast.error('Failed to split asset.');
+    throw new Error('Failed to split asset or txId missing.');
+  }
+  const txid = splitRes.txId;
+  const vout = 0;
+  const utxo = `${txid}:${vout}`;
+  console.log(`Asset split successful. UTXO created: ${utxo}`);
+
+  console.log(`Attempting to fetch UTXO info for ${utxo}...`);
+  const utxoData: any = await retryAsyncOperation(
+    clientApi.getUtxoInfo,
+    [utxo],
+    { delayMs: 2000, maxAttempts: 15 }
+  );
+
+  if (!utxoData) {
+    throw new Error(`Failed to fetch UTXO info for ${utxo} after multiple attempts.`);
+  }
+
+  const sellUtxoInfos: SellUtxoInfo[] = [{
+    ...utxoData,
+    Price: Number(price) * Number(quantity),
+  }];
+  console.log('Successfully fetched UTXO info:', sellUtxoInfos);
+  return sellUtxoInfos;
+};
+
+// Helper function: Build and sign the order
+const buildAndSignOrder = async (
+  sellUtxoInfos: SellUtxoInfo[],
+  address: string,
+  network: string,
+  btcWallet: any
+): Promise<string> => {
+  console.log('Building sell order...');
+  const sat20SellOrder = await window.sat20.buildBatchSellOrder(
+    sellUtxoInfos.map((v) => JSON.stringify(v)),
+    address,
+    network,
+  );
+  const psbt = sat20SellOrder?.data?.psbt;
+  if (!psbt) {
+    toast.error('Failed to build the sell order.');
+    throw new Error('Failed to build sell order or PSBT missing.');
+  }
+  console.log('Sell order built, signing PSBT...');
+  toast.info("Please sign the transaction in your wallet.");
+  const signedPsbts = await btcWallet.signPsbt(psbt, { chain: 'sat20' });
+  if (!signedPsbts) {
+    toast.error('Transaction signing failed or was cancelled.');
+    throw new Error('Failed to sign PSBT.');
+  }
+  console.log('PSBT signed successfully:', signedPsbts);
+  return signedPsbts;
+};
+
+// Helper function: Submit the signed order
+const submitSignedOrder = async (
+  address: string,
+  assetName: string,
+  signedPsbts: string
+): Promise<void> => {
+  console.log('Submitting signed order...');
+  const orders = [{
+    assets_name: assetName,
+    raw: signedPsbts,
+  }];
+  const res = await marketApi.submitBatchOrders({
+    address,
+    orders: orders,
+  });
+
+  if (res.code === 200) {
+    console.log('Sell order submitted successfully');
+    toast.success('Sell order submitted successfully!');
+  } else {
+    const errorMsg = res.message || 'Failed to submit sell order';
+    console.error('Failed to submit sell order:', errorMsg);
+    toast.error(`Order submission failed: ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+};
+
 const SellOrderModal = ({
   assetInfo,
-  availableBalance = 1000, // 如果未传入值，默认设置为 0
+  //availableBalance = 1000, // 如果未传入值，默认设置为 0
   onClose,
   onSubmit,
 }: SellOrderModalProps) => {
@@ -61,18 +175,42 @@ const SellOrderModal = ({
   const [price, setPrice] = useState<number | "">("");
   const [batchQuantity, setBatchQuantity] = useState<number>(1); // 批量挂单数量，默认值为 1
   const [loading, setLoading] = useState(false); // 挂单加载状态
-  const { address, network, btcWallet } = useReactWalletStore((state) => state);
 
-  // 动态计算滑动条的最大值
-  const maxBatchQuantity = quantity ? Math.floor(availableBalance / (quantity as number)) : 1;
+  const { loading: balanceLoading, assets } = useAssetStore();
+  const { address, btcWallet } = useReactWalletStore();
+  const { network } = useCommonStore();
+  const [isSelling, setIsSelling] = useState(false);
+  const queryClient = useQueryClient();
+
+  const userAssetBalance = useMemo(() => {
+      if (!assetInfo.assetName || balanceLoading) return 0;
+      const parts = assetInfo.assetName.split(':');
+      const protocol = parts[0] || 'plain';
+      const protocolKey = protocol as keyof typeof assets;
+      const protocolAssets = Array.isArray(assets[protocolKey]) ? assets[protocolKey] : [];
+      const userAsset = protocolAssets.find((asset: AssetItem) => asset.key === assetInfo.assetName);
+      console.log("User Asset:", userAsset); // 调试日志
+      return userAsset ? userAsset.amount : 0;
+    }, [assetInfo.assetName, assets, balanceLoading]);
+
+  console.log("Test User Asset Balance:", userAssetBalance); // 调试日志
+
+  // // 动态计算滑动条的最大值
+  // const maxBatchQuantity = quantity ? Math.floor(availableBalance / (quantity as number)) : 1;
 
   // 校验逻辑
-  const isSellValid =
-    quantity !== "" &&
-    price !== "" &&
-    (quantity as number) > 0 &&
-    batchQuantity > 0 &&
-    (quantity as number) * batchQuantity <= availableBalance;
+
+    const isSellValid = useMemo(() =>
+        quantity !== "" &&
+        price !== "" &&
+        Number(quantity) > 0 &&
+        Number(price) > 0 &&
+        Number(quantity) <= userAssetBalance &&
+        batchQuantity > 0 &&
+        !balanceLoading,
+        [quantity, price, userAssetBalance, balanceLoading]);
+
+    const maxBatchQuantity = quantity ? Math.floor(userAssetBalance / (quantity as number)) : 1;      
 
   // 计算用户可以获得的收入 (将单价从 sats 转换为 BTC)
   const calculatedBTC =
@@ -80,92 +218,113 @@ const SellOrderModal = ({
 
   // 处理点击 "Max" 按钮
   const handleMaxClick = () => {
-    setQuantity(availableBalance);
-    setBatchQuantity(1); // 默认设置批量挂单为 1
+    if (!balanceLoading) {
+      setQuantity(userAssetBalance);
+      setBatchQuantity(1); // 默认设置批量挂单为 1
+    }
   };
 
+    const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleNumericInput(e.target.value, setQuantity);
+    };
+  
+    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleNumericInput(e.target.value, setPrice);
+    };
+
+
   const handleSellSubmit = async () => {
-    if (!isSellValid || !address || !network) return;
+    if (!isSellValid) {
+      console.warn("Sell attempt with invalid input or state.");
+      if (Number(quantity) > userAssetBalance) toast.error("Insufficient balance.");
+      else if (Number(quantity) <= 0) toast.error("Quantity must be positive.");
+      else if (Number(price) <= 0) toast.error("Price must be positive.");
+      return;
+    }
+    if (!address || !network || !btcWallet) {
+      console.error("Missing address, network, or wallet connection.");
+      toast.error("Wallet not connected or network not selected.");
+      return;
+    }
   
+    setIsSelling(true);
     setLoading(true);
+  
     try {
-      const sellUtxoInfos: Array<{ [key: string]: any; Price: number }> = [];
+      const sellQuantity = Number(quantity);
+      const sellPrice = Number(price);
   
-      // 批量生成挂单信息
-      for (let i = 0; i < batchQuantity; i++) {
-        if (!assetInfo.assetName || !(quantity > 0)) {
-          throw new Error("Missing required information: Asset Key or Quantity.");
-        }
-  
-        // 调用拆分资产接口
-        const splitRes = await window.sat20.splitAsset(assetInfo.assetName, quantity as number);
-        if (!splitRes?.txId) {
-          throw new Error('Failed to split asset or txId missing.');
-        }
-        const txid = splitRes.txId;
-        const vout = 0;
-        const utxo = `${txid}:${vout}`;
-        console.log(`Asset split successful. UTXO created: ${utxo}`);
-  
-        // 获取 UTXO 信息
-        const utxoData: any = await clientApi.getUtxoInfo(utxo);
-        if (!utxoData) {
-          throw new Error("Failed to fetch UTXO data.");
-        }
-  
-        // 格式化资产名称为 protocol:f.assetName
-        const formattedAssetName = `ordx:f:${assetInfo.assetName}`;
-  
-        sellUtxoInfos.push({
-          ...utxoData,
-          Price: price,
-          AssetName: formattedAssetName, // 使用格式化后的资产名称
-        });
+      // **1. 批量拆分 UTXO**
+      console.log(`Splitting asset ${assetInfo.assetName} into ${batchQuantity} UTXOs...`);
+      const splitRes = await window.sat20.splitBatchAsset(
+        assetInfo.assetName,
+        sellQuantity,
+        batchQuantity
+      );
+      if (!splitRes?.txIds || splitRes.txIds.length !== batchQuantity) {
+        throw new Error("Failed to split assets or mismatch in UTXO count.");
       }
+      console.log(`Batch split successful. Generated UTXOs:`, splitRes.txIds);
   
-      // 构建批量挂单订单
+      // **2. 构建批量挂单信息**
+      const sellUtxoInfos: SellUtxoInfo[] = splitRes.txIds.map((txId: string) => ({
+        txId,
+        vout: 0,
+        Price: sellPrice,
+      }));
+  
+      // **3. 构建批量挂单订单**
+      console.log("Building batch sell order...");
       const sat20SellOrder = await window.sat20.buildBatchSellOrder(
         sellUtxoInfos.map((v) => JSON.stringify(v)),
         address,
-        network,
+        network
       );
       const psbt = sat20SellOrder?.data?.psbt;
       if (!psbt) {
-        throw new Error('Failed to build batch sell order.');
+        throw new Error("Failed to build batch sell order.");
       }
+      console.log("Batch sell order built successfully.");
   
-      // 签名交易
-      const signedPsbts = await btcWallet?.signPsbt(psbt, { chain: 'sat20' });
+      // **4. 批量签名订单**
+      console.log("Signing batch PSBT...");
+      toast.info("Please sign the transaction in your wallet.");
+      const signedPsbts = await btcWallet.signPsbt(psbt, { chain: "sat20" });
       if (!signedPsbts) {
-        throw new Error('Failed to sign PSBT.');
+        throw new Error("Failed to sign batch PSBT.");
       }
+      console.log("Batch PSBT signed successfully.");
   
-      // 提交挂单
+      // **5. 提交批量挂单**
+      console.log("Submitting batch sell orders...");
       const orders = sellUtxoInfos.map((info) => ({
-        assets_name: info.AssetName, // 使用格式化后的资产名称
+        assets_name: assetInfo.assetName,
         raw: signedPsbts,
       }));
       const res = await marketApi.submitBatchOrders({
         address,
-        orders: orders,
+        orders,
       });
   
       if (res.code === 200) {
-        console.log('Sell order submitted successfully');
-        onSubmit(quantity as number, price as number, batchQuantity);
+        console.log("Sell order submitted successfully.");
+        toast.success("Sell order submitted successfully!");
+        onSubmit(sellQuantity, sellPrice, batchQuantity);
         onClose(); // 关闭弹窗
       } else {
-        throw new Error(res.message || 'Failed to submit sell order.');
+        throw new Error(res.message || "Failed to submit sell order.");
       }
     } catch (error) {
       console.error("Error during sell process:", error);
+      toast.error("Failed to submit sell order. Please try again.");
     } finally {
       setLoading(false);
+      setIsSelling(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-end sm:items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-end sm:items-center z-50">
       <div className="bg-zinc-900 p-6 rounded-t-lg md:rounded-lg w-full max-w-md relative">
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -183,7 +342,7 @@ const SellOrderModal = ({
             Asset Balance: {assetInfo.assetBalance}
           </p>
           <p className="text-lg text-zinc-400">
-            Available Balance: {availableBalance}
+            Available Balance: {userAssetBalance}
           </p>
         </div>
 
