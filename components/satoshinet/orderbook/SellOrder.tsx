@@ -144,16 +144,53 @@ const buildAndSignOrder = async (
 };
 
 // Helper function: Submit the signed order
+// const submitSignedOrder = async (
+//   address: string,
+//   assetName: string,
+//   signedPsbts: string
+// ): Promise<boolean> => {
+//   console.log('Submitting signed order...');
+//   const orders = [{
+//     assets_name: assetName,
+//     raw: signedPsbts,
+//   }];
+//   try {
+//     const res = await marketApi.submitBatchOrders({
+//       address,
+//       orders: orders,
+//     });
+
+//     if (res.code === 200) {
+//       console.log('Sell order submitted successfully');
+//       toast.success('Sell order submitted successfully!');
+//       return true;
+//     } else {
+//       const errorMsg = res.message || 'Failed to submit sell order';
+//       console.error('Failed to submit sell order:', errorMsg);
+//       toast.error(`Order submission failed: ${errorMsg}`);
+//       throw new Error(errorMsg);
+//     }
+//   } catch (error) {
+//     console.error('Error in submitSignedOrder:', error);
+//     return false;
+//   }
+// };
+
 const submitSignedOrder = async (
   address: string,
   assetName: string,
-  signedPsbts: string
+  signedPsbts: string | string[]
 ): Promise<boolean> => {
   console.log('Submitting signed order...');
+
+  // 如果 signedPsbts 是数组，则将其转换为字符串
+  const rawPsbts = Array.isArray(signedPsbts) ? signedPsbts.join(",") : signedPsbts;
+
   const orders = [{
     assets_name: assetName,
-    raw: signedPsbts,
+    raw: rawPsbts, // 确保传递的是字符串
   }];
+
   try {
     const res = await marketApi.submitBatchOrders({
       address,
