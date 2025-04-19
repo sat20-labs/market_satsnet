@@ -120,7 +120,7 @@ const buildAndSignOrder = async (
   address: string,
   network: string,
   btcWallet: any
-): Promise<string> => {
+): Promise<string[]> => {
   console.log('Building sell order...');
   const sat20SellOrder = await window.sat20.buildBatchSellOrder_SatsNet(
     sellUtxoInfos.map((v) => JSON.stringify(v)),
@@ -147,13 +147,13 @@ const buildAndSignOrder = async (
 const submitSignedOrder = async (
   address: string,
   assetName: string,
-  signedPsbts: string
+  signedPsbts: string[]
 ): Promise<boolean> => {
   console.log('Submitting signed order...');
-  const orders = [{
+  const orders = signedPsbts.map((psbt) => ({
     assets_name: assetName,
-    raw: signedPsbts,
-  }];
+    raw: psbt,
+  }));
   try {
     const res = await marketApi.submitBatchOrders({
       address,
@@ -224,7 +224,10 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
     const amountRes = await window.sat20.getAssetAmount_SatsNet(address, assetInfo.assetName)
     console.log('amountRes', amountRes);
 
-    setBalance(amountRes)
+    setBalance({
+      availableAmt: Number(amountRes.availableAmt),
+      lockedAmt: Number(amountRes.lockedAmt)
+    })
   }
   useEffect(() => {
     getAssetAmount();
@@ -305,7 +308,8 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
     }
   };
 
-  const displayBalance = balance.availableAmt;
+  const displayBalance = balance.availableAmt + balance.lockedAmt;
+  const displayAvailableAmt = balance.availableAmt
   const isLoading = balanceLoading || isSelling;
   const ticker = useMemo(() => assetInfo.assetName.split(':').pop() || assetInfo.assetName, [assetInfo.assetName]);
 
@@ -396,7 +400,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
       <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 min-h-[100px] text-sm">
         <p className="flex justify-between gap-1 text-gray-400">
           <span>Available Balance: </span>
-          <span className="gap-1">{displayBalance} {ticker}</span>
+          <span className="gap-1">{displayAvailableAmt} {ticker}</span>
         </p>
 
         {!balanceLoading && quantity !== "" && Number(quantity) > balance.availableAmt && (
