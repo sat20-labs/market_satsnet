@@ -83,3 +83,21 @@ export function formatBtcAmount(btcValue: number | undefined | null): string {
 
   return formattedString;
 }
+
+export const removeObjectEmptyValue = (obj: any) => {
+  const _obj = { ...obj };
+  Object.keys(_obj).forEach((key) => {
+    if (
+      _obj[key] === '' ||
+      _obj[key] === undefined ||
+      _obj[key] === null ||
+      _obj[key] === 'null' ||
+      _obj[key] === 'undefined' ||
+      _obj[key] === 'NaN' ||
+      (isNaN(_obj[key]) && typeof _obj[key] === 'number')
+    ) {
+      delete _obj[key];
+    }
+  });
+  return _obj;
+};

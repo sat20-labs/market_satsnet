@@ -372,7 +372,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       }
 
       console.log("Finalizing sell order (based on first selected order)...");
-      const finalizeRes = await window.sat20.finalizeSellOrder(
+      const finalizeRes = await window.sat20.finalizeSellOrder_SatsNet(
         firstOrderRaw,
         buyUtxoInfos.map((v) => JSON.stringify(v)),
         address,

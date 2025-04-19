@@ -95,6 +95,9 @@ class ClientApi {
   getNsListByAddress = async (address: string): Promise<any> => {
     return this.request(`ns/address/${address}`);
   }
+  getSeedByUtxo = async (utxo: string): Promise<any> => {
+    return this.request(`utxo/seed/${utxo}`);
+  };
 
   getOrdxAddressHolders = async (
     address: string,

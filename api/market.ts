@@ -1,4 +1,4 @@
-import { removeObjectEmptyValue } from '@/lib/utils';
+import { removeObjectEmptyValue } from '@/utils';
 import { useCommonStore } from '@/store';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 

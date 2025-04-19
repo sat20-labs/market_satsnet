@@ -18,10 +18,10 @@ import { useTheme } from 'next-themes';
 import { hideStr, satsToBitcoin, formatBtcAmount } from '@/utils';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { useCommonStore, useAssetStore, useUtxoStore } from '@/store';
+import { useCommonStore, useAssetStore, useUtxoStore, useWalletStore } from '@/store';
 import { generateMempoolUrl } from '@/utils';
 import { usePlainUtxo } from '@/lib/hooks';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 const WalletConnectButton = () => {
@@ -38,6 +38,7 @@ const WalletConnectButton = () => {
     disconnect,
     btcWallet,
   } = useReactWalletStore((state) => state);
+  const { getBalance, balance } = useWalletStore();
   const { loadSummaryData } = useAssetStore();
   const { data: plainUtxos } = usePlainUtxo();
   const [isCopied, setIsCopied] = useState(false);
@@ -55,11 +56,7 @@ const WalletConnectButton = () => {
   const initCheck = async () => {
     await check();
   };
-  const getWalletUtxos = async () => {
-    const utxos = await window.sat20.getAssetAmount_SatsNet(address, '::')
-    console.log('utxos', utxos);
-    
-  };
+
   useEffect(() => {
     initCheck();
   }, []);
@@ -131,9 +128,9 @@ const WalletConnectButton = () => {
     }
   };
   const showAmount = useMemo(() => {
-    const btcValue = satsToBitcoin(utxoAmount);
+    const btcValue = satsToBitcoin(balance.availableAmt);
     return formatBtcAmount(btcValue);
-  }, [utxoAmount]);
+  }, [balance]);
   const checkSignature = async () => {
     if (signature && publicKey) {
       console.log('checkSignature', signature);
@@ -168,7 +165,7 @@ const WalletConnectButton = () => {
     if (connected) {
       setTimeout(() => {
         checkSignature();
-        getWalletUtxos();
+        getBalance();
       }, 1000);
       btcWallet?.on('accountsChanged', accountAndNetworkChange);
       btcWallet?.on('networkChanged', accountAndNetworkChange);

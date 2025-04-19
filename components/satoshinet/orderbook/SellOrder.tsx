@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SellUtxoInfo } from "@/types";
 import { useAssetStore } from '@/store/asset';
 import { AssetItem } from "@/store/asset";
@@ -74,7 +74,7 @@ const handleNumericInput = (
 };
 
 // Helper function: Prepare sell data (split UTXO and get info)
-const prepareSellData = async (assetName: string, quantity: number, price: number): Promise<SellUtxoInfo[]> => {
+const prepareSellData = async (assetName: string, quantity: number, price: number): Promise<[SellUtxoInfo[], string]> => {
   console.log(`Splitting asset ${assetName} for quantity ${quantity}`);
   const splitRes = await window.sat20.splitAsset(assetName, quantity);
   if (!splitRes?.txId) {
@@ -102,7 +102,7 @@ const prepareSellData = async (assetName: string, quantity: number, price: numbe
     Price: Number(price) * Number(quantity),
   }];
   console.log('Successfully fetched UTXO info:', sellUtxoInfos);
-  return sellUtxoInfos;
+  return [sellUtxoInfos, utxo];
 };
 
 // Helper function: Build and sign the order
@@ -113,7 +113,7 @@ const buildAndSignOrder = async (
   btcWallet: any
 ): Promise<string> => {
   console.log('Building sell order...');
-  const sat20SellOrder = await window.sat20.buildBatchSellOrder(
+  const sat20SellOrder = await window.sat20.buildBatchSellOrder_SatsNet(
     sellUtxoInfos.map((v) => JSON.stringify(v)),
     address,
     network,
@@ -160,23 +160,20 @@ const submitSignedOrder = async (
     throw new Error(errorMsg);
   }
 };
-
+interface AssetBalance {
+  availableAmt: number,
+  lockedAmt: number
+}
 const SellOrder = ({ assetInfo }: SellOrderProps) => {
   const { loading: balanceLoading, assets } = useAssetStore();
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const [isSelling, setIsSelling] = useState(false);
   const queryClient = useQueryClient();
-
-  const userAssetBalance = useMemo(() => {
-    if (!assetInfo.assetName || balanceLoading) return 0;
-    const parts = assetInfo.assetName.split(':');
-    const protocol = parts[0] || 'plain';
-    const protocolKey = protocol as keyof typeof assets;
-    const protocolAssets = Array.isArray(assets[protocolKey]) ? assets[protocolKey] : [];
-    const userAsset = protocolAssets.find((asset: AssetItem) => asset.key === assetInfo.assetName);
-    return userAsset ? userAsset.amount : 0;
-  }, [assetInfo.assetName, assets, balanceLoading]);
+  const [balance, setBalance] = useState<AssetBalance>({
+    availableAmt: 0,
+    lockedAmt: 0
+  });
 
   const [quantity, setQuantity] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
@@ -195,13 +192,31 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
     price !== "" &&
     Number(quantity) > 0 &&
     Number(price) > 0 &&
-    Number(quantity) <= userAssetBalance &&
+    Number(quantity) <= balance.availableAmt &&
     !balanceLoading,
-    [quantity, price, userAssetBalance, balanceLoading]);
+    [quantity, price, balance.availableAmt, balanceLoading]);
+
+  const getAssetAmount = async () => {
+    console.log('getAssetAmount', assetInfo.assetName);
+    
+    const amountRes = await window.sat20.getAssetAmount_SatsNet(address, assetInfo.assetName)
+    console.log('amountRes', amountRes);
+
+    setBalance(amountRes)
+  }
+  useEffect(() => { 
+    getAssetAmount();
+  }, [address, assetInfo.assetName]);
+  const lockSellUtxo = async (utxo: string) => {
+    const res = await window.sat20.lockUtxo_SatsNet(address, utxo, 'sell')
+    console.log(res);
+    
+    await getAssetAmount();
+  }
 
   const handleMaxClick = () => {
     if (!balanceLoading) {
-      setQuantity(userAssetBalance);
+      setQuantity(balance.availableAmt);
     }
   };
 
@@ -216,7 +231,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
   const handleSell = async () => {
     if (!isSellValid) {
       console.warn("Sell attempt with invalid input or state.");
-      if (Number(quantity) > userAssetBalance) toast.error("Insufficient balance.");
+      if (Number(quantity) > balance.availableAmt) toast.error("Insufficient balance.");
       else if (Number(quantity) <= 0) toast.error("Quantity must be positive.");
       else if (Number(price) <= 0) toast.error("Price must be positive.");
       return;
@@ -232,16 +247,15 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
     const sellPrice = Number(price);
 
     try {
-      const sellUtxoInfos = await prepareSellData(assetInfo.assetName, sellQuantity, sellPrice);
+      const [sellUtxoInfos, utxo] = await prepareSellData(assetInfo.assetName, sellQuantity, sellPrice);
       const signedPsbts = await buildAndSignOrder(sellUtxoInfos, address, network, btcWallet);
       await submitSignedOrder(address, assetInfo.assetName, signedPsbts);
 
       // 成功售出后，使所有订单查询缓存失效
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-
+      await lockSellUtxo(utxo);
       setQuantity("");
       setPrice("");
-
     } catch (error: any) {
       console.error("Error during sell process:", error);
     } finally {
@@ -249,28 +263,28 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
     }
   };
 
-  const displayBalance = balanceLoading ? "Loading..." : userAssetBalance;
+  const displayBalance = balance.availableAmt;
   const isLoading = balanceLoading || isSelling;
   const ticker = useMemo(() => assetInfo.assetName.split(':').pop() || assetInfo.assetName, [assetInfo.assetName]);
 
   return (
     <div>
       <div className="flex items-center gap-4 mb-6 p-4 bg-zinc-800/50 rounded-lg">
-          {assetInfo.assetLogo ? (
-         <img
-              src={assetInfo.assetLogo}
-              alt={ticker}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-          ) : (
-            <Avatar className="w-12 h-12 flex-shrink-0">
-              <AvatarFallback className="text-xl text-gray-300 font-black bg-zinc-800">
-                {typeof ticker === 'string'
-                  ? ticker.slice(0, 1).toUpperCase()
-                  : '?'}
-              </AvatarFallback>
-            </Avatar>
-          )}
+        {assetInfo.assetLogo ? (
+          <img
+            src={assetInfo.assetLogo}
+            alt={ticker}
+            className="w-12 h-12 rounded-full object-cover"
+          />
+        ) : (
+          <Avatar className="w-12 h-12 flex-shrink-0">
+            <AvatarFallback className="text-xl text-gray-300 font-black bg-zinc-800">
+              {typeof ticker === 'string'
+                ? ticker.slice(0, 1).toUpperCase()
+                : '?'}
+            </AvatarFallback>
+          </Avatar>
+        )}
         <div className="leading-relaxed min-w-0">
           <p className="text-sm sm:text-base text-zinc-200 font-medium break-all">
             {ticker}
@@ -337,7 +351,7 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
           <span className="gap-1">{displayBalance} {ticker}</span>
         </p>
 
-        {!balanceLoading && quantity !== "" && Number(quantity) > userAssetBalance && (
+        {!balanceLoading && quantity !== "" && Number(quantity) > balance.availableAmt && (
           <p className="text-red-500 font-medium mt-2">
             Insufficient balance.
           </p>
