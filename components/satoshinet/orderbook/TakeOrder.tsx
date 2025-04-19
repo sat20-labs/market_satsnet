@@ -3,7 +3,7 @@ import OrderRow from "@/components/satoshinet/orderbook/OrderRow";
 import OrderSummary from "@/components/satoshinet/orderbook/OrderSummary";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useCommonStore, useAssetStore, useUtxoStore } from "@/store";
+import { useCommonStore, useAssetStore, useUtxoStore, useWalletStore } from "@/store";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { tryit } from "radash";
@@ -76,13 +76,11 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   const [manualSelectedIndexes, setManualSelectedIndexes] = useState<number[]>([]); // 手动选中的挂单
   const [sliderSelectedIndexes, setSliderSelectedIndexes] = useState<number[]>([]); // 滑动条选中的挂单
   const [sliderValue, setSliderValue] = useState(0); // 滑动条的值
-
+  const { getBalance, balance } = useWalletStore();
   const [lockedOrders, setLockedOrders] = useState<Map<number, string>>(new Map()); // orderId -> raw
   const [isProcessingLock, setIsProcessingLock] = useState(false);
   const { chain, network } = useCommonStore();
   const { assets } = useAssetStore();
-  const { list: utxoList } = useUtxoStore();
-  console.log('assets', assets);
 
   const { address, btcWallet } = useReactWalletStore();
   const [page, setPage] = useState(1);
@@ -92,7 +90,6 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const queryClient = useQueryClient();
-  console.log('utxoList', utxoList);
 
   const queryKey = useMemo(() => {
     return ['orders', assetInfo.assetName, chain, network, page, size, mode];
@@ -279,67 +276,29 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   );
 
   // 当滑动条值变化时，更新滑动条选中的挂单
-  useEffect(() => {
-    if (sliderValue > 0) {
-      // 获取当前滑动条选中的订单索引
-      const selected = sortedOrders.slice(0, sliderValue).map(order => allOrders.indexOf(order));
-      setSliderSelectedIndexes(selected);
-  
-      // 获取需要锁定的订单 ID
-      const orderIdsToLock = sortedOrders.slice(0, sliderValue).map(order => order.order_id);
-  
-      // 获取需要解锁的订单 ID（之前锁定的订单中不再被选中的部分）
-      const previouslyLockedIds = sliderSelectedIndexes.map(index => allOrders[index]?.order_id).filter(id => id !== undefined);
-      const orderIdsToUnlock = previouslyLockedIds.filter(id => !orderIdsToLock.includes(id));
-  
-      // 避免重复调用锁定和解锁逻辑
-      if (orderIdsToUnlock.length > 0) {
-        debouncedUnlock(orderIdsToUnlock);
-      }
-  
-      if (orderIdsToLock.length > 0) {
-        debouncedLock(orderIdsToLock);
-      }
-    }
-  }, [sliderValue, sortedOrders, allOrders, debouncedLock, debouncedUnlock]);
-
-  // const handleOrderClick = useCallback(async (index: number) => {
-  //   const order = allOrders[index];
-  //   if (!order || order.locked === 1 && !lockedOrders.has(order.order_id) || order.address === address) {
-  //     console.warn("Clicked on a disabled or invalid order row.");
-  //     return;
-  //   };
-
-  //   const orderId = order.order_id;
-
-  //   if (selectedIndexes.includes(index)) {
-  //     console.log('handleOrderClick 取消选择', order);
-  //     setSelectedIndexes(prev => prev.filter(i => i !== index));
-  //     if (lockedOrders.has(orderId)) {
-  //       debouncedUnlock([orderId]);
-  //     }
-  //   } else {
-  //     console.log('handleOrderClick 新选择', order);
-  //     setSelectedIndexes(prev => [...prev, index]);
-  //     debouncedLock([orderId]);
-  //   }
-  //   if (lockedOrders.has(orderId)) {
-  //     setLockedOrders(prev => {
-  //       const newMap = new Map(prev);
-  //       newMap.delete(orderId);
-  //       return newMap;
-  //     });
-  //   }
-  //   if(selectedIndexes.length === 0) {
-  //     setSliderValue(0);
-  //     setSliderSelectedIndexes([]);
-  //   }
-  //   else {
-  //     const selected = sortedOrders.slice(0, selectedIndexes.length).map(order => allOrders.indexOf(order));
+  // useEffect(() => {
+  //   if (sliderValue > 0) {
+  //     // 获取当前滑动条选中的订单索引
+  //     const selected = sortedOrders.slice(0, sliderValue).map(order => allOrders.indexOf(order));
   //     setSliderSelectedIndexes(selected);
+  
+  //     // 获取需要锁定的订单 ID
+  //     const orderIdsToLock = sortedOrders.slice(0, sliderValue).map(order => order.order_id);
+  
+  //     // 获取需要解锁的订单 ID（之前锁定的订单中不再被选中的部分）
+  //     const previouslyLockedIds = sliderSelectedIndexes.map(index => allOrders[index]?.order_id).filter(id => id !== undefined);
+  //     const orderIdsToUnlock = previouslyLockedIds.filter(id => !orderIdsToLock.includes(id));
+  
+  //     // 避免重复调用锁定和解锁逻辑
+  //     if (orderIdsToUnlock.length > 0) {
+  //       debouncedUnlock(orderIdsToUnlock);
+  //     }
+  
+  //     if (orderIdsToLock.length > 0) {
+  //       debouncedLock(orderIdsToLock);
+  //     }
   //   }
-
-  // }, [allOrders, selectedIndexes, lockedOrders, debouncedLock, debouncedUnlock, address]);
+  // }, [sliderValue, sortedOrders, allOrders, debouncedLock, debouncedUnlock]);
 
   const handleOrderClick = useCallback(async (index: number) => {
     const order = allOrders[index];
@@ -409,7 +368,11 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       };
     });
   }, [selectedOrdersData]);
-
+  const totalSellAmount = useMemo(() => {
+    return summarySelectedOrders.reduce((sum, order) => {
+      return sum + order.totalSats
+    }, 0);
+  }, [summarySelectedOrders]);
   const [isLoadingState, setIsLoadingState] = useState(false);
 
   const handleBuyOrder = async () => {
@@ -468,13 +431,13 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       const serviceFee = 0;
       const networkFee = 10;
 
-      // console.log("Fetching UTXO info for:", utxoList);
-      // for (const { utxo } of utxoList) {
-      //   const utxoData = await getUtxoInfoWithRetry(utxo);
-      //   buyUtxoInfos.push({ ...utxoData });
-      // }
+      const totalFee = totalSellAmount + serviceFee + networkFee;
+      const utxosResult = await window.sat20.getUtxosWithAsset_SatsNet(address, '::', totalFee)
+      console.log('asset :: utxos', utxosResult);
+      
+      const utxoList = utxosResult.utxos;
 
-      for (const { utxo } of utxoList) {
+      for (const utxo of utxoList) {
         try {
           console.log(`Fetching UTXO info for: ${utxo}`);
           const utxoData = await getUtxoInfoWithRetry(utxo);
@@ -542,6 +505,10 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         toast.success("Order placed successfully!", { id: toastId });
         setSelectedIndexes([]);
         setPage(1);
+        for (const utxo of utxoList) {
+          const res = await window.sat20.lockUtxo_SatsNet(address, utxo, 'buy')
+          console.log('lockUtxo_SatsNet res', res);
+        }
         queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });
       } else {
         await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => {
