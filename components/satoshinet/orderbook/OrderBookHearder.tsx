@@ -50,7 +50,7 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
             onClick={() => setIsSettingsOpen(true)} // 打开设置弹窗
             aria-label="Settings"
           >
-            <Icon icon="mdi:cog-outline" className="text-lg sm:text-xl" />
+            <Icon icon="mdi:tune-vertical-variant" className="text-lg sm:text-xl" />
           </button>
         )}
         <button
