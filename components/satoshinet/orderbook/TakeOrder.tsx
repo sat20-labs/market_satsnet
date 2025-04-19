@@ -3,7 +3,7 @@ import OrderRow from "@/components/satoshinet/orderbook/OrderRow";
 import OrderSummary from "@/components/satoshinet/orderbook/OrderSummary";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useCommonStore, useAssetStore, useUtxoStore } from "@/store";
+import { useCommonStore, useAssetStore, useUtxoStore, useWalletStore } from "@/store";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { tryit } from "radash";
@@ -80,7 +80,6 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   const { chain, network } = useCommonStore();
   const { assets } = useAssetStore();
   const { list: utxoList } = useUtxoStore();
-  console.log('assets', assets);
 
   const { address, btcWallet } = useReactWalletStore();
   const [page, setPage] = useState(1);
@@ -90,7 +89,6 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const queryClient = useQueryClient();
-  console.log('utxoList', utxoList);
 
   const queryKey = useMemo(() => {
     return ['orders', assetInfo.assetName, chain, network, page, size, mode];
@@ -355,7 +353,11 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       };
     });
   }, [selectedOrdersData]);
-
+  const totalSellAmount = useMemo(() => {
+    return summarySelectedOrders.reduce((sum, order) => {
+      return sum + order.totalSats
+    }, 0);
+  }, [summarySelectedOrders]);
   const [isLoadingState, setIsLoadingState] = useState(false);
 
   const handleBuyOrder = async () => {
@@ -482,6 +484,10 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         toast.success("Order placed successfully!", { id: toastId });
         setSelectedIndexes([]);
         setPage(1);
+        for (const utxo of utxoList) {
+          const res = await window.sat20.lockUtxo_SatsNet(address, utxo, 'buy')
+          console.log('lockUtxo_SatsNet res', res);
+        }
         queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });
       } else {
         await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => {
