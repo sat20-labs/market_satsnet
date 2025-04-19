@@ -3,9 +3,8 @@
 import React, { useState } from 'react';
 import { OrdxProtocolTab } from './OrdxProtocolTab';
 import { useRouter } from 'next/navigation';
-import { AssetsList } from './AssetsList';
 import { useAssetStore } from '@/store/asset';
-import { NewAssetsList } from './NewAssetsList';
+import { AssetsList } from './AssetsList';
 
 export const Assets = () => {
   const [protocol, setProtocol] = useState<string>('ordx');   
@@ -30,12 +29,8 @@ export const Assets = () => {
         <OrdxProtocolTab onChange={onProtocolChange} />
       </div>
       {!!protocol && currentAssets?.length&& (
-        // <AssetsList
-        //   onListClick={onListClick}
-        //   assets={currentAssets}
-        // />
 
-        <NewAssetsList
+        <AssetsList
           assets={currentAssets}
         />
       )}

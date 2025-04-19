@@ -11,9 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
+import { Slider } from "@/components/ui/slider"
 
 interface SellOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
+  onSellSuccess?: () => void;
 }
 
 // Helper function for retrying async operations
@@ -71,38 +73,45 @@ const handleNumericInput = (
       setter(value === "" ? "" : Number(value) >= 0 ? Number(value) : "");
     }
   }
+
 };
 
 // Helper function: Prepare sell data (split UTXO and get info)
-const prepareSellData = async (assetName: string, quantity: number, price: number): Promise<[SellUtxoInfo[], string]> => {
+const prepareSellData = async (assetName: string, quantity: number, price: number, batchQuantity: number): Promise<[SellUtxoInfo[], string[]]> => {
   console.log(`Splitting asset ${assetName} for quantity ${quantity}`);
-  const splitRes = await window.sat20.splitAsset(assetName, quantity);
+  const splitRes = await window.sat20.batchSendAssets_SatsNet(assetName, quantity, batchQuantity);
+  console.log('splitRes', splitRes);
+
   if (!splitRes?.txId) {
     toast.error('Failed to split asset.');
     throw new Error('Failed to split asset or txId missing.');
   }
   const txid = splitRes.txId;
-  const vout = 0;
-  const utxo = `${txid}:${vout}`;
-  console.log(`Asset split successful. UTXO created: ${utxo}`);
 
-  console.log(`Attempting to fetch UTXO info for ${utxo}...`);
-  const utxoData: any = await retryAsyncOperation(
-    clientApi.getUtxoInfo,
-    [utxo],
-    { delayMs: 2000, maxAttempts: 15 }
-  );
+  const sellUtxoInfos: SellUtxoInfo[] = []
+  const utxos: string[] = []
+  for (let i = 0; i < batchQuantity; i++) {
+    const vout = i;
+    const utxo = `${txid}:${vout}`;
+    console.log(`Asset split successful. UTXO created: ${utxo}`);
+    utxos.push(utxo);
+    console.log(`Attempting to fetch UTXO info for ${utxo}...`);
+    const utxoData: any = await retryAsyncOperation(
+      clientApi.getUtxoInfo,
+      [utxo],
+      { delayMs: 2000, maxAttempts: 15 }
+    );
 
-  if (!utxoData) {
-    throw new Error(`Failed to fetch UTXO info for ${utxo} after multiple attempts.`);
+    if (!utxoData) {
+      throw new Error(`Failed to fetch UTXO info for ${utxo} after multiple attempts.`);
+    }
+    sellUtxoInfos.push({
+      ...utxoData,
+      Price: Number(price) * Number(quantity),
+    })
   }
-
-  const sellUtxoInfos: SellUtxoInfo[] = [{
-    ...utxoData,
-    Price: Number(price) * Number(quantity),
-  }];
   console.log('Successfully fetched UTXO info:', sellUtxoInfos);
-  return [sellUtxoInfos, utxo];
+  return [sellUtxoInfos, utxos];
 };
 
 // Helper function: Build and sign the order
@@ -125,13 +134,13 @@ const buildAndSignOrder = async (
   }
   console.log('Sell order built, signing PSBT...');
   toast.info("Please sign the transaction in your wallet.");
-  const signedPsbts = await btcWallet.signPsbt(psbt, { chain: 'sat20' });
-  if (!signedPsbts) {
+  const signedPsbt = await btcWallet.signPsbt(psbt, { chain: 'sat20' });
+  if (!signedPsbt) {
     toast.error('Transaction signing failed or was cancelled.');
     throw new Error('Failed to sign PSBT.');
   }
-  console.log('PSBT signed successfully:', signedPsbts);
-  return signedPsbts;
+  const batchSignedPsbts = await window.sat20.splitBatchSignedPsbt_SatsNet(signedPsbt, network);
+  return batchSignedPsbts?.data?.psbts;
 };
 
 // Helper function: Submit the signed order
@@ -139,37 +148,45 @@ const submitSignedOrder = async (
   address: string,
   assetName: string,
   signedPsbts: string
-): Promise<void> => {
+): Promise<boolean> => {
   console.log('Submitting signed order...');
   const orders = [{
     assets_name: assetName,
     raw: signedPsbts,
   }];
-  const res = await marketApi.submitBatchOrders({
-    address,
-    orders: orders,
-  });
+  try {
+    const res = await marketApi.submitBatchOrders({
+      address,
+      orders: orders,
+    });
 
-  if (res.code === 200) {
-    console.log('Sell order submitted successfully');
-    toast.success('Sell order submitted successfully!');
-  } else {
-    const errorMsg = res.message || 'Failed to submit sell order';
-    console.error('Failed to submit sell order:', errorMsg);
-    toast.error(`Order submission failed: ${errorMsg}`);
-    throw new Error(errorMsg);
+    if (res.code === 200) {
+      console.log('Sell order submitted successfully');
+      toast.success('Sell order submitted successfully!');
+      return true;
+    } else {
+      const errorMsg = res.message || 'Failed to submit sell order';
+      console.error('Failed to submit sell order:', errorMsg);
+      toast.error(`Order submission failed: ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+  } catch (error) {
+    console.error('Error in submitSignedOrder:', error);
+    return false;
   }
 };
+
 interface AssetBalance {
   availableAmt: number,
   lockedAmt: number
 }
-const SellOrder = ({ assetInfo }: SellOrderProps) => {
+const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
   const { loading: balanceLoading, assets } = useAssetStore();
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const [isSelling, setIsSelling] = useState(false);
   const queryClient = useQueryClient();
+  const [batchQuantity, setBatchQuantity] = useState(1);
   const [balance, setBalance] = useState<AssetBalance>({
     availableAmt: 0,
     lockedAmt: 0
@@ -177,15 +194,20 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
 
   const [quantity, setQuantity] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
-
+  const totalQuantity = useMemo(() => {
+    return Number(quantity) * batchQuantity;
+  }, [quantity, batchQuantity]);
+  const batchQuantityMax = useMemo(() => {
+    return Math.floor(balance.availableAmt / Number(quantity));
+  }, [balance.availableAmt, quantity]);
   const calculatedBTC = useMemo(() => {
-    const numQuantity = Number(quantity);
+    const numQuantity = Number(totalQuantity);
     const numPrice = Number(price);
     if (numQuantity > 0 && numPrice > 0) {
       return numQuantity * numPrice;
     }
     return 0;
-  }, [quantity, price]);
+  }, [totalQuantity, price]);
 
   const isSellValid = useMemo(() =>
     quantity !== "" &&
@@ -198,30 +220,32 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
 
   const getAssetAmount = async () => {
     console.log('getAssetAmount', assetInfo.assetName);
-    
+
     const amountRes = await window.sat20.getAssetAmount_SatsNet(address, assetInfo.assetName)
     console.log('amountRes', amountRes);
 
     setBalance(amountRes)
   }
-  useEffect(() => { 
+  useEffect(() => {
     getAssetAmount();
   }, [address, assetInfo.assetName]);
   const lockSellUtxo = async (utxo: string) => {
     const res = await window.sat20.lockUtxo_SatsNet(address, utxo, 'sell')
     console.log(res);
-    
+
     await getAssetAmount();
   }
 
   const handleMaxClick = () => {
     if (!balanceLoading) {
       setQuantity(balance.availableAmt);
+      setBatchQuantity(1);
     }
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleNumericInput(e.target.value, setQuantity);
+    setBatchQuantity(1);
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,10 +253,11 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
   };
 
   const handleSell = async () => {
+
     if (!isSellValid) {
       console.warn("Sell attempt with invalid input or state.");
-      if (Number(quantity) > balance.availableAmt) toast.error("Insufficient balance.");
-      else if (Number(quantity) <= 0) toast.error("Quantity must be positive.");
+      if (Number(totalQuantity) > balance.availableAmt) toast.error("Insufficient balance.");
+      else if (Number(totalQuantity) <= 0) toast.error("Quantity must be positive.");
       else if (Number(price) <= 0) toast.error("Price must be positive.");
       return;
     }
@@ -247,17 +272,34 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
     const sellPrice = Number(price);
 
     try {
-      const [sellUtxoInfos, utxo] = await prepareSellData(assetInfo.assetName, sellQuantity, sellPrice);
+      const [sellUtxoInfos, utxos] = await prepareSellData(assetInfo.assetName, sellQuantity, sellPrice, batchQuantity);
       const signedPsbts = await buildAndSignOrder(sellUtxoInfos, address, network, btcWallet);
-      await submitSignedOrder(address, assetInfo.assetName, signedPsbts);
+      const submissionSuccess = await submitSignedOrder(address, assetInfo.assetName, signedPsbts);
 
-      // 成功售出后，使所有订单查询缓存失效
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      await lockSellUtxo(utxo);
-      setQuantity("");
-      setPrice("");
+      if (submissionSuccess) {
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        for (const utxo of utxos) {
+          try {
+            await lockSellUtxo(utxo);
+          } catch (lockError) {
+            console.error(`Failed to lock UTXO ${utxo}:`, lockError);
+            toast.error(`Order submitted, but failed to lock UTXO ${utxo}. Please check manually.`);
+          }
+        }
+        setQuantity("");
+        setPrice("");
+        setBatchQuantity(1);
+
+        if (onSellSuccess) {
+          onSellSuccess();
+        }
+      } else {
+        console.log("Order submission failed.");
+      }
+
     } catch (error: any) {
       console.error("Error during sell process:", error);
+      toast.error(`Sell process failed: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSelling(false);
     }
@@ -344,7 +386,13 @@ const SellOrder = ({ assetInfo }: SellOrderProps) => {
           />
         </div>
       </div>
-
+      <div className="mb-4">
+        <label className="block text-sm text-gray-400 mb-1">Repeat :</label>
+        <div className="flex items-center gap-4">
+          <Slider disabled={!quantity} defaultValue={[1]} max={batchQuantityMax} min={1} step={1} value={[batchQuantity]} onValueChange={(value) => setBatchQuantity(value[0])} />
+          <span className="text-sm text-gray-400">{batchQuantity}</span>
+        </div>
+      </div>
       <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 min-h-[100px] text-sm">
         <p className="flex justify-between gap-1 text-gray-400">
           <span>Available Balance: </span>

@@ -101,3 +101,8 @@ export const removeObjectEmptyValue = (obj: any) => {
   });
   return _obj;
 };
+export const getLabelForAssets = (asset: any) => {
+  console.log('asset', asset);
+  
+  return `${asset.Protocol}:${asset.Type}:${asset.Ticker}`
+};

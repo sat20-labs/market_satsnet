@@ -1,70 +1,103 @@
 'use client';
 
-import { memo } from 'react';
+import { useMemo, useState } from 'react';
+import SellOrderModal from './SellOrderModal'; // 引入挂单弹窗组件
+import { AssetItem } from '@/store/asset';
+import { Button } from '@/components/ui/button';
+
 import {
   Table,
   TableHeader,
+  TableColumn,
   TableBody,
-  TableHead,
   TableRow,
   TableCell,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+} from '@nextui-org/react';
 
-import { AssetItem } from '@/store/asset';
 
-interface Props {
+interface AssetListProps {
+  // assets_type: string; // 资产类型
   assets: AssetItem[];
-  onListClick?: (assetId: string) => void;
+  // onListClick?: (assetId: string) => void;
 }
 
-export const AssetsList = memo(function AssetsList({ assets, onListClick }: Props) {
+export const AssetsList = ({ assets }: AssetListProps) => {
+
+  const [isModalOpen, setIsModalOpen] = useState(false); // 控制弹窗显示状态
+  const [selectedAsset, setSelectedAsset] = useState<any>(null); // 当前选中的资产
+
+  const columns = [
+    { key: 'name', label: 'Name' },
+    { key: 'balance', label: 'Balance' },
+    { key: 'price', label: 'Price' },
+    { key: 'action', label: 'Action' },
+  ];
+
+
+
+  // 打开挂单弹窗
+  const handleSellClick = (asset: any) => {
+    const selected = {
+      assetName: asset.key,
+    };
+    console.log("Selected Asset:", selected); // 调试日志
+    setSelectedAsset(selected);
+    setIsModalOpen(true);
+  };
+
   return (
-    <Table>
-      <TableHeader>
-        {/* Define TableHead directly */}
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Balance</TableHead>
-          <TableHead className="text-right">Price</TableHead>
-          <TableHead className="text-right">Action</TableHead>
-        </TableRow>
+
+    <div>
+    <Table aria-label="Assets List Table" cellPadding={0} cellSpacing={0} className="w-full bg-accent/50 rounded-lg shadow-md">
+      <TableHeader columns={columns}>
+        {(column) => (
+          <TableColumn
+            key={column.key}
+            align={column.key === 'action' || column.key === 'price' ? 'end' : 'start'}
+            className={column.key === 'action' || column.key === 'price' ? 'h-12 text-right bg-accent' : 'text-left bg-accent'}
+          >
+            {column.label}
+          </TableColumn>
+        )}
       </TableHeader>
-      {/* Map assets directly in TableBody */}
-      <TableBody>
-        {assets && assets.length > 0 ? (
-          assets.map((asset) => (
-            <TableRow key={asset.id}>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="font-medium">{asset.label}</span>
-                </div>
-              </TableCell>
-              <TableCell>{asset.amount}</TableCell>
-              <TableCell className="text-right">
-                <span className="text-sm text-gray-400">-</span>
-              </TableCell>
-              <TableCell className="text-right">
-                {/* Use Shadcn Button and onClick */}
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={() => onListClick?.(asset.key)}
-                >
-                  List
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))
-        ) : (
-          // Handle empty state within TableBody
-          <TableRow>
-            <TableCell colSpan={4} className="h-24 text-center">
-              No assets found.
+      <TableBody items={assets} emptyContent={'No assets found.'}>
+        {(asset) => (
+          <TableRow key={asset.id} className="hover:bg-accent/50 cursor-pointer">
+            <TableCell>
+              <div className="flex flex-col">
+                <span className="font-medium text-white">{asset.label}</span>
+              </div>
+            </TableCell>
+            <TableCell>
+              <span className="text-white">{asset.amount}</span>
+            </TableCell>
+            <TableCell className="text-right">
+              <span className="text-sm text-gray-400">-</span>
+            </TableCell>
+            <TableCell className="text-right">
+              <Button
+                size="sm"
+                color="secondary"   
+                variant="outline"          
+                className="text-sm"
+                // onPress={() => onListClick?.(asset.key)}
+                onClick={() => handleSellClick(asset)} // 打开挂单弹窗
+              >
+                List
+              </Button>
             </TableCell>
           </TableRow>
         )}
       </TableBody>
-    </Table>
+    </Table>   
+       {/* 挂单弹窗 */}
+       {isModalOpen && selectedAsset && (
+        <SellOrderModal
+          assetInfo={selectedAsset}
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+        />
+      )}
+    </div>
   );
-});
+};

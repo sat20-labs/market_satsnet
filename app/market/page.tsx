@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SortDropdown } from '@/components/SortDropdown';
-import { getLabelForAssets } from '@/lib/utils';
+import { getLabelForAssets } from '@/utils';
 import { useCommonStore } from '@/store';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
 import { NameMarketNav } from '@/components/market/NameMarketNav';
