@@ -48,7 +48,7 @@ export const AssetsList = ({ assets }: AssetListProps) => {
   return (
 
     <div>
-    <Table aria-label="Assets List Table" cellPadding={0} cellSpacing={0} className="w-full bg-accent/50 rounded-lg shadow-md">
+    <Table aria-label="Assets List Table" cellPadding={0} cellSpacing={0} className="w-full bg-accent/50 rounded-lg shadow-md border-collapse">
       <TableHeader columns={columns}>
         {(column) => (
           <TableColumn
@@ -62,7 +62,10 @@ export const AssetsList = ({ assets }: AssetListProps) => {
       </TableHeader>
       <TableBody items={assets} emptyContent={'No assets found.'}>
         {(asset) => (
-          <TableRow key={asset.id} className="hover:bg-accent/50 cursor-pointer">
+          <TableRow
+          key={asset.id}
+          className="hover:bg-accent/50 cursor-pointer border-b-2 border-red-700"
+        >
             <TableCell>
               <div className="flex flex-col">
                 <span className="font-medium text-white">{asset.label}</span>

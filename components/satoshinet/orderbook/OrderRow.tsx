@@ -51,7 +51,7 @@ const OrderRow = React.memo(function OrderRow({
   };
 
   const disabledReason = getDisabledReason();
-  console.log(`OrderRow - order_id: ${order.order_id}, isLocked: ${isLocked}, selected: ${selected}`);
+  // console.log(`OrderRow - order_id: ${order.order_id}, isLocked: ${isLocked}, selected: ${selected}`);
 
 
   return (
