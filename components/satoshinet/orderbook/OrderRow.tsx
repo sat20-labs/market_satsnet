@@ -106,22 +106,4 @@ const OrderRow = React.memo(function OrderRow({
   );
 });
 
-// 添加 CSS 动画样式
-const styles = `
-.lock-icon {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  opacity: 0;
-  transform: scale(0.5);
-}
-
-.lock-icon.visible {
-  opacity: 1;
-  transform: scale(1);
-}`;
-
-const styleSheet = document.createElement("style");
-styleSheet.type = "text/css";
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
-
 export default OrderRow;
