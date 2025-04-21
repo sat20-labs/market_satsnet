@@ -3,7 +3,7 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { marketApi } from '@/api';
 import { useMemo, useState } from 'react';
-import { hideStr, resolveMempoolTxLink } from '@/lib/utils';
+import { hideStr, resolveMempoolTxLink } from '@/utils';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { Pagination } from '@/components/Pagination';
 
