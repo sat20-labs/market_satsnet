@@ -83,7 +83,7 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
             />
           </div>
           <div className="mb-4">
-            <label className="text-sm">Max price per item</label>
+            <label className="text-sm">Item price limit</label>
             <div className="flex items-center rounded  py-1">
               <Input
                 type="number"

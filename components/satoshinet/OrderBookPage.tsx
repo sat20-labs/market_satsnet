@@ -110,8 +110,8 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
       )}
       <div className="mt-4 text-sm text-gray-400">
         {/* 根据 settings 过滤订单簿 */}
-        {settings.showOngoingTrades && <p>显示进行中交易...</p>}
-        {settings.maxBidPrice > 0 && <p>最高报价价格: {settings.maxBidPrice} sats</p>}
+        {settings.showOngoingTrades && <p>Show pending transactions...</p>}
+        {settings.maxBidPrice > 0 && <p>Item price limit: {settings.maxBidPrice} sats</p>}
       </div>
     </div>
   );

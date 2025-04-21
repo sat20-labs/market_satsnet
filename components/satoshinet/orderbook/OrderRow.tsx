@@ -45,8 +45,8 @@ const OrderRow = React.memo(function OrderRow({
 
   // 获取禁用原因（用于 tooltip 显示）
   const getDisabledReason = () => {
-    if (isOwnOrder) return "这是您自己的订单";
-    if (isLockedByOthers) return "此订单已被其他用户锁定";
+    if (isOwnOrder) return "Your own order.";
+    if (isLockedByOthers) return "Locked by another user.";
     return "";
   };
 

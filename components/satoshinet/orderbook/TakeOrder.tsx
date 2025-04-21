@@ -94,6 +94,8 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     return ['orders', assetInfo.assetName, chain, network, page, size, mode];
   }, [assetInfo.assetName, page, size, network, chain, mode]);
 
+
+  
   // 定义 debouncedLock
   const debouncedLock = useMemo(
     () => debounce({ delay: 300 }, async (orderIds: number[]) => {
@@ -326,6 +328,10 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       debouncedLock(orderIdsToLock);
     }
   }, [sortedOrders, allOrders, selectedIndexes, debouncedLock, debouncedUnlock]);
+
+  const debouncedHandleSliderChange = useMemo(() => debounce({ delay: 200 }, (newValue: number) => {
+    handleSliderChange(newValue);
+  }), [handleSliderChange]);
 
   const selectedOrdersData = selectedIndexes
     .map((index) => allOrders[index])
@@ -576,8 +582,11 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
             type="range"
             min="1"
             max={maxSelectableOrders}
+            step="1" // 设置最小步长为 1
             value={sliderValue}
-            onChange={(e) => handleSliderChange(Number(e.target.value))}
+            onChange={(e) => debouncedHandleSliderChange(Number(e.target.value))}
+            onMouseUp={() => handleSliderChange(sliderValue)}
+            onTouchEnd={() => handleSliderChange(sliderValue)}
             className="w-full"
           />
         </div>

@@ -55,7 +55,7 @@ export const ActivityTable = ({ activities, isLoading, error }: ActivityTablePro
             {activity.time}
             {activity.txid && (
               <a
-                href={`https://mempool.space/testnet/tx/${activity.txid}`}
+                href={`https://satstestnet.sat20.org/tx/${activity.txid}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t('common.view_transaction')}

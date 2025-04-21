@@ -12,6 +12,8 @@ import { getLabelForAssets } from '@/utils';
 import { useCommonStore } from '@/store';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
 import { NameMarketNav } from '@/components/market/NameMarketNav';
+import { BtcPrice } from "@/components/BtcPrice";
+import { satsToBitcoin, formatBtcAmount } from '@/utils';
 import {
   Table,
   TableBody,
@@ -164,12 +166,12 @@ export default function Market() {
         allowsSorting: true,
       },
       {
-        key: 'lowest_price',
+        key: 'onsell_lowest_price',
         label: t('common.lowest_price'),
         allowsSorting: true,
       },
       {
-        key: 'lowest_price_change',
+        key: 'onsell_lowest_price_change',
         label: t('common.price_change'),
         allowsSorting: true,
       },
@@ -321,6 +323,101 @@ export default function Market() {
                         </TableCell>
                       );
                     }
+
+                    if (columnKey === 'onsell_lowest_price_change') {
+                      const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+                    
+                      return (
+                        <TableCell key={columnKey} className="px-4 py-3">
+                          <div
+                            className={`flex text-sm md:text-base whitespace-nowrap ${
+                              numericValue > 0 ? 'text-red-500' : numericValue < 0 ? 'text-green-500' : 'text-gray-300'
+                            }`}
+                          >
+                            {typeof value === 'string' ? value : '-'}
+                          </div>
+                        </TableCell>
+                      );
+                    }
+
+                    if (columnKey === 'tx_total_volume') {
+                      const changeValue = item.tx_amount_change; // 获取交易量变化值
+                      const numericChangeValue = typeof changeValue === 'string' ? parseFloat(changeValue) : changeValue;
+                  
+                      return (
+                        <TableCell key={columnKey} className="px-4 py-3">
+                          <div className="flex flex-col text-sm md:text-base whitespace-nowrap">
+                            {/* 显示交易量 */}
+                            <span>{typeof value === 'number' ? value.toLocaleString() : '-'}</span>
+                  
+                            {/* 显示交易量变化 */}
+                            {changeValue !== '0.00%' && (
+                            <span
+                              className={`text-xs ${
+                                numericChangeValue > 0
+                                  ? 'text-red-500'
+                                  : numericChangeValue < 0
+                                  ? 'text-green-500'
+                                  : 'text-gray-300'
+                              }`}
+                            >
+                              {typeof changeValue === 'string' ? changeValue : '-'}
+                            </span>
+                            )}
+                          </div>
+                        </TableCell>
+                      );
+                    }
+
+                    if (columnKey === 'market_cap') {
+                      const marketCapInBtc = satsToBitcoin(value ); // 转换为 BTC
+                      const marketCapInUsd = typeof marketCapInBtc === 'number' ? <BtcPrice btc={marketCapInBtc} /> : 0; // 转换为美元
+               
+                    
+                      return (
+                        <TableCell key={columnKey} className="px-4 py-3">
+                          <div className="flex flex-col text-sm md:text-base whitespace-nowrap">
+                            {/* 显示 BTC 值 */}
+                            <span>{marketCapInBtc.toFixed(2)} BTC</span>
+                    
+                            {/* 显示美元值 */}
+                            <span className="text-xs text-gray-400">
+                              ${marketCapInUsd}
+                            </span>
+                          </div>
+                        </TableCell>
+                      );
+                    }
+
+                    if (columnKey === 'holder_count') {
+                      const changeValue = item.holder_count_change; // 获取持有人变化值
+                      const numericChangeValue = typeof changeValue === 'string' ? parseFloat(changeValue) : changeValue;
+                  
+                      return (
+                        <TableCell key={columnKey} className="px-4 py-3">
+                          <div className="flex flex-col text-sm md:text-base whitespace-nowrap">
+                            {/* 显示交易量 */}
+                            <span>{typeof value === 'number' ? value.toLocaleString() : '-'}</span>
+                  
+                            {/* 显示交易量变化 */}
+                            {changeValue !== '0.00%' && (
+                            <span
+                              className={`text-xs ${
+                                numericChangeValue > 0
+                                  ? 'text-red-500'
+                                  : numericChangeValue < 0
+                                  ? 'text-green-500'
+                                  : 'text-gray-300'
+                              }`}
+                            >
+                              {typeof changeValue === 'string' ? changeValue : '-'}
+                            </span>
+                          )}
+                          </div>
+                        </TableCell>
+                      );
+                    }
+
 
                     return (
                       <TableCell key={columnKey} className="text-sm md:text-base px-4 py-3">
