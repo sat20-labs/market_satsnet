@@ -11,7 +11,6 @@ import { clientApi, marketApi } from "@/api";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { toast } from "sonner";
 import { debounce } from "radash";
-import { set } from "lodash";
 // --- Start: Define types locally (Consider moving to types/market.ts later) ---
 export interface MarketOrderAsset {
   assets_name: {
@@ -68,19 +67,17 @@ async function getUtxoInfoWithRetry(utxo: string) {
 interface TakeOrderProps {
   mode: "buy" | "sell";
   setMode: (mode: "buy" | "sell") => void;
-  userWallet: { btcBalance: number; assetBalance: number, address: string };
   assetInfo: { assetName: string; assetLogo: string; AssetId: string; floorPrice: number };
 }
 
-const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => {
+const TakeOrder = ({ assetInfo, mode, setMode }: TakeOrderProps) => {
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
   const [sliderValue, setSliderValue] = useState(0);
   const [isProcessingLock, setIsProcessingLock] = useState(false);
   const [lockedOrders, setLockedOrders] = useState<Map<number, string>>(new Map());
   const { chain, network } = useCommonStore();
   const { assets } = useAssetStore();
-  const { list: utxoList } = useUtxoStore();
-
+  const { balance, getBalance } = useWalletStore();
   const { address, btcWallet } = useReactWalletStore();
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(100);
@@ -95,7 +92,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   }, [assetInfo.assetName, page, size, network, chain, mode]);
 
 
-  
+
   // 定义 debouncedLock
   const debouncedLock = useMemo(
     () => debounce({ delay: 300 }, async (orderIds: number[]) => {
@@ -257,13 +254,13 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     let count = 0;
 
     for (const order of sortedOrders) {
-      totalCost += order.value / 100_000_000; // 转换为 BTC
-      if (totalCost > userWallet.btcBalance) break; // 超出余额时停止
+      totalCost += order.value; // 转换为 BTC
+      if (totalCost > balance.availableAmt) break; // 超出余额时停止
       count++;
     }
 
     return count;
-  }, [sortedOrders, userWallet.btcBalance]);
+  }, [sortedOrders, balance.availableAmt]);
 
   const handleOrderClick = useCallback(async (index: number) => {
     const order = allOrders[index];
@@ -273,16 +270,16 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     }
 
     const orderId = order.order_id;
-    
+
     setSelectedIndexes(prev => {
       const isSelected = prev.includes(index);
-      const newIndexes = isSelected 
+      const newIndexes = isSelected
         ? prev.filter(i => i !== index)
         : [...prev, index].sort((a, b) => a - b);
-      
+
       // 更新滑动条值以匹配选择状态
       setSliderValue(newIndexes.length);
-      
+
       // 处理锁定/解锁
       if (isSelected) {
         if (lockedOrders.has(orderId)) {
@@ -291,14 +288,14 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       } else {
         debouncedLock([orderId]);
       }
-      
+
       return newIndexes;
     });
   }, [allOrders, lockedOrders, debouncedLock, debouncedUnlock, address]);
 
   const handleSliderChange = useCallback((newValue: number) => {
     setSliderValue(newValue);
-    
+
     const ordersToSelect = sortedOrders.slice(0, newValue);
     const newSelectedIndexes = ordersToSelect
       .map(order => allOrders.findIndex(o => o.order_id === order.order_id))
@@ -308,11 +305,11 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     // 计算需要锁定和解锁的订单
     const currentOrderIds = new Set(selectedIndexes.map(idx => allOrders[idx]?.order_id));
     const newOrderIds = new Set(newSelectedIndexes.map(idx => allOrders[idx]?.order_id));
-    
+
     const orderIdsToLock = newSelectedIndexes
       .map(idx => allOrders[idx]?.order_id)
       .filter(id => id && !currentOrderIds.has(id));
-      
+
     const orderIdsToUnlock = selectedIndexes
       .map(idx => allOrders[idx]?.order_id)
       .filter(id => id && !newOrderIds.has(id));
@@ -338,10 +335,10 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     .filter((order) => order !== undefined && order !== null);
 
   const totalBTC = selectedOrdersData.reduce((sum, order) => {
-    return sum + order.value / 100_000_000;
+    return sum + order.value;
   }, 0);
 
-  const isBalanceSufficient = userWallet.btcBalance >= totalBTC;
+  const isBalanceSufficient = balance.availableAmt >= totalBTC;
 
   const summarySelectedOrders = useMemo(() => {
     return selectedOrdersData.map(order => {
@@ -419,10 +416,18 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       }
 
       const buyUtxoInfos: any[] = [];
-      const serviceFee = 0;
+      const serviceFeeRate = 0.008; // 0.8%
+      const serviceFee = Math.floor(totalSellAmount * serviceFeeRate);
       const networkFee = 10;
-
-      for (const { utxo } of utxoList) {
+      const totalUtxoAmount = totalSellAmount + serviceFee + networkFee;
+      const utxoRes = await window.sat20.getUtxosWithAsset_SatsNet(address, "::", totalUtxoAmount);
+      console.log('utxoRes', utxoRes);
+      const { utxos = [] } = utxoRes;
+      if (utxos.length === 0) {
+        toast.error("No valid UTXOs available for this transaction. Please check your wallet.");
+        return;
+      }
+      for (const utxo of utxos) {
         try {
           //console.log(`Fetching UTXO info for: ${utxo}`);
           const utxoData = await getUtxoInfoWithRetry(utxo);
@@ -490,10 +495,11 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
         toast.success("Order placed successfully!", { id: toastId });
         setSelectedIndexes([]);
         setPage(1);
-        for (const utxo of utxoList) {
+        for (const utxo of utxos) {
           const res = await window.sat20.lockUtxo_SatsNet(address, utxo, 'buy')
           console.log('lockUtxo_SatsNet res', res);
         }
+        await getBalance();
         queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });
       } else {
         await marketApi.unlockBulkOrder({ address, orderIds: successfullyLockedIds }).catch(unlockError => {

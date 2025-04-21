@@ -83,7 +83,7 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
           assetName: assetData.assetName,
           AssetId: assetData.assetId,
           floorPrice: parseFloat(assetData.floorPrice),
-        }} userWallet={userWallet} />
+        }} />
       ) : (
         <div>
           {mode === "buy" ? (
