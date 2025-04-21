@@ -29,8 +29,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-import { hideStr } from '@/lib';
-import { generateMempoolUrl } from '@/lib/utils';
+import { generateMempoolUrl, hideStr } from '@/utils';
 
 export const OrdxBillList = () => {
   const { t, i18n } = useTranslation();
