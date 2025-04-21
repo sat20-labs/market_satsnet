@@ -35,3 +35,14 @@ body {
   opacity: 0.6;
   /* 禁用状态的透明度 */
 }
+
+.lock-icon {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.lock-icon.visible {
+  opacity: 1;
+  transform: scale(1);
+}

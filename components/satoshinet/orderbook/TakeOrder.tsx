@@ -73,14 +73,13 @@ interface TakeOrderProps {
 }
 
 const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => {
-  const [manualSelectedIndexes, setManualSelectedIndexes] = useState<number[]>([]); // 手动选中的挂单
-  const [sliderSelectedIndexes, setSliderSelectedIndexes] = useState<number[]>([]); // 滑动条选中的挂单
-  const [sliderValue, setSliderValue] = useState(0); // 滑动条的值
-  const { getBalance, balance } = useWalletStore();
-  const [lockedOrders, setLockedOrders] = useState<Map<number, string>>(new Map()); // orderId -> raw
+  const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
+  const [sliderValue, setSliderValue] = useState(0);
   const [isProcessingLock, setIsProcessingLock] = useState(false);
+  const [lockedOrders, setLockedOrders] = useState<Map<number, string>>(new Map());
   const { chain, network } = useCommonStore();
   const { assets } = useAssetStore();
+  const { list: utxoList } = useUtxoStore();
 
   const { address, btcWallet } = useReactWalletStore();
   const [page, setPage] = useState(1);
@@ -95,13 +94,96 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     return ['orders', assetInfo.assetName, chain, network, page, size, mode];
   }, [assetInfo.assetName, page, size, network, chain, mode]);
 
+  // 定义 debouncedLock
+  const debouncedLock = useMemo(
+    () => debounce({ delay: 300 }, async (orderIds: number[]) => {
+      if (!address || orderIds.length === 0) return;
+
+      const ordersToLock = allOrders.filter(order => orderIds.includes(order.order_id));
+      if (ordersToLock.length !== orderIds.length) {
+        console.warn("Some orders to lock were not found in allOrders");
+      }
+
+      setIsProcessingLock(true);
+      try {
+        const lockData = await marketApi.lockBulkOrder({ address, orderIds });
+
+        if (lockData.code === 200 && lockData.data) {
+          const newLockedOrders = new Map(lockedOrders);
+          const failedOrderIndexes: number[] = [];
+
+          lockData.data.forEach((item) => {
+            if (item.raw) {
+              newLockedOrders.set(item.order_id, item.raw);
+            } else {
+              const failedIndex = allOrders.findIndex(order => order.order_id === item.order_id);
+              if (failedIndex !== -1) {
+                failedOrderIndexes.push(failedIndex);
+              }
+            }
+          });
+
+          console.log("Updated lockedOrders after lock:", Array.from(newLockedOrders.keys()));
+
+          setLockedOrders(newLockedOrders);
+
+          if (failedOrderIndexes.length > 0) {
+            setSelectedIndexes(prev =>
+              prev.filter(index => !failedOrderIndexes.includes(index))
+            );
+            toast.error("Some orders are already locked by others");
+            queryClient.invalidateQueries({ queryKey: queryKey });
+          }
+        } else {
+          toast.error(lockData.msg || "Failed to lock orders");
+          queryClient.invalidateQueries({ queryKey: queryKey });
+        }
+      } catch (error) {
+        console.error("Lock orders failed:", error);
+        toast.error("Failed to lock orders");
+        queryClient.invalidateQueries({ queryKey: queryKey });
+      } finally {
+        setIsProcessingLock(false);
+      }
+    }),
+    [address, allOrders, lockedOrders, queryClient, queryKey]
+  );
+
+  // 定义 debouncedUnlock
+  const debouncedUnlock = useMemo(
+    () => debounce({ delay: 300 }, async (orderIds: number[]) => {
+      if (!address || orderIds.length === 0) return;
+
+      try {
+        // 更新本地状态，移除解锁的订单
+        setLockedOrders(prev => {
+          const newLockedOrders = new Map(prev);
+          orderIds.forEach(id => newLockedOrders.delete(id));
+          console.log("Updated lockedOrders after unlock:", Array.from(newLockedOrders.keys()));
+          return newLockedOrders;
+        });
+
+        // 调用解锁 API
+        const unlockResult = await marketApi.unlockBulkOrder({ address, orderIds });
+
+        if (unlockResult.code !== 200) {
+          console.error("Failed to unlock orders:", orderIds);
+          toast.error(unlockResult.msg || "Failed to unlock orders");
+        }
+      } catch (error) {
+        console.error("Unlock orders failed:", error);
+        toast.error("Failed to unlock orders");
+      }
+    }),
+    [address, lockedOrders]
+  );
+
   useEffect(() => {
     setPage(1);
     setAllOrders([]);
     setTotalOrders(0);
-    setManualSelectedIndexes([]);//手动选中的挂单
-    setSliderSelectedIndexes([]);//滑动条选中的挂单
-    setSliderValue(0);//滑动条的值
+    setSelectedIndexes([]);
+    setSliderValue(0);
     setLockedOrders(new Map());
   }, [assetInfo.assetName, mode]);
 
@@ -181,14 +263,69 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
     return count;
   }, [sortedOrders, userWallet.btcBalance]);
 
-  
+  const handleOrderClick = useCallback(async (index: number) => {
+    const order = allOrders[index];
+    if (!order || (order.locked === 1 && !lockedOrders.has(order.order_id)) || order.address === address) {
+      console.warn("Clicked on a disabled or invalid order row.");
+      return;
+    }
 
-  // 合并手动选中和滑动条选中
-  const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
+    const orderId = order.order_id;
+    
+    setSelectedIndexes(prev => {
+      const isSelected = prev.includes(index);
+      const newIndexes = isSelected 
+        ? prev.filter(i => i !== index)
+        : [...prev, index].sort((a, b) => a - b);
+      
+      // 更新滑动条值以匹配选择状态
+      setSliderValue(newIndexes.length);
+      
+      // 处理锁定/解锁
+      if (isSelected) {
+        if (lockedOrders.has(orderId)) {
+          debouncedUnlock([orderId]);
+        }
+      } else {
+        debouncedLock([orderId]);
+      }
+      
+      return newIndexes;
+    });
+  }, [allOrders, lockedOrders, debouncedLock, debouncedUnlock, address]);
 
-  useEffect(() => {
-    setSelectedIndexes(Array.from(new Set([...manualSelectedIndexes, ...sliderSelectedIndexes])));
-  }, [manualSelectedIndexes, sliderSelectedIndexes]);
+  const handleSliderChange = useCallback((newValue: number) => {
+    setSliderValue(newValue);
+    
+    const ordersToSelect = sortedOrders.slice(0, newValue);
+    const newSelectedIndexes = ordersToSelect
+      .map(order => allOrders.findIndex(o => o.order_id === order.order_id))
+      .filter(index => index !== -1)
+      .sort((a, b) => a - b);
+
+    // 计算需要锁定和解锁的订单
+    const currentOrderIds = new Set(selectedIndexes.map(idx => allOrders[idx]?.order_id));
+    const newOrderIds = new Set(newSelectedIndexes.map(idx => allOrders[idx]?.order_id));
+    
+    const orderIdsToLock = newSelectedIndexes
+      .map(idx => allOrders[idx]?.order_id)
+      .filter(id => id && !currentOrderIds.has(id));
+      
+    const orderIdsToUnlock = selectedIndexes
+      .map(idx => allOrders[idx]?.order_id)
+      .filter(id => id && !newOrderIds.has(id));
+
+    // 更新选择状态
+    setSelectedIndexes(newSelectedIndexes);
+
+    // 处理锁定/解锁
+    if (orderIdsToUnlock.length > 0) {
+      debouncedUnlock(orderIdsToUnlock);
+    }
+    if (orderIdsToLock.length > 0) {
+      debouncedLock(orderIdsToLock);
+    }
+  }, [sortedOrders, allOrders, selectedIndexes, debouncedLock, debouncedUnlock]);
 
   const selectedOrdersData = selectedIndexes
     .map((index) => allOrders[index])
@@ -199,158 +336,6 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
   }, 0);
 
   const isBalanceSufficient = userWallet.btcBalance >= totalBTC;
-
-  const debouncedLock = useMemo(
-    () => debounce({ delay: 300 }, async (orderIds: number[]) => {
-      if (!address || orderIds.length === 0) return;
-
-      const ordersToLock = allOrders.filter(order => orderIds.includes(order.order_id));
-      if (ordersToLock.length !== orderIds.length) {
-        console.warn("Some orders to lock were not found in allOrders");
-      }
-
-      setIsProcessingLock(true);
-      try {
-        const lockData = await marketApi.lockBulkOrder({ address, orderIds });
-
-        if (lockData.code === 200 && lockData.data) {
-          const newLockedOrders = new Map(lockedOrders);
-          const failedOrderIndexes: number[] = [];
-
-          lockData.data.forEach((item) => {
-            if (item.raw) {
-              newLockedOrders.set(item.order_id, item.raw);
-            } else {
-              const failedIndex = allOrders.findIndex(order => order.order_id === item.order_id);
-              if (failedIndex !== -1) {
-                failedOrderIndexes.push(failedIndex);
-              }
-            }
-          });
-
-          setLockedOrders(newLockedOrders);
-
-          if (failedOrderIndexes.length > 0) {
-            setSelectedIndexes(prev =>
-              prev.filter(index => !failedOrderIndexes.includes(index))
-            );
-            toast.error("Some orders are already locked by others");
-            queryClient.invalidateQueries({ queryKey: queryKey });
-          }
-        } else {
-          toast.error(lockData.msg || "Failed to lock orders");
-          queryClient.invalidateQueries({ queryKey: queryKey });
-        }
-      } catch (error) {
-        console.error("Lock orders failed:", error);
-        toast.error("Failed to lock orders");
-        queryClient.invalidateQueries({ queryKey: queryKey });
-      } finally {
-        setIsProcessingLock(false);
-      }
-    }),
-    [address, allOrders, lockedOrders, queryClient, queryKey]
-  );
-
-  const debouncedUnlock = useMemo(
-    () => debounce({ delay: 500 }, async (orderIds: number[]) => {
-      if (!address || orderIds.length === 0) return;
-  
-      try {
-        const newLockedOrders = new Map(lockedOrders);
-        orderIds.forEach(id => newLockedOrders.delete(id));
-        setLockedOrders(newLockedOrders);
-  
-        const unlockResult = await marketApi.unlockBulkOrder({ address, orderIds });
-  
-        if (unlockResult.code !== 200) {
-          console.error("Failed to unlock orders:", orderIds);
-          toast.error(unlockResult.msg || "Failed to unlock orders");
-        }
-      } catch (error) {
-        console.error("Unlock orders failed:", error);
-        toast.error("Failed to unlock orders");
-      }
-    }),
-    [address, lockedOrders]
-  );
-
-  // 当滑动条值变化时，更新滑动条选中的挂单
-  // useEffect(() => {
-  //   if (sliderValue > 0) {
-  //     // 获取当前滑动条选中的订单索引
-  //     const selected = sortedOrders.slice(0, sliderValue).map(order => allOrders.indexOf(order));
-  //     setSliderSelectedIndexes(selected);
-  
-  //     // 获取需要锁定的订单 ID
-  //     const orderIdsToLock = sortedOrders.slice(0, sliderValue).map(order => order.order_id);
-  
-  //     // 获取需要解锁的订单 ID（之前锁定的订单中不再被选中的部分）
-  //     const previouslyLockedIds = sliderSelectedIndexes.map(index => allOrders[index]?.order_id).filter(id => id !== undefined);
-  //     const orderIdsToUnlock = previouslyLockedIds.filter(id => !orderIdsToLock.includes(id));
-  
-  //     // 避免重复调用锁定和解锁逻辑
-  //     if (orderIdsToUnlock.length > 0) {
-  //       debouncedUnlock(orderIdsToUnlock);
-  //     }
-  
-  //     if (orderIdsToLock.length > 0) {
-  //       debouncedLock(orderIdsToLock);
-  //     }
-  //   }
-  // }, [sliderValue, sortedOrders, allOrders, debouncedLock, debouncedUnlock]);
-
-  const handleOrderClick = useCallback(async (index: number) => {
-    const order = allOrders[index];
-    if (!order || (order.locked === 1 && !lockedOrders.has(order.order_id)) || order.address === address) {
-      console.warn("Clicked on a disabled or invalid order row.");
-      return;
-    }
-  
-    const orderId = order.order_id;
-  
-    setSelectedIndexes(prev => {
-      const isSelected = prev.includes(index);
-  
-      // 更新选中状态
-      const newSelectedIndexes = isSelected
-        ? prev.filter(i => i !== index) // 取消选中
-        : [...prev, index]; // 新选中
-  
-      // 锁定或解锁订单
-      if (isSelected) {
-        if (lockedOrders.has(orderId)) {
-          debouncedUnlock([orderId]);
-        }
-      } else {
-        debouncedLock([orderId]);
-      }
-  
-      // 更新滑动条值
-      setSliderValue(newSelectedIndexes.length);
-  
-      return newSelectedIndexes;
-    });
-  }, [allOrders, lockedOrders, debouncedLock, debouncedUnlock, address]);
-
-  useEffect(() => {
-    const initialLockedIds = Array.from(lockedOrders.keys());
-
-    return () => {
-      console.log('Component unmounting, attempting to unlock orders locked during this session.');
-      const finalLockedIds = Array.from(lockedOrders.keys());
-      if (finalLockedIds.length > 0 && address) {
-        console.log('Unlocking order IDs on unmount:', finalLockedIds);
-        marketApi.unlockBulkOrder({ address, orderIds: finalLockedIds }).catch(error => {
-          console.error("Failed to unlock orders on unmount:", error);
-        });
-      }
-    };
-  }, [address]);
-
-  console.log("allOrders:", allOrders);
-  console.log("selectedIndexes referring to allOrders:", selectedIndexes);
-  console.log("selectedOrdersData derived from allOrders:", selectedOrdersData);
 
   const summarySelectedOrders = useMemo(() => {
     return selectedOrdersData.map(order => {
@@ -431,15 +416,9 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
       const serviceFee = 0;
       const networkFee = 10;
 
-      const totalFee = totalSellAmount + serviceFee + networkFee;
-      const utxosResult = await window.sat20.getUtxosWithAsset_SatsNet(address, '::', totalFee)
-      console.log('asset :: utxos', utxosResult);
-      
-      const utxoList = utxosResult.utxos;
-
-      for (const utxo of utxoList) {
+      for (const { utxo } of utxoList) {
         try {
-          console.log(`Fetching UTXO info for: ${utxo}`);
+          //console.log(`Fetching UTXO info for: ${utxo}`);
           const utxoData = await getUtxoInfoWithRetry(utxo);
           buyUtxoInfos.push({ ...utxoData });
         } catch (error) {
@@ -448,12 +427,12 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
           continue; // 跳过无效的 UTXO
         }
       }
-      
+
       if (buyUtxoInfos.length === 0) {
         toast.error("No valid UTXOs available for this transaction. Please check your wallet.");
         return;
       }
-      
+
       console.log("UTXO infos fetched:", buyUtxoInfos);
 
       const firstOrderRaw = rawMap[intendedOrderIds[0]];
@@ -598,7 +577,7 @@ const TakeOrder = ({ assetInfo, mode, setMode, userWallet }: TakeOrderProps) => 
             min="1"
             max={maxSelectableOrders}
             value={sliderValue}
-            onChange={(e) => setSliderValue(Number(e.target.value))}
+            onChange={(e) => handleSliderChange(Number(e.target.value))}
             className="w-full"
           />
         </div>

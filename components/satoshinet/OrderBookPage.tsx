@@ -28,25 +28,82 @@ interface AssetInfoProps {
 
 const OrderBookPage = ({ assetData }: AssetInfoProps) => {
   //const { asset, activeTab, mode } = router.query; // 获取 URL 中的参数
-  const [query, setQuery] = useState<Record<string, string | undefined>>({});  
+  // const [query, setQuery] = useState<Record<string, string | undefined>>({});  
 
-  const [activeTab, setActiveTab] = useState<"takeOrder" | "makeOrder">("takeOrder");
-  const [mode, setMode] = useState<"buy" | "sell">("buy");
-  const userWallet = {
-    btcBalance: 0.5, // 用户钱包中的 BTC 余额
-    assetBalance: 1000, // 用户持有的资产数量
-    address: '', // 用户钱包地址'';
-  };
+  // const [activeTab, setActiveTab] = useState<"takeOrder" | "makeOrder">("takeOrder");
+  // const [mode, setMode] = useState<"buy" | "sell">("buy");
+  // const userWallet = {
+  //   btcBalance: 0.5, // 用户钱包中的 BTC 余额
+  //   assetBalance: 1000, // 用户持有的资产数量
+  //   address: '', // 用户钱包地址'';
+  // };
+
+  // // const handleTabChange = (tab: "takeOrder" | "makeOrder") => {
+  // //   setActiveTab(tab);
+  // //   setMode("buy"); // 切换标签时默认选中 "Buy"
+  // // };
 
   // const handleTabChange = (tab: "takeOrder" | "makeOrder") => {
   //   setActiveTab(tab);
-  //   setMode("buy"); // 切换标签时默认选中 "Buy"
+  //   if (tab === "makeOrder") {
+  //     setMode("sell"); // 切换到 makeOrder 时强制设置为 sell
+  //   }
   // };
+
+  // const [settings, setSettings] = useState({
+  //   showOngoingTrades: false,
+  //   maxBidPrice: 0,
+  // });
+
+  // const handleSettingsChange = (newSettings: { showOngoingTrades: boolean; maxBidPrice: number }) => {
+  //   setSettings(newSettings);
+  //   console.log("Updated Settings:", newSettings);
+  // };
+
+  // useEffect(() => {
+  //   // 解析 URL 参数
+  //   if (typeof window !== "undefined") {
+  //     const searchParams = new URLSearchParams(window.location.search);
+  //     setQuery({
+  //       asset: searchParams.get("asset") ?? undefined,
+  //       activeTabSet: searchParams.get("activeTabSet") ?? undefined,
+  //       modeSet: searchParams.get("modeSet") ?? undefined,
+  //     });
+  //   }
+  // }, []);
+
+  // const { asset, activeTabSet, modeSet } = query;
+
+  // useEffect(() => {
+  //   console.log("URL Parameters:", query);
+  
+  //   // 更新 activeTab
+  //   if (activeTabSet === "makeOrder" || activeTabSet === "takeOrder") {
+  //     setActiveTab(activeTabSet as "takeOrder" | "makeOrder");
+  //   }
+  // }, [activeTabSet]);
+  
+  // useEffect(() => {
+  //   // 更新 mode
+  //   if (modeSet === "sell" || modeSet === "buy") {
+  //     setMode(modeSet as "sell" | "buy");
+  //   }
+  // }, [modeSet]);
+  const [activeTab, setActiveTab] = useState<"takeOrder" | "makeOrder">("takeOrder");
+  const [mode, setMode] = useState<"buy" | "sell">("buy");
+
+  const userWallet = {
+    btcBalance: 0.5, // 用户钱包中的 BTC 余额
+    assetBalance: 1000, // 用户持有的资产数量
+    address: '', // 用户钱包地址
+  };
 
   const handleTabChange = (tab: "takeOrder" | "makeOrder") => {
     setActiveTab(tab);
     if (tab === "makeOrder") {
-      setMode("sell"); // 切换到 makeOrder 时强制设置为 sell
+      setMode("sell"); // 切换到 Make Order 时强制设置为 sell
+    } else if (tab === "takeOrder") {
+      setMode("buy"); // 切换回 Take Order 时默认设置为 buy
     }
   };
 
@@ -59,37 +116,6 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
     setSettings(newSettings);
     console.log("Updated Settings:", newSettings);
   };
-
-  useEffect(() => {
-    // 解析 URL 参数
-    if (typeof window !== "undefined") {
-      const searchParams = new URLSearchParams(window.location.search);
-      setQuery({
-        asset: searchParams.get("asset") ?? undefined,
-        activeTabSet: searchParams.get("activeTabSet") ?? undefined,
-        modeSet: searchParams.get("modeSet") ?? undefined,
-      });
-    }
-  }, []);
-
-  const { asset, activeTabSet, modeSet } = query;
-
-  useEffect(() => {
-    console.log("URL Parameters:", query);
-  
-    // 更新 activeTab
-    if (activeTabSet === "makeOrder" || activeTabSet === "takeOrder") {
-      setActiveTab(activeTabSet as "takeOrder" | "makeOrder");
-    }
-  }, [activeTabSet]);
-  
-  useEffect(() => {
-    // 更新 mode
-    if (modeSet === "sell" || modeSet === "buy") {
-      setMode(modeSet as "sell" | "buy");
-    }
-  }, [modeSet]);
-  
 
   return (
     <div className="max-w-full mx-auto p-4 bg-[#0E0E10] text-zinc-200 rounded-2xl shadow-lg border border-zinc-700 w-full h-full">
