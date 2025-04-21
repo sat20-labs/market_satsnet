@@ -64,7 +64,7 @@ export const AssetsList = ({ assets }: AssetListProps) => {
         {(asset) => (
           <TableRow
           key={asset.id}
-          className="hover:bg-accent/50 cursor-pointer border-b-2 border-red-700"
+          className="hover:bg-accent/50 cursor-pointer border-b-1 border-zinc-700/50"
         >
             <TableCell>
               <div className="flex flex-col">

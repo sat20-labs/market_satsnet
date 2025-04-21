@@ -215,7 +215,7 @@ const WalletConnectButton = () => {
                       {showAmount}
                     </span>
                   </div>
-                  <div className="px-2 h-full flex justify-center items-center text-gray-300 bg-[#282828] ml-2">
+                  <div className="px-2 h-full flex justify-center items-center text-gray-300 bg-transparent ml-2">
                     {address?.slice(-4)}
                     <ChevronDown className="text-gray-400 text-sm w-4 h-4 ml-1" />
                   </div>

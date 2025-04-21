@@ -337,7 +337,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
             {ticker}
           </p>
           <p className="text-sm text-gray-400">
-            Your Balance: {displayBalance}
+            Your Balance: <span className="ml-2"> {displayBalance.toLocaleString()} {ticker}</span>
           </p>
         </div>
       </div>
@@ -401,7 +401,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
       <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 min-h-[100px] text-sm">
         <p className="flex justify-between gap-1 text-gray-400">
           <span>Available Balance: </span>
-          <span className="gap-1">{displayAvailableAmt} {ticker}</span>
+          <span className="gap-1">{displayAvailableAmt.toLocaleString()} {ticker}</span>
         </p>
 
         {!balanceLoading && quantity !== "" && Number(quantity) > balance.availableAmt && (
@@ -421,7 +421,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
         )}
 
         {calculatedBTC > 0 && !isLoading && (
-          <div className="mt-4 pt-4 border-t border-zinc-700">
+          <div className="mt-4 pt-4 border-t border-zinc-800">
             <p className="font-medium text-gray-400">
               Est. Receive: <span className="font-semibold text-zinc-200">{calculatedBTC} sats</span>
             </p>
@@ -434,7 +434,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
           onClick={handleSell}
           className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${!isSellValid || isLoading
             ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60"
-            : "btn-gradient-sell hover:opacity-90 active:opacity-80"
+            : "btn-gradient"
             }`}
           disabled={(!isSellValid || isLoading)}
           size="lg"

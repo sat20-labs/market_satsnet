@@ -15,9 +15,12 @@ const BuySellToggle = ({
     <div className="inline-flex my-6 rounded-lg overflow-hidden border border-gray-600 w-full">
       <button
         onClick={() => !disableBuy && onChange("buy")} // 禁用时不触发 onChange
+        disabled={disableBuy} // 禁用 Buy 按钮
         className={`w-full px-4 py-2 text-sm font-medium ${
-          mode === "buy" ? "bg-zinc-600 text-white" : "bg-zinc-800 text-zinc-400"
-        }`}
+          mode === "buy"
+            ? "bg-zinc-600 text-white"
+            : "bg-zinc-800 text-zinc-400"
+        } ${disableBuy ? "cursor-not-allowed" : ""}`} // 禁用时样式
       >
         Buy
       </button>

@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import OrderBookHeader from "@/components/satoshinet/orderbook/OrderBookHearder";
 import BuySellToggle from "@/components/satoshinet/orderbook/BuySellToggle";
 import TakeOrder from "@/components/satoshinet/orderbook/TakeOrder";
 import MakeOrder from "@/components/satoshinet/orderbook/MakeOrder";
 import BuyOrder from './orderbook/BuyOrder';
 import SellOrder from './orderbook/SellOrder';
+import { useWalletStore } from '@/store';
+import { satsToBitcoin, formatBtcAmount } from '@/utils';
+
 
 interface AssetInfoProps {
   assetData: {
@@ -14,86 +17,27 @@ interface AssetInfoProps {
     protocol: string;
     assetLogo: string;
     floorPrice: string;
-    floorPriceUSD: string;
-    volume: string;
-    volumeUSD: string;
+    volume: string;  
     marketCap: string;
-    marketCapUSD: string;
     transactions: number;
     holders: number;
     mintProgress: string;
   };
 }
 
-
-const OrderBookPage = ({ assetData }: AssetInfoProps) => {
-  //const { asset, activeTab, mode } = router.query; // 获取 URL 中的参数
-  // const [query, setQuery] = useState<Record<string, string | undefined>>({});  
-
-  // const [activeTab, setActiveTab] = useState<"takeOrder" | "makeOrder">("takeOrder");
-  // const [mode, setMode] = useState<"buy" | "sell">("buy");
-  // const userWallet = {
-  //   btcBalance: 0.5, // 用户钱包中的 BTC 余额
-  //   assetBalance: 1000, // 用户持有的资产数量
-  //   address: '', // 用户钱包地址'';
-  // };
-
-  // // const handleTabChange = (tab: "takeOrder" | "makeOrder") => {
-  // //   setActiveTab(tab);
-  // //   setMode("buy"); // 切换标签时默认选中 "Buy"
-  // // };
-
-  // const handleTabChange = (tab: "takeOrder" | "makeOrder") => {
-  //   setActiveTab(tab);
-  //   if (tab === "makeOrder") {
-  //     setMode("sell"); // 切换到 makeOrder 时强制设置为 sell
-  //   }
-  // };
-
-  // const [settings, setSettings] = useState({
-  //   showOngoingTrades: false,
-  //   maxBidPrice: 0,
-  // });
-
-  // const handleSettingsChange = (newSettings: { showOngoingTrades: boolean; maxBidPrice: number }) => {
-  //   setSettings(newSettings);
-  //   console.log("Updated Settings:", newSettings);
-  // };
-
-  // useEffect(() => {
-  //   // 解析 URL 参数
-  //   if (typeof window !== "undefined") {
-  //     const searchParams = new URLSearchParams(window.location.search);
-  //     setQuery({
-  //       asset: searchParams.get("asset") ?? undefined,
-  //       activeTabSet: searchParams.get("activeTabSet") ?? undefined,
-  //       modeSet: searchParams.get("modeSet") ?? undefined,
-  //     });
-  //   }
-  // }, []);
-
-  // const { asset, activeTabSet, modeSet } = query;
-
-  // useEffect(() => {
-  //   console.log("URL Parameters:", query);
-  
-  //   // 更新 activeTab
-  //   if (activeTabSet === "makeOrder" || activeTabSet === "takeOrder") {
-  //     setActiveTab(activeTabSet as "takeOrder" | "makeOrder");
-  //   }
-  // }, [activeTabSet]);
-  
-  // useEffect(() => {
-  //   // 更新 mode
-  //   if (modeSet === "sell" || modeSet === "buy") {
-  //     setMode(modeSet as "sell" | "buy");
-  //   }
-  // }, [modeSet]);
+const OrderBookPage = ({ assetData }: AssetInfoProps) => {  
   const [activeTab, setActiveTab] = useState<"takeOrder" | "makeOrder">("takeOrder");
   const [mode, setMode] = useState<"buy" | "sell">("buy");
 
+  const { getBalance, balance } = useWalletStore();
+
+  const showAmount = useMemo(() => {
+      const btcValue = satsToBitcoin(balance.availableAmt);
+      return formatBtcAmount(btcValue);
+    }, [balance]);
+
   const userWallet = {
-    btcBalance: 0.5, // 用户钱包中的 BTC 余额
+    btcBalance: typeof showAmount === "string" ? parseFloat(showAmount) : showAmount || 0, // 用户钱包中的 BTC 余额
     assetBalance: 1000, // 用户持有的资产数量
     address: '', // 用户钱包地址
   };
@@ -131,9 +75,8 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
       {activeTab === "takeOrder" ? (
         <BuySellToggle mode={mode} onChange={setMode} disableSell={true} />
       ) : (
-        <BuySellToggle mode={'sell'} onChange={setMode} disableBuy={true} />)
-
-      }
+        <BuySellToggle mode={mode} onChange={setMode} disableBuy={false} />
+      )}
       {activeTab === "takeOrder" ? (
         <TakeOrder mode={mode} setMode={setMode} assetInfo={{
           assetLogo: assetData.assetLogo,

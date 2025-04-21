@@ -25,9 +25,9 @@ export const HomeTypeTabs = ({ value, onChange }: HomeTypeTabsProps) => {
     <Tabs
       value={value}
       onValueChange={changeHandler}
-      className=""
+      className=" h-full"
     >
-      <TabsList className="">
+      <TabsList className="h-full">
         {list.map((item) => (
           <TabsTrigger
             key={item.key}

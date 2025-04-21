@@ -208,7 +208,7 @@ export default function Market() {
 
   return (
     <div className="bg-transparent p-0 sm:pt-2 w-full">
-      <div className="my-2 flex justify-between items-center gap-1">
+      <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} />
         <SortDropdown
           sortList={sortList}
@@ -218,17 +218,17 @@ export default function Market() {
         ></SortDropdown>
       </div>
       {type === 'ns' && <NameMarketNav />}
-      <div className="relative overflow-x-auto w-full rounded-lg">
+      <div className="relative overflow-x-auto w-full px-3 pt-2 bg-zinc-900 rounded-lg">
         <Table className="w-full ">
-          <TableHeader className="sticky top-0 z-20 bg-zinc-800">
-            <TableRow className="">
+          <TableHeader className="top-0 z-20 bg-zinc-800">
+            <TableRow className="rounded-2xl">
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
                   onClick={() => handleSort(column.key)}
-                  className={`h-12 py-3 text-sm font-medium text-gray-300 whitespace-nowrap ${column.allowsSorting ? 'cursor-pointer hover:bg-zinc-700' : ''
+                  className={`h-12 py-3 text-sm font-medium text-gray-300  whitespace-nowrap ${column.allowsSorting ? 'cursor-pointer hover:bg-zinc-700' : ''
                     } ${column.key === 'assets_name'
-                      ? 'sticky left-0 z-30 bg-zinc-800 pl-5 pr-4'
+                      ? 'z-30 bg-zinc-800 pl-8 pr-4'
                       : 'px-4'
                     }`}
                 >
@@ -277,7 +277,7 @@ export default function Market() {
                       return (
                         <TableCell
                           key={columnKey}
-                          className="sticky left-0 z-10 pl-5 pr-4 py-3"
+                          className="z-10 pl-5 pr-4 py-3"
                         >
                           <div className="flex items-center text-sm md:text-base">
                             {logo ? (

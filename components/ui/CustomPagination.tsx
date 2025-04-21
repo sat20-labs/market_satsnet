@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useMediaQuery } from 'react-responsive';
 import { useTranslation } from 'react-i18next';
 import {
   Pagination,
@@ -41,6 +42,8 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
   isLoading = false,
 }) => {
   const { t } = useTranslation();
+  const isMobile = useMediaQuery({ maxWidth: 640 });
+  const MAX_VISIBLE_PAGES = isMobile ? 3 : 5;
 
   const handlePrevious = () => {
     if (currentPage > 1 && !isLoading) {
@@ -134,7 +137,7 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
         </PaginationContent>
       </Pagination>
 
-      <div className="flex items-center gap-2 justify-end">
+      <div className="flex items-center gap-2 justify-end mb-4">
         <span className="text-sm text-gray-400 whitespace-nowrap">{t('common.items_per_page')}</span>
         <Select
           value={String(pageSize)}

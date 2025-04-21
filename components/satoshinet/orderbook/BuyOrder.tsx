@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Icon } from "@iconify/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { useCommonStore } from "@/store";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"; 
 import { getOrders } from "@/api/request";
@@ -51,7 +52,7 @@ const BuyOrder = ({ userWallet, assetInfo }: BuyOrderProps) => {
           <p className="text-sm sm:text-base text-zinc-200 font-medium">{ticker} 
             {/* <span className="text-zinc-500 text-sm">({assetInfo.AssetId})</span> */}
             </p>
-          <p className="text-sm text-gray-400">Floor Price: {assetInfo.floorPrice} sats</p>
+          <p className="text-sm text-gray-400">Floor Price: <span className="ml-2">{assetInfo.floorPrice} sats</span></p>
         </div>
       </div>
 
@@ -68,10 +69,7 @@ const BuyOrder = ({ userWallet, assetInfo }: BuyOrderProps) => {
             placeholder="Enter quantity"
             className="w-full h-10 bg-zinc-800 text-zinc-200 p-2 rounded"
             min="0" // Add min attribute for better UX
-          />
-          {/* <span className="text-sm text-gray-400">
-            {assetInfo.assetName}
-          </span> */}
+          />         
         </div>
       </div>
 
@@ -107,10 +105,10 @@ const BuyOrder = ({ userWallet, assetInfo }: BuyOrderProps) => {
 
         {/* Summary */}
         {quantity && price && calculatedBTC > 0 && (
-          <div className="mt-4 pt-4 border-t border-zinc-700"> {/* Added border */}
+          <div className="mt-4 pt-4 border-t border-zinc-800"> {/* Added border */}
             <p className="flex justify-between font-medium text-gray-400"> 
               <span className="text-lg">You will pay:</span> 
-              <span className="flex justify-start gap-1 text-gray-200 text-lg font-mono font-bold"><Icon icon="cryptocurrency-color:btc" className="mr-1 mt-1" />{calculatedBTC/100000000} </span>              
+              <span className="flex justify-start gap-1 text-gray-200 text-lg font-mono font-bold">{calculatedBTC/100000000} BTC</span>             
             </p>
             <p className="flex justify-end text-gray-400 text-xs"> {calculatedBTC.toLocaleString()} sats</p>
           </div>
@@ -118,6 +116,7 @@ const BuyOrder = ({ userWallet, assetInfo }: BuyOrderProps) => {
       </div>
 
       {/* Action Button */}
+      <WalletConnectBus asChild>
       <Button
         className={`w-full h-10 mt-4 py-3 rounded-xl text-zinc-200 text-sm font-semibold ${!isBuyValid
           ? "bg-gray-700 cursor-not-allowed"
@@ -127,6 +126,7 @@ const BuyOrder = ({ userWallet, assetInfo }: BuyOrderProps) => {
       >
         Buy {ticker}
       </Button>
+      </WalletConnectBus>
     </div>
   );
 };

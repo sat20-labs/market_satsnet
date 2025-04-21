@@ -11,7 +11,7 @@ interface SatoshiNetMarketProps {
 }
 
 export default function SatoshiNetMarket({ asset, assetData }: SatoshiNetMarketProps) {
-
+console.log('SatoshiNetMarket assetData:', assetData); // Debugging log to check assetData
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 sm:p-4 h-full w-ful">
@@ -22,9 +22,9 @@ export default function SatoshiNetMarket({ asset, assetData }: SatoshiNetMarketP
           <ChartModule assets_name={asset || ''} />
         </div>
 
-        {/* <div className="flex items-center justify-center w-full h-[200px] sm:h-[280px] mt-10 sm:mb-0">
+        <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
           <AssetInfo assetData={assetData} />
-        </div> */}
+        </div>
       </div>
 
       <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
