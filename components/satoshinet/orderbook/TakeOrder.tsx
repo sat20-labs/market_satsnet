@@ -446,14 +446,15 @@ const TakeOrder = ({ assetInfo, mode, setMode }: TakeOrderProps) => {
 
       console.log("UTXO infos fetched:", buyUtxoInfos);
 
-      const firstOrderRaw = rawMap[intendedOrderIds[0]];
-      if (!firstOrderRaw) {
-        throw new Error(`Critical error: Raw transaction data not found for first order ${intendedOrderIds[0]} even after successful lock.`);
+      const orderRaws = Object.values(rawMap);
+      const mergeRaw = await window.sat20.mergeBatchSignedPsbt_SatsNet(orderRaws, network);
+      console.log('mergeRaw', mergeRaw);
+      if (!mergeRaw.data.psbt) {
+        throw new Error("Failed to merge PSBTs.");
       }
-
       console.log("Finalizing sell order (based on first selected order)...");
       const finalizeRes = await window.sat20.finalizeSellOrder_SatsNet(
-        firstOrderRaw,
+        mergeRaw.data.psbt,
         buyUtxoInfos.map((v) => JSON.stringify(v)),
         address,
         NEXT_PUBLIC_SERVICE_ADDRESS,
