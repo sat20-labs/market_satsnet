@@ -4,6 +4,11 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Icon } from '@iconify/react';
 import { DataTable } from "@/components/satoshinet/DataTable";
 import { Activity } from "./types";
+import { hideStr }  from '@/utils';
+import { useState } from 'react';
+import { Copy, ChevronDown, Bitcoin } from 'lucide-react';
+import { Button,} from '@/components/ui/button';
+import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
 interface ActivityTableProps {
@@ -14,6 +19,14 @@ interface ActivityTableProps {
 
 export const ActivityTable = ({ activities, isLoading, error }: ActivityTableProps) => {
   const { t } = useTranslation();
+  const [isCopied, setIsCopied] = useState(false);
+  const copyAddress = (address) => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 1500);
+    }
+  };
   const columns: ColumnDef<Activity>[] = [
     {
       accessorKey: "eventTypeLabel",
@@ -46,6 +59,38 @@ export const ActivityTable = ({ activities, isLoading, error }: ActivityTablePro
       },
     },
     {
+      accessorKey: "from",
+      header: t('common.from'),
+      cell: ({ row }) => {
+        const from = row.original.from || '-';
+        return (
+        <span className="flex items-center justify-start gap-1">
+            <span className="text-zinc-300 font-thin">
+              {hideStr(from, 5)}
+            </span>
+            <Button variant="ghost" size="icon" onClick={() => copyAddress(from)} className="h-6 w-6 text-zinc-400 cursor-pointer">
+              <Copy className="h-4 w-4" />
+            </Button>        
+        </span>);
+      },
+    },
+    {
+      accessorKey: "to",
+      header: t('common.to'),
+      cell: ({ row }) => {
+        const to = row.original.to || '-';
+        return (
+          <span className="flex items-center justify-start gap-1">
+              <span className="text-zinc-300 font-thin">
+                {hideStr(to, 5)}
+              </span>
+              <Button variant="ghost" size="icon" onClick={() => copyAddress(to)} className="h-6 w-6 text-zinc-400 cursor-pointer">
+                <Copy className="h-4 w-4" />
+              </Button>        
+        </span>);
+      },
+    },
+    {
       id: "time",
       header: t('common.time'),
       cell: ({ row }) => {
@@ -55,7 +100,7 @@ export const ActivityTable = ({ activities, isLoading, error }: ActivityTablePro
             {activity.time}
             {activity.txid && (
               <a
-                href={`https://satstestnet.sat20.org/tx/${activity.txid}`}
+                href={`https://mempool.dev.sat20.org/tx/${activity.txid}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t('common.view_transaction')}

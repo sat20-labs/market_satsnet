@@ -71,14 +71,14 @@ export const FeerateSelectButton = () => {
         <Button
           variant="ghost"
           disabled={isLoading}
-          className="bg-transparent sm:px-2 px-[6px] sm:gap-2 gap-[1px] text-xs sm:text-base text-zinc-300 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
+          className="bg-transparent sm:px-2 px-8 sm:gap-2 gap-3 text-xs sm:text-base text-zinc-300 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
         >
           {isLoading ? (
             <Icon icon="eos-icons:loading" className="text-xl0" />
           ) : (
             <Icon icon="mdi:gas-station" className="text-xl0" />
           )}
-          10 sats
+          <span className='mr-4 sm:mr-1'>10 sats</span>
           {/* {feeRate.value}{' sat'}
           <span className="hidden sm:inline dark:text-gray-400 text-slate-600">/vB</span> */}
         </Button>

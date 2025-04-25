@@ -149,10 +149,12 @@ export const Header = () => {
                        <NetworkSelect />
                        <ChainSelect />
                      </div>
-                       <FeerateSelectButton />
-                     <LanguageSelect />
+                     <div className="flex items-center gap-3 w-full">
+                        <FeerateSelectButton />
+                        <LanguageSelect />
+                     </div>                     
                   </div>
-                  <Separator className="my-2"/>
+                  <Separator className="my-1"/>
                   <nav className="flex-1 px-4 space-y-1">
                     {navMenus.map((item) => {
                      const active = isActive(item.href);
@@ -161,12 +163,12 @@ export const Header = () => {
                           key={item.href}
                           href={item.href}
                           target={item.target}
-                          className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                          className={`flex items-center rounded-md px-3 py-2 mb-4 border-b border-zinc-700/50 text-sm font-medium transition-colors ${
                             active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                           }`}
                           onClick={() => setIsMenuOpen(false)}
                        >
-                          {item.label}
+                        <Icon icon="mdi:chevron-right-circle-outline" className="text-base text-zinc-500 mr-2" />  {item.label}
                        </NextLink>
                      )
                    })}
