@@ -108,5 +108,6 @@
   "quantity": "数量",
   "total_value": "总价",
   "unknown": "未知",
-  "unknown_status": "未知状态"
+  "unknown_status": "未知状态",
+  "copied_successfully": "复制成功"
 }

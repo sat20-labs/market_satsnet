@@ -75,7 +75,7 @@ export const AssetsList = ({ assets }: AssetListProps) => {
               <span className="text-white">{asset.amount}</span>
             </TableCell>
             <TableCell className="text-right">
-              <span className="text-sm text-gray-400">-</span>
+              <span className="text-sm text-gray-400">-{}</span>
             </TableCell>
             <TableCell className="text-right">
               <Button

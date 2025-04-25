@@ -105,5 +105,6 @@
   "total_value": "Total Value",
   "unknown": "Unknown",
   "unknown_status": "Unknown Status",
-  "event": "Event"
+  "event": "Event",
+  "copied_successfully": "Copied Successfully"
 }

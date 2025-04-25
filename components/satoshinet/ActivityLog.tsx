@@ -134,8 +134,8 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
           }
 
           // Extract `from` and `to` addresses
-          const from = order.address || '-';
-          const to = order.txaddress || '-';
+          const from = order.address;
+          const to = order.txaddress;
 
           return {
             order_id: order.order_id,
