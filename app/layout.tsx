@@ -8,6 +8,7 @@ import '@/locales';
 import { useCommonStore } from '@/store';
 import { SystemNoticeModal } from '@/components/SystemNoticeModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Icon } from '@iconify/react';
 
 export default function RootLayout({
   children,
@@ -47,17 +48,18 @@ export default function RootLayout({
               {children}
             </main>
             <footer id="footer">
-              <ul className="flex justify-center gap-4 items-center text-gray-500">
+              <ul className="flex justify-center h-14 gap-4 items-center border-t border-zinc-700/50 text-gray-500">
                 <li>
-                  <a href="https://twitter.com/sat20market/" target="_blank" rel="noopener noreferrer">
+                  <a href="https://x.com/Sat20Nexus/" target="_blank" rel="noopener noreferrer">  
                     <Avatar>
                       <AvatarFallback>
-                        <img src="/twitter.png" alt="sat20 twitter" className="w-full h-full object-cover" />
+                        {/* <img src="/twitter.png" alt="sat20 twitter" className="w-full h-full object-cover" /> */}
+                        <Icon icon="fa6-brands:x-twitter" className="text-base text-zinc-200/50 hover:text-purple-500" />
                       </AvatarFallback>
                     </Avatar>
                   </a>
                 </li>
-                <li className="text-sm">Copyrights&copy;2024</li>
+                <li className="text-sm">Copyrights&copy;2025</li>
                 <li>V1.0.{appVersion}</li>
               </ul>
             </footer>

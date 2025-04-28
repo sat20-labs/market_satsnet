@@ -133,6 +133,10 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
             eventTypeLabel = `${t('common.unknown')} (${eventTypeStatus})`;
           }
 
+          // Extract `from` and `to` addresses
+          const from = order.address;
+          const to = order.txaddress;
+
           return {
             order_id: order.order_id,
             eventTypeLabel,
@@ -141,6 +145,8 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
             totalValue,
             time,
             txid: order.txid || undefined,
+            from, // Add `from`
+            to,   // Add `to`
           };
         } catch (error) {
           console.error(`Error transforming order ${order.order_id}:`, order, error);

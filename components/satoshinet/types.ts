@@ -37,6 +37,8 @@ export interface Activity {
   totalValue: number; // In sats
   time: string;
   txid?: string;
+  from: string; // Add `from`
+  to: string;   // Add `to`
 }
 
 export interface HistoryData {

@@ -112,6 +112,8 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
             totalValue,
             time,
             txid: order.txid || undefined,
+            from: order.address , // Add from address
+            to: order.txaddress , // Add to address
           };
         } catch (error) {
           console.error(`Error transforming order ${order.order_id}:`, order, error);
