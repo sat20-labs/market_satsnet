@@ -1,5 +1,6 @@
 import { useCommonStore } from '../store/common';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+
 interface RequestParams {
   address?: string;
   network?: string;
@@ -18,8 +19,7 @@ interface RequestParams {
 class ClientApi {
   private readonly BASE_URL = process.env.NEXT_PUBLIC_ORDX_HOST;
 
-  private generatePath = (path: string, chain: string, network: string): string => {    
-    console.log('clientApi chain/network:', chain,"/", network);
+  private generatePath = (path: string, chain: string, network: string): string => {
     if (chain === 'SatoshiNet') {
       return `${this.BASE_URL}/satsnet${
         network === 'testnet' ? '/testnet' : '/mainnet'

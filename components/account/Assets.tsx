@@ -9,9 +9,9 @@ import { AssetsList } from './AssetsList';
 export const Assets = () => {
   const [protocol, setProtocol] = useState<string>('ordx');   
   const { assets } = useAssetStore();
-  const router = useRouter();
+  console.log('assets', assets);
   const onProtocolChange = (t: string) => {
-    console.log('t', t);
+    console.log('onProtocolChange', t);
     
     if (t !== protocol) {
       setProtocol(t);
@@ -19,10 +19,6 @@ export const Assets = () => {
   };
 
   const currentAssets = assets[protocol as keyof typeof assets];
-  const onListClick = (key: string) => {
-    console.log('List clicked for asset:', key);
-    router.push(`/order?asset=${key}&activeTabSet=makeOrder&modeSet=sell`); // 传递 activeTab 和 mode 参数
-  };
   return (
     <div className="py-4">
       <div className="mb-4">

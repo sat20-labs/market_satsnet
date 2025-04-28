@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { SellUtxoInfo } from "@/types";
 import { useAssetStore } from '@/store/asset';
-import { AssetItem } from "@/store/asset";
+
 import { clientApi, marketApi } from "@/api";
 import { useCommonStore } from "@/store";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
@@ -192,7 +192,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
     availableAmt: 0,
     lockedAmt: 0
   });
-
+  const [tickerInfo, setTickerInfo] = useState<any>(null);
   const [quantity, setQuantity] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
   const totalQuantity = useMemo(() => {
@@ -223,13 +223,22 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
     console.log('getAssetAmount', assetInfo.assetName);
 
     const amountRes = await window.sat20.getAssetAmount_SatsNet(address, assetInfo.assetName)
-    console.log('amountRes', amountRes);
-
     setBalance({
       availableAmt: Number(amountRes.availableAmt),
       lockedAmt: Number(amountRes.lockedAmt)
     })
   }
+  useEffect(() => {
+    const fetchTickerInfo = async () => {
+      const infoRes = await window.sat20.getTickerInfo(assetInfo.assetName)
+      if (infoRes?.ticker) {
+        const { ticker } = infoRes
+        const result = JSON.parse(ticker)
+        setTickerInfo(result)
+      }
+    }
+    fetchTickerInfo()
+  }, [address, assetInfo.assetName]);
   useEffect(() => {
     getAssetAmount();
   }, [address, assetInfo.assetName]);
@@ -334,10 +343,10 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
         )}
         <div className="leading-relaxed min-w-0">
           <p className="text-sm sm:text-base text-zinc-200 font-medium break-all">
-            {ticker}
+            {tickerInfo?.displayname}
           </p>
           <p className="text-sm text-gray-400">
-            Your Balance: <span className="ml-2"> {displayBalance.toLocaleString()} {ticker}</span>
+            Your Balance: <span className="ml-2"> {displayBalance.toLocaleString()}</span>
           </p>
         </div>
       </div>
@@ -345,7 +354,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
       {/* Quantity Input */}
       <div className="mb-4 space-y-1.5">
         <label htmlFor="sell-quantity" className="block text-sm text-gray-400 mb-1">
-          Quantity ({ticker}):
+          Quantity ({tickerInfo?.displayname}):
         </label>
         <div className="flex items-center gap-2">
           <Input
@@ -375,7 +384,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
 
       {/* Price Input */}
       <div className="mb-6 space-y-1.5">
-        <label htmlFor="sell-price" className="block text-sm text-gray-400 mb-1">Unit Price (sats/{ticker}):</label>
+        <label htmlFor="sell-price" className="block text-sm text-gray-400 mb-1">Unit Price (sats/{tickerInfo?.displayname}):</label>
         <div className="flex items-center gap-2">
           <Input
             id="sell-price"
@@ -401,7 +410,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
       <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 min-h-[100px] text-sm">
         <p className="flex justify-between gap-1 text-gray-400">
           <span>Available Balance: </span>
-          <span className="gap-1">{displayAvailableAmt.toLocaleString()} {ticker}</span>
+          <span className="gap-1">{displayAvailableAmt.toLocaleString()} </span>
         </p>
 
         {!balanceLoading && quantity !== "" && Number(quantity) > balance.availableAmt && (
@@ -439,7 +448,7 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
           disabled={(!isSellValid || isLoading)}
           size="lg"
         >
-          {isSelling ? "Processing..." : `Sell ${ticker}`}
+          {isSelling ? "Processing..." : `Sell ${tickerInfo?.displayname}`}
         </Button>
       </WalletConnectBus>
     </div>

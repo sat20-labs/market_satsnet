@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { clientApi } from '@/api'
-import { parallel } from 'radash'
+import { parallel, tryit } from 'radash'
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react'
 
 /**
@@ -62,10 +62,10 @@ interface AssetState {
   // 状态
   loading: boolean;
   error: Error | null;
-  
+
   // 原始数据
   rawAssetList: AssetItem[];
-  
+
   // 分类资产列表
   assets: {
     ordx: AssetItem[];
@@ -74,17 +74,17 @@ interface AssetState {
     brc20: AssetItem[];
     ord: AssetItem[];
   };
-  
+
   // UTXO 数据
   plainUtxos: AssetUtxoItem[];
-  
+
   // 可用资产类型
   availableAssetTypes: AssetTypeOption[];
-  
+
   // 查询数据
   summaryData: any;
   isSummaryLoading: boolean;
-  
+
   // Actions
   setLoading: (loading: boolean) => void;
   setError: (error: Error | null) => void;
@@ -95,7 +95,7 @@ interface AssetState {
   setSummaryData: (data: any) => void;
   setIsSummaryLoading: (loading: boolean) => void;
   setAssets: (assets: AssetState['assets']) => void;
-  
+
   // 业务方法
   loadSummaryData: () => Promise<any>;
   loadUtxoData: (assetKeys?: string[]) => Promise<AssetUtxoItem[][]>;
@@ -157,7 +157,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
     setLoading: (loading) => set({ loading }),
     setError: (error) => set({ error }),
     setRawAssetList: (list) => set({ rawAssetList: list }),
-    updateAssetsByProtocol: (protocol, assets) => 
+    updateAssetsByProtocol: (protocol, assets) =>
       set((state) => ({
         assets: {
           ...state.assets,
@@ -184,30 +184,48 @@ export const useAssetStore = create<AssetState>((set, get) => {
         state.setIsSummaryLoading(true);
         const result = await clientApi.getAddressSummary(address);
         // Update summary data regardless of processing result.data
-        state.setSummaryData(result); 
+        state.setSummaryData(result);
 
         if (result?.data) {
           const apiAssets = result.data || [];
           const newAssetList: AssetItem[] = [];
           // console.log('apiAssets', apiAssets);
 
-          apiAssets.forEach((item: any) => {
+          for (let i = 0; i < apiAssets.length; i++) {
+            const item = apiAssets[i];
             // Use 'plain' as default protocol if item.Name.Protocol is empty or null
-            const protocol = item.Name.Protocol || 'plain'; 
-            const key = protocol !== 'plain' 
+            const protocol = item.Name.Protocol || 'plain';
+            const key = protocol !== 'plain'
               ? `${item.Name.Protocol}:${item.Name.Type}:${item.Name.Ticker}`
-              : 'plain::'; // Use specific key for plain BTC
+              : '::'; // Use specific key for plain BTC
 
             // Check if asset with this key already exists in the current rawAssetList
             if (!state.rawAssetList.find((v) => v?.key === key)) {
+              let label = item.Name.Ticker;
+              console.log('key', key);
+              if (key !== '::') {
+                try {
+                  const infoRes = await window.sat20.getTickerInfo(key)
+                  console.log('infoRes', infoRes);
+                  
+                  if (infoRes?.ticker) {
+                    const { ticker } = infoRes
+                    const result = JSON.parse(ticker)
+                    console.log('ticker result', result)
+                    label = result?.displayname || label
+                  }
+                } catch (error) {
+                  console.error('error', error)
+                }
+              }
+              console.log('label', label);
+              
               newAssetList.push({
                 id: key,
                 key,
                 protocol: protocol === 'plain' ? '' : item.Name.Protocol, // Store empty string for plain
                 type: item.Name.Type,
-                label: item.Name.Type === 'e' 
-                  ? `${item.Name.Ticker}（raresats）` 
-                  : (protocol === 'plain' ? 'BTC' : item.Name.Ticker), // Label BTC correctly
+                label, // Label BTC correctly
                 ticker: item.Name.Ticker,
                 utxos: [],
                 amount: Number(item.Amount),
@@ -217,7 +235,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
               // This depends on whether the summary API guarantees uniqueness or if amounts can change.
               // For now, we only add new assets based on key.
             }
-          });
+          };
 
           if (newAssetList.length > 0) {
             const updatedRawAssetList = [...state.rawAssetList, ...newAssetList];
@@ -234,7 +252,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
             updatedRawAssetList.forEach(asset => {
               const protocolKey = asset.protocol || 'plain'; // Map empty protocol to 'plain' key
               if (updatedAssets[protocolKey as keyof typeof updatedAssets]) {
-                 updatedAssets[protocolKey as keyof typeof updatedAssets].push(asset);
+                updatedAssets[protocolKey as keyof typeof updatedAssets].push(asset);
               } else {
                 // Handle unexpected protocols if necessary, though current structure covers known ones
                 console.warn(`Unknown protocol found for asset key ${asset.key}: ${asset.protocol}`);
@@ -246,22 +264,22 @@ export const useAssetStore = create<AssetState>((set, get) => {
               ...(updatedRawAssetList.some(item => !item.protocol) ? [{ label: 'BTC', value: 'btc' }] : []), // Check for empty protocol
               ...(updatedRawAssetList.some(item => item.protocol === 'ordx') ? [{ label: 'SAT20', value: 'ordx' }] : []),
               ...(updatedRawAssetList.some(item => item.protocol === 'runes') ? [{ label: 'Runes', value: 'runes' }] : []),
-               // Add other protocols like brc20, ord if needed
+              // Add other protocols like brc20, ord if needed
             ];
-            
+
             // Update state once with all changes
             set({
               rawAssetList: updatedRawAssetList,
               assets: updatedAssets,
               availableAssetTypes: updatedAvailableAssetTypes,
             });
-
+            console.log('updatedRawAssetList', updatedAssets);
+            
           }
-          // If newAssetList is empty, we still might need to update summaryData, handled above.
         } else {
-           // Handle case where result exists but result.data is null/empty
-           // Potentially clear assets if API returns empty data? Or just update summaryData?
-           // Current logic updates summaryData and does nothing else, which seems reasonable.
+          // Handle case where result exists but result.data is null/empty
+          // Potentially clear assets if API returns empty data? Or just update summaryData?
+          // Current logic updates summaryData and does nothing else, which seems reasonable.
         }
 
         return result; // Return the original API result
@@ -291,21 +309,21 @@ export const useAssetStore = create<AssetState>((set, get) => {
           // If only plain BTC exists, maybe fetch plain UTXOs separately?
           // Or handle plain UTXOs differently as they don't have a specific 'key' in the same sense.
           // Current `processAllUtxos` might fail if passed 'plain::'.
-           // Let's assume plain UTXOs are handled elsewhere or need specific logic.
-           // For now, return early if only plain BTC or no keys.
-           state.setLoading(false);
-           return []; 
+          // Let's assume plain UTXOs are handled elsewhere or need specific logic.
+          // For now, return early if only plain BTC or no keys.
+          state.setLoading(false);
+          return [];
         }
 
         const utxoResults = await processAllUtxos(address, keysToFetch);
 
         // --- Start: Update UTXOs in rawAssetList and categorized assets ---
         const updatedRawAssetList = state.rawAssetList.map((asset) => {
-           const keyIndex = keysToFetch.indexOf(asset.key);
-           if (keyIndex !== -1 && utxoResults[keyIndex]) {
-             return { ...asset, utxos: utxoResults[keyIndex] };
-           }
-           return asset; // Return unchanged asset if no UTXOs fetched for it
+          const keyIndex = keysToFetch.indexOf(asset.key);
+          if (keyIndex !== -1 && utxoResults[keyIndex]) {
+            return { ...asset, utxos: utxoResults[keyIndex] };
+          }
+          return asset; // Return unchanged asset if no UTXOs fetched for it
         });
 
         // Rebuild the assets object similar to loadSummaryData
@@ -320,7 +338,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
         updatedRawAssetList.forEach(asset => {
           const protocolKey = asset.protocol || 'plain';
           if (updatedAssets[protocolKey as keyof typeof updatedAssets]) {
-             updatedAssets[protocolKey as keyof typeof updatedAssets].push(asset);
+            updatedAssets[protocolKey as keyof typeof updatedAssets].push(asset);
           }
         });
 
@@ -335,9 +353,9 @@ export const useAssetStore = create<AssetState>((set, get) => {
           // plainUtxos: plainUtxos, // Update plainUtxos if logic is added
         });
         // --- End: Update UTXOs ---
-        
+
         // Return the fetched UTXO arrays directly
-        return utxoResults; 
+        return utxoResults;
       } catch (err) {
         console.error('Failed to load UTXO data:', err);
         state.setError(err instanceof Error ? err : new Error('Failed to load UTXO data'));
@@ -403,8 +421,8 @@ export const useAssetStore = create<AssetState>((set, get) => {
 });
 
 // 导出选择器
-export const selectAssetsByProtocol = (protocol: string) => 
+export const selectAssetsByProtocol = (protocol: string) =>
   (state: AssetState) => state.assets[protocol as keyof typeof state.assets];
 
-export const selectPlainBalance = (state: AssetState) => 
+export const selectPlainBalance = (state: AssetState) =>
   state.assets.plain.reduce((acc, item) => acc + Number(item.amount), 0);

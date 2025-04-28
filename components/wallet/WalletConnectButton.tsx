@@ -20,7 +20,6 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore, useAssetStore, useUtxoStore, useWalletStore } from '@/store';
 import { generateMempoolUrl } from '@/utils';
-import { usePlainUtxo } from '@/lib/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 
 
@@ -40,7 +39,6 @@ const WalletConnectButton = () => {
   } = useReactWalletStore((state) => state);
   const { getBalance, balance } = useWalletStore();
   const { loadSummaryData } = useAssetStore();
-  const { data: plainUtxos } = usePlainUtxo();
   const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
   const queryClient = useQueryClient();

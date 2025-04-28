@@ -4,7 +4,7 @@ import { marketApi } from '@/api';
 import { useQuery } from '@tanstack/react-query';
 import type { Key as ReactKey } from 'react';
 import type { Key } from '@react-types/shared';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SortDropdown } from '@/components/SortDropdown';
@@ -59,6 +59,7 @@ export default function Market() {
   const [interval, setInterval] = useState<number>(1);
   const [sortField, setSortField] = useState<Key>('assets_name');
   const [sortOrder, setSortOrder] = useState<0 | 1>(0);
+  const [labelMap, setLabelMap] = useState<Record<string, string>>({});
 
   const sortList = useMemo(
     () => [
@@ -113,12 +114,42 @@ export default function Market() {
 
   const list = useMemo(() => {
     return queryData?.map((item) => {
+      const key = getLabelForAssets(item.assets_name)
       return {
         ...item,
-        assets_name: getLabelForAssets(item.assets_name),
+        assets_name: key,
       };
     }) || [];
   }, [queryData]);
+
+  useEffect(() => {
+    if (!list.length || typeof window === 'undefined' || !window.sat20) return;
+    let isMounted = true;
+    const fetchLabels = async () => {
+      const entries = await Promise.all(
+        list.map(async (item) => {
+          try {
+            const infoRes = await window.sat20.getTickerInfo(item.assets_name);
+            if (infoRes?.ticker) {
+              const result = JSON.parse(infoRes.ticker);
+              return [item.assets_name, result?.displayname || item.assets_name];
+            }
+          } catch {}
+          return [item.assets_name, item.assets_name];
+        })
+      );
+      if (isMounted) setLabelMap(Object.fromEntries(entries));
+    };
+    fetchLabels();
+    return () => { isMounted = false; };
+  }, [list]);
+
+  const listWithLabel = useMemo(() => {
+    return list.map((item) => ({
+      ...item,
+      label: labelMap[item.assets_name] || item.assets_name,
+    }));
+  }, [list, labelMap]);
 
   const toDetail = (key: ReactKey) => {
     const assetName = String(key);
@@ -246,14 +277,14 @@ export default function Market() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!isLoading && list.length === 0 ? (
+            {!isLoading && listWithLabel.length === 0 ? (
               <TableRow className="hover:bg-zinc-800/50">
                 <TableCell colSpan={columns.length} className="h-24 text-center text-zinc-500 py-3">
                   No Data.
                 </TableCell>
               </TableRow>
             ) : (
-              list.map((item: any) => (
+              listWithLabel.map((item: any) => (
                 <TableRow
                   key={item.assets_name}
                   onClick={() => toDetail(item.assets_name)}
@@ -268,13 +299,12 @@ export default function Market() {
                       const tick_type = item.assets_type;
                       const nickname = item.nickname;
                       const logo = item.logo;
-                      const displayTick = nickname || tick;
+                      const displayTick = item.label || nickname || tick;
                       console.log('displayTick:', displayTick);
 
-                      // 直接在回调函数中计算 ticker
-                    const ticker = typeof displayTick === 'string'
-                    ? displayTick.split(':').pop() || displayTick
-                    : '';
+                      const ticker = typeof displayTick === 'string'
+                        ? displayTick.split(':').pop() || displayTick
+                        : '';
 
                       return (
                         <TableCell

@@ -12,7 +12,6 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
   const isFirstRender = useRef(true);
 
   const { assets } = useAssetStore();
-  console.log('assets', assets);
   const list = useMemo(() => {
     return [
       {
@@ -22,7 +21,7 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
       },
       {
         label: 'Runes',
-        key: 'rune',
+        key: 'runes',
         value: assets.runes.reduce((sum, asset) => sum + asset.amount, 0),
       },
     ];
