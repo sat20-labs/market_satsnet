@@ -1,9 +1,6 @@
 import dynamic from 'next/dynamic';
 import { OrderAnalyze } from './OrderAnalyze';
 import React, { useMemo } from 'react'; 
-const TradingViewWidget = dynamic(() => import('react-tradingview-widget'), {
-  ssr: false,
-});
 
 interface ChartModuleProps {
   assets_name: string;
