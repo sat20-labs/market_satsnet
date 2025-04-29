@@ -12,7 +12,7 @@ interface OrderRowProps {
   order: MarketOrder;
   selected: boolean;
   onClick: () => void;
-  currentWalletAddress: string;
+  currentWalletAddress?: string;
   isLocked?: boolean;
   isProcessingLock?: boolean;
 }

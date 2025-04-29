@@ -25,6 +25,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import { Loader2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Suspense } from 'react';
 
 interface AssetItem {
   assets_name: string;
@@ -47,7 +48,11 @@ type StrictSortDescriptor = {
   direction: SortDirection;
 };
 
-export default function Market() {
+function Loading() {
+  return <div className="p-4 text-center">Loading...</div>;
+}
+
+function MarketContent() {
   const { t } = useTranslation();
   const router = useRouter();
   const params = useSearchParams();
@@ -469,5 +474,13 @@ export default function Market() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MarketPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <MarketContent />
+    </Suspense>
   );
 }

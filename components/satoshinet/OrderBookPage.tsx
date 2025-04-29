@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import OrderBookHeader from "@/components/satoshinet/orderbook/OrderBookHearder";
-import BuySellToggle from "@/components/satoshinet/orderbook/BuySellToggle";
 import TakeOrder from "@/components/satoshinet/orderbook/TakeOrder";
 import MakeOrder from "@/components/satoshinet/orderbook/MakeOrder";
 import BuyOrder from './orderbook/BuyOrder';
@@ -17,7 +16,7 @@ interface AssetInfoProps {
     protocol: string;
     assetLogo: string;
     floorPrice: string;
-    volume: string;  
+    volume: string;
     marketCap: string;
     transactions: number;
     holders: number;
@@ -25,16 +24,16 @@ interface AssetInfoProps {
   };
 }
 
-const OrderBookPage = ({ assetData }: AssetInfoProps) => {  
+const OrderBookPage = ({ assetData }: AssetInfoProps) => {
   const [activeTab, setActiveTab] = useState<"takeOrder" | "makeOrder">("takeOrder");
   const [mode, setMode] = useState<"buy" | "sell">("buy");
 
   const { getBalance, balance } = useWalletStore();
 
   const showAmount = useMemo(() => {
-      const btcValue = satsToBitcoin(balance.availableAmt);
-      return formatBtcAmount(btcValue);
-    }, [balance]);
+    const btcValue = satsToBitcoin(balance.availableAmt);
+    return formatBtcAmount(btcValue);
+  }, [balance]);
 
   const userWallet = {
     btcBalance: typeof showAmount === "string" ? parseFloat(showAmount) : showAmount || 0, // 用户钱包中的 BTC 余额
@@ -73,40 +72,19 @@ const OrderBookPage = ({ assetData }: AssetInfoProps) => {
 
       {/* Buy/Sell Toggle */}
       {activeTab === "takeOrder" ? (
-        <BuySellToggle mode={mode} onChange={setMode} disableSell={true} />
-      ) : (
-        <BuySellToggle mode={mode} onChange={setMode} disableBuy={false} />
-      )}
-      {activeTab === "takeOrder" ? (
-        <TakeOrder mode={mode} setMode={setMode} assetInfo={{
+        <TakeOrder assetInfo={{
           assetLogo: assetData.assetLogo,
           assetName: assetData.assetName,
           AssetId: assetData.assetId,
           floorPrice: parseFloat(assetData.floorPrice),
         }} />
       ) : (
-        <div>
-          {mode === "buy" ? (
-            <BuyOrder
-              userWallet={userWallet}
-              assetInfo={{
-                assetLogo: assetData.assetLogo,
-                assetName: assetData.assetName,
-                AssetId: assetData.assetId,
-                floorPrice: parseFloat(assetData.floorPrice),
-              }}
-            />
-          ) : (
-            <SellOrder
-              assetInfo={{
-                assetLogo: assetData.assetLogo,
-                assetName: assetData.assetName,
-                AssetId: assetData.assetId,
-                floorPrice: parseFloat(assetData.floorPrice),
-              }}
-            />
-          )}
-        </div>
+        <MakeOrder assetInfo={{
+          assetLogo: assetData.assetLogo,
+          assetName: assetData.assetName,
+          AssetId: assetData.assetId,
+          floorPrice: parseFloat(assetData.floorPrice),
+        }} />
       )}
       <div className="mt-4 text-sm text-gray-400">
         {/* 根据 settings 过滤订单簿 */}

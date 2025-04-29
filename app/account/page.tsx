@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import {
   Tabs,
   TabsContent,
@@ -19,7 +19,7 @@ import { OrdxBillList } from '@/components/account/OrdxBillList';
 import { marketApi } from '@/api';
 import { useCommonStore } from '@/store';
 
-export default function AccountPage() {
+function AccountContent() {
   const { t } = useTranslation();
   const params = useSearchParams();
   const paramTab = params.get('source') || 'utxo';
@@ -72,5 +72,13 @@ export default function AccountPage() {
         <OrdxOrderList address={address} />
       </TabsContent>
     </Tabs>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AccountContent />
+    </Suspense>
   );
 }

@@ -5,9 +5,13 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import SatoshiNetMarket from '@/components/satoshinet/SatoshiNetMarket';
 import { marketApi } from '@/api';
+import { Suspense } from 'react';
 
+function Loading() {
+  return <div className="p-4 bg-black text-white w-full">Loading...</div>;
+}
 
-export default function SatoshiNetMarketPage() {
+function SatoshiNetMarketPageContent() {
   const params = useSearchParams();
   const router = useRouter();
   const asset = params.get('asset');
@@ -95,5 +99,13 @@ export default function SatoshiNetMarketPage() {
       {/* 将资产信息传递到子组件 */}
       <SatoshiNetMarket asset={asset} assetData={summary} />
     </div>
+  );
+}
+
+export default function SatoshiNetMarketPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <SatoshiNetMarketPageContent />
+    </Suspense>
   );
 }

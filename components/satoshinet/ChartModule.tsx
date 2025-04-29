@@ -1,4 +1,3 @@
-import dynamic from 'next/dynamic';
 import { OrderAnalyze } from './OrderAnalyze';
 import React, { useMemo } from 'react'; 
 

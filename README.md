@@ -38,3 +38,53 @@ npm run dev
 ## License
 
 Licensed under the [MIT license](https://github.com/nextui-org/next-app-template/blob/main/LICENSE).
+
+## 业务组件与UI组件拆分说明
+
+### TakeOrderContainer
+- 负责业务逻辑、数据获取、状态管理。
+- 通过props将数据和事件传递给TakeOrderUI。
+- 通过onBuyOrders回调将用户选择的订单返回给父组件。
+
+#### 用法示例：
+```tsx
+<TakeOrderContainer
+  assetInfo={...}
+  mode="buy"
+  setMode={setMode}
+  onBuyOrders={(orders) => {
+    // 这里处理用户选择的订单
+    console.log('用户选择的订单:', orders);
+  }}
+/>
+```
+
+#### Props说明：
+- assetInfo: { assetName, assetLogo, AssetId, floorPrice }
+- mode: "buy" | "sell"
+- setMode: (mode) => void
+- onBuyOrders: (orders: MarketOrder[]) => void // 用户点击Buy时回调，返回选中订单
+
+### TakeOrderUI
+- 只负责UI展示和交互，所有数据和事件通过props传入。
+- 点击Buy时通过onBuy回调。
+
+#### Props说明：
+- orders: MarketOrder[]
+- selectedIndexes: number[]
+- maxSelectableOrders: number
+- sliderValue: number
+- isLoading: boolean
+- isLoadingMore: boolean
+- totalOrders: number
+- lockedOrders: Map<number, string>
+- isProcessingLock: boolean
+- isBalanceSufficient: boolean
+- summarySelectedOrders: any[]
+- onOrderClick: (index: number) => void
+- onSliderChange: (value: number) => void
+- onLoadMore: () => void
+- onBuy: () => void
+- mode: "buy" | "sell"
+- isFetching: boolean
+- assetInfo: { assetName, assetLogo, AssetId, floorPrice }
