@@ -14,7 +14,6 @@ import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
 import { NameMarketNav } from '@/components/market/NameMarketNav';
 
 import { BtcPrice } from "@/components/BtcPrice";
-import { useBtcPriceNumber } from '@/components/BTCPriceNumber';
 
 import { satsToBitcoin, formatBtcAmount, formatLargeNumber } from '@/utils';
 import {
