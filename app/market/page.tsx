@@ -12,8 +12,11 @@ import { getLabelForAssets } from '@/utils';
 import { useCommonStore } from '@/store';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
 import { NameMarketNav } from '@/components/market/NameMarketNav';
+
 import { BtcPrice } from "@/components/BtcPrice";
-import { satsToBitcoin, formatBtcAmount } from '@/utils';
+import { useBtcPriceNumber } from '@/components/BTCPriceNumber';
+
+import { satsToBitcoin, formatBtcAmount, formatLargeNumber } from '@/utils';
 import {
   Table,
   TableBody,
@@ -401,18 +404,22 @@ export default function Market() {
 
                     if (columnKey === 'market_cap') {
                       const marketCapInBtc = satsToBitcoin(value ); // 转换为 BTC
-                      const marketCapInUsd = typeof marketCapInBtc === 'number' ? <BtcPrice btc={marketCapInBtc} /> : 0; // 转换为美元
-               
-                    
+                      //const marketCapInUsd = useBtcPriceNumber(marketCapInBtc || 0); // 始终调用 useBtcPrice
+                      
+                      // const marketCapInUsd = <BtcPrice btc={marketCapInBtc} />
+                      const formattedMarketCapInBtc = formatLargeNumber(marketCapInBtc); // 格式化 BTC 值
+
+                      //const formattedMarketCapInUsd = formatLargeNumber(Number(usdValue)); // 格式化 USD 值
+
                       return (
                         <TableCell key={columnKey} className="px-4 py-3">
                           <div className="flex flex-col text-sm md:text-base whitespace-nowrap">
                             {/* 显示 BTC 值 */}
-                            <span>{marketCapInBtc.toFixed(2)} BTC</span>
+                            <span>{formattedMarketCapInBtc} <span className='text-zinc-500 font-bold'>BTC</span></span>
                     
                             {/* 显示美元值 */}
                             <span className="text-xs text-gray-400">
-                              ${marketCapInUsd}
+                              $ <BtcPrice btc={marketCapInBtc} />
                             </span>
                           </div>
                         </TableCell>
