@@ -82,8 +82,24 @@ class ClientApi {
   getUtxoInfo = async (utxo: string): Promise<any> => {
     return this.request(`v3/utxo/info/${utxo}`);
   }
+  /**
+   * 获取ticker信息，始终请求btc主链接口（无论当前chain是什么）
+   * @param ticker 资产ticker
+   */
   getTickerInfo = async (ticker: string): Promise<any> => {
-    return this.request(`v3/tick/info/${ticker}`);
+    const { network } = useReactWalletStore.getState();
+    const baseUrl = `${this.BASE_URL}${network === 'testnet' ? '/btc/testnet' : '/btc/mainnet'}`;
+    const url = `${baseUrl}/v3/tick/info/${ticker}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   }
   getNsName = async (name: string): Promise<any> => {
     return this.request(`ns/name/${name}`);

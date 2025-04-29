@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useMemo, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { marketApi } from '@/api';
+import { marketApi, clientApi } from '@/api';
 import { Suspense } from 'react';
 import { ChartModule } from '@/components/satoshinet/ChartModule';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
@@ -13,6 +13,7 @@ import TakeOrder from '@/components/satoshinet/orderbook/TakeOrder';
 import MakeOrder from '@/components/satoshinet/orderbook/MakeOrder';
 import { useWalletStore } from '@/store';
 import { satsToBitcoin, formatBtcAmount } from '@/utils';
+import { useQueryKey } from '@/lib/hooks/useQueryKey';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -20,7 +21,6 @@ function Loading() {
 
 function OrderPageContent() {
   const params = useSearchParams();
-  const router = useRouter();
   const asset = params.get('asset');
 
   // Fetch asset summary
@@ -29,25 +29,15 @@ function OrderPageContent() {
     queryFn: () => marketApi.getAssetsSummary({ assets_name: asset ?? '' }),
     enabled: !!asset,
   });
-
-  // Fetch ticker info
-  const [tickerInfo, setTickerInfo] = useState<any>(null);
-  useEffect(() => {
-    if (!asset) return;
-    async function fetchTickerInfo() {
-      try {
-        const infoRes = await window.sat20.getTickerInfo(asset);
-        if (infoRes?.ticker) {
-          const { ticker } = infoRes;
-          const result = JSON.parse(ticker);
-          setTickerInfo(result);
-        }
-      } catch (e) {
-        setTickerInfo(null);
-      }
-    }
-    fetchTickerInfo();
-  }, [asset]);
+  const tickerInfoQueryKey = useQueryKey(['tickerInfo', asset]);
+  const { data: tickerRes } = useQuery({
+    queryKey: tickerInfoQueryKey,
+    queryFn: () => clientApi.getTickerInfo(asset ?? ''),
+    enabled: !!asset,
+  });
+  const tickerInfo = useMemo(() => {
+    return tickerRes?.data || {};
+  }, [tickerRes]);
 
   // Transform asset summary
   const summary = useMemo(() => {

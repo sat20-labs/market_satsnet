@@ -43,34 +43,34 @@ const getBaseUrl = (chain: RequestContext['chain'], network: RequestContext['net
 
 export const request = async (
   path: string,
-  context: RequestContext, // Pass context as an argument
   options: RequestOptions = {},
+  customContext?: Partial<RequestContext>,
 ) => {
-  const { publicKey, signature, chain, network, connected } = context;
+  const { publicKey, connected } = useReactWalletStore.getState();
+  const { signature } = useCommonStore.getState();
+  const { chain, network } = useCommonStore.getState();
+  let context: RequestContext = { publicKey, signature, chain, network, connected };
+  if (customContext) {
+    context = { ...context, ...customContext };
+  }
+  const { publicKey: ctxPublicKey, signature: ctxSignature, chain: ctxChain, network: ctxNetwork, connected: ctxConnected } = context;
   const {
-    headers: customHeaders = {}, // Rename to avoid conflict with Headers interface
+    headers: customHeaders = {},
     method = 'GET',
     data,
     formData,
-    timeout = 10000, // Default timeout
-    ...restOptions // Capture other RequestInit properties (excluding headers, method, data, formData, timeout)
+    timeout = 10000,
+    ...restOptions
   } = options;
-
-  const baseUrl = getBaseUrl(chain, network);
+  const baseUrl = getBaseUrl(ctxChain, ctxNetwork);
   let url = `${baseUrl}${path}`;
-
-  // Initialize fetchOptions first, excluding headers for now
   const fetchOptions: RequestInit = {
     method,
-    ...restOptions, // Spread remaining standard options first
+    ...restOptions,
   };
-
-  // Ensure headers is always a Headers object
-  // Initialize from customHeaders (which is the destructured 'headers' from input options)
-  const initialHeaders = customHeaders; // Correctly use the destructured headers
+  const initialHeaders = customHeaders;
   const headers = new Headers(initialHeaders as HeadersInit);
-  fetchOptions.headers = headers; // Assign the guaranteed Headers object
-
+  fetchOptions.headers = headers;
   if (method === 'GET' && data) {
     const query = new URLSearchParams(removeObjectEmptyValue(data)).toString();
     if (query) {
@@ -79,92 +79,63 @@ export const request = async (
   } else if (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
     if (formData) {
         fetchOptions.body = formData;
-        // Let the browser set the Content-Type for FormData, so remove it if previously set
         headers.delete('Content-Type');
     } else if (data) {
         fetchOptions.body = JSON.stringify(data);
-        // Ensure Content-Type is set for JSON, unless already set
-        if (!headers.has('Content-Type')) { // Now safe to call .has()
-          headers.set('Content-Type', 'application/json'); // Now safe to call .set()
+        if (!headers.has('Content-Type')) {
+          headers.set('Content-Type', 'application/json');
         }
     }
   }
-
-  // Add authentication headers if connected and signature exists
-  if (connected && signature && publicKey) {
-    headers.set('Publickey', publicKey); // Now safe to call .set()
-    headers.set('Signature', signature); // Now safe to call .set()
+  if (ctxConnected && ctxSignature && ctxPublicKey) {
+    headers.set('Publickey', ctxPublicKey);
+    headers.set('Signature', ctxSignature);
   }
-
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   fetchOptions.signal = controller.signal;
-
   try {
     console.log('fetch request:', method, url, fetchOptions);
     const response = await fetch(url, fetchOptions);
     clearTimeout(timeoutId);
-
     if (!response.ok) {
       let errorBody: any = null;
       let errorMessage = `HTTP error! Status: ${response.status} ${response.statusText} for ${method} ${url}`;
       try {
-        // Attempt to parse error body for more details
         errorBody = await response.json();
         errorMessage = errorBody?.msg || errorBody?.message || errorMessage;
-        // Include API error code if available
         if (errorBody?.code) {
           errorMessage += ` (API Code: ${errorBody.code})`;
         }
       } catch (parseError) {
         console.warn("Could not parse error response body as JSON:", parseError);
-        // Try reading as text if JSON fails
         try {
           const textError = await response.text();
           errorMessage += `\nResponse body: ${textError}`;
-        } catch (textErrorErr) {
-          // Ignore if reading as text also fails
-        }
+        } catch (textErrorErr) {}
       }
-      // Consider creating a custom error class for API errors
       throw new Error(errorMessage);
     }
-
-    // Assume JSON response, handle cases where no body is expected (e.g., 204 No Content)
     if (response.status === 204) {
-       return null; // Or undefined, or an empty object, depending on expected behavior
+       return null;
     }
-
     const responseData = await response.json();
     console.log('fetch response data:', responseData);
-
-    // Centralized check for business logic errors based on 'code' field
-    if (responseData?.code === -1 || responseData?.code === 500) { // Or check for other non-success codes
+    if (responseData?.code === -1 || responseData?.code === 500) {
       const errorMsg = responseData?.msg || responseData?.message || 'Unknown API error';
       console.error('API Error:', errorMsg, responseData);
-       // Potentially clear signature if verification failed
       if (errorMsg.includes('signature verification failed') || errorMsg.includes('public and signature parameters are required')) {
         console.warn('API Signature Error, potentially clearing signature:', errorMsg);
-        // Consider notifying the state management layer to clear the signature
-        // useCommonStore.getState().reset(); // Be cautious about direct calls here
       }
       throw new Error(`API Error: ${errorMsg} (Code: ${responseData.code})`);
     }
-
-    return responseData; // Return successful data
-
+    return responseData;
   } catch (error: any) {
-    clearTimeout(timeoutId); // Ensure timeout is cleared on any error
-
-    // Log the error with more context
+    clearTimeout(timeoutId);
     console.error(`Request failed: ${method} ${url}`, error);
-
-    // Enhance specific error types
     if (error.name === 'AbortError') {
       throw new Error(`Request timed out after ${timeout / 1000} seconds for ${method} ${url}`);
     }
-
-    // Re-throw the original or enhanced error
     throw error;
   }
 };
@@ -178,21 +149,8 @@ export const getOrdxAssets = async ({
   size,
   category,
 }: any) => {
-  // Fetch context from stores before calling request
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState(); // Assuming reset/setSignature are not needed here
-  const { chain, network } = useCommonStore.getState();
-
-  const context: RequestContext = {
-      publicKey,
-      signature,
-      chain,
-      network,
-      connected
-  };
-
-  const res = await request('/ordx/GetAddressOrdxAssets', context, { // Pass context here
-    method: 'GET', // Explicitly specify method for clarity if not GET
+  const res = await request('/ordx/GetAddressOrdxAssets', {
+    method: 'GET',
     data: {
       address,
       offset,
@@ -204,18 +162,11 @@ export const getOrdxAssets = async ({
     },
   });
   console.log('getOrdxAssets res', res);
-  
   return res;
 };
 
 export const getAddressOrdxList = async ({ address }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetAddressOrdxList', context, { data: { address } }); // Pass context
+  const res = await request('/ordx/GetAddressOrdxList', { data: { address } });
   return res;
 };
 
@@ -225,13 +176,7 @@ interface GetAssetsSummary {
 export const getAssetsSummary = async ({
   assets_name,
 }: GetAssetsSummary) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetAssetsSummary', context, { // Pass context
+  const res = await request('/ordx/GetAssetsSummary', {
     data: { assets_name },
   });
   return res;
@@ -259,13 +204,7 @@ export const getOrders = async ({
   address,
   hide_locked,
 }: GetOrders) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetOrders', context, { // Pass context
+  const res = await request('/ordx/GetOrders', {
     data: {
       assets_name,
       assets_protocol,
@@ -285,17 +224,11 @@ export const getHistory = async ({
   assets_type,
   offset,
   size,
-  sort = 0, // 0: 不排序 1: 价格升序 2: 价格降序 3: 时间升序 4: 时间降序
+  sort = 0,
   address,
   filter,
 }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetHistory', context, { // Pass context
+  const res = await request('/ordx/GetHistory', {
     data: { assets_name, assets_type, offset, size, sort, address, filter },
   });
   return res;
@@ -319,14 +252,8 @@ export const getTopAssets = async ({
   sort_field = '',
   sort_order = 0,
 }: GetTopAssets) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
   const _interval = interval === 0 ? undefined : interval;
-  const res = await request('/ordx/GetTopAssets', context, { // Pass context
+  const res = await request('/ordx/GetTopAssets', {
     data: {
       assets_protocol,
       assets_type,
@@ -346,11 +273,7 @@ export const getChargedTaskList = async ({
   sort_field,
   sort_order,
 }: any) => {
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-  const res = await request('/ordx/GetChargedTaskList', context, {
+  const res = await request('/ordx/GetChargedTaskList', {
     data: { address, offset, size, sort_field, sort_order },
   });
   return res;
@@ -363,11 +286,7 @@ export const addOrderTask = async ({
   txid,
   type,
 }: any) => {
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-  const res = await request('/ordx/AddOrderTask', context, {
+  const res = await request('/ordx/AddOrderTask', {
     method: 'POST',
     data: { address, fees, parameters, txid, type },
   });
@@ -375,65 +294,35 @@ export const addOrderTask = async ({
 };
 
 export const submitOrder = async ({ address, raw }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/SubmitOrder', context, { // Pass context
+  const res = await request('/ordx/SubmitOrder', {
     method: 'POST',
     data: { address, raw },
   });
   return res;
 };
 export const submitBatchOrders = async ({ address, orders }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/SubmitBatchOrders', context, { // Pass context
+  const res = await request('/ordx/SubmitBatchOrders', {
     method: 'POST',
     data: { address, order_query: orders },
   });
   return res;
 };
 export const cancelOrder = async ({ address, order_id }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/CancelOrder', context, { // Pass context
+  const res = await request('/ordx/CancelOrder', {
     method: 'POST',
     data: { address, order_id },
   });
   return res;
 };
 export const lockOrder = async ({ address, order_id }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/LockOrder', context, { // Pass context
+  const res = await request('/ordx/LockOrder', {
     method: 'POST',
     data: { address, order_id },
   });
   return res;
 };
 export const unlockOrder = async ({ address, order_id }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/UnlockOrder', context, { // Pass context
+  const res = await request('/ordx/UnlockOrder', {
     method: 'POST',
     data: { address, order_id },
   });
@@ -441,26 +330,14 @@ export const unlockOrder = async ({ address, order_id }: any) => {
 };
 
 export const buyOrder = async ({ address, order_id, raw }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/BuyOrder', context, { // Pass context
+  const res = await request('/ordx/BuyOrder', {
     method: 'POST',
     data: { address, order_id, raw },
   });
   return res;
 };
 export const bulkBuyOrder = async ({ address, order_ids, raw }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/BulkBuyOrder', context, { // Pass context
+  const res = await request('/ordx/BulkBuyOrder', {
     method: 'POST',
     data: { address, order_ids, raw },
   });
@@ -468,24 +345,12 @@ export const bulkBuyOrder = async ({ address, order_ids, raw }: any) => {
 };
 
 export const getBTCPrice = async () => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetBTCPrice', context, {}); // Pass context
+  const res = await request('/ordx/GetBTCPrice', {});
   return res;
 };
 
 export const getAssetsAnalytics = async ({ assets_name, assets_type }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetAssetsAnalytics', context, { // Pass context
+  const res = await request('/ordx/GetAssetsAnalytics', {
     data: {
       assets_name,
       assets_type,
@@ -495,26 +360,12 @@ export const getAssetsAnalytics = async ({ assets_name, assets_type }: any) => {
 };
 
 export const getRecommendedFees = async () => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetRecommendedFees', context); // Pass context
+  const res = await request('/ordx/GetRecommendedFees', {});
   return res;
 };
 
-
-
 export const lockBulkOrder = async ({ address, orderIds }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/LockBulkOrder', context, { // Pass context
+  const res = await request('/ordx/LockBulkOrder', {
     method: 'POST',
     data: {
       address,
@@ -525,13 +376,7 @@ export const lockBulkOrder = async ({ address, orderIds }: any) => {
 };
 
 export const unlockBulkOrder = async ({ address, orderIds }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/UnlockBulkOrder', context, { // Pass context
+  const res = await request('/ordx/UnlockBulkOrder', {
     method: 'POST',
     data: {
       address,
@@ -541,28 +386,15 @@ export const unlockBulkOrder = async ({ address, orderIds }: any) => {
   return res;
 };
 
-
 export const getAddressAssetsValue = async (address: string) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetAddressAssetsValue', context, { // Pass context
+  const res = await request('/ordx/GetAddressAssetsValue', {
     data: { address },
   });
   return res;
 };
 
 export const getAddressAssetsSummary = async (address: string) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetAddressAssetsSummary', context, { // Pass context
+  const res = await request('/ordx/GetAddressAssetsSummary', {
     data: { address },
   });
   return res;
@@ -572,13 +404,7 @@ export const getAddressAssetsList = async (
   address: string,
   assets_protocol: string,
 ) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetAddressAssetsList', context, { // Pass context
+  const res = await request('/ordx/GetAddressAssetsList', {
     data: { address, assets_protocol },
   });
   return res;
@@ -589,13 +415,7 @@ export const getLastOrderTaskByParameters = async ({
   parameters,
   type,
 }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetLastOrderTaskByParameters', context, { // Pass context
+  const res = await request('/ordx/GetLastOrderTaskByParameters', {
     method: 'POST',
     data: { address, parameters, type },
   });
@@ -609,26 +429,14 @@ export const getOrderTaskList = async ({
   sort_field,
   sort_order,
 }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/ordx/GetOrderTaskList', context, { // Pass context
+  const res = await request('/ordx/GetOrderTaskList', {
     data: { address, offset, size, sort_field, sort_order },
   });
   return res;
 };
 
 export const getFeeDiscount = async ({ address, project_id }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request(`/ordx/GetFeeDiscount`, context, { // Pass context
+  const res = await request(`/ordx/GetFeeDiscount`, {
     data: {
       address,
       project_id,
@@ -637,13 +445,7 @@ export const getFeeDiscount = async ({ address, project_id }: any) => {
   return res;
 };
 export const getNameCategoryList = async ({ name }: any) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request(`/ordx/GetNameCategoryList`, context, { // Pass context
+  const res = await request(`/ordx/GetNameCategoryList`, {
     data: {
       name_set: name,
     },
@@ -701,13 +503,7 @@ export const getSatsByAddress = async ({ address, sats, network }: any) => {
 };
 
 export const bindTwitterAccount = async ({ address }) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/sat20twitter/bindaccount', context, { // Pass context
+  const res = await request('/sat20twitter/bindaccount', {
     method: 'POST',
     data: { address },
   });
@@ -715,13 +511,7 @@ export const bindTwitterAccount = async ({ address }) => {
 };
 
 export const getTwitterAccount = async ({ address }) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/sat20twitter/getaccountinfo', context, { // Pass context
+  const res = await request('/sat20twitter/getaccountinfo', {
     data: { address },
   });
   return res;
@@ -733,13 +523,7 @@ export const updateTwitterActivity = async ({
   result,
   activity_id,
 }) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/sat20twitter/updateactivity', context, { // Pass context
+  const res = await request('/sat20twitter/updateactivity', {
     method: 'POST',
     data: { address, activity_name, result, activity_id },
   });
@@ -747,13 +531,7 @@ export const updateTwitterActivity = async ({
 };
 
 export const getTwitterActivity = async ({ address, activity_id }) => {
-  // Fetch context from stores
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
-  const context: RequestContext = { publicKey, signature, chain, network, connected };
-
-  const res = await request('/sat20twitter/verifyactivity', context, { // Pass context
+  const res = await request('/sat20twitter/verifyactivity', {
     data: { address, activity_id },
   });
   return res;
