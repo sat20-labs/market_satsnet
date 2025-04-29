@@ -106,3 +106,15 @@ export const getLabelForAssets = (asset: any) => {
   
   return `${asset.Protocol}:${asset.Type}:${asset.Ticker}`
 };
+
+
+export const formatLargeNumber = (num: number): string => {
+  if (num >= 1_000_000_000) {
+    return `${(num / 1_000_000_000).toFixed(2)}B`; // 转换为十亿单位
+  } else if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(2)}M`; // 转换为百万单位
+  } else if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(2)}K`; // 转换为千单位
+  }
+  return num.toString(); // 小于 1000 的数字直接返回
+};

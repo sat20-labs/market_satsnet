@@ -335,8 +335,8 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
         ) : (
           <Avatar className="w-12 h-12 flex-shrink-0">
             <AvatarFallback className="text-xl text-gray-300 font-black bg-zinc-800">
-              {typeof ticker === 'string'
-                ? ticker.slice(0, 1).toUpperCase()
+              {typeof tickerInfo?.displayname === 'string'
+                ? tickerInfo?.displayname.slice(0, 1).toUpperCase()
                 : '?'}
             </AvatarFallback>
           </Avatar>
@@ -403,7 +403,27 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
       <div className="mb-4">
         <label className="block text-sm text-gray-400 mb-1">Repeat :</label>
         <div className="flex items-center gap-4">
-          <Slider disabled={!quantity} defaultValue={[1]} max={batchQuantityMax} min={1} step={1} value={[batchQuantity]} onValueChange={(value) => setBatchQuantity(value[0])} />
+        <Slider
+            disabled={!quantity}
+            defaultValue={[1]}
+            max={Math.min(batchQuantityMax, 100)} // 限制最大值为 100
+            min={1}
+            step={1}
+            value={[batchQuantity]}
+            onValueChange={(value) => setBatchQuantity(value[0])}
+          />
+          <Input
+            type="number"
+            min={1}
+            max={Math.min(batchQuantityMax, 100)} // 同步限制输入框的最大值
+            value={batchQuantity}
+            onChange={(e) => {
+              const value = Math.min(Math.max(Number(e.target.value), 1), Math.min(batchQuantityMax, 100));
+              setBatchQuantity(value);
+            }}
+            className="w-16 h-10 text-center"
+            disabled={!quantity}
+          />
           <span className="text-sm text-gray-400">{batchQuantity}</span>
         </div>
       </div>
