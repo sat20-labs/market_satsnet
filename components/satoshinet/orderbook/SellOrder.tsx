@@ -16,6 +16,7 @@ import { Slider } from "@/components/ui/slider"
 interface SellOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   onSellSuccess?: () => void;
+  tickerInfo?: any;
 }
 
 // Helper function for retrying async operations
@@ -181,7 +182,7 @@ interface AssetBalance {
   availableAmt: number,
   lockedAmt: number
 }
-const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
+const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: SellOrderProps) => {
   const { loading: balanceLoading, assets } = useAssetStore();
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
@@ -192,7 +193,6 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
     availableAmt: 0,
     lockedAmt: 0
   });
-  const [tickerInfo, setTickerInfo] = useState<any>(null);
   const [quantity, setQuantity] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
   const totalQuantity = useMemo(() => {
@@ -228,17 +228,6 @@ const SellOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
       lockedAmt: Number(amountRes.lockedAmt)
     })
   }
-  useEffect(() => {
-    const fetchTickerInfo = async () => {
-      const infoRes = await window.sat20.getTickerInfo(assetInfo.assetName)
-      if (infoRes?.ticker) {
-        const { ticker } = infoRes
-        const result = JSON.parse(ticker)
-        setTickerInfo(result)
-      }
-    }
-    fetchTickerInfo()
-  }, [address, assetInfo.assetName]);
   useEffect(() => {
     getAssetAmount();
   }, [address, assetInfo.assetName]);

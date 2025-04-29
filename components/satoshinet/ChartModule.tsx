@@ -3,10 +3,11 @@ import React, { useMemo } from 'react';
 
 interface ChartModuleProps {
   assets_name: string;
+  tickerInfo?: any;
 }
 
 
-export const ChartModule = ({ assets_name }: ChartModuleProps) => {
+export const ChartModule = ({ assets_name, tickerInfo }: ChartModuleProps) => {
   
 
   const assetsName = useMemo(() => {
@@ -16,7 +17,7 @@ export const ChartModule = ({ assets_name }: ChartModuleProps) => {
 
   return (
     <div className="w-full h-full bg-zinc-900 rounded-lg">
-      <h2 className="text-lg font-bold text-zinc-400 ml-4 py-4">Chart for {assetsName}</h2>
+      <h2 className="text-lg font-bold text-zinc-400 ml-4 py-4">Chart for {tickerInfo?.displayname}</h2>
       <OrderAnalyze assets_name={assets_name} />
       {/* <TradingViewWidget
         symbol="BTCUSD"

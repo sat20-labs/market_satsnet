@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Slider } from "@/components/ui/slider"
 
-interface SellOrderProps {
+interface BuyOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   onSellSuccess?: () => void;
+  tickerInfo?: any;
 }
+
 interface AssetInfo {
   Name: string;
   Amount: number;
@@ -190,14 +192,14 @@ interface AssetBalance {
   availableAmt: number,
   lockedAmt: number
 }
-const BuyOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
+
+const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: BuyOrderProps) => {
   const { loading: balanceLoading, assets } = useAssetStore();
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const [isBuying, setIsBuying] = useState(false);
   const queryClient = useQueryClient();
   const { getBalance, balance } = useWalletStore();
-  const [tickerInfo, setTickerInfo] = useState<any>(null);
   const [quantity, setQuantity] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
   const [batchQuantity, setBatchQuantity] = useState(1);
@@ -228,17 +230,6 @@ const BuyOrder = ({ assetInfo, onSellSuccess }: SellOrderProps) => {
     !balanceLoading,
     [quantity, price, totalQuantity, balance.availableAmt, balanceLoading]);
 
-  useEffect(() => {
-    const fetchTickerInfo = async () => {
-      const infoRes = await window.sat20.getTickerInfo(assetInfo.assetName)
-      if (infoRes?.ticker) {
-        const { ticker } = infoRes
-        const result = JSON.parse(ticker)
-        setTickerInfo(result)
-      }
-    }
-    fetchTickerInfo()
-  }, [address, assetInfo.assetName]);
   const lockBuyUtxo = async (utxo: string) => {
     const res = await window.sat20.lockUtxo_SatsNet(address, utxo, 'buy')
     console.log(res);

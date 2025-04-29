@@ -54,6 +54,7 @@ async function getUtxoInfoWithRetry(utxo: string) {
 
 interface TakeOrderProps {
   assetInfo: { assetName: string; assetLogo: string; AssetId: string; floorPrice: number };
+  tickerInfo?: any;
 }
 
 const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
