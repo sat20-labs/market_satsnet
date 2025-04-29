@@ -11,20 +11,10 @@ const nextConfig = {
       __dirname,
       'node_modules/bitcore-lib',
     );
-    config.experiments = {
-      ...config.experiments,
-      syncWebAssembly: true, // 使用异步 WebAssembly
-      // 或者启用 syncWebAssembly，但它已经被弃用
-      // syncWebAssembly: true, // Webpack 4 风格的同步 WebAssembly
-    };
-
     return config;
   },
   images: {
     unoptimized: true,
-  },
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
   },
 };
 
