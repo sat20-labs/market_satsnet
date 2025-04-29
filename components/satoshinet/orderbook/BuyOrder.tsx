@@ -1,15 +1,11 @@
 import React, { useState, useMemo } from "react";
-import { Icon } from "@iconify/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
-import { useCommonStore } from "@/store";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"; 
-import { getOrders } from "@/api/request";
-import { useQuery } from "@tanstack/react-query";
 
 interface BuyOrderProps {
-  userWallet: { btcBalance: number; assetBalance: number }; // Keep assetBalance for potential future use or consistency
+  userWallet: { btcBalance: number; assetBalance: number };
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
 }
 
@@ -19,12 +15,9 @@ const BuyOrder = ({ userWallet, assetInfo }: BuyOrderProps) => {
   const [quantity, setQuantity] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
 
-  // 计算用户需要支付的 BTC - 使用 Number() 进行安全转换
   const calculatedBTC = Number(quantity) * Number(price);
 
-  const walletBalance =  userWallet.btcBalance * 100000000; // 转换为 satoshis  
-
-  // 买单校验逻辑 - 简化条件，依赖 calculatedBTC > 0
+  const walletBalance =  userWallet.btcBalance * 100000000;
   const isBuyValid = Number(walletBalance) >= calculatedBTC && calculatedBTC > 0;
 
   const ticker = useMemo(() => assetInfo.assetName.split(':').pop() || assetInfo.assetName, [assetInfo.assetName]);

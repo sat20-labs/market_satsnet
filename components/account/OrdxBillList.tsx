@@ -1,6 +1,6 @@
 'use client';
 
-import { getChargedTaskList, getOrderTaskList } from '@/api';
+import { marketApi } from '@/api';
 import {
   Table,
   TableBody,
@@ -58,7 +58,7 @@ export const OrdxBillList = () => {
     let tasks = [];
     setLoading(true);
     try {
-      const resp = await getChargedTaskList({
+      const resp = await marketApi.getChargedTaskList({
         address: address,
         offset: (page - 1) * size,
         size: size,
@@ -85,7 +85,7 @@ export const OrdxBillList = () => {
     let tasks = [];
     setLoading(true);
     try {
-      const resp = await getOrderTaskList({
+      const resp = await marketApi.getOrderTaskList({
         address: address,
         offset: (page - 1) * size,
         size: size,

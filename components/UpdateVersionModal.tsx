@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { version } from '@/assets/version';
-import { getAppVersion } from '@/api';
+import { marketApi } from '@/api';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/store';
@@ -24,7 +24,7 @@ export const UpdateVersionModal = () => {
   // Get data from useQuery
   const { data: appVersion } = useQuery({
     queryKey: ['getAppVersion', version],
-    queryFn: getAppVersion,
+    queryFn: marketApi.getAppVersion,
     refetchInterval: 1000 * 60 * 2,
   });
 

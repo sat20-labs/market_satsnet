@@ -1,21 +1,16 @@
 'use client';
 
-import { getOrders, cancelOrder } from '@/api';
 import { marketApi } from '@/api';
 import { useEffect, useMemo, useState } from 'react';
-import { Pagination } from '@/components/Pagination';
 import { useCommonStore } from '@/store';
 import { useTranslation } from 'react-i18next';
-import { useList } from 'react-use';
 
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
 import { toast } from 'sonner';
 import { BtcPrice } from '../BtcPrice';
-import useSWR from 'swr';
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button";
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { CustomPagination } from "@/components/ui/CustomPagination";
-import { Content } from '@/components/Content';
 
 interface OrdxOrderListProps {
   address?: string;
@@ -32,7 +27,7 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
   const [pageSize, setPageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
   const PAGE_SIZES = [10, 20, 50, 100];
-  
+
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -150,7 +145,7 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
 
                     {/* Quantity */}
                     <td className="px-4 py-2 text-right">
-                      <span>{order.assets.amount?.toLocaleString()  || 0}</span>
+                      <span>{order.assets.amount?.toLocaleString() || 0}</span>
                     </td>
 
                     {/* Price */}
@@ -168,7 +163,7 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
                         <span className="pl-1 text-zinc-400">sats</span>
                       </div>
                       <div className="text-zinc-400">
-                        $<BtcPrice btc={order?.price/100000000} />
+                        $<BtcPrice btc={order?.price / 100000000} />
                       </div>
                     </td>
 
@@ -203,18 +198,18 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
 
       {totalCount > 0 && (
         <div className="my-2 px-1 sm:px-4">
-              <CustomPagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                pageSize={pageSize}
-                onPageSizeChange={handlePageSizeChange}
-                availablePageSizes={PAGE_SIZES}
-                isLoading={isLoading}
-              />
-               </div>
-            )}
-      
+          <CustomPagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
+            availablePageSizes={PAGE_SIZES}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
+
     </div>
   );
 };

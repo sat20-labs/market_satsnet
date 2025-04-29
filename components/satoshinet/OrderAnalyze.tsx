@@ -3,10 +3,8 @@
 import { useMemo, useEffect, useRef, useState, use } from 'react';
 import { Button } from '@/components/ui/button';
 
-import { getAssetsAnalytics } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { marketApi } from '@/api';
-import { OrderPieChart } from '@/components/chart/OrderPieChart';
 import { OrderLineChart } from '@/components/chart/OrderLineChart';
 import { useQuery } from '@tanstack/react-query';
 import { useCommonStore } from '@/store';

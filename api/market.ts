@@ -338,6 +338,41 @@ export const getTopAssets = async ({
   });
   return res;
 };
+export const getChargedTaskList = async ({
+  address,
+  offset,
+  size,
+  sort_field,
+  sort_order,
+}: any) => {
+  const { publicKey, connected } = useReactWalletStore.getState();
+  const { signature } = useCommonStore.getState();
+  const { chain, network } = useCommonStore.getState();
+  const context: RequestContext = { publicKey, signature, chain, network, connected };
+  const res = await request('/ordx/GetChargedTaskList', context, {
+    data: { address, offset, size, sort_field, sort_order },
+  });
+  return res;
+};
+
+export const addOrderTask = async ({
+  address,
+  fees,
+  parameters,
+  txid,
+  type,
+}: any) => {
+  const { publicKey, connected } = useReactWalletStore.getState();
+  const { signature } = useCommonStore.getState();
+  const { chain, network } = useCommonStore.getState();
+  const context: RequestContext = { publicKey, signature, chain, network, connected };
+  const res = await request('/ordx/AddOrderTask', context, {
+    method: 'POST',
+    data: { address, fees, parameters, txid, type },
+  });
+  return res;
+};
+
 export const submitOrder = async ({ address, raw }: any) => {
   // Fetch context from stores
   const { publicKey, connected } = useReactWalletStore.getState();
