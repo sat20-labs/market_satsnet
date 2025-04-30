@@ -20,6 +20,7 @@ interface SellOrderModalProps {
   assetInfo: SellOrderAssetInfo;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  tickerInfo: any;
 }
 
 
@@ -28,7 +29,10 @@ const SellOrderModal = ({
   assetInfo,
   open,
   onOpenChange,
+  tickerInfo,
 }: SellOrderModalProps) => {
+  console.log("tickerInfo", tickerInfo);
+  
   const { address } = useReactWalletStore();
   const handleCloseModal = () => {
     onOpenChange(false);
@@ -46,10 +50,15 @@ const SellOrderModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-zinc-800 text-zinc-200">
         <DialogHeader>
-          <DialogTitle className="text-zinc-100">Sell {assetInfo.displayname || assetInfo.assetName}</DialogTitle>
+          <DialogTitle className="text-zinc-100">Sell {tickerInfo.displayname || assetInfo.assetName}</DialogTitle>
         </DialogHeader>
         <div className="pt-4">
-          <SellOrder assetInfo={assetInfo} onSellSuccess={handleCloseModal} assetBalance={assetBalance} balanceLoading={balanceLoading} />
+          <SellOrder assetInfo={assetInfo}
+           onSellSuccess={handleCloseModal} 
+           assetBalance={assetBalance} 
+           balanceLoading={balanceLoading} 
+           tickerInfo={tickerInfo}
+           />
         </div>
 
       </DialogContent>
