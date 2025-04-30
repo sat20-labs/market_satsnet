@@ -11,6 +11,7 @@ import { MARKET_FEES, calculateServiceFee } from "@/config/fees";
 
 export interface TakeOrderUIProps {
   orders: any[];
+  tickerInfo: any;
   totalOrders: number;
   isLoading: boolean;
   isLoadingMore: boolean;
@@ -34,6 +35,7 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
   isLoadingMore,
   onLoadMore,
   onBuy,
+  tickerInfo,
   mode,
   isFetching,
   assetInfo,
@@ -325,6 +327,7 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
       )}
       {selectedIndexes.length > 0 && (
         <OrderSummary 
+          tickerInfo={tickerInfo}
           selectedOrders={summarySelectedOrders} 
           mode={mode}
           fees={fees}

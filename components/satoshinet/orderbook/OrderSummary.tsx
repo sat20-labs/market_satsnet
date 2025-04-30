@@ -9,6 +9,7 @@ interface OrderSummaryProps {
     serviceFee: number;
     networkFee: number;
   };
+  tickerInfo: any,
   summary: {
     totalQuantity: number;
     totalSats: number;
@@ -17,8 +18,8 @@ interface OrderSummaryProps {
   };
 }
 
-const OrderSummary = ({ selectedOrders, mode, fees, summary }: OrderSummaryProps) => {
-  const assetsName = selectedOrders.length > 0 ? selectedOrders[0].ticker : undefined;
+const OrderSummary = ({ selectedOrders, mode, fees, summary, tickerInfo }: OrderSummaryProps) => {
+  const assetsName = selectedOrders.length > 0 ? tickerInfo.displayname : undefined;
   const serviceFeeRate = MARKET_FEES.SERVICE_FEE_RATE * 100; // Convert to percentage
 
   return (

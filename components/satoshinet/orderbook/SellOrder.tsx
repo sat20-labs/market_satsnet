@@ -283,6 +283,8 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
 
   const displayBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
   const displayAvailableAmt = assetBalance.availableAmt
+  console.log("assetBalance", assetBalance);
+  
   const isLoading = balanceLoading || isSelling;
   const ticker = useMemo(() => assetInfo.assetName.split(':').pop() || assetInfo.assetName, [assetInfo.assetName]);
 
