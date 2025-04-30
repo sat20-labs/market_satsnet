@@ -17,6 +17,8 @@ interface SellOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   onSellSuccess?: () => void;
   tickerInfo?: any;
+  assetBalance: { availableAmt: number; lockedAmt: number };
+  balanceLoading: boolean;
 }
 
 // Helper function for retrying async operations
@@ -178,29 +180,20 @@ const submitSignedOrder = async (
   }
 };
 
-interface AssetBalance {
-  availableAmt: number,
-  lockedAmt: number
-}
-const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: SellOrderProps) => {
-  const { loading: balanceLoading, assets } = useAssetStore();
+const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: SellOrderProps) => {
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const [isSelling, setIsSelling] = useState(false);
   const queryClient = useQueryClient();
   const [batchQuantity, setBatchQuantity] = useState(1);
-  const [balance, setBalance] = useState<AssetBalance>({
-    availableAmt: 0,
-    lockedAmt: 0
-  });
   const [quantity, setQuantity] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
   const totalQuantity = useMemo(() => {
     return Number(quantity) * batchQuantity;
   }, [quantity, batchQuantity]);
   const batchQuantityMax = useMemo(() => {
-    return Math.floor(balance.availableAmt / Number(quantity));
-  }, [balance.availableAmt, quantity]);
+    return Math.floor(assetBalance.availableAmt / Number(quantity));
+  }, [assetBalance.availableAmt, quantity]);
   const calculatedBTC = useMemo(() => {
     const numQuantity = Number(totalQuantity);
     const numPrice = Number(price);
@@ -215,32 +208,13 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: SellOrderProps
     price !== "" &&
     Number(quantity) > 0 &&
     Number(price) > 0 &&
-    Number(quantity) <= balance.availableAmt &&
+    Number(quantity) <= assetBalance.availableAmt &&
     !balanceLoading,
-    [quantity, price, balance.availableAmt, balanceLoading]);
-
-  const getAssetAmount = async () => {
-    console.log('getAssetAmount', assetInfo.assetName);
-
-    const amountRes = await window.sat20.getAssetAmount_SatsNet(address, assetInfo.assetName)
-    setBalance({
-      availableAmt: Number(amountRes.availableAmt),
-      lockedAmt: Number(amountRes.lockedAmt)
-    })
-  }
-  useEffect(() => {
-    getAssetAmount();
-  }, [address, assetInfo.assetName]);
-  const lockSellUtxo = async (utxo: string) => {
-    const res = await window.sat20.lockUtxo_SatsNet(address, utxo, 'sell')
-    console.log(res);
-
-    await getAssetAmount();
-  }
+    [quantity, price, assetBalance.availableAmt, balanceLoading]);
 
   const handleMaxClick = () => {
     if (!balanceLoading) {
-      setQuantity(balance.availableAmt);
+      setQuantity(assetBalance.availableAmt);
       setBatchQuantity(1);
     }
   };
@@ -258,7 +232,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: SellOrderProps
 
     if (!isSellValid) {
       console.warn("Sell attempt with invalid input or state.");
-      if (Number(totalQuantity) > balance.availableAmt) toast.error("Insufficient balance.");
+      if (Number(totalQuantity) > assetBalance.availableAmt) toast.error("Insufficient balance.");
       else if (Number(totalQuantity) <= 0) toast.error("Quantity must be positive.");
       else if (Number(price) <= 0) toast.error("Price must be positive.");
       return;
@@ -280,14 +254,14 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: SellOrderProps
 
       if (submissionSuccess) {
         queryClient.invalidateQueries({ queryKey: ['orders'] });
-        for (const utxo of utxos) {
-          try {
-            await lockSellUtxo(utxo);
-          } catch (lockError) {
-            console.error(`Failed to lock UTXO ${utxo}:`, lockError);
-            toast.error(`Order submitted, but failed to lock UTXO ${utxo}. Please check manually.`);
-          }
-        }
+        // for (const utxo of utxos) {
+        //   try {
+        //     await lockSellUtxo(utxo);
+        //   } catch (lockError) {
+        //     console.error(`Failed to lock UTXO ${utxo}:`, lockError);
+        //     toast.error(`Order submitted, but failed to lock UTXO ${utxo}. Please check manually.`);
+        //   }
+        // }
         setQuantity("");
         setPrice("");
         setBatchQuantity(1);
@@ -307,8 +281,8 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: SellOrderProps
     }
   };
 
-  const displayBalance = balance.availableAmt + balance.lockedAmt;
-  const displayAvailableAmt = balance.availableAmt
+  const displayBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
+  const displayAvailableAmt = assetBalance.availableAmt
   const isLoading = balanceLoading || isSelling;
   const ticker = useMemo(() => assetInfo.assetName.split(':').pop() || assetInfo.assetName, [assetInfo.assetName]);
 
@@ -422,7 +396,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: SellOrderProps
           <span className="gap-1">{displayAvailableAmt.toLocaleString()} </span>
         </p>
 
-        {!balanceLoading && quantity !== "" && Number(quantity) > balance.availableAmt && (
+        {!balanceLoading && quantity !== "" && Number(quantity) > assetBalance.availableAmt && (
           <p className="text-red-500 font-medium mt-2">
             Insufficient balance.
           </p>

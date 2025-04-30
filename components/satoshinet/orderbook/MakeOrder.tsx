@@ -6,9 +6,12 @@ import BuySellToggle from "@/components/satoshinet/orderbook/BuySellToggle";
 interface MakeOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   tickerInfo?: any;
+  assetBalance: { availableAmt: number; lockedAmt: number };
+  balanceLoading: boolean;
+  onSellSuccess?: () => void;
 }
 
-const MakeOrder = ({ assetInfo, tickerInfo }: MakeOrderProps) => {
+const MakeOrder = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSellSuccess }: MakeOrderProps) => {
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
   return (
     <div>
@@ -18,11 +21,16 @@ const MakeOrder = ({ assetInfo, tickerInfo }: MakeOrderProps) => {
         <BuyOrder
           assetInfo={assetInfo}
           tickerInfo={tickerInfo}
+          assetBalance={assetBalance}
+          balanceLoading={balanceLoading}
         />
       ) : (
         <SellOrder
           assetInfo={assetInfo}
           tickerInfo={tickerInfo}
+          assetBalance={assetBalance}
+          balanceLoading={balanceLoading}
+          onSellSuccess={onSellSuccess}
         />
       )}
     </div>

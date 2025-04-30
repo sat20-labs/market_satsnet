@@ -59,9 +59,11 @@ export interface TakeOrderRef {
 interface TakeOrderProps {
   assetInfo: { assetName: string; assetLogo: string; AssetId: string; floorPrice: number };
   tickerInfo?: any;
+  assetBalance?: number;
+  onSellSuccess?: () => void;
 }
 
-const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo }, ref) => {
+const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo, assetBalance, onSellSuccess }, ref) => {
   const { chain, network } = useCommonStore();
   const { balance, getBalance } = useWalletStore();
   const { address, btcWallet } = useReactWalletStore();
@@ -300,6 +302,9 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
         }
         await getBalance();
         queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });
+        if (typeof onSellSuccess === 'function') {
+          onSellSuccess();
+        }
         return; // 成功完成
       } else {
         throw new Error(buyRes.msg || "Failed to place sell order.");
@@ -351,6 +356,8 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
         balance={balance}
         network={network}
         chain={chain}
+        assetBalance={mode === 'sell' ? assetBalance : balance.availableAmt}
+        {...(mode === 'sell' ? { onSellSuccess } : {})}
       />
     </>
   );

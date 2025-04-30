@@ -23,6 +23,8 @@ export interface TakeOrderUIProps {
   balance: any;
   network: string;
   chain: string;
+  assetBalance?: number;
+  onSellSuccess?: () => void;
 }
 
 const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
@@ -39,6 +41,8 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
   balance,
   network,
   chain,
+  assetBalance,
+  onSellSuccess,
 }) => {
   // UI交互相关状态
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
@@ -77,7 +81,6 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
 
   // 订单总价
   const totalBTC = selectedOrdersData.reduce((sum, order) => sum + order.value, 0);
-  const isBalanceSufficient = balance.availableAmt >= totalBTC;
 
   // 订单摘要
   const summarySelectedOrders = useMemo(() => {
@@ -96,6 +99,16 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
       };
     });
   }, [selectedOrdersData]);
+
+  // 卖单时总卖出数量
+  const totalSellAmount = useMemo(() => {
+    return summarySelectedOrders.reduce((sum, order) => sum + order.quantity, 0);
+  }, [summarySelectedOrders]);
+
+  // 余额判断逻辑
+  const isBalanceSufficient = mode === 'buy'
+    ? balance.availableAmt >= totalBTC
+    : (assetBalance !== undefined ? assetBalance >= totalSellAmount : true);
 
   // 计算费用和汇总信息
   const { fees, summary } = useMemo(() => {
@@ -232,10 +245,6 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
     }
   }, [sortedOrders, orders, selectedIndexes, lockOrders, unlockOrders]);
 
-  const totalSellAmount = useMemo(() => {
-    return summarySelectedOrders.reduce((sum, order) => sum + order.totalSats, 0);
-  }, [summarySelectedOrders]);
-
   // 清除选择
   const clearSelection = useCallback(() => {
     setSelectedIndexes([]);
@@ -248,6 +257,9 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
     try {
       await onBuy(selectedOrdersData, fees, summary);
       clearSelection(); // 交易成功后清除选择
+      if (mode === 'sell' && typeof onSellSuccess === 'function') {
+        onSellSuccess();
+      }
     } catch (error) {
       // 如果onBuy抛出错误，错误会在这里被捕获
       console.error('Order failed:', error);

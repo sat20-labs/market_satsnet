@@ -17,6 +17,8 @@ interface BuyOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   onSellSuccess?: () => void;
   tickerInfo?: any;
+  assetBalance: { availableAmt: number; lockedAmt: number };
+  balanceLoading: boolean;
 }
 
 interface AssetInfo {
@@ -193,8 +195,7 @@ interface AssetBalance {
   lockedAmt: number
 }
 
-const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {} }: BuyOrderProps) => {
-  const { loading: balanceLoading, assets } = useAssetStore();
+const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: BuyOrderProps) => {
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const [isBuying, setIsBuying] = useState(false);

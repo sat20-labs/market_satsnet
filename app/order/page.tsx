@@ -15,6 +15,8 @@ import { useWalletStore } from '@/store';
 import { satsToBitcoin, formatBtcAmount } from '@/utils';
 import { useQueryKey } from '@/lib/hooks/useQueryKey';
 import { useCommonStore } from '@/store';
+import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
+
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
 }
@@ -64,16 +66,6 @@ function OrderPageContent() {
 
   // Wallet and order book state
   const [activeTab, setActiveTab] = useState<'takeOrder' | 'makeOrder'>('takeOrder');
-  const { balance } = useWalletStore();
-  const showAmount = useMemo(() => {
-    const btcValue = satsToBitcoin(balance.availableAmt);
-    return formatBtcAmount(btcValue);
-  }, [balance]);
-  const userWallet = {
-    btcBalance: typeof showAmount === 'string' ? parseFloat(showAmount) : showAmount || 0,
-    assetBalance: 1000,
-    address: '',
-  };
   const handleTabChange = (tab: 'takeOrder' | 'makeOrder') => {
     setActiveTab(tab);
   };
@@ -82,6 +74,26 @@ function OrderPageContent() {
     setSettings(newSettings);
   };
   console.log(tickerInfo);
+
+  const { address } = useReactWalletStore();
+  const [assetBalance, setAssetBalance] = useState({ availableAmt: 0, lockedAmt: 0 });
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  useEffect(() => {
+    if (!address || !summary.assetName) return;
+    setBalanceLoading(true);
+    window.sat20.getAssetAmount_SatsNet(address, summary.assetName)
+      .then(res => setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) }))
+      .finally(() => setBalanceLoading(false));
+  }, [address, summary.assetName]);
+  console.log("assetBalance", assetBalance);
+  
+  const handleSellSuccess = () => {
+    if (!address || !summary.assetName) return;
+    setBalanceLoading(true);
+    window.sat20.getAssetAmount_SatsNet(address, summary.assetName)
+      .then(res => setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) }))
+      .finally(() => setBalanceLoading(false));
+  };
 
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
@@ -121,19 +133,25 @@ function OrderPageContent() {
             onSettingsChange={handleSettingsChange}
           />
           {activeTab === 'takeOrder' ? (
-            <TakeOrder ref={takeOrderRef} assetInfo={{
-              assetLogo: summary.assetLogo,
-              assetName: summary.assetName,
-              AssetId: summary.assetId,
-              floorPrice: parseFloat(summary.floorPrice),
-            }} tickerInfo={tickerInfo} />
+            <TakeOrder
+              ref={takeOrderRef}
+              assetInfo={{
+                assetLogo: summary.assetLogo,
+                assetName: summary.assetName,
+                AssetId: summary.assetId,
+                floorPrice: parseFloat(summary.floorPrice),
+              }}
+              tickerInfo={tickerInfo}
+              assetBalance={assetBalance.availableAmt}
+              onSellSuccess={handleSellSuccess}
+            />
           ) : (
             <MakeOrder assetInfo={{
               assetLogo: summary.assetLogo,
               assetName: summary.assetName,
               AssetId: summary.assetId,
               floorPrice: parseFloat(summary.floorPrice),
-            }} tickerInfo={tickerInfo} />
+            }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} />
           )}
           <div className="mt-4 text-sm text-gray-400">
             {settings.showOngoingTrades && <p>Show pending transactions...</p>}
