@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { marketApi, clientApi } from '@/api';
 import { Suspense } from 'react';
@@ -9,12 +9,12 @@ import { ChartModule } from '@/components/satoshinet/ChartModule';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import { ActivityLog } from '@/components/satoshinet/ActivityLog';
 import OrderBookHeader from '@/components/satoshinet/orderbook/OrderBookHearder';
-import TakeOrder from '@/components/satoshinet/orderbook/TakeOrder';
+import TakeOrder, { TakeOrderRef } from '@/components/satoshinet/orderbook/TakeOrder';
 import MakeOrder from '@/components/satoshinet/orderbook/MakeOrder';
 import { useWalletStore } from '@/store';
 import { satsToBitcoin, formatBtcAmount } from '@/utils';
 import { useQueryKey } from '@/lib/hooks/useQueryKey';
-
+import { useCommonStore } from '@/store';
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
 }
@@ -22,7 +22,7 @@ function Loading() {
 function OrderPageContent() {
   const params = useSearchParams();
   const asset = params.get('asset');
-
+  const takeOrderRef = useRef<TakeOrderRef>(null);
   // Fetch asset summary
   const { data, isLoading, error } = useQuery({
     queryKey: ['assetSummary', asset],
@@ -38,7 +38,7 @@ function OrderPageContent() {
   const tickerInfo = useMemo(() => {
     return tickerRes?.data || {};
   }, [tickerRes]);
-
+  const { chain, network } = useCommonStore();
   // Transform asset summary
   const summary = useMemo(() => {
     const summaryData = data?.data?.summary;
@@ -64,7 +64,7 @@ function OrderPageContent() {
 
   // Wallet and order book state
   const [activeTab, setActiveTab] = useState<'takeOrder' | 'makeOrder'>('takeOrder');
-  const {  balance } = useWalletStore();
+  const { balance } = useWalletStore();
   const showAmount = useMemo(() => {
     const btcValue = satsToBitcoin(balance.availableAmt);
     return formatBtcAmount(btcValue);
@@ -82,7 +82,7 @@ function OrderPageContent() {
     setSettings(newSettings);
   };
   console.log(tickerInfo);
-  
+
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
   }
@@ -92,7 +92,14 @@ function OrderPageContent() {
   if (error) {
     return <div className="p-4 bg-black text-white w-full">Error loading data: {error.message}</div>;
   }
+  const handleRefresh = async () => {
+    console.log("handleRefresh");
+    if (activeTab === "takeOrder" && takeOrderRef.current) {
 
+
+      await takeOrderRef.current.forceRefresh();
+    }
+  };
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 sm:p-4 h-full w-ful">
       {/* Chart and Asset Info Container */}
@@ -110,11 +117,11 @@ function OrderPageContent() {
           <OrderBookHeader
             activeTab={activeTab}
             onTabChange={handleTabChange}
-            onRefresh={() => {}}
+            onRefresh={handleRefresh}
             onSettingsChange={handleSettingsChange}
           />
           {activeTab === 'takeOrder' ? (
-            <TakeOrder assetInfo={{
+            <TakeOrder ref={takeOrderRef} assetInfo={{
               assetLogo: summary.assetLogo,
               assetName: summary.assetName,
               AssetId: summary.assetId,

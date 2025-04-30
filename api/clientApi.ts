@@ -87,7 +87,7 @@ class ClientApi {
    * @param ticker 资产ticker
    */
   getTickerInfo = async (ticker: string): Promise<any> => {
-    const { network } = useReactWalletStore.getState();
+    const { network } = useCommonStore.getState();
     const baseUrl = `${this.BASE_URL}${network === 'testnet' ? '/btc/testnet' : '/btc/mainnet'}`;
     const url = `${baseUrl}/v3/tick/info/${ticker}`;
     const response = await fetch(url, {

@@ -21,7 +21,9 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
     onSettingsChange({ showOngoingTrades, maxBidPrice }); // 保存设置
     setIsSettingsOpen(false); // 关闭弹窗
   };
-
+  const handleRefresh = () => {
+    onRefresh();
+  };  
   return (
     <div className="flex items-center justify-between bg-transparent border-b-1 border-zinc-800 pt-6 rounded-t-lg gap-4">
       {/* Tab 切换按钮 */}
@@ -55,7 +57,7 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
         )}
         <button
           className="text-gray-400 hover:text-white transition-colors"
-          onClick={onRefresh}
+          onClick={handleRefresh}
           aria-label="Refresh"
         >
           <Icon icon="mdi:refresh" className="text-lg sm:text-xl" />

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useCommonStore, useAssetStore, useWalletStore } from "@/store";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { clientApi, marketApi } from "@/api";
@@ -52,12 +52,16 @@ async function getUtxoInfoWithRetry(utxo: string) {
   throw new Error(`Failed to get UTXO info for ${utxo} after ${MAX_RETRIES} attempts.`);
 }
 
+export interface TakeOrderRef {
+  forceRefresh: () => Promise<void>;
+}
+
 interface TakeOrderProps {
   assetInfo: { assetName: string; assetLogo: string; AssetId: string; floorPrice: number };
   tickerInfo?: any;
 }
 
-const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
+const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo }, ref) => {
   const { chain, network } = useCommonStore();
   const { balance, getBalance } = useWalletStore();
   const { address, btcWallet } = useReactWalletStore();
@@ -73,13 +77,7 @@ const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
     return ['orders', assetInfo.assetName, chain, network, page, size, mode];
   }, [assetInfo.assetName, page, size, network, chain, mode]);
 
-  useEffect(() => {
-    setPage(1);
-    setAllOrders([]);
-    setTotalOrders(0);
-  }, [assetInfo.assetName, mode]);
-
-  const { data: fetchedData, isLoading, isFetching, error, isSuccess } = useQuery<{ data: { order_list: MarketOrder[], total: number } }>({
+  const { data: fetchedData, isLoading, isFetching, error, isSuccess, refetch } = useQuery<{ data: { order_list: MarketOrder[], total: number } }>({
     queryKey: queryKey,
     queryFn: () => {
       return marketApi.getOrders({
@@ -97,6 +95,17 @@ const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
     refetchIntervalInBackground: false,
     staleTime: 20000,
   });
+
+  // 暴露强制刷新方法给父组件
+  useImperativeHandle(ref, () => ({
+    forceRefresh: async () => {
+      if (page === 1) {
+        await refetch();
+      } else {
+        setPage(1);
+      }
+    }
+  }));
 
   useEffect(() => {
     if (isSuccess && fetchedData?.data) {
@@ -123,13 +132,9 @@ const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
     }
   }, [error]);
 
-  // 买入订单业务逻辑
-  const handleBuyOrder = async (selectedOrdersData: any[], totalSellAmount: number) => {
-    if (selectedOrdersData.length === 0) {
-      toast.warning("No orders selected.");
-      return;
-    }
-    const toastId = toast.loading("Processing your order...");
+  // 处理买入订单
+  const handleBuyAsset = async (selectedOrdersData: any[], fees: any, summary: any) => {
+    const toastId = toast.loading("Processing your buy order...");
     const NEXT_PUBLIC_SERVICE_ADDRESS =
       network === 'testnet'
         ? process.env.NEXT_PUBLIC_SERVICE_TESTNET_ADDRESS
@@ -138,16 +143,15 @@ const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
     try {
       // === UTXO和PSBT处理逻辑 ===
       const buyUtxoInfos: any[] = [];
-      const serviceFeeRate = 0.008; // 0.8%
-      const serviceFee = Math.floor(totalSellAmount * serviceFeeRate);
-      const networkFee = 10;
-      const totalUtxoAmount = totalSellAmount + serviceFee + networkFee;
-      const utxoRes = await window.sat20.getUtxosWithAsset_SatsNet(address, "::", totalUtxoAmount);
+
+      // 获取UTXO
+      const utxoRes = await window.sat20.getUtxosWithAsset_SatsNet(address, "::", summary.totalPay);
       const { utxos = [] } = utxoRes;
       if (utxos.length === 0) {
-        toast.error("No valid UTXOs available for this transaction. Please check your wallet.");
-        return;
+        throw new Error("No valid UTXOs available for this transaction. Please check your wallet.");
       }
+
+      // 获取UTXO信息
       for (const utxo of utxos) {
         try {
           const utxoData = await getUtxoInfoWithRetry(utxo);
@@ -158,56 +162,170 @@ const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
         }
       }
       if (buyUtxoInfos.length === 0) {
-        toast.error("No valid UTXOs available for this transaction. Please check your wallet.");
-        return;
+        throw new Error("No valid UTXOs available for this transaction. Please check your wallet.");
       }
+
       // === 合并PSBT ===
-      // 由UI组件负责lock，UI组件会将lockedOrders的raw传递过来
-      // 这里假设UI组件已保证所有订单已锁定，并能提供raw数据
-      // 这里我们从selectedOrdersData中提取raw
       const orderRaws = selectedOrdersData.map(order => order.raw).filter(Boolean);
       const mergeRaw = await window.sat20.mergeBatchSignedPsbt_SatsNet(orderRaws, network);
       if (!mergeRaw.data.psbt) {
         throw new Error("Failed to merge PSBTs.");
       }
+
+      // Finalize PSBT
       const finalizeRes = await window.sat20.finalizeSellOrder_SatsNet(
         mergeRaw.data.psbt,
         buyUtxoInfos.map((v) => JSON.stringify(v)),
         address,
         NEXT_PUBLIC_SERVICE_ADDRESS,
         network,
-        serviceFee,
-        networkFee,
+        fees.serviceFee,
+        fees.networkFee,
       );
+
       if (!finalizeRes || !finalizeRes.psbt) {
-        throw new Error("Failed to finalize sell order.");
+        throw new Error("Failed to finalize buy order.");
       }
+
       const signedPsbt = await btcWallet?.signPsbt(finalizeRes.psbt, { chain: 'sat20' });
       if (!signedPsbt) {
         throw new Error('Failed to sign PSBT.');
       }
+
       const buyRaw = await window.sat20?.extractTxFromPsbt(signedPsbt, chain);
       if (!buyRaw) {
         throw new Error('Failed to extract transaction from PSBT.');
       }
+
       const buyRes = await marketApi.bulkBuyOrder({
         address,
         order_ids: intendedOrderIds,
         raw: buyRaw,
       });
+
       if (buyRes.code === 200) {
-        toast.success("Order placed successfully!", { id: toastId });
+        toast.success("Buy order placed successfully!", { id: toastId });
         setPage(1);
-        for (const utxo of utxos) {
-          await window.sat20.lockUtxo_SatsNet(address, utxo, 'buy');
+        for (const utxo of buyUtxoInfos) {
+          await window.sat20.lockUtxo_SatsNet(address, utxo.Outpoint, 'buy');
         }
         await getBalance();
         queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });
+        return; // 成功完成
       } else {
-        throw new Error(buyRes.msg || "Failed to place order.");
+        throw new Error(buyRes.msg || "Failed to place buy order.");
       }
     } catch (error: any) {
-      toast.error(`Order failed: ${error.message || 'Unknown error'}`, { id: toastId });
+      toast.error(`Buy order failed: ${error.message || 'Unknown error'}`, { id: toastId });
+      throw error; // 重新抛出错误，这样UI组件可以捕获到
+    }
+  };
+
+  // 处理卖出订单
+  const handleSellAsset = async (selectedOrdersData: any[], fees: any, summary: any) => {
+    const toastId = toast.loading("Processing your sell order...");
+    const NEXT_PUBLIC_SERVICE_ADDRESS =
+      network === 'testnet'
+        ? process.env.NEXT_PUBLIC_SERVICE_TESTNET_ADDRESS
+        : process.env.NEXT_PUBLIC_SERVICE_ADDRESS;
+    const intendedOrderIds = selectedOrdersData.map((order) => order.order_id);
+    try {
+      // === UTXO和PSBT处理逻辑 ===
+      const buyUtxoInfos: any[] = [];
+
+      // 获取资产UTXO
+      const utxoRes = await window.sat20.getUtxosWithAsset_SatsNet(address, assetInfo.assetName, summary.totalPay);
+      const { utxos = [] } = utxoRes;
+      if (utxos.length === 0) {
+        throw new Error(`No valid ${assetInfo.assetName} UTXOs available for this transaction. Please check your wallet.`);
+      }
+
+      // 获取UTXO信息
+      for (const utxo of utxos) {
+        try {
+          const utxoData = await getUtxoInfoWithRetry(utxo);
+          buyUtxoInfos.push({ ...utxoData });
+        } catch (error) {
+          toast.error(`Failed to fetch UTXO info for: ${utxo}. Skipping this UTXO.`);
+          continue;
+        }
+      }
+      if (buyUtxoInfos.length === 0) {
+        throw new Error(`No valid ${assetInfo.assetName} UTXOs available for this transaction. Please check your wallet.`);
+      }
+
+      // === 合并PSBT ===
+      const orderRaws = selectedOrdersData.map(order => order.raw).filter(Boolean);
+      const mergeRaw = await window.sat20.mergeBatchSignedPsbt_SatsNet(orderRaws, network);
+      if (!mergeRaw.data.psbt) {
+        throw new Error("Failed to merge PSBTs.");
+      }
+
+      // Finalize PSBT
+      const finalizeRes = await window.sat20.finalizeSellOrder_SatsNet(
+        mergeRaw.data.psbt,
+        buyUtxoInfos.map((v) => JSON.stringify(v)),
+        address,
+        NEXT_PUBLIC_SERVICE_ADDRESS,
+        network,
+        fees.serviceFee,
+        fees.networkFee,
+      );
+
+      if (!finalizeRes || !finalizeRes.psbt) {
+        throw new Error("Failed to finalize sell order.");
+      }
+
+      const signedPsbt = await btcWallet?.signPsbt(finalizeRes.psbt, { chain: 'sat20' });
+      if (!signedPsbt) {
+        throw new Error('Failed to sign PSBT.');
+      }
+
+      const buyRaw = await window.sat20?.extractTxFromPsbt(signedPsbt, chain);
+      if (!buyRaw) {
+        throw new Error('Failed to extract transaction from PSBT.');
+      }
+
+      const buyRes = await marketApi.bulkBuyOrder({
+        address,
+        order_ids: intendedOrderIds,
+        raw: buyRaw,
+      });
+
+      if (buyRes.code === 200) {
+        toast.success("Sell order placed successfully!", { id: toastId });
+        setPage(1);
+        for (const utxo of buyUtxoInfos) {
+          await window.sat20.lockUtxo_SatsNet(address, utxo.Outpoint, 'sell');
+        }
+        await getBalance();
+        queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });
+        return; // 成功完成
+      } else {
+        throw new Error(buyRes.msg || "Failed to place sell order.");
+      }
+    } catch (error: any) {
+      toast.error(`Sell order failed: ${error.message || 'Unknown error'}`, { id: toastId });
+      throw error; // 重新抛出错误，这样UI组件可以捕获到
+    }
+  };
+
+  // 统一处理函数
+  const handleOrder = async (selectedOrdersData: any[], fees: any, summary: any) => {
+    if (selectedOrdersData.length === 0) {
+      toast.warning("No orders selected.");
+      return;
+    }
+
+    try {
+      if (mode === 'buy') {
+        await handleBuyAsset(selectedOrdersData, fees, summary);
+      } else {
+        await handleSellAsset(selectedOrdersData, fees, summary);
+      }
+    } catch (error) {
+      // 错误已经在具体处理函数中显示给用户了，这里只需要继续传播错误
+      throw error;
     }
   };
 
@@ -225,7 +343,7 @@ const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
           setIsLoadingMore(true);
           setPage(prevPage => prevPage + 1);
         }}
-        onBuy={handleBuyOrder}
+        onBuy={handleOrder}
         mode={mode}
         isFetching={isFetching}
         assetInfo={assetInfo}
@@ -236,6 +354,8 @@ const TakeOrderContainer = ({ assetInfo }: TakeOrderProps) => {
       />
     </>
   );
-};
+});
+
+TakeOrderContainer.displayName = 'TakeOrderContainer';
 
 export default TakeOrderContainer;

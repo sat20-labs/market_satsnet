@@ -1,61 +1,78 @@
 import React from "react";
 import { Icon } from "@iconify/react";
-
+import { MARKET_FEES } from "@/config/fees";
 
 interface OrderSummaryProps {
   selectedOrders: { ticker: string, quantity: number; price: number; totalSats: number; }[];
+  mode: 'buy' | 'sell';
+  fees: {
+    serviceFee: number;
+    networkFee: number;
+  };
+  summary: {
+    totalQuantity: number;
+    totalSats: number;
+    totalPay: number;
+    totalReceive: number;
+  };
 }
 
-const OrderSummary = ({ selectedOrders }: OrderSummaryProps) => {
-  // 计算汇总信息
-  const totalQuantity = selectedOrders.reduce((sum, order) => {
-    console.log("order.quantity:", order.quantity);
-    return sum + (order.quantity || 0);
-  }, 0);
-
-  const totalBTC = selectedOrders.reduce((sum, order) => sum + order.price, 0);
-
+const OrderSummary = ({ selectedOrders, mode, fees, summary }: OrderSummaryProps) => {
   const assetsName = selectedOrders.length > 0 ? selectedOrders[0].ticker : undefined;
-
-    // Service Fee 计算 (假设费率为 0.8%)
-    const serviceFeeRate = 0.008; // 0.8%
-    const serviceFee = Math.floor(totalBTC * serviceFeeRate); // 向下取整
-    
-    const networkFee = 10; // 假设网络费用为 10 sats
-    //const networkFeeBTC = networkFee / 1e8; // 转换为 BTC
-    // 总支付金额计算
-
-
-    const totalPay = totalBTC + serviceFee + networkFee;
-    //console.log("totalBTC:", totalBTC, "serviceFee:", serviceFee, "networkFee:", networkFee, "totalPay:", totalPay);
-
+  const serviceFeeRate = MARKET_FEES.SERVICE_FEE_RATE * 100; // Convert to percentage
 
   return (
     <div className="mt-4 px-3 pt-4 pb-1 bg-zinc-800/60 divide-y text-sm text-zinc-300 divide-zinc-800 rounded-2xl shadow-lg">
       <div className="flex font-extrabold text-gray-400 mb-2">Order Summary</div>
       <div className="mt-2 text-xs text-zinc-400">
         <div className="flex justify-between py-1">
-          Total Quantity: <span className="font-medium">{totalQuantity} {assetsName}</span>
+          Total Quantity: <span className="font-medium">{summary.totalQuantity} {assetsName}</span>
         </div>
         <div className="flex justify-between py-1">
-          Total Sats: <span className="font-medium">{totalBTC} sats</span>
+          Total Sats: <span className="font-medium">{summary.totalSats} sats</span>
         </div>
 
+        {/* 服务费显示逻辑 */}
         <div className="flex justify-between py-2">
-          <span>Service Fee (0.8%)</span>
-          <span className="font-medium">{serviceFee} sats</span>
+          <span>Service Fee ({serviceFeeRate}%, min {MARKET_FEES.MIN_SERVICE_FEE} sats)</span>
+          <span className="font-medium">
+            {fees.serviceFee} sats
+            {mode === 'sell' && <span className="text-yellow-500 ml-1">(Paid by you)</span>}
+          </span>
         </div>
+        
         <div className="flex justify-between py-2">
           <span>Network Fee</span>
-          <span className="font-medium">{networkFee} sats</span>
+          <span className="font-medium">{fees.networkFee} sats</span>
         </div>
       </div>
-      <div className="flex justify-between py-2">
-        <span>You Pay</span>
-        <span className="flex justify-end font-extrabold gap-1">
-          <Icon icon="cryptocurrency-color:btc" className="mr-1 mt-0.5" />
-          {totalPay} sats
-        </span>
+      <div className="flex flex-col gap-2 py-2">
+        <div className="flex justify-between">
+          <span>You Pay</span>
+          <span className="flex justify-end font-extrabold gap-1">
+            {mode === 'buy' ? (
+              <>
+                <Icon icon="cryptocurrency-color:btc" className="mr-1 mt-0.5" />
+                {summary.totalPay} sats
+              </>
+            ) : (
+              <>{summary.totalPay} {assetsName}</>
+            )}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span>You Receive</span>
+          <span className="flex justify-end font-extrabold gap-1">
+            {mode === 'buy' ? (
+              <>{summary.totalReceive} {assetsName}</>
+            ) : (
+              <>
+                <Icon icon="cryptocurrency-color:btc" className="mr-1 mt-0.5" />
+                {summary.totalReceive} sats
+              </>
+            )}
+          </span>
+        </div>
       </div>
     </div>
   );

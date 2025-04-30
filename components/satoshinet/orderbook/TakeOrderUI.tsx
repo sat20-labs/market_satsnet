@@ -7,6 +7,7 @@ import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { debounce, tryit } from "radash";
 import { toast } from "sonner";
 import { marketApi } from "@/api";
+import { MARKET_FEES, calculateServiceFee } from "@/config/fees";
 
 export interface TakeOrderUIProps {
   orders: any[];
@@ -14,7 +15,7 @@ export interface TakeOrderUIProps {
   isLoading: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
-  onBuy: (selectedOrdersData: any[], totalSellAmount: number) => Promise<void>;
+  onBuy: (selectedOrdersData: any[], fees: any, summary: any) => Promise<void>;
   mode: "buy" | "sell";
   isFetching: boolean;
   assetInfo: { assetName: string; assetLogo: string; AssetId: string; floorPrice: number };
@@ -67,6 +68,67 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
     }
     return count;
   }, [sortedOrders, balance.availableAmt]);
+
+  // 选中订单数据
+  const selectedOrdersData = selectedIndexes
+    .map((index) => orders[index])
+    .filter((order) => order !== undefined && order !== null)
+    .map((order) => ({ ...order, raw: lockedOrders.get(order.order_id) }));
+
+  // 订单总价
+  const totalBTC = selectedOrdersData.reduce((sum, order) => sum + order.value, 0);
+  const isBalanceSufficient = balance.availableAmt >= totalBTC;
+
+  // 订单摘要
+  const summarySelectedOrders = useMemo(() => {
+    return selectedOrdersData.map(order => {
+      const ticker = typeof order.assets?.assets_name === 'string'
+        ? order.assets.assets_name
+        : order.assets?.assets_name?.Ticker || 'Unknown';
+      const quantity = parseInt(order.assets?.amount ?? '0', 10);
+      const pricePerUnitSats = order.price;
+      const totalSats = order.price;
+      return {
+        ticker,
+        quantity,
+        price: pricePerUnitSats,
+        totalSats: totalSats,
+      };
+    });
+  }, [selectedOrdersData]);
+
+  // 计算费用和汇总信息
+  const { fees, summary } = useMemo(() => {
+    const totalQuantity = summarySelectedOrders.reduce((sum, order) => sum + order.quantity, 0);
+    const totalSats = summarySelectedOrders.reduce((sum, order) => sum + order.totalSats, 0);
+    
+    // 费用计算
+    const serviceFee = calculateServiceFee(totalSats);
+    const networkFee = MARKET_FEES.NETWORK_FEE;
+
+    // 根据模式计算支付和接收金额
+    let totalPay, totalReceive;
+    if (mode === 'buy') {
+      totalPay = totalSats + serviceFee + networkFee;
+      totalReceive = totalQuantity;
+    } else {
+      totalPay = totalQuantity;
+      totalReceive = totalSats - serviceFee - networkFee;
+    }
+
+    return {
+      fees: {
+        serviceFee,
+        networkFee,
+      },
+      summary: {
+        totalQuantity,
+        totalSats,
+        totalPay,
+        totalReceive,
+      }
+    };
+  }, [summarySelectedOrders, mode]);
 
   // 锁定订单
   const lockOrders = useCallback(async (orderIds: number[]) => {
@@ -170,40 +232,26 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
     }
   }, [sortedOrders, orders, selectedIndexes, lockOrders, unlockOrders]);
 
-  // 选中订单数据
-  const selectedOrdersData = selectedIndexes
-    .map((index) => orders[index])
-    .filter((order) => order !== undefined && order !== null)
-    .map((order) => ({ ...order, raw: lockedOrders.get(order.order_id) }));
-
-  // 订单总价
-  const totalBTC = selectedOrdersData.reduce((sum, order) => sum + order.value, 0);
-  const isBalanceSufficient = balance.availableAmt >= totalBTC;
-
-  // 订单摘要
-  const summarySelectedOrders = useMemo(() => {
-    return selectedOrdersData.map(order => {
-      const ticker = typeof order.assets?.assets_name === 'string'
-        ? order.assets.assets_name
-        : order.assets?.assets_name?.Ticker || 'Unknown';
-      const quantity = parseInt(order.assets?.amount ?? '0', 10);
-      const pricePerUnitSats = order.price;
-      const totalSats = order.price;
-      return {
-        ticker,
-        quantity,
-        price: pricePerUnitSats,
-        totalSats: totalSats,
-      };
-    });
-  }, [selectedOrdersData]);
   const totalSellAmount = useMemo(() => {
     return summarySelectedOrders.reduce((sum, order) => sum + order.totalSats, 0);
   }, [summarySelectedOrders]);
 
+  // 清除选择
+  const clearSelection = useCallback(() => {
+    setSelectedIndexes([]);
+    setSliderValue(0);
+    setLockedOrders(new Map());
+  }, []);
+
   // Buy按钮点击
-  const handleBuy = () => {
-    onBuy(selectedOrdersData, totalSellAmount);
+  const handleBuy = async () => {
+    try {
+      await onBuy(selectedOrdersData, fees, summary);
+      clearSelection(); // 交易成功后清除选择
+    } catch (error) {
+      // 如果onBuy抛出错误，错误会在这里被捕获
+      console.error('Order failed:', error);
+    }
   };
 
   return (
@@ -263,7 +311,14 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
           />
         </div>
       )}
-      {selectedIndexes.length > 0 && <OrderSummary selectedOrders={summarySelectedOrders} />}
+      {selectedIndexes.length > 0 && (
+        <OrderSummary 
+          selectedOrders={summarySelectedOrders} 
+          mode={mode}
+          fees={fees}
+          summary={summary}
+        />
+      )}
       {!isBalanceSufficient && selectedIndexes.length > 0 && (
         <p className="text-red-500 mt-4 text-xs font-medium">
           Insufficient BTC balance to take the selected orders.
