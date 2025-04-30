@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 
 import SellOrder from "@/components/satoshinet/orderbook/SellOrder";
-
+import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 interface SellOrderAssetInfo {
   assetLogo: string;
   assetName: string;
@@ -29,10 +29,19 @@ const SellOrderModal = ({
   open,
   onOpenChange,
 }: SellOrderModalProps) => {
+  const { address } = useReactWalletStore();
   const handleCloseModal = () => {
     onOpenChange(false);
   };
-
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [assetBalance, setAssetBalance] = useState({ availableAmt: 0, lockedAmt: 0 });
+  useEffect(() => {
+    if (!address || !assetInfo.assetName) return;
+    setBalanceLoading(true);
+    window.sat20.getAssetAmount_SatsNet(address, assetInfo.assetName)
+      .then(res => setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) }))
+      .finally(() => setBalanceLoading(false));
+  }, [address, assetInfo.assetName]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-zinc-800 text-zinc-200">
@@ -40,7 +49,7 @@ const SellOrderModal = ({
           <DialogTitle className="text-zinc-100">Sell {assetInfo.displayname || assetInfo.assetName}</DialogTitle>
         </DialogHeader>
         <div className="pt-4">
-          <SellOrder assetInfo={assetInfo} onSellSuccess={handleCloseModal} />
+          <SellOrder assetInfo={assetInfo} onSellSuccess={handleCloseModal} assetBalance={assetBalance} balanceLoading={balanceLoading} />
         </div>
 
       </DialogContent>
