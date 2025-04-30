@@ -14,6 +14,7 @@ import {
   useReactWalletStore,
 } from '@sat20/btc-connect/dist/react';
 import { Copy, ChevronDown, Bitcoin } from 'lucide-react';
+import { Icon } from '@iconify/react'; // Assuming Icon comes from @iconify/react
 import { useTheme } from 'next-themes';
 import { hideStr, satsToBitcoin, formatBtcAmount } from '@/utils';
 import { toast } from 'sonner';
@@ -208,7 +209,8 @@ const WalletConnectButton = () => {
                   className="px-0 bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-gray-200 focus:ring-0 focus-visible:ring-0"
                 >
                   <div className="flex items-center gap-1 pl-2">
-                    <Bitcoin className="w-4 h-4 text-orange-400" />
+                    {/* <Bitcoin className="w-4 h-4 text-orange-400" /> */}
+                    <Icon icon="cryptocurrency:btc" className="text-sm custom-btc-icon" />
                     <span className='text-gray-200 text-xs sm:text-sm'>
                       {showAmount}
                     </span>

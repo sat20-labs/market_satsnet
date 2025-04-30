@@ -58,11 +58,12 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
           </CardHeader>
           <CardContent className="p-3 pt-1 leading-8">
             <div className="flex items-center text-base sm:text-md">
-              <Icon icon="cryptocurrency-color:btc" className="mr-1" />
+              {/* <Icon icon="cryptocurrency-color:btc" className="mr-1" /> */}
+               <Icon icon="cryptocurrency:btc" className="mr-1 custom-btc-small-icon" />
               <span className='font-extrabold text-zinc-200'>{item.value}</span>
             </div>
             <div className="flex text-xs sm:font-bold">
-              <span className="text-yellow-400 w-5"> &nbsp;$</span>
+              {/* <span className="text-yellow-400 w-5"> &nbsp;$</span> */}
               <span className="text-gray-400 h-5">
                 {/* <BtcPrice btc={item.value} /> */}
               </span>

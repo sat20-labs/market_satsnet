@@ -53,7 +53,7 @@ const OrderSummary = ({ selectedOrders, mode, fees, summary, tickerInfo }: Order
           <span className="flex justify-end font-extrabold gap-1">
             {mode === 'buy' ? (
               <>
-                <Icon icon="cryptocurrency-color:btc" className="mt-0.5" />
+                 <Icon icon="cryptocurrency:btc" className="mr-1 custom-btc-small-icon" />
                 {summary.totalPay} <span className="text-zinc-400 font-normal ml-2">sats</span>
               </>
             ) : (
@@ -68,7 +68,8 @@ const OrderSummary = ({ selectedOrders, mode, fees, summary, tickerInfo }: Order
               <>{summary.totalReceive} <span className="text-zinc-400 font-normal ml-2">{assetsName}</span></>
             ) : (
               <>
-                <Icon icon="cryptocurrency-color:btc" className="mr-1 mt-0.5" />
+                {/* <Icon icon="cryptocurrency-color:btc" className="mr-1 mt-0.5 " /> */}
+                <Icon icon="cryptocurrency:btc" className="mr-1 custom-btc-small-icon" />
                 {summary.totalReceive} <span className="text-zinc-400 font-normal ml-2">sats</span>
               </>
             )}
