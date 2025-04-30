@@ -284,7 +284,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
   const displayBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
   const displayAvailableAmt = assetBalance.availableAmt
   console.log("assetBalance", assetBalance);
-  
+
   const isLoading = balanceLoading || isSelling;
   const ticker = useMemo(() => assetInfo.assetName.split(':').pop() || assetInfo.assetName, [assetInfo.assetName]);
 
@@ -368,31 +368,31 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
       <div className="mb-4">
         <label className="block text-sm text-gray-400 mb-1">Repeat :</label>
         <div className="flex items-center gap-4">
-        <Slider
+          <Slider
             disabled={!quantity}
             defaultValue={[1]}
-            max={Math.min(batchQuantityMax, 1000)} // 限制最大值为 100
+            max={Math.min(batchQuantityMax, 100)} // 限制最大值为 100
             min={1}
             step={1}
             value={[batchQuantity]}
             onValueChange={(value) => setBatchQuantity(value[0])}
           />
           <Input
-                type="number"
-                min={1}
-                max={Math.min(batchQuantityMax, 1000)}
-                value={batchQuantity}
-                onChange={(e) => {
-                  const value = Math.min(Math.max(Number(e.target.value), 1), Math.min(batchQuantityMax, 1000));
-                  setBatchQuantity(value);
-                }}
-                className="h-10 text-center"
-                style={{
-                  width: `${Math.max(batchQuantity.toString().length, 2)}ch`, // 根据输入长度动态调整宽度
-                  minWidth: '10ch', // 设置最小宽度
-                }}
-                disabled={!quantity}
-              />
+            type="number"
+            min={1}
+            max={Math.min(batchQuantityMax, 100)}
+            value={batchQuantity}
+            onChange={(e) => {
+              const value = Math.min(Math.max(Number(e.target.value), 1), Math.min(batchQuantityMax, 100));
+              setBatchQuantity(value);
+            }}
+            className="h-10 text-center"
+            style={{
+              width: `${Math.max(batchQuantity.toString().length, 2)}ch`, // 根据输入长度动态调整宽度
+              minWidth: '8ch', // 设置最小宽度
+            }}
+            disabled={!quantity}
+          />
           <span className="text-sm text-gray-400">{batchQuantity}</span>
         </div>
       </div>

@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import OrderRow from "@/components/satoshinet/orderbook/OrderRow";
 import OrderSummary from "@/components/satoshinet/orderbook/OrderSummary";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { debounce, tryit } from "radash";
@@ -51,6 +52,13 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
   const [sliderValue, setSliderValue] = useState(0);
   const [isProcessingLock, setIsProcessingLock] = useState(false);
   const [lockedOrders, setLockedOrders] = useState<Map<number, string>>(new Map());
+
+  // 当 mode 发生变化时，初始化选择列表和滑块值
+  useEffect(() => {
+    setSelectedIndexes([]);
+    setSliderValue(0);
+    setLockedOrders(new Map());
+  }, [mode]);
 
   // 排除自己的挂单并按单价排序
   const sortedOrders = useMemo(() => {
@@ -221,7 +229,7 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
     });
   }, [orders, lockedOrders, address, lockOrders, unlockOrders]);
 
-  // 滑块选择
+  // // 滑块选择
   const handleSliderChange = useCallback((newValue: number) => {
     setSliderValue(newValue);
     const ordersToSelect = sortedOrders.slice(0, newValue);
@@ -246,6 +254,7 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
       lockOrders(orderIdsToLock);
     }
   }, [sortedOrders, orders, selectedIndexes, lockOrders, unlockOrders]);
+
 
   // 清除选择
   const clearSelection = useCallback(() => {
@@ -314,15 +323,35 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
             <span>Selected Orders: {sliderValue}</span>
             <span>Max: {maxSelectableOrders}</span>
           </div>
-          <input
-            type="range"
-            min="1"
-            max={maxSelectableOrders}
-            step="1"
-            value={sliderValue}
-            onChange={(e) => handleSliderChange(Number(e.target.value))}
-            className="w-full"
-          />
+          <div className="flex items-center gap-4">
+            {/* 滑动条 */}
+            <input
+              type="range"
+              min="1"
+              max={maxSelectableOrders}
+              step="1"
+              value={sliderValue}
+              onChange={(e) => handleSliderChange(Number(e.target.value))}
+              className="w-full"
+            />
+            {/* 输入框 */}
+            <Input
+              type="number"
+              min="1"
+              max={maxSelectableOrders}
+              value={sliderValue}
+              
+              onChange={(e) => {
+                const value = Math.min(Math.max(Number(e.target.value), 1), maxSelectableOrders);
+                handleSliderChange(value);
+              }}
+              style={{
+                width: `${Math.max(sliderValue.toString().length, 2)}ch`, // 根据输入长度动态调整宽度
+                minWidth: '8ch', // 设置最小宽度
+              }}
+              className="w-16 h-10 text-center border border-gray-600 rounded-lg"
+            />
+          </div>
         </div>
       )}
       {selectedIndexes.length > 0 && (
