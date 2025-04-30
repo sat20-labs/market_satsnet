@@ -63,7 +63,7 @@ interface TakeOrderProps {
   onSellSuccess?: () => void;
 }
 
-const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo, assetBalance, onSellSuccess }, ref) => {
+const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo, tickerInfo, assetBalance, onSellSuccess }, ref) => {
   const { chain, network } = useCommonStore();
   const { balance, getBalance } = useWalletStore();
   const { address, btcWallet } = useReactWalletStore();
@@ -340,6 +340,7 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
     <>
       <BuySellToggle mode={mode} onChange={setMode} />
       <TakeOrderUI
+        tickerInfo={tickerInfo}
         orders={allOrders}
         totalOrders={totalOrders}
         isLoading={isListLoading}
