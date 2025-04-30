@@ -394,32 +394,36 @@ const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, bal
 
        {/* Repeat 批量滑块 */}
        <div className="mb-4">
-        <label className="block text-sm text-gray-400 mb-1">Repeat :</label>
-        <div className="flex items-center gap-4">          
-          <Slider
-              disabled={!quantity}
-              defaultValue={[1]}
-              max={Math.min(batchQuantityMax, 100)} // 限制最大值为 100
-              min={1}
-              step={1}
-              value={[batchQuantity]}
-              onValueChange={(value) => setBatchQuantity(value[0])}
-            />
-          <Input
-              type="number"
-              min={1}
-              max={Math.min(batchQuantityMax, 100)} // 同步限制输入框的最大值
-              value={batchQuantity}
-              onChange={(e) => {
-                const value = Math.min(Math.max(Number(e.target.value), 1), Math.min(batchQuantityMax, 100));
-                setBatchQuantity(value);
-              }}
-              className="w-16 h-10 text-center"
-              disabled={!quantity}
-            />
-          <span className="text-sm text-gray-400">{batchQuantity}</span>
-        </div>
-      </div>
+  <label className="block text-sm text-gray-400 mb-1">Repeat :</label>
+  <div className="flex items-center gap-4">
+    <Slider
+      disabled={!quantity}
+      defaultValue={[1]}
+      max={Math.min(batchQuantityMax, 1000)} // 限制最大值为 1000
+      min={1}
+      step={1}
+      value={[batchQuantity]}
+      onValueChange={(value) => setBatchQuantity(value[0])}
+    />
+    <Input
+      type="number"
+      min={1}
+      max={Math.min(batchQuantityMax, 1000)}
+      value={batchQuantity}
+      onChange={(e) => {
+        const value = Math.min(Math.max(Number(e.target.value), 1), Math.min(batchQuantityMax, 1000));
+        setBatchQuantity(value);
+      }}
+      className="h-10 text-center"
+      style={{
+        width: `${Math.max(batchQuantity.toString().length, 2)}ch`, // 根据输入长度动态调整宽度
+        minWidth: '10ch', // 设置最小宽度
+      }}
+      disabled={!quantity}
+    />
+    <span className="text-sm text-gray-400">{batchQuantity}</span>
+  </div>
+</div>
 
       <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 min-h-[100px] text-sm">
         <p className="flex justify-between gap-1 text-gray-400">
