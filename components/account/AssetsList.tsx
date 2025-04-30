@@ -25,7 +25,7 @@ export const AssetsList = ({ assets }: AssetListProps) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false); // 控制弹窗显示状态
   const [selectedAsset, setSelectedAsset] = useState<any>(null); // 当前选中的资产
-
+  const [tickerInfo, setTickerInfo] = useState<any>(null); // 当前选中的资产
   const columns = [
     { key: 'name', label: 'Name' },
     { key: 'balance', label: 'Balance' },
@@ -40,6 +40,12 @@ export const AssetsList = ({ assets }: AssetListProps) => {
     const selected = {
       assetName: asset.key,
     };
+    const tickerInfo = {
+      displayname: asset.label,
+    }
+    setTickerInfo(tickerInfo);
+    console.log("tickerInfo", tickerInfo);
+    
     console.log("Selected Asset:", selected); // 调试日志
     setSelectedAsset(selected);
     setIsModalOpen(true);
@@ -98,6 +104,7 @@ export const AssetsList = ({ assets }: AssetListProps) => {
         <SellOrderModal
           assetInfo={selectedAsset}
           open={isModalOpen}
+          tickerInfo={tickerInfo}
           onOpenChange={setIsModalOpen}
         />
       )}

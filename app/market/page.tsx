@@ -1,6 +1,6 @@
 'use client';
 
-import { marketApi } from '@/api';
+import { marketApi, clientApi } from '@/api';
 import { useQuery } from '@tanstack/react-query';
 import type { Key as ReactKey } from 'react';
 import type { Key } from '@react-types/shared';
@@ -130,19 +130,18 @@ function MarketContent() {
   }, [queryData]);
 
   useEffect(() => {
-    if (!list.length || typeof window === 'undefined' || !window.sat20) return;
+    if (!list.length) return;
     let isMounted = true;
     const fetchLabels = async () => {
       const entries = await Promise.all(
         list.map(async (item) => {
           try {
-            const infoRes = await window.sat20.getTickerInfo(item.assets_name);
-            if (infoRes?.ticker) {
-              const result = JSON.parse(infoRes.ticker);
-              return [item.assets_name, result?.displayname || item.assets_name];
-            }
-          } catch {}
-          return [item.assets_name, item.assets_name];
+            const infoRes = await clientApi.getTickerInfo(item.assets_name);
+            const displayName = infoRes?.data?.displayname || infoRes?.data?.Ticker || item.assets_name;
+            return [item.assets_name, displayName];
+          } catch {
+            return [item.assets_name, item.assets_name];
+          }
         })
       );
       if (isMounted) setLabelMap(Object.fromEntries(entries));
