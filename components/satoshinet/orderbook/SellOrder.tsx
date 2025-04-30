@@ -371,24 +371,28 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
         <Slider
             disabled={!quantity}
             defaultValue={[1]}
-            max={Math.min(batchQuantityMax, 100)} // 限制最大值为 100
+            max={Math.min(batchQuantityMax, 1000)} // 限制最大值为 100
             min={1}
             step={1}
             value={[batchQuantity]}
             onValueChange={(value) => setBatchQuantity(value[0])}
           />
           <Input
-            type="number"
-            min={1}
-            max={Math.min(batchQuantityMax, 100)} // 同步限制输入框的最大值
-            value={batchQuantity}
-            onChange={(e) => {
-              const value = Math.min(Math.max(Number(e.target.value), 1), Math.min(batchQuantityMax, 100));
-              setBatchQuantity(value);
-            }}
-            className="w-16 h-10 text-center"
-            disabled={!quantity}
-          />
+                type="number"
+                min={1}
+                max={Math.min(batchQuantityMax, 1000)}
+                value={batchQuantity}
+                onChange={(e) => {
+                  const value = Math.min(Math.max(Number(e.target.value), 1), Math.min(batchQuantityMax, 1000));
+                  setBatchQuantity(value);
+                }}
+                className="h-10 text-center"
+                style={{
+                  width: `${Math.max(batchQuantity.toString().length, 2)}ch`, // 根据输入长度动态调整宽度
+                  minWidth: '10ch', // 设置最小宽度
+                }}
+                disabled={!quantity}
+              />
           <span className="text-sm text-gray-400">{batchQuantity}</span>
         </div>
       </div>
