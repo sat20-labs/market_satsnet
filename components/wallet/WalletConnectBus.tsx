@@ -41,9 +41,7 @@ export const WalletConnectBus = ({
 
     const child = children as React.ReactElement<any>; // Type assertion
 
-    // Clone the child and merge props, ensuring our onClick is added
-    // without necessarily overwriting an existing one (though typically asChild implies the child handles display only).
-    // A more robust merge might check child.props.onClick and call it too if needed.
+    // 替换child的内容为"Connect Wallet"，保持原有props
     return React.cloneElement(child, {
       onClick: (e: React.MouseEvent<any>) => {
         handleConnectClick(e); // Call our connect logic
@@ -51,7 +49,7 @@ export const WalletConnectBus = ({
       },
       // Merge className if provided to the wrapper
       className: className ? `${child.props.className || ''} ${className}`.trim() : child.props.className,
-      // Add other props like 'ref' if necessary, though onClick is the primary focus
+      children: text || t('buttons.connect')
     });
   }
 
