@@ -14,6 +14,7 @@ interface RequestParams {
   page?: number;
   pagesize?: number;
   hex?: string;
+  utxos?: string[];
 }
 
 class ClientApi {
@@ -49,11 +50,13 @@ class ClientApi {
       },
     };
 
-    if (method === 'POST' && params.hex) {
-      options.body = JSON.stringify({ SignedTxHex: params.hex });
+    if (method === 'POST') {
+      if (params && Object.keys(params).length > 0) {
+        options.body = JSON.stringify(params);
+      }
     }
 
-    const response = await fetch(url);
+    const response = await fetch(url, options);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -81,6 +84,9 @@ class ClientApi {
   }
   getUtxoInfo = async (utxo: string): Promise<any> => {
     return this.request(`v3/utxo/info/${utxo}`);
+  }
+  getUtxosInfo = async (utxos: string[]): Promise<any> => {
+    return this.request(`v3/utxos/info`, { utxos }, 'POST');
   }
   /**
    * 获取ticker信息，始终请求btc主链接口（无论当前chain是什么）

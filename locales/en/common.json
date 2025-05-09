@@ -106,5 +106,8 @@
   "unknown": "Unknown",
   "unknown_status": "Unknown Status",
   "event": "Event",
-  "copied_successfully": "Copied Successfully"
+  "copied_successfully": "Copied Successfully",
+  "list_sell": "List Sell",
+  "list_buy": "List Buy",
+  "unlisted": "Unlisted"
 }

@@ -109,5 +109,8 @@
   "total_value": "总价",
   "unknown": "未知",
   "unknown_status": "未知状态",
-  "copied_successfully": "复制成功"
+  "copied_successfully": "复制成功",
+  "list_sell": "挂卖单",
+  "list_buy": "挂买单",
+  "unlisted": "取消挂单"
 }

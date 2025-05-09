@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { Activity, Order, ApiResponse } from './types';
 import { ActivityTable } from './ActivityTable';
 import { CustomPagination } from "@/components/ui/CustomPagination";
+import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
 
 interface ActivityLogProps {
   assets_name: string | null;
@@ -36,26 +37,16 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
   const [apiFilter, setApiFilter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'activities' | 'myActivities'>('activities');
 
-  // Dynamic filter list based on address and translation
-  const filterList = useMemo(() => {
-    const _list = [
-      { label: t('common.filter_all'), value: 0 },
-      { label: t('common.executed'), value: 1 },
-      { label: t('common.delist'), value: 2 },
-      { label: t('common.invalid'), value: 3 },
-      { label: t('common.list'), value: 4 },
-    ];
-    if (address) {
-      const executedIndex = _list.findIndex(item => item.value === 1);
-      if (executedIndex > -1) {
-        _list.splice(executedIndex, 1);
-      }
-      _list.push({ label: t('common.history_sell'), value: 10 });
-      _list.push({ label: t('common.history_buy'), value: 11 });
-    }
-    _list.sort((a, b) => a.value - b.value);
-    return _list;
-  }, [t, address]);
+  // 1. 定义筛选项常量，只保留1,2,3,4,10,11
+  const FILTER_OPTIONS = [
+    { label: t('common.executed'), value: 1 },
+    { label: t('common.delist'), value: 2 },
+    { label: t('common.invalid'), value: 3 },
+    { label: t('common.list'), value: 4 },
+    { label: t('common.history_sell'), value: 10 },
+    { label: t('common.buy'), value: 11 },
+  ];
+  const filterList = useMemo(() => FILTER_OPTIONS, [t]);
 
   // Query for all activities
   const allActivitiesQuery = useQuery<ApiResponse>({
@@ -89,54 +80,33 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
     enabled: !!assets_name && !!address && activeTab === 'myActivities',
   });
 
+  // 2. transformOrders展示时动态判断eventTypeLabel
   const transformOrders = (orders: Order[]): Activity[] => {
     return orders
       .map((order): Activity | null => {
         try {
           const quantity = Number(order.assets.amount);
           let unitPrice = Number(order.assets.unit_price);
-
-          if (isNaN(quantity) || isNaN(unitPrice)) {
-            console.warn(`Skipping order ${order.order_id}: Invalid quantity or price`);
-            return null;
-          }
-
-          // Keep price in original unit (SAT or BTC)
-          let priceInSats: number;
-          priceInSats = unitPrice;
-
+          if (isNaN(quantity) || isNaN(unitPrice)) return null;
+          let priceInSats = unitPrice;
           const totalValue = quantity * priceInSats;
           const timeMs = order.txid ? order.txtime : order.order_time;
           const time = formatDistanceToNowStrict(new Date(timeMs), { addSuffix: true });
-
           let eventTypeLabel = t('common.unknown');
-          let eventTypeStatus = order.result;
-
-          if (address && order.result === 1) {
-            if (order.address === address) {
-              eventTypeStatus = order.order_type === 1 ? 10 : 11;
-            } else if (order.txaddress === address) {
-              eventTypeStatus = order.order_type === 1 ? 11 : 10;
-            } else {
-              eventTypeStatus = 1;
-            }
-          } else if (order.result === undefined || order.result === null) {
-            eventTypeStatus = 4;
-          } else if (order.result === 0) {
-            eventTypeStatus = 4;
-          }
-
-          const foundFilter = filterList.find(f => f.value === eventTypeStatus);
-          if (foundFilter) {
-            eventTypeLabel = foundFilter.label;
+          if (order.result === 4) {
+            eventTypeLabel = order.order_type === 1 ? t('common.list_sell') : t('common.list_buy');
           } else {
-            eventTypeLabel = `${t('common.unknown')} (${eventTypeStatus})`;
+            // 其它状态直接用映射
+            const statusMap = {
+              1: t('common.executed'),
+              2: t('common.delist'),
+              3: t('common.invalid'),
+              4: t('common.list'),
+              10: t('common.history_sell'),
+              11: t('common.buy'),
+            };
+            eventTypeLabel = statusMap[order.result] || t('common.unknown');
           }
-
-          // Extract `from` and `to` addresses
-          const from = order.address;
-          const to = order.txaddress;
-
           return {
             order_id: order.order_id,
             eventTypeLabel,
@@ -145,11 +115,10 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
             totalValue,
             time,
             txid: order.txid || undefined,
-            from, // Add `from`
-            to,   // Add `to`
+            from: order.address,
+            to: order.txaddress,
           };
-        } catch (error) {
-          console.error(`Error transforming order ${order.order_id}:`, order, error);
+        } catch {
           return null;
         }
       })
@@ -240,15 +209,9 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
       {activeTab === 'myActivities' && !address ? (
         <div className="flex flex-col items-center justify-center py-10 gap-4">
           <p className="text-gray-400">{t('common.connect_wallet_to_view')}</p>
-          <Button
-            variant="outline"
-            onClick={() => {
-              // Trigger wallet connect action
-              // This should be implemented based on your wallet connection logic
-            }}
-          >
-            {t('common.connect_wallet')}
-          </Button>
+          <WalletConnectBus>
+            <Button variant="outline">{t('common.connect_wallet')}</Button>
+          </WalletConnectBus>
         </div>
       ) : (
         <>
