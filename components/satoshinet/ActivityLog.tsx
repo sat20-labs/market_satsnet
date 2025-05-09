@@ -44,7 +44,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
     { label: t('common.invalid'), value: 3 },
     { label: t('common.list'), value: 4 },
     { label: t('common.history_sell'), value: 10 },
-    { label: t('common.buy'), value: 11 },
+    { label: t('common.history_buy'), value: 11 },
   ];
   const filterList = useMemo(() => FILTER_OPTIONS, [t]);
 
@@ -103,7 +103,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
               3: t('common.invalid'),
               4: t('common.list'),
               10: t('common.history_sell'),
-              11: t('common.buy'),
+              11: t('common.history_buy'),
             };
             eventTypeLabel = statusMap[order.result] || t('common.unknown');
           }
