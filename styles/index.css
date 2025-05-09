@@ -46,3 +46,29 @@ body {
   opacity: 1;
   transform: scale(1);
 }
+
+.custom-btc-icon {
+  background-color: #fff; /* 品红色背景 */
+  color: #a200ff;
+  border-radius: 50%; /* 圆形背景 */
+  border: #505050 1px solid; /* 边框颜色和宽度 */
+  display: inline-flex; /* 确保图标居中 */
+  align-items: center; /* 垂直居中 */
+  justify-content: center; /* 水平居中 */
+  width: 28px; /* 设置固定宽度 */
+  height: 28px; /* 设置固定高度 */
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.1); /* 添加轻微阴影，减少锯齿感 */
+}
+
+.custom-btc-small-icon {
+  background-color: #fff; /* 品红色背景 */
+  color: #a200ff;
+  border-radius: 50%; /* 圆形背景 */
+  border: #505050 1px solid; /* 边框颜色和宽度 */
+  display: inline-flex; /* 确保图标居中 */
+  align-items: center; /* 垂直居中 */
+  justify-content: center; /* 水平居中 */
+  width: 20px; /* 设置固定宽度 */
+  height: 20px; /* 设置固定高度 */
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.1); /* 添加轻微阴影，减少锯齿感 */
+}

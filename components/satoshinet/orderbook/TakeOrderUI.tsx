@@ -154,56 +154,99 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
   }, [summarySelectedOrders, mode]);
 
   // 锁定订单
-  const lockOrders = useCallback(async (orderIds: number[]) => {
-    if (!address || orderIds.length === 0) return;
-    setIsProcessingLock(true);
-    try {
-      const lockData = await marketApi.lockBulkOrder({ address, orderIds });
-      if (lockData.code === 200 && lockData.data) {
-        const newLockedOrders = new Map(lockedOrders);
-        const failedOrderIndexes: number[] = [];
-        lockData.data.forEach((item: any) => {
-          if (item.raw) {
-            newLockedOrders.set(item.order_id, item.raw);
-          } else {
-            const failedIndex = orders.findIndex((order) => order.order_id === item.order_id);
-            if (failedIndex !== -1) {
-              failedOrderIndexes.push(failedIndex);
+  // const lockOrders = useCallback(async (orderIds: number[]) => {
+  //   if (!address || orderIds.length === 0) return;
+  //   setIsProcessingLock(true);
+  //   try {
+  //     const lockData = await marketApi.lockBulkOrder({ address, orderIds });
+  //     if (lockData.code === 200 && lockData.data) {
+  //       const newLockedOrders = new Map(lockedOrders);
+  //       const failedOrderIndexes: number[] = [];
+  //       lockData.data.forEach((item: any) => {
+  //         if (item.raw) {
+  //           newLockedOrders.set(item.order_id, item.raw);
+  //         } else {
+  //           const failedIndex = orders.findIndex((order) => order.order_id === item.order_id);
+  //           if (failedIndex !== -1) {
+  //             failedOrderIndexes.push(failedIndex);
+  //           }
+  //         }
+  //       });
+  //       setLockedOrders(newLockedOrders);
+  //       if (failedOrderIndexes.length > 0) {
+  //         setSelectedIndexes((prev) => prev.filter((index) => !failedOrderIndexes.includes(index)));
+  //         toast.error("Some orders are already locked by others");
+  //       }
+  //     } else {
+  //       toast.error(lockData.msg || "Failed to lock orders");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Failed to lock orders");
+  //   } finally {
+  //     setIsProcessingLock(false);
+  //   }
+  // }, [address, orders, lockedOrders]);
+  const lockOrders = useCallback(
+    async (orderIds: number[]) => {
+      if (!address || orderIds.length === 0) return;
+      try {
+        const lockData = await marketApi.lockBulkOrder({ address, orderIds });
+        if (lockData.code === 200 && lockData.data) {
+          const newLockedOrders = new Map(lockedOrders);
+          lockData.data.forEach((item: any) => {
+            if (item.raw) {
+              newLockedOrders.set(item.order_id, item.raw);
             }
-          }
-        });
-        setLockedOrders(newLockedOrders);
-        if (failedOrderIndexes.length > 0) {
-          setSelectedIndexes((prev) => prev.filter((index) => !failedOrderIndexes.includes(index)));
-          toast.error("Some orders are already locked by others");
+          });
+          setLockedOrders(newLockedOrders);
+        } else {
+          toast.error(lockData.msg || "Failed to lock orders");
         }
-      } else {
-        toast.error(lockData.msg || "Failed to lock orders");
+      } catch (error) {
+        toast.error("Failed to lock orders");
       }
-    } catch (error) {
-      toast.error("Failed to lock orders");
-    } finally {
-      setIsProcessingLock(false);
-    }
-  }, [address, orders, lockedOrders]);
+    },
+    [address, lockedOrders]
+  );
 
   // 解锁订单
-  const unlockOrders = useCallback(async (orderIds: number[]) => {
-    if (!address || orderIds.length === 0) return;
-    try {
-      setLockedOrders((prev) => {
-        const newLockedOrders = new Map(prev);
-        orderIds.forEach((id) => newLockedOrders.delete(id));
-        return newLockedOrders;
-      });
-      const unlockResult = await marketApi.unlockBulkOrder({ address, orderIds });
-      if (unlockResult.code !== 200) {
-        toast.error(unlockResult.msg || "Failed to unlock orders");
+  // const unlockOrders = useCallback(
+  //   async (orderIds: number[]) => {
+  //   if (!address || orderIds.length === 0) return;
+  //   try {
+  //     setLockedOrders((prev) => {
+  //       const newLockedOrders = new Map(prev);
+  //       orderIds.forEach((id) => newLockedOrders.delete(id));
+  //       return newLockedOrders;
+  //     });
+  //     const unlockResult = await marketApi.unlockBulkOrder({ address, orderIds });
+  //     if (unlockResult.code !== 200) {
+  //       toast.error(unlockResult.msg || "Failed to unlock orders");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Failed to unlock orders");
+  //   }
+  // }, [address]);
+  const unlockOrders = useCallback(
+    async (orderIds: number[]) => {
+      if (!address || orderIds.length === 0) return;
+      try {
+        const unlockResult = await marketApi.unlockBulkOrder({ address, orderIds });
+        if (unlockResult.code !== 200) {
+          toast.error(unlockResult.msg || "Failed to unlock orders");
+        } else {
+          setLockedOrders((prev) => {
+            const newLockedOrders = new Map(prev);
+            orderIds.forEach((id) => newLockedOrders.delete(id));
+            return newLockedOrders;
+          });
+        }
+      } catch (error) {
+        toast.error("Failed to unlock orders");
       }
-    } catch (error) {
-      toast.error("Failed to unlock orders");
-    }
-  }, [address]);
+    },
+    [address]
+  );
 
   // 订单点击
   const handleOrderClick = useCallback((index: number) => {
@@ -230,32 +273,70 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
   }, [orders, lockedOrders, address, lockOrders, unlockOrders]);
 
   // // 滑块选择
-  const handleSliderChange = useCallback((newValue: number) => {
-    setSliderValue(newValue);
-    const ordersToSelect = sortedOrders.slice(0, newValue);
-    const newSelectedIndexes = ordersToSelect
-      .map(order => orders.findIndex(o => o.order_id === order.order_id))
-      .filter(index => index !== -1)
-      .sort((a, b) => a - b);
-    // 计算需要锁定和解锁的订单
-    const currentOrderIds = new Set(selectedIndexes.map(idx => orders[idx]?.order_id));
-    const newOrderIds = new Set(newSelectedIndexes.map(idx => orders[idx]?.order_id));
-    const orderIdsToLock = newSelectedIndexes
-      .map(idx => orders[idx]?.order_id)
-      .filter(id => id && !currentOrderIds.has(id));
-    const orderIdsToUnlock = selectedIndexes
-      .map(idx => orders[idx]?.order_id)
-      .filter(id => id && !newOrderIds.has(id));
-    setSelectedIndexes(newSelectedIndexes);
-    if (orderIdsToUnlock.length > 0) {
-      unlockOrders(orderIdsToUnlock);
-    }
-    if (orderIdsToLock.length > 0) {
-      lockOrders(orderIdsToLock);
-    }
-  }, [sortedOrders, orders, selectedIndexes, lockOrders, unlockOrders]);
+  // const handleSliderChange = useCallback((newValue: number) => {
+  //   setSliderValue(newValue);
+  //   const ordersToSelect = sortedOrders.slice(0, newValue);
+  //   const newSelectedIndexes = ordersToSelect
+  //     .map(order => orders.findIndex(o => o.order_id === order.order_id))
+  //     .filter(index => index !== -1)
+  //     .sort((a, b) => a - b);
+  //   // 计算需要锁定和解锁的订单
+  //   const currentOrderIds = new Set(selectedIndexes.map(idx => orders[idx]?.order_id));
+  //   const newOrderIds = new Set(newSelectedIndexes.map(idx => orders[idx]?.order_id));
+  //   const orderIdsToLock = newSelectedIndexes
+  //     .map(idx => orders[idx]?.order_id)
+  //     .filter(id => id && !currentOrderIds.has(id));
+  //   const orderIdsToUnlock = selectedIndexes
+  //     .map(idx => orders[idx]?.order_id)
+  //     .filter(id => id && !newOrderIds.has(id));
+  //   setSelectedIndexes(newSelectedIndexes);
+  //   if (orderIdsToUnlock.length > 0) {
+  //     unlockOrders(orderIdsToUnlock);
+  //   }
+  //   if (orderIdsToLock.length > 0) {
+  //     lockOrders(orderIdsToLock);
+  //   }
+  // }, [sortedOrders, orders, selectedIndexes, lockOrders, unlockOrders]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
+  const handleSliderChange = useCallback(
+    async (newValue: number) => {
+      if (isProcessing) return; // 如果正在处理锁定或解锁操作，直接返回
 
+      setSliderValue(newValue);
+      const ordersToSelect = sortedOrders.slice(0, newValue);
+      const newSelectedIndexes = ordersToSelect
+        .map((order) => orders.findIndex((o) => o.order_id === order.order_id))
+        .filter((index) => index !== -1)
+        .sort((a, b) => a - b);
+
+      // 计算需要锁定和解锁的订单
+      const currentOrderIds = new Set(selectedIndexes.map((idx) => orders[idx]?.order_id));
+      const newOrderIds = new Set(newSelectedIndexes.map((idx) => orders[idx]?.order_id));
+      const orderIdsToLock = newSelectedIndexes
+        .map((idx) => orders[idx]?.order_id)
+        .filter((id) => id && !currentOrderIds.has(id));
+      const orderIdsToUnlock = selectedIndexes
+        .map((idx) => orders[idx]?.order_id)
+        .filter((id) => id && !newOrderIds.has(id));
+
+      setIsProcessing(true); // 设置为处理中
+      try {
+        if (orderIdsToUnlock.length > 0) {
+          await unlockOrders(orderIdsToUnlock);
+        }
+        if (orderIdsToLock.length > 0) {
+          await lockOrders(orderIdsToLock);
+        }
+        setSelectedIndexes(newSelectedIndexes);
+      } catch (error) {
+        console.error("Error during lock/unlock:", error);
+      } finally {
+        setIsProcessing(false); // 操作完成后解除锁定状态
+      }
+    },
+    [sortedOrders, orders, selectedIndexes, lockOrders, unlockOrders, isProcessing]
+  );
   // 清除选择
   const clearSelection = useCallback(() => {
     setSelectedIndexes([]);

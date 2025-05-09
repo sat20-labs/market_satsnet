@@ -323,13 +323,13 @@ const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, bal
             className="w-12 h-12 rounded-full object-cover"
           />
         ) : (
-          <Avatar className="w-12 h-12 flex-shrink-0">
-            <AvatarFallback className="text-xl text-gray-300 font-black bg-zinc-800">
-              {typeof ticker === 'string'
-                ? ticker.slice(0, 1).toUpperCase()
-                : '?'}
-            </AvatarFallback>
-          </Avatar>
+         <Avatar className="w-12 h-12 flex-shrink-0">
+          <AvatarFallback className="text-xl text-gray-300 font-black bg-zinc-800">
+            {typeof tickerInfo?.displayname === 'string'
+              ? tickerInfo?.displayname.slice(0, 1).toUpperCase()
+              : '?'}
+          </AvatarFallback>
+        </Avatar>
         )}
         <div className="leading-relaxed min-w-0">
           <p className="text-sm sm:text-base text-zinc-200 font-medium break-all">
