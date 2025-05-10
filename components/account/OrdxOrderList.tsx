@@ -103,6 +103,7 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
       const res = await marketApi.cancelOrder({ address: storeAddress || address, order_id: item.order_id });
       if (res.code === 200) {
         toast.success('Cancel order successfully!');
+        await window.sat20.unlockUtxo_SatsNet(address, item.utxo);
         refetch();
       } else {
         toast.error('Cancel order failed');
@@ -189,12 +190,12 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
                     {/* Total BTC / USD */}
                     <td className="font-mono px-4 py-2 text-right">
                       <div className="text-lg text-gray-400">
-                        <span className="font-bold">{asset?.price?.toLocaleString() || 0}</span>
+                        <span className="font-bold">{order?.price?.toLocaleString() || 0}</span>
                         <span className="pl-1 text-zinc-400">sats</span>
                       </div>
-                      <div className="text-zinc-400">
+                      {/* <div className="text-zinc-400">
                         $<BtcPrice btc={asset?.price / 100000000} />
-                      </div>
+                      </div> */}
                     </td>
 
                     {/* Time */}
