@@ -20,6 +20,7 @@ import { Activity, Order, ApiResponse } from './types';
 import { ActivityTable } from './ActivityTable';
 import { CustomPagination } from "@/components/ui/CustomPagination";
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
+import { FilterSelect } from './FilterSelect';
 
 interface MyActivitiesLogProps {
   assets_name?: string | null;
@@ -38,12 +39,13 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
 
   // 1. 定义筛选项常量，只保留1,2,3,4,10,11
   const FILTER_OPTIONS = [
+    { label: t('common.all'), value: 0 },
     { label: t('common.executed'), value: 1 },
     { label: t('common.delist'), value: 2 },
     { label: t('common.invalid'), value: 3 },
     { label: t('common.list'), value: 4 },
     { label: t('common.history_sell'), value: 10 },
-    { label: t('common.buy'), value: 11 },
+    { label: t('common.history_buy'), value: 11 },
   ];
   const filterList = useMemo(() => FILTER_OPTIONS, [t]);
 
@@ -89,7 +91,7 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
               3: t('common.invalid'),
               4: t('common.list'),
               10: t('common.history_sell'),
-              11: t('common.buy'),
+              11: t('common.history_buy'),
             };
             eventTypeLabel = statusMap[order.result] || t('common.unknown');
           }
@@ -131,51 +133,28 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
     setPage(1);
   };
 
-  if (!address) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 gap-4">
-        <p className="text-gray-400">{t('common.connect_wallet_to_view')}</p>
-        <WalletConnectBus>
-          <Button variant="outline">{t('common.connect_wallet')}</Button>
-        </WalletConnectBus>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-zinc-900/90 sm:p-6 rounded-lg text-zinc-200 w-full">
-      <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 items-center justify-end mb-4">
-        <Select
-          value={String(apiFilter)}
-          onValueChange={(value) => setApiFilter(Number(value))}
-        >
-          <SelectTrigger className="w-[150px] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm">
-            <SelectValue placeholder={t('common.filter_placeholder')} />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-gray-300">
-            {filterList.map((filter) => (
-              <SelectItem
-                key={filter.value}
-                value={String(filter.value)}
-                className="text-xs sm:text-sm"
-              >
-                {filter.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-gray-400 hover:text-white transition-colors h-8 w-8"
-          aria-label={t('common.refresh')}
-          onClick={handleRefresh}
-        >
-          <Icon icon="mdi:refresh" className="h-5 w-5" />
-        </Button>
+      <div className="flex justify-end flex-col sm:flex-row items-start sm:items-center gap-2 px-1 sm:gap-4 mb-4 mt-4">
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 items-center">
+          <FilterSelect
+            value={apiFilter}
+            options={filterList}
+            onChange={(val) => setApiFilter(Number(val))}
+            placeholder={t('common.filter_placeholder')}
+            className="w-[150px] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-400 hover:text-white transition-colors h-8 w-8"
+            aria-label={t('common.refresh')}
+            onClick={handleRefresh}
+          >
+            <Icon icon="mdi:refresh" className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
-
       <div className="mt-4">
         <ActivityTable
           activities={activities}
@@ -183,7 +162,6 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
           error={myActivitiesQuery.error as Error}
         />
       </div>
-
       {totalCount > 0 && (
         <CustomPagination
           currentPage={page}

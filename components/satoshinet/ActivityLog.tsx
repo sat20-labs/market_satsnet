@@ -20,6 +20,9 @@ import { Activity, Order, ApiResponse } from './types';
 import { ActivityTable } from './ActivityTable';
 import { CustomPagination } from "@/components/ui/CustomPagination";
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
+import { ActivityTabs } from './ActivityTabs';
+import { FilterSelect } from './FilterSelect';
+import { ActivityContent } from './ActivityContent';
 
 interface ActivityLogProps {
   assets_name: string | null;
@@ -39,6 +42,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
 
   // 1. 定义筛选项常量，只保留1,2,3,4,10,11
   const FILTER_OPTIONS = [
+    { label: t('common.all'), value: 0 },
     { label: t('common.executed'), value: 1 },
     { label: t('common.delist'), value: 2 },
     { label: t('common.invalid'), value: 3 },
@@ -47,6 +51,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
     { label: t('common.history_buy'), value: 11 },
   ];
   const filterList = useMemo(() => FILTER_OPTIONS, [t]);
+  console.log('filterList', filterList);
 
   // Query for all activities
   const allActivitiesQuery = useQuery<ApiResponse>({
@@ -149,51 +154,15 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
   return (
     <div className="bg-zinc-900/90 sm:p-6 rounded-lg text-zinc-200 w-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1 sm:gap-4 mb-4 mt-4">
-        <div className="flex gap-1 w-full sm:w-auto">
-          <Button
-            variant="ghost"
-            className={`text-sm sm:text-base font-medium h-auto px-3 py-1.5 ${activeTab === 'activities'
-                ? 'text-blue-500 border-b-2 border-blue-500 rounded-none'
-                : 'text-gray-400 border-b-2 border-transparent rounded-none'
-              }`}
-            onClick={() => setActiveTab('activities')}
-          >
-            {t('common.activity')}
-          </Button>
-          <Button
-            variant="ghost"
-            className={`text-sm sm:text-base font-medium h-auto px-3 py-1.5 ${activeTab === 'myActivities'
-                ? 'text-blue-500 border-b-2 border-blue-500 rounded-none'
-                : 'text-gray-400 border-b-2 border-transparent rounded-none'
-              }`}
-            onClick={() => setActiveTab('myActivities')}
-            disabled={!address}
-          >
-            {t('common.my_activities')}
-          </Button>
-        </div>
-
+        <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 items-center">
-          <Select
-            value={String(apiFilter)}
-            onValueChange={(value) => setApiFilter(Number(value))}
-          >
-            <SelectTrigger className="w-[150px] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm">
-              <SelectValue placeholder={t('common.filter_placeholder')} />
-            </SelectTrigger>
-            <SelectContent className="bg-zinc-800 border-zinc-700 text-gray-300">
-              {filterList.map((filter) => (
-                <SelectItem
-                  key={filter.value}
-                  value={String(filter.value)}
-                  className="text-xs sm:text-sm"
-                >
-                  {filter.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
+          <FilterSelect
+            value={apiFilter}
+            options={filterList}
+            onChange={(val) => setApiFilter(Number(val))}
+            placeholder={t('common.filter_placeholder')}
+            className="w-[150px] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm"
+          />
           <Button
             variant="ghost"
             size="icon"
@@ -205,7 +174,6 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
           </Button>
         </div>
       </div>
-
       {activeTab === 'myActivities' && !address ? (
         <div className="flex flex-col items-center justify-center py-10 gap-4">
           <p className="text-gray-400">{t('common.connect_wallet_to_view')}</p>
@@ -214,27 +182,17 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
           </WalletConnectBus>
         </div>
       ) : (
-        <>
-          <div className="mt-4">
-            <ActivityTable
-              activities={activities}
-              isLoading={currentQuery.isLoading}
-              error={currentQuery.error as Error}
-            />
-          </div>
-
-          {totalCount > 0 && (
-              <CustomPagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  onPageChange={setPage}
-                  pageSize={pageSize}
-                  onPageSizeChange={handlePageSizeChange}
-                  availablePageSizes={PAGE_SIZES}
-                  isLoading={currentQuery.isLoading}
-              />
-          )}
-        </>
+        <ActivityContent
+          activities={activities}
+          isLoading={currentQuery.isLoading}
+          error={currentQuery.error as Error}
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
+          availablePageSizes={PAGE_SIZES}
+        />
       )}
     </div>
   );
