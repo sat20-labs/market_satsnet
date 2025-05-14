@@ -49,6 +49,10 @@ export const Header = () => {
         href: '/market',
       },
       {
+        label: t('pages.launchpool.title'), // 新增 LaunchPool 菜单
+        href: '/launchpool',
+      },
+      {
         label: t('pages.explorer.title'),
         href: network === 'testnet' ? 'https://testnet.sat20.org/browser/app/' : 'https://mainnet.sat20.org/browser/app/',
         target: '_blank',
