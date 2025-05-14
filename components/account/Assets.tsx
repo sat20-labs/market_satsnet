@@ -10,6 +10,7 @@ export const Assets = () => {
   const [protocol, setProtocol] = useState<string>('ordx');   
   const { assets } = useAssetStore();
   console.log('assets', assets);
+  console.log('assets', protocol);
   const onProtocolChange = (t: string) => {
     console.log('onProtocolChange', t);
     
@@ -24,7 +25,7 @@ export const Assets = () => {
       <div className="mb-4">
         <OrdxProtocolTab onChange={onProtocolChange} />
       </div>
-      {!!protocol && currentAssets?.length&& (
+      {!!protocol && !!currentAssets?.length && (
 
         <AssetsList
           assets={currentAssets}

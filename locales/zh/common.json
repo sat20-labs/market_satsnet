@@ -39,6 +39,7 @@
   "holder_count": "持有人",
   "lowest_price": "地板价",
   "close": "关闭",
+  "all": "全部",
   "executed": "成交",
   "delist": "下架",
   "invalid": "无效",
@@ -109,5 +110,8 @@
   "total_value": "总价",
   "unknown": "未知",
   "unknown_status": "未知状态",
-  "copied_successfully": "复制成功"
+  "copied_successfully": "复制成功",
+  "list_sell": "挂卖单",
+  "list_buy": "挂买单",
+  "unlisted": "取消挂单"
 }

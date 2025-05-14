@@ -19,6 +19,8 @@ import { useTranslation } from 'react-i18next';
 import { Activity, Order, ApiResponse } from './types';
 import { ActivityTable } from './ActivityTable';
 import { CustomPagination } from "@/components/ui/CustomPagination";
+import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
+import { FilterSelect } from './FilterSelect';
 
 interface MyActivitiesLogProps {
   assets_name?: string | null;
@@ -35,19 +37,17 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
   const [sort, setSort] = useState(1);
   const [apiFilter, setApiFilter] = useState<number>(0);
 
-  // Filter list for personal activities
-  const filterList = useMemo(() => {
-    const _list = [
-      { label: t('common.filter_all'), value: 0 },
-      { label: t('common.delist'), value: 2 },
-      { label: t('common.invalid'), value: 3 },
-      { label: t('common.list'), value: 4 },
-      { label: t('common.history_sell'), value: 10 },
-      { label: t('common.history_buy'), value: 11 },
-    ];
-    _list.sort((a, b) => a.value - b.value);
-    return _list;
-  }, [t]);
+  // 1. 定义筛选项常量，只保留1,2,3,4,10,11
+  const FILTER_OPTIONS = [
+    { label: t('common.all'), value: 0 },
+    { label: t('common.executed'), value: 1 },
+    { label: t('common.delist'), value: 2 },
+    { label: t('common.invalid'), value: 3 },
+    { label: t('common.list'), value: 4 },
+    { label: t('common.history_sell'), value: 10 },
+    { label: t('common.history_buy'), value: 11 },
+  ];
+  const filterList = useMemo(() => FILTER_OPTIONS, [t]);
 
   // Query for my activities
   const myActivitiesQuery = useQuery<ApiResponse>({
@@ -73,37 +73,28 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
         try {
           const quantity = Number(order.assets.amount);
           let unitPrice = Number(order.assets.unit_price);
-
-          if (isNaN(quantity) || isNaN(unitPrice)) {
-            console.warn(`Skipping order ${order.order_id}: Invalid quantity or price`);
-            return null;
-          }
-
+          if (isNaN(quantity) || isNaN(unitPrice)) return null;
           let priceInSats = unitPrice;
           const totalValue = quantity * priceInSats;
           const timeMs = order.txid ? order.txtime : order.order_time;
           const time = formatDistanceToNowStrict(new Date(timeMs), { addSuffix: true });
-
-          let eventTypeLabel = t('common.unknown');
           let eventTypeStatus = order.result;
-
-          if (order.result === 1) {
-            if (order.address === address) {
-              eventTypeStatus = order.order_type === 1 ? 10 : 11;
-            } else if (order.txaddress === address) {
-              eventTypeStatus = order.order_type === 1 ? 11 : 10;
-            }
-          } else if (order.result === undefined || order.result === null || order.result === 0) {
-            eventTypeStatus = 4;
-          }
-
-          const foundFilter = filterList.find(f => f.value === eventTypeStatus);
-          if (foundFilter) {
-            eventTypeLabel = foundFilter.label;
+          // 只在result为4时区分挂买单/挂卖单
+          let eventTypeLabel = t('common.unknown');
+          if (order.result === 4) {
+            eventTypeLabel = order.order_type === 1 ? t('common.list_sell') : t('common.list_buy');
           } else {
-            eventTypeLabel = `${t('common.unknown')} (${eventTypeStatus})`;
+            // 其它状态直接用映射
+            const statusMap = {
+              1: t('common.executed'),
+              2: t('common.delist'),
+              3: t('common.invalid'),
+              4: t('common.list'),
+              10: t('common.history_sell'),
+              11: t('common.history_buy'),
+            };
+            eventTypeLabel = statusMap[order.result] || t('common.unknown');
           }
-
           return {
             order_id: order.order_id,
             eventTypeLabel,
@@ -112,11 +103,10 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
             totalValue,
             time,
             txid: order.txid || undefined,
-            from: order.address , // Add from address
-            to: order.txaddress , // Add to address
+            from: order.address,
+            to: order.txaddress,
           };
-        } catch (error) {
-          console.error(`Error transforming order ${order.order_id}:`, order, error);
+        } catch {
           return null;
         }
       })
@@ -143,51 +133,28 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
     setPage(1);
   };
 
-  if (!address) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 gap-4">
-        <p className="text-gray-400">{t('common.connect_wallet_to_view')}</p>
-        <Button variant="outline">
-          {t('common.connect_wallet')}
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-zinc-900/90 sm:p-6 rounded-lg text-zinc-200 w-full">
-      <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 items-center justify-end mb-4">
-        <Select
-          value={String(apiFilter)}
-          onValueChange={(value) => setApiFilter(Number(value))}
-        >
-          <SelectTrigger className="w-[150px] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm">
-            <SelectValue placeholder={t('common.filter_placeholder')} />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-gray-300">
-            {filterList.map((filter) => (
-              <SelectItem
-                key={filter.value}
-                value={String(filter.value)}
-                className="text-xs sm:text-sm"
-              >
-                {filter.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-gray-400 hover:text-white transition-colors h-8 w-8"
-          aria-label={t('common.refresh')}
-          onClick={handleRefresh}
-        >
-          <Icon icon="mdi:refresh" className="h-5 w-5" />
-        </Button>
+      <div className="flex justify-end flex-col sm:flex-row items-start sm:items-center gap-2 px-1 sm:gap-4 mb-4 mt-4">
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 items-center">
+          <FilterSelect
+            value={apiFilter}
+            options={filterList}
+            onChange={(val) => setApiFilter(Number(val))}
+            placeholder={t('common.filter_placeholder')}
+            className="w-[150px] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-400 hover:text-white transition-colors h-8 w-8"
+            aria-label={t('common.refresh')}
+            onClick={handleRefresh}
+          >
+            <Icon icon="mdi:refresh" className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
-
       <div className="mt-4">
         <ActivityTable
           activities={activities}
@@ -195,7 +162,6 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
           error={myActivitiesQuery.error as Error}
         />
       </div>
-
       {totalCount > 0 && (
         <CustomPagination
           currentPage={page}

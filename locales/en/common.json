@@ -34,11 +34,12 @@
   "holder_count": "Holders",
   "lowest_price": "Floor Price",
   "close": "Close",
-  "executed": "Sale",
+  "executed": "Executed",
   "delist": "Unlist",
   "invalid": "invalid",
   "list": "List",
   "sell": "sell",
+  "all": "All",
   "sell_unit_price": "Unit Price",
   "history_sell": "Sell",
   "history_buy": "Buy",
@@ -106,5 +107,8 @@
   "unknown": "Unknown",
   "unknown_status": "Unknown Status",
   "event": "Event",
-  "copied_successfully": "Copied Successfully"
+  "copied_successfully": "Copied Successfully",
+  "list_sell": "List Sell",
+  "list_buy": "List Buy",
+  "unlisted": "Unlisted"
 }

@@ -91,28 +91,33 @@ const prepareSellData = async (assetName: string, quantity: number, price: numbe
   }
   const txid = splitRes.txId;
 
-  const sellUtxoInfos: SellUtxoInfo[] = []
-  const utxos: string[] = []
+  // 1. 生成所有utxo字符串
+  const utxos: string[] = [];
   for (let i = 0; i < batchQuantity; i++) {
     const vout = i;
     const utxo = `${txid}:${vout}`;
     console.log(`Asset split successful. UTXO created: ${utxo}`);
     utxos.push(utxo);
-    console.log(`Attempting to fetch UTXO info for ${utxo}...`);
-    const utxoData: any = await retryAsyncOperation(
-      clientApi.getUtxoInfo,
-      [utxo],
-      { delayMs: 2000, maxAttempts: 15 }
-    );
-
-    if (!utxoData) {
-      throw new Error(`Failed to fetch UTXO info for ${utxo} after multiple attempts.`);
-    }
-    sellUtxoInfos.push({
-      ...utxoData,
-      Price: Number(price) * Number(quantity),
-    })
   }
+
+  // 2. 批量获取所有utxo信息
+  console.log(`Attempting to fetch UTXO info for all:`, utxos);
+  const utxoDataArr: any = await retryAsyncOperation(
+    clientApi.getUtxosInfo,
+    [utxos],
+    { delayMs: 2000, maxAttempts: 15 }
+  );
+
+  if (!utxoDataArr || !Array.isArray(utxoDataArr) || utxoDataArr.length !== utxos.length) {
+    throw new Error(`Failed to fetch all UTXO info after multiple attempts.`);
+  }
+
+  // 3. 组装sellUtxoInfos
+  const sellUtxoInfos: SellUtxoInfo[] = utxoDataArr.map((utxoData: any) => ({
+    ...utxoData,
+    Price: Number(price) * Number(quantity),
+  }));
+
   console.log('Successfully fetched UTXO info:', sellUtxoInfos);
   return [sellUtxoInfos, utxos];
 };
