@@ -7,7 +7,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/u
 import { Modal } from '@/components/ui/modal'; 
 import { useTranslation } from 'react-i18next';
 
-const CreatePool = () => {
+const CreatePool = ({ closeModal}: { closeModal: () => void }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -46,6 +46,12 @@ const CreatePool = () => {
       <div className="sticky top-0 bg-gray-900/50 border border-zinc-600 z-10 p-4  rounded-lg shadow-lg">
         <h2 className="text-xl font-bold mb-2">{t('Create LaunchPool')}</h2>
         <p className="text-zinc-400">{t('Create a new launch pool for your asset. Please fill in the details below')}</p>
+        <button
+          className="absolute top-4 right-6 text-zinc-400 hover:text-white"
+          onClick={closeModal}
+        >
+          ✕
+        </button>
       </div>
 
       <hr className="mb-6 h-1" />
