@@ -39,7 +39,7 @@ const WalletConnectButton = () => {
     btcWallet,
   } = useReactWalletStore((state) => state);
   const { getBalance, balance } = useWalletStore();
-  const { loadSummaryData } = useAssetStore();
+  const { refreshAssets } = useAssetStore();
   const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
   const queryClient = useQueryClient();
@@ -48,11 +48,14 @@ const WalletConnectButton = () => {
     return utxoList.reduce((acc, cur) => acc + cur.value, 0);
   }, [utxoList]);
   useEffect(() => {
+    console.log('address', address);
+    console.log('connected', connected);
     if (address && connected) {
-      loadSummaryData();
+      refreshAssets();
     }
   }, [address, connected]);
   const initCheck = async () => {
+    console.log('initCheck');
     await check();
   };
 
@@ -96,12 +99,13 @@ const WalletConnectButton = () => {
   const accountAndNetworkChange = async () => {
     console.log('accountAndNetworkChange');
     console.log('connected', connected);
+    console.log('btcWallet', btcWallet);
     queryClient.invalidateQueries({ queryKey: ['utxos'] });
 
     const windowState =
       document.visibilityState === 'visible' || !document.hidden;
     try {
-      await check();
+      await initCheck();
       if (process.env.NEXT_PUBLIC_SIGNATURE_TEXT && connected) {
         try {
           console.log('checkSignature');

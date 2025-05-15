@@ -175,7 +175,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
       // console.log('loadSummaryData', address); // Keep or remove logging as needed
       const { address } = useReactWalletStore.getState(); // Get fresh address inside the action
       const state = get();
-
+      console.log('loadSummaryData', address);
       try {
         if (!address) {
           console.warn('loadSummaryData: No address found.');
@@ -184,6 +184,8 @@ export const useAssetStore = create<AssetState>((set, get) => {
         state.setIsSummaryLoading(true);
         const result = await clientApi.getAddressSummary(address);
         // Update summary data regardless of processing result.data
+        console.log('result', result);
+        
         state.setSummaryData(result);
 
         if (result?.data) {
