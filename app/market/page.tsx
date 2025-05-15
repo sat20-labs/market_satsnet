@@ -55,7 +55,7 @@ function Loading() {
 }
 
 function MarketContent() {
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation(); // 确保翻译内容已加载
   const router = useRouter();
   const params = useSearchParams();
   const { chain, network } = useCommonStore();
@@ -240,6 +240,15 @@ function MarketContent() {
     ],
     [t, type],
   );
+
+  if (!ready) {
+    // 如果翻译内容尚未加载，显示加载状态
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (error) {
     console.error('Error fetching assets:', error);
@@ -484,7 +493,7 @@ function MarketContent() {
 
 export default function MarketPage() {
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
       <MarketContent />
     </Suspense>
   );

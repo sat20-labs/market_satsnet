@@ -9,6 +9,9 @@
   "market": {
     "title": "市场"
   },
+  "launchpool": {
+    "title": "发射池"
+  },
   "tools": {
     "title": "工具箱",
     "transaction": {

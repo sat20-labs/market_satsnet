@@ -38,7 +38,7 @@ export const UpdateVersionModal = () => {
     }
   }, [appVersion]); // Depend on appVersion data
 
-  const timer = useRef<any>();
+  const timer = useRef<any>(null);
 
   const refresh = () => {
     setOpen(false);

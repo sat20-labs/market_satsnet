@@ -9,6 +9,9 @@
   "market": {
     "title": "MarketPlace"
   },
+  "launchpool": {
+    "title": "LaunchPool"
+  },
   "tools": {
     "title": "Toolbox",
     "transaction": {

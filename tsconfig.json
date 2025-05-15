@@ -39,7 +39,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "out/types/**/*.ts"
-  ],
+, "components/launchpool/JoinPool.0000tsx"  ],
   "exclude": [
     "node_modules"
   ]
