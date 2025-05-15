@@ -1,26 +1,26 @@
-// 状态定义
+// Status definitions
 export enum PoolStatus {
-  NOT_STARTED = "not_started", // 未开始
-  ACTIVE = "active",           // 发布中
-  FULL = "full",               // 池子已满
-  DISTRIBUTING = "distributing", // 分发中
-  COMPLETED = "completed",     // 已完成
-  EXPIRED = "expired",         // 已过期
-  EXPIRED_UNFILLED = "expired_unfilled", // 新增：过期未满状态
+  NOT_STARTED = "not_started", // Not started
+  ACTIVE = "active",           // Active
+  FULL = "full",               // Full
+  DISTRIBUTING = "distributing", // Distributing
+  COMPLETED = "completed",     // Completed
+  EXPIRED = "expired",         // Expired
+  EXPIRED_UNFILLED = "expired_unfilled", // Expired but not filled
 }
 
-// 状态文本映射
+// Status text mapping
 export const statusTextMap: Record<string, string> = {
-  [PoolStatus.NOT_STARTED]: "未开始",
-  [PoolStatus.ACTIVE]: "发布中",
-  [PoolStatus.FULL]: "池子已满",
-  [PoolStatus.DISTRIBUTING]: "分发中",
-  [PoolStatus.COMPLETED]: "已完成",
-  [PoolStatus.EXPIRED]: "已过期",
-  [PoolStatus.EXPIRED_UNFILLED]: "过期未满",
+  [PoolStatus.NOT_STARTED]: "Not Started",
+  [PoolStatus.ACTIVE]: "Active",
+  [PoolStatus.FULL]: "Full",
+  [PoolStatus.DISTRIBUTING]: "Distributing",
+  [PoolStatus.COMPLETED]: "Completed",
+  [PoolStatus.EXPIRED]: "Expired",
+  [PoolStatus.EXPIRED_UNFILLED]: "Expired (Unfilled)",
 };
 
-// 状态颜色映射
+// Status color mapping
 export const statusColorMap: Record<string, string> = {
   [PoolStatus.NOT_STARTED]: "bg-gray-500",
   [PoolStatus.ACTIVE]: "bg-green-500",

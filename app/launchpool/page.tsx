@@ -24,7 +24,8 @@ import { Suspense } from 'react';
 
 import { SortDropdown } from '@/components/SortDropdown';
 import { useTranslation } from 'react-i18next';
-import DistributionList from '@/components/launchpool/DistributionList'; // 引入新组件
+import DistributionList from '@/components/launchpool/DistributionList';
+import ActionButtons from '@/components/launchpool/ActionButtons';
 
 const protocol = 'default';
 const interval = 1;
@@ -246,16 +247,16 @@ const LaunchPool = () => {
 
   const columns = [
     { key: 'assetName', label: 'Asset Name' },
-    { key: 'status', label: 'Status' },
+    { key: 'status', label: 'Pool Status' },
     { key: 'unitPrice', label: 'Unit Price' },
     { key: 'marketCap', label: 'Market Cap' },
     { key: 'totalSupply', label: 'Total Supply' },
     { key: 'poolSize', label: 'Pool Size' },
-    { key: 'launchCap', label: 'Launch Cap' },
-    { key: 'progress', label: 'Progress' },
-    { key: 'contract', label: 'C.Template' },
+    { key: 'launchCap', label: 'Launch Cap' },    
+    // { key: 'contract', label: 'C.Template' },
     { key: 'startTime', label: 'Start Time' },
     { key: 'endTime', label: 'End Time' },
+    { key: 'progress', label: 'Progress' },
     { key: 'action', label: 'Action' },
   ];
 
@@ -277,46 +278,24 @@ const LaunchPool = () => {
     setSelectedPool(null);
   };
 
-  const canJoinPool = (status: PoolStatus) => {
-    return status === PoolStatus.ACTIVE;
-  };
-
-  const canViewDetails = (status: PoolStatus) => {
-    return true;
-  };
-
-  const canDistribute = (status: PoolStatus) => {
-    return status === PoolStatus.FULL || status === PoolStatus.DISTRIBUTING;
-  };
-
-  const canViewDistribution = (status: PoolStatus) => {
-    return status === PoolStatus.DISTRIBUTING || status === PoolStatus.COMPLETED;
-  };
-
-  const canAutoDistribute = (status: PoolStatus, progress: number) => {
-    return status === PoolStatus.EXPIRED_UNFILLED;
-  };
-
-  const canAutoRefund = (status: PoolStatus) => {
-    return status === PoolStatus.EXPIRED_UNFILLED;
-  };
-
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} />
         <div className="flex items-center gap-2">
-          <Button className='h-10 btn-gradient' onClick={() => (window.location.href = '/launchpool/create')}>Create Pool</Button>
+          <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/launchpool/create')}>
+            Create Pool
+          </Button>
         </div>
       </div>
       <div className="relative overflow-x-auto w-full px-3 pt-2 bg-zinc-900 rounded-lg">
-        <Table className="w-full border-collapse rounded-lg shadow-md">
+        <Table className="w-full border-collapse rounded-lg shadow-md min-w-[800px]">
           <TableHeader className="bg-gray-800 text-zinc-300">
             <TableRow>
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
-                  className={`p-2 ${column.key === 'contract' ? 'text-center' : 'text-left'}`}
+                  className={`p-2 ${column.key === 'contract' ? 'text-center' : 'text-left'} whitespace-nowrap`}
                 >
                   {column.label}
                 </TableHead>
@@ -327,7 +306,7 @@ const LaunchPool = () => {
           <tbody>
             {poolList.map((pool, index) => (
               <tr key={index} className="border-b border-gray-700 hover:bg-gray-800/50 text-zinc-400 transition-colors duration-200">
-                <td className="flex justify-start mt-2 items-center p-2 gap-1">
+                <td className="flex justify-start mt-2 items-center p-2 gap-1 whitespace-nowrap">
                   {pool.logo ? (
                     <img src={pool.logo} alt="Logo" className="w-10 h-10" />
                   ) : (
@@ -337,91 +316,27 @@ const LaunchPool = () => {
                   )}
                   <div>{pool.assetName}</div>
                 </td>
-                <td className="p-2">
+                <td className="p-2 whitespace-nowrap">
                   <Badge className={`${statusColorMap[pool.status]} text-white`}>
                     {statusTextMap[pool.status]}
                   </Badge>
                 </td>
-                <td className="p-2">{pool.unitPrice}</td>
-                <td className="p-2">{pool.marketCap}</td>
-                <td className="p-2">{pool.totalSupply}</td>
-                <td className="p-2">{pool.poolSize}</td>
-                <td className="p-2">{pool.launchCap}</td>
-                <td className="p-2">
+                <td className="p-2 whitespace-nowrap">{pool.unitPrice}</td>
+                <td className="p-2 whitespace-nowrap">{pool.marketCap}</td>
+                <td className="p-2 whitespace-nowrap">{pool.totalSupply}</td>
+                <td className="p-2 whitespace-nowrap">{pool.poolSize}</td>
+                <td className="p-2 whitespace-nowrap">{pool.launchCap}</td>                
+                {/* <td className="p-2 whitespace-nowrap">{pool.templateName}</td> */}
+                <td className="p-2 whitespace-nowrap">{pool.startTime}</td>
+                <td className="p-2 whitespace-nowrap">{pool.endTime}</td>
+                <td className="p-2 whitespace-nowrap">
                   <div className="w-full bg-gray-200 h-2 rounded">
                     <div className="bg-purple-500 h-2 rounded" style={{ width: `${pool.progress}%` }}></div>
                     <span className="mb-4 text-xs text-zinc-400">{pool.progress}%</span>
                   </div>
                 </td>
-                <td className="p-2 text-center wrap-normal">
-                  <div className="items-center">
-                    <Button
-                      variant="link"
-                      className="mt-1"
-                      onClick={() => openModal('template', pool.template)}
-                    >
-                      {pool.template}
-                    </Button>
-                  </div>
-                </td>
-                <td className="p-2">{pool.startTime}</td>
-                <td className="p-2">{pool.endTime}</td>
-                <td className="p-2">
-                  <Button 
-                    variant="link" 
-                    onClick={() => openModal('details', pool)}
-                  >
-                    Details
-                  </Button>
-                  
-                  {canJoinPool(pool.status) && (
-                    <Button 
-                      variant="outline" 
-                      onClick={() => openModal('join')}
-                    >
-                      Join Pool
-                    </Button>
-                  )}
-                  
-                  {canDistribute(pool.status) && (
-                    <Button 
-                      variant="outline" 
-                      className="ml-2"
-                      onClick={() => openModal('distribute')}
-                    >
-                      {pool.status === PoolStatus.DISTRIBUTING ? '继续分发' : '开始分发'}
-                    </Button>
-                  )}
-                  
-                  {canViewDistribution(pool.status) && (
-                    <Button 
-                      variant="link" 
-                      className="ml-2"
-                      onClick={() => openModal('distribution', pool)}
-                    >
-                      查看分发
-                    </Button>
-                  )}
-
-                  {canAutoDistribute(pool.status, pool.progress) && (
-                    <Button 
-                      variant="outline" 
-                      className="ml-2 bg-indigo-600 hover:bg-indigo-700 text-zinc-400"
-                      onClick={() => openModal('autoDistribute')}
-                    >
-                      继续分发
-                    </Button>
-                  )}
-                  
-                  {canAutoRefund(pool.status) && (
-                    <Button 
-                      variant="outline" 
-                      className="ml-2 bg-red-600 hover:bg-red-700 text-zinc-400"
-                      onClick={() => openModal('autoRefund')}
-                    >
-                      自动退还
-                    </Button>
-                  )}
+                <td className="p-2 text-center wrap-normal whitespace-nowrap relative">
+                  <ActionButtons pool={pool} openModal={openModal} />
                 </td>
               </tr>
             ))}
@@ -439,9 +354,9 @@ const LaunchPool = () => {
             )}
             {modalType === 'distribute' && (
               <div className="bg-zinc-900 p-6 rounded-lg shadow-md max-w-[600px]">
-                <h2 className="text-xl font-bold mb-4">分发资产</h2>
-                <p className="text-zinc-400">开始根据用户参与比例分发资产...</p>
-                <Button className="mt-4" onClick={closeModal}>关闭</Button>
+                <h2 className="text-xl font-bold mb-4">Distribute Assets</h2>
+                <p className="text-zinc-400">Start distributing assets based on user participation ratio...</p>
+                <Button className="mt-4" onClick={closeModal}>Close</Button>
               </div>
             )}
             {modalType === 'distribution' && selectedPool && (
@@ -449,23 +364,23 @@ const LaunchPool = () => {
             )}
             {modalType === 'autoDistribute' && (
               <div className="bg-zinc-900 p-6 rounded-lg shadow-md max-w-[600px]">
-                <h2 className="text-xl font-bold mb-4">自动分发资产</h2>
+                <h2 className="text-xl font-bold mb-4">Auto Distribute Assets</h2>
                 <p className="text-zinc-400 mb-4">
-                  此操作将按照当前参与情况分发资产，未达到期望募集量，但仍将按申领比例分发可用资产给参与者，剩余直接进入流动性池子。
+                  This operation will distribute assets based on the current participation ratio. Remaining assets will be added to the liquidity pool.
                 </p>
                 <p className="text-amber-500 mb-4">
-                  警告：此操作不可逆，执行后将无法撤销。确定要继续吗？
+                  Warning: This operation is irreversible. Are you sure you want to proceed?
                 </p>
                 <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" onClick={closeModal}>取消</Button>
+                  <Button variant="outline" onClick={closeModal}>Cancel</Button>
                   <Button 
                     className="bg-indigo-600 hover:bg-indigo-700 text-white" 
                     onClick={() => {
-                      alert('自动分发已启动！');
+                      alert('Auto distribution started!');
                       closeModal();
                     }}
                   >
-                    确认分发
+                    Confirm Distribution
                   </Button>
                 </div>
               </div>
@@ -473,23 +388,23 @@ const LaunchPool = () => {
             
             {modalType === 'autoRefund' && (
               <div className="bg-zinc-900 p-6 rounded-lg shadow-md max-w-[600px]">
-                <h2 className="text-xl font-bold mb-4">自动退还资金</h2>
+                <h2 className="text-xl font-bold mb-4">Auto Refund</h2>
                 <p className="text-zinc-400 mb-4">
-                  此操作将取消发射池，并将所有参与者的资金退还到其原始地址。发射池将被标记为已关闭。
+                  This operation will cancel the pool and refund all participants to their original addresses. The pool will be marked as closed.
                 </p>
                 <p className="text-red-500 mb-4">
-                  警告：此操作不可逆，执行后将无法撤销。确定要继续吗？
+                  Warning: This operation is irreversible. Are you sure you want to proceed?
                 </p>
                 <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" onClick={closeModal}>取消</Button>
+                  <Button variant="outline" onClick={closeModal}>Cancel</Button>
                   <Button 
                     className="bg-red-600 hover:bg-red-700 text-white" 
                     onClick={() => {
-                      alert('自动退款已启动！');
+                      alert('Auto refund started!');
                       closeModal();
                     }}
                   >
-                    确认退还
+                    Confirm Refund
                   </Button>
                 </div>
               </div>
