@@ -16,6 +16,7 @@ import { satsToBitcoin, formatBtcAmount } from '@/utils';
 import { useQueryKey } from '@/lib/hooks/useQueryKey';
 import { useCommonStore } from '@/store';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
+import Trade from '@/components/satoshinet/swap/SwapTrade';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -65,8 +66,8 @@ function OrderPageContent() {
   }, [data]);
 
   // Wallet and order book state
-  const [activeTab, setActiveTab] = useState<'takeOrder' | 'makeOrder'>('takeOrder');
-  const handleTabChange = (tab: 'takeOrder' | 'makeOrder') => {
+  const [activeTab, setActiveTab] = useState<'takeOrder' | 'makeOrder' | 'swap'>('takeOrder');
+  const handleTabChange = (tab: 'takeOrder' | 'makeOrder' | 'swap') => {
     setActiveTab(tab);
   };
   const [settings, setSettings] = useState({ showOngoingTrades: false, maxBidPrice: 0 });
@@ -145,14 +146,22 @@ function OrderPageContent() {
               assetBalance={assetBalance.availableAmt}
               onSellSuccess={handleSellSuccess}
             />
-          ) : (
+          ) : activeTab === 'makeOrder' ? (
             <MakeOrder assetInfo={{
               assetLogo: summary.assetLogo,
               assetName: summary.assetName,
               AssetId: summary.assetId,
               floorPrice: parseFloat(summary.floorPrice),
             }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} />
-          )}
+          ) : activeTab === 'swap' ? (
+            <Trade  assetInfo={{
+            assetLogo: summary.assetLogo,
+            assetName: summary.assetName,
+            AssetId: summary.assetId,
+            floorPrice: parseFloat(summary.floorPrice),
+          }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} 
+            /> // 确保这里渲染 Trade 组件
+          ) : null}
           <div className="mt-4 text-sm text-gray-400">
             {settings.showOngoingTrades && <p>Show pending transactions...</p>}
             {settings.maxBidPrice > 0 && <p>Item price limit: {settings.maxBidPrice} sats</p>}

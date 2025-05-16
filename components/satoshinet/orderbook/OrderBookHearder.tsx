@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface OrderBookHeaderProps {
-  activeTab: "takeOrder" | "makeOrder";
-  onTabChange: (tab: "takeOrder" | "makeOrder") => void;
+  activeTab: "takeOrder" | "makeOrder" | "swap"; 
+  onTabChange: (tab: "takeOrder" | "makeOrder" | "swap") => void;
   onRefresh: () => void;
   onSettingsChange: (settings: { showOngoingTrades: boolean; maxBidPrice: number }) => void; // 新增回调
 }
@@ -29,19 +29,28 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
       {/* Tab 切换按钮 */}
       <div className="flex gap-4">
         <button
-          className={`text-sm sm:text-base font-medium pb-2 ${activeTab === "takeOrder" ? "text-blue-500 border-b-2 border-blue-500" : "text-gray-400"
+          className={`text-sm sm:text-base font-medium pb-2 ${activeTab === "takeOrder" ? "text-zinc-200 border-b-2 border-purple-500" : "text-gray-400"
             }`}
           onClick={() => onTabChange("takeOrder")}
         >
           Take Order
         </button>
         <button
-          className={`text-sm sm:text-base font-medium pb-2 ${activeTab === "makeOrder" ? "text-blue-500 border-b-2 border-blue-500" : "text-gray-400"
+          className={`text-sm sm:text-base font-medium pb-2 ${activeTab === "makeOrder" ? "text-zinc-200 border-b-2 border-purple-500" : "text-gray-400"
             }`}
           onClick={() => onTabChange("makeOrder")}
         >
           Make Order
         </button>
+        {/* SWAP UI */}
+        {/* <button
+          className={`flex justify-center items-center text-sm sm:text-base font-medium pb-2 ${
+            activeTab === "swap" ? "border-b-2 border-purple-500" : "text-gray-400"
+          }`}
+          onClick={() => onTabChange("swap")}
+        >
+         <span>Swap</span><Icon icon="token-branded:xrune" color='red' className="w-6 h-6" />
+        </button>  */}
       </div>
 
       {/* 设置和刷新图标 */}
