@@ -63,8 +63,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       startBlock: Number(formData.startBlock),
       endBlock: Number(formData.endBlock),
       assetProtocol: formData.protocol,
-      assetName: assetName.toString(),
-      assetSymbol: Number(formData.assetSymbol),
+      assetName: assetName.Ticker,
+      // assetSymbol: Number(formData.assetSymbol),
       bindingSat: Number(formData.n),
       limit: Number(formData.limit),
       maxSupply: Number(formData.maxSupply),
@@ -72,9 +72,9 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     };
     const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1)
     console.log('result:', result);
-    const { txid } = result
-    if (txid) {
-      toast.success(`Contract deployed successfully, txid: ${txid}`);
+    const { txId } = result
+    if (txId) {
+      toast.success(`Contract deployed successfully, txid: ${txId}`);
     } else {
       toast.error('Contract deployment failed');
     }
