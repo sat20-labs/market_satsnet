@@ -43,7 +43,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       Ticker: formData.ticker,
       N: Number(formData.n),
       toString() {
-        return `${this.Protocol}:${this.Type}:${this.Ticker}:${this.N}`;
+        return `${this.Protocol}:${this.Type}:${this.Ticker}`;
       }
     };
     const launchPool = {

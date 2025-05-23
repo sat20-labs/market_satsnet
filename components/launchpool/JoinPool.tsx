@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 interface JoinPoolProps {
   closeModal: () => void;
@@ -20,8 +21,13 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     const result = await window.sat20.invokeContract_SatsNet(
       poolData.contractURL, JSON.stringify(params), '1')
     console.log('result:', result);
-    alert(`You have successfully joined the pool with amount: ${amount}`);
-    closeModal();
+    if (result.txid) {
+      toast.success(`You have successfully joined the pool with amount: ${amount}, txid: ${result.txid}`);
+      closeModal();
+    } else {
+      toast.error('Join pool failed');
+    }
+    
   };
 
   return (
