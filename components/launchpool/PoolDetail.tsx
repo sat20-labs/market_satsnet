@@ -94,16 +94,16 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-2">{poolDetails.protocol}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Start Time</td>
+                      <td className="p-3 font-bold text-zinc-400">Start Block</td>
                       <td className="p-2">{poolDetails.startTime}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">End Time</td>
+                      <td className="p-3 font-bold text-zinc-400">End Block</td>
                       <td className="p-2">{poolDetails.endTime}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400">Creator</td>
-                      <td className="p-2">{poolDetails.creator}</td>
+                      <td className="p-2">{poolDetails.deployer}</td>
                     </tr>
                   </tbody>
                 </table>
