@@ -190,10 +190,11 @@ const LaunchPool = () => {
     { label: 'Runes', key: 'runes' },
   ];
 
-  // 根据当前 protocol 筛选池子
+  // 根据当前 protocol 筛选池子，并按 deployTime 降序排序
   const filteredPoolList = useMemo(() => {
-    if (protocol === 'all') return adaptedPoolList;
-    return adaptedPoolList.filter(pool => pool.protocol === protocol);
+    let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
+    // 按 deployTime 降序排序，确保 deployTime 是数字
+    return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
 
   return (
