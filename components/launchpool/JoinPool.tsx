@@ -27,6 +27,10 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   ];
 
   const handleConfirm = async () => {
+    if (Number(amount) > limit) {
+      toast.error(`Amount must be less than or equal to limit (${limit})`);
+      return;
+    }
     const params = {
       action: 'mint',
       param: amount.toString()
