@@ -120,25 +120,30 @@ const LaunchPool = () => {
     const result = await window.sat20.getDeployedContractsInServer();
     const { contractURLs = [] } = result;
     const list = contractURLs.filter(Boolean);
-    const getListStatus = list.map(async (item) => {
+    console.log('getDeployedContractsInServer', list);
+
+    // 串行请求每个合约状态
+    const statusList: any[] = [];
+    for (const item of list) {
       const result = await window.sat20.getDeployedContractStatus(item);
       const { contractStatus } = result;
+      console.log('contractStatus', contractStatus && JSON.parse(contractStatus));
       if (contractStatus) {
-        return {
+        console.log('getDeployedContractsInServer', item);
+        console.log('getDeployedContractsInServer', JSON.parse(contractStatus));
+        statusList.push({
           ...JSON.parse(contractStatus),
           contractURL: item,
-        };
+        });
       }
-      return null;
-    });
-    const statusList = await Promise.all(getListStatus);
-    return statusList.filter(Boolean);
+    }
+    return statusList;
   };
 
   const { data: poolList = [] } = useQuery({
     queryKey: ['poolList'],
     queryFn: getPoolList,
-    refetchInterval: 10000, // 每10秒自动刷新一次
+    refetchInterval: 30000, // 每10秒自动刷新一次
   });
   console.log('poolList', poolList);
 

@@ -34,8 +34,8 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     const result = await window.sat20.invokeContract_SatsNet(
       poolData.contractURL, JSON.stringify(params), '1')
     console.log('result:', result);
-    if (result.txid) {
-      toast.success(`You have successfully joined the pool with amount: ${amount}, txid: ${result.txid}`);
+    if (result.txId) {
+      toast.success(`You have successfully joined the pool with amount: ${amount}, TxId: ${result.txId}`);
       closeModal();
     } else {
       toast.error('Join pool failed');
