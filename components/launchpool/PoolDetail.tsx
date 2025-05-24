@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
+import JoinPool from './JoinPool';
+import { Modal } from '@/components/ui/modal';
 
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
   const canViewParticipants = () => {
@@ -19,6 +21,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
   };
 
   const [activeTab, setActiveTabState] = React.useState<string>("basic");
+  const [showJoinModal, setShowJoinModal] = React.useState(false);
 
   function setActiveTab(tab: string): void {
     setActiveTabState(tab);
@@ -119,7 +122,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
               
               <div className="flex space-x-4 mt-4">
                 {poolDetails.status === PoolStatus.ACTIVE && (
-                  <Button variant="outline" className="btn-gradient mt-2 w-36 sm:w-48 h-11">
+                  <Button variant="outline" className="btn-gradient mt-2 w-36 sm:w-48 h-11" onClick={() => setShowJoinModal(true)}>
                     Join Pool
                   </Button>
                 )}
@@ -198,6 +201,13 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
           </div>
         </Tabs>
       </div>
+      {showJoinModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40" style={{top:0,left:0}}>
+          <div className="relative z-70">
+            <JoinPool closeModal={() => setShowJoinModal(false)} poolData={poolDetails} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
