@@ -134,7 +134,13 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
             <Input
               placeholder={t('Ticker')}
               value={formData.ticker}
-              onChange={(e) => handleInputChange('ticker', e.target.value)}
+              onChange={(e) => {
+                let value = e.target.value;
+                if (formData.protocol === 'runes') {
+                  value = value.toUpperCase().replace(/\s+/g, '•');
+                }
+                handleInputChange('ticker', value);
+              }}
             />
             <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('N (BindingSat)')}</label>
             <Input
@@ -144,6 +150,17 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               onChange={(e) => handleInputChange('n', e.target.value)}
               disabled={formData.protocol === 'runes'}
             />
+            {formData.protocol === 'runes' && (
+              <>
+                <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Asset Symbol')}</label>
+                <Input
+                  placeholder={t('Asset Symbol')}
+                  type="text"
+                  value={formData.assetSymbol}
+                  onChange={(e) => handleInputChange('assetSymbol', e.target.value)}
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -191,17 +208,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               value={formData.endBlock}
               onChange={(e) => handleInputChange('endBlock', e.target.value)}
             />
-            {formData.protocol === 'runes' && (
-              <>
-                <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Asset Symbol')}</label>
-                <Input
-                  placeholder={t('Asset Symbol')}
-                  type="text"
-                  value={formData.assetSymbol}
-                  onChange={(e) => handleInputChange('assetSymbol', e.target.value)}
-                />
-              </>
-            )}
           </div>
         )}
 
