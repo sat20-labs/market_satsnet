@@ -237,7 +237,12 @@ const LaunchPool = () => {
                       {adaptedPool.assetName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span>{adaptedPool.assetName}</span>
+                  <span
+                    className="cursor-pointer text-primary hover:underline"
+                    onClick={() => openModal('details', adaptedPool)}
+                  >
+                    {adaptedPool.assetName}
+                  </span>
                 </TableCell>
                 <TableCell className="px-4 py-2">
                   <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>

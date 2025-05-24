@@ -11,11 +11,7 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
 
   switch (pool.status) {
     case PoolStatus.NOT_STARTED:
-      mainAction = (
-        <Button variant="outline" className='w-36' onClick={() => openModal('details', pool)}>
-          Details
-        </Button>
-      );
+      mainAction = null;
       break;
 
     case PoolStatus.ACTIVE:
@@ -24,22 +20,12 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
           Join Pool
         </Button>
       );
-      moreActions.push(
-        <Button variant="outline" className='w-36' key="details" onClick={() => openModal('details', pool)}>
-          Details
-        </Button>
-      );
       break;
 
     case PoolStatus.FULL:
       mainAction = (
         <Button variant="outline" className="btn-gradient w-36" onClick={() => openModal('distribute', pool)}>
           Start Distribution
-        </Button>
-      );
-      moreActions.push(
-        <Button variant="outline" className='w-36' key="details" onClick={() => openModal('details', pool)}>
-          Details
         </Button>
       );
       break;
@@ -67,11 +53,7 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
 
     case PoolStatus.EXPIRED:
     case PoolStatus.EXPIRED_UNFILLED:
-      mainAction = (
-        <Button variant="outline" className='w-36' onClick={() => openModal('details', pool)}>
-          Details
-        </Button>
-      );
+      mainAction = null;
       moreActions.push(
         <Button variant="outline" className='w-36' key="force" onClick={() => openModal('autoDistribute', pool)}>
           Force Distribution
