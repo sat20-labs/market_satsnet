@@ -9,29 +9,19 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制菜单显示状态
   const moreActions: React.ReactNode[] = [];
   let mainAction: React.ReactNode = null;
-  const { satsnetHeight } = useCommonStore();
 
-  // 判断是否激活：status==100 且 enableBlock <= 当前区块高度
-  const isActive =
-    pool.status === 100 &&
-    typeof pool.enableBlock !== 'undefined' &&
-    Number(pool.enableBlock) <= Number(satsnetHeight);
-
-  switch (pool.status) {
+  console.log(pool.poolStatus);
+  switch (pool.poolStatus) {
     case PoolStatus.NOT_STARTED:
       mainAction = null;
       break;
 
     case PoolStatus.ACTIVE:
-      if (isActive) {
-        mainAction = (
-          <Button variant="outline" className="btn-gradient w-36" onClick={() => openModal('join', pool)}>
-            Join Pool
-          </Button>
-        );
-      } else {
-        mainAction = null;
-      }
+      mainAction = (
+        <Button variant="outline" className="btn-gradient w-36" onClick={() => openModal('join', pool)}>
+          Join Pool
+        </Button>
+      );
       break;
 
     case PoolStatus.FULL:

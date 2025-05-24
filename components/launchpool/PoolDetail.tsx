@@ -105,6 +105,14 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-3 font-bold text-zinc-400">Creator</td>
                       <td className="p-2">{poolDetails.deployer}</td>
                     </tr>
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400">Limit</td>
+                      <td className="p-2">{poolDetails.limit}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400">Binding Sat</td>
+                      <td className="p-2">{poolDetails.bindingSat ?? poolDetails.n}</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
