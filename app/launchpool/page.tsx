@@ -8,7 +8,6 @@ import LaunchPoolTemplate from '@/components/launchpool/[templateId]/TemplateDet
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
 import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
-import { satsToBitcoin, formatBtcAmount, formatLargeNumber } from '@/utils';
 import {
   Table,
   TableBody,
@@ -18,18 +17,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Image from 'next/image';
-import { Loader2, ArrowUp, ArrowDown } from 'lucide-react';
-import { Suspense } from 'react';
 
-import { SortDropdown } from '@/components/SortDropdown';
 import { useTranslation } from 'react-i18next';
 import DistributionList from '@/components/launchpool/DistributionList';
 import ActionButtons from '@/components/launchpool/ActionButtons';
+import { useCommonStore } from '@/store/common';
+import { useQuery } from '@tanstack/react-query';
+import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
+import { useContractStore } from '@/store/contract';
+import { uniq } from 'lodash';
 
 const protocol = 'default';
-const interval = 1;
-const isLoading = false;
 // supported contracts: [{"contractType":"launchpool.tc","ttl":0,"assetName":{"Protocol":"","Type":"","Ticker":""},"bindingSat":0,"limit":0,"maxSupply":0,"launchRation":0}  ]
 // deployed contracts: []
 // deploy contract launchpool.tc need 60766 sats
@@ -41,7 +39,7 @@ const protocolChange = (newProtocol) => { /* handle protocol change */ };
 const onSortChange = (newInterval) => { /* handle sort change */ };
 
 // 适配器函数：后端字段优先，没有则用前端字段
-function adaptPoolData(pool) {
+function adaptPoolData(pool, satsnetHeight) {
   const launchCap = (pool.maxSupply ?? pool.launchCap) && (pool.launchRation ?? 0)
     ? Math.floor((pool.maxSupply ?? pool.launchCap) * (pool.launchRation ?? 100) / 100)
     : (pool.launchCap ?? 0);
@@ -49,6 +47,29 @@ function adaptPoolData(pool) {
   const progress = launchCap
     ? Math.floor(((pool.TotalMinted ?? pool.progress ?? 0) / launchCap) * 100)
     : (pool.progress ?? 0);
+
+  // 计算poolStatus
+  let poolStatus = PoolStatus.NOT_STARTED;
+  const startBlock = Number(pool.startBlock);
+  const endBlock = Number(pool.endBlock);
+  if (!isNaN(startBlock) && !isNaN(endBlock) && typeof satsnetHeight === 'number') {
+    if (endBlock === 0) {
+      // endBlock为0，永远ACTIVE（但未到startBlock前是NOT_STARTED）
+      if (satsnetHeight < startBlock) {
+        poolStatus = PoolStatus.NOT_STARTED;
+      } else {
+        poolStatus = PoolStatus.ACTIVE;
+      }
+    } else {
+      if (satsnetHeight < startBlock) {
+        poolStatus = PoolStatus.NOT_STARTED;
+      } else if (satsnetHeight >= startBlock && satsnetHeight <= endBlock) {
+        poolStatus = PoolStatus.ACTIVE;
+      } else if (satsnetHeight > endBlock) {
+        poolStatus = PoolStatus.EXPIRED;
+      }
+    }
+  }
 
   return {
     ...pool,
@@ -75,12 +96,17 @@ function adaptPoolData(pool) {
       : (pool.endTime ?? ''),
     statusCode: pool.status ?? '',
     status: PoolStatus.ACTIVE,
+    poolStatus,
+    deployTime: pool.deployTime ?? '',
   };
 }
 
 const LaunchPool = () => {
   const { t } = useTranslation();
-
+  useSupportedContracts();
+  const supportedContracts = useContractStore((state) => state.supportedContracts);
+  console.log('supportedContracts', supportedContracts);
+  const { satsnetHeight } = useCommonStore();
   const sortList = useMemo(
     () => [
       { label: t('common.time_1D'), value: 1 },
@@ -89,44 +115,46 @@ const LaunchPool = () => {
     ],
     [t],
   );
-  const [poolList, setPools] = useState<any[]>([]);
-  
+
   const getPoolList = async () => {
-    const result = await window.sat20.getDeployedContractsInServer()
-    const { contractURLs = [] } = result
-    console.log('result:', result);
-    const list = contractURLs.filter(Boolean)
+    const result = await window.sat20.getDeployedContractsInServer();
+    const { contractURLs = [] } = result;
+    const list = contractURLs.filter(Boolean);
     const getListStatus = list.map(async (item) => {
-      const result = await window.sat20.getDeployedContractStatus(item)
-      const { contractStatus } = result
+      const result = await window.sat20.getDeployedContractStatus(item);
+      const { contractStatus } = result;
       if (contractStatus) {
         return {
           ...JSON.parse(contractStatus),
-          contractURL: item
-        }
+          contractURL: item,
+        };
       }
-      return null
-    })
-    const statusList = await Promise.all(getListStatus)
-    setPools(statusList.filter(Boolean).map(adaptPoolData))
-    console.log('list:', statusList);
-  }
-  useEffect(() => {
-    getPoolList()
-  }, [])
-  
+      return null;
+    });
+    const statusList = await Promise.all(getListStatus);
+    return statusList.filter(Boolean);
+  };
+
+  const { data: poolList = [] } = useQuery({
+    queryKey: ['poolList'],
+    queryFn: getPoolList,
+    refetchInterval: 10000, // 每10秒自动刷新一次
+  });
+  console.log('poolList', poolList);
+
+  // 用 useMemo 结合 poolList 和 satsnetHeight 生成渲染用 list
+  const adaptedPoolList = useMemo(() => {
+    return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
+  }, [poolList, satsnetHeight]);
 
   const columns = [
     { key: 'assetName', label: 'Asset Name' },
-    { key: 'status', label: 'Pool Status' },
-    { key: 'unitPrice', label: 'Unit Price' },
-    { key: 'marketCap', label: 'Market Cap' },
+    { key: 'poolStatus', label: 'Pool Status' },
     { key: 'totalSupply', label: 'Total Supply' },
     { key: 'poolSize', label: 'Pool Size' },
-    { key: 'launchCap', label: 'Launch Cap' },
-    // { key: 'contract', label: 'C.Template' },
-    { key: 'startTime', label: 'Start Time' },
-    { key: 'endTime', label: 'End Time' },
+    { key: 'deployTime', label: 'Deploy Time' },
+    { key: 'startBlock', label: 'Start Block' },
+    { key: 'endBlock', label: 'End Block' },
     { key: 'progress', label: 'Progress' },
     { key: 'action', label: 'Action' },
   ];
@@ -151,10 +179,26 @@ const LaunchPool = () => {
     setSelectedPool(null);
   };
 
+  const [protocol, setProtocol] = useState('all');
+  const protocolChange = (newProtocol) => setProtocol(newProtocol);
+
+  // 自动提取所有协议类型，生成 tab 列表
+  const protocolTabs = [
+    { label: '全部', key: 'all' },
+    { label: 'OrdX', key: 'ordx' },
+    { label: 'Runes', key: 'runes' },
+  ];
+
+  // 根据当前 protocol 筛选池子
+  const filteredPoolList = useMemo(() => {
+    if (protocol === 'all') return adaptedPoolList;
+    return adaptedPoolList.filter(pool => pool.protocol === protocol);
+  }, [adaptedPoolList, protocol]);
+
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
-        <HomeTypeTabs value={protocol} onChange={protocolChange} />
+        <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2">
           <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/launchpool/create')}>
             Create Pool
@@ -176,44 +220,43 @@ const LaunchPool = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {poolList.map((pool, index) => (
+            {filteredPoolList.map((adaptedPool, index) => (
               <TableRow
-                key={pool.id ?? index}
+                key={adaptedPool.id ?? index}
                 className="border-b border-border hover:bg-accent transition-colors"
               >
                 <TableCell className="flex items-center gap-2 px-4 py-2">
-                  {pool.logo ? (
-                    <img src={pool.logo} alt="Logo" className="w-8 h-8 rounded-full" />
-                  ) : (
-                    <div className="w-8 h-8 bg-gray-600 text-white text-lg font-bold flex items-center justify-center rounded-full">
-                      {pool.assetName?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span>{pool.assetName}</span>
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={adaptedPool.logo} alt="Logo" />
+                    <AvatarFallback>
+                      {adaptedPool.assetName?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{adaptedPool.assetName}</span>
                 </TableCell>
                 <TableCell className="px-4 py-2">
-                  <Badge className={`${statusColorMap[pool.status]} text-white`}>
-                    {statusTextMap[pool.status]}
+                  <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
+                    {statusTextMap[adaptedPool.poolStatus]}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-2">{pool.unitPrice}</TableCell>
-                <TableCell className="px-4 py-2">{pool.marketCap}</TableCell>
-                <TableCell className="px-4 py-2">{pool.totalSupply}</TableCell>
-                <TableCell className="px-4 py-2">{pool.poolSize}</TableCell>
-                <TableCell className="px-4 py-2">{pool.launchCap}</TableCell>
-                <TableCell className="px-4 py-2">{pool.startTime}</TableCell>
-                <TableCell className="px-4 py-2">{pool.endTime}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.totalSupply}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.poolSize}</TableCell>
+                <TableCell className="px-4 py-2">
+                  {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
+                </TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.startTime}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.endTime}</TableCell>
                 <TableCell className="px-4 py-2 min-w-[120px]">
                   <div className="w-full bg-gray-200 h-2 rounded">
                     <div
                       className="bg-purple-500 h-2 rounded"
-                      style={{ width: `${pool.progress}%` }}
+                      style={{ width: `${adaptedPool.progress}%` }}
                     ></div>
                   </div>
-                  <span className="text-xs text-muted-foreground">{pool.progress}%</span>
+                  <span className="text-xs text-muted-foreground">{adaptedPool.progress}%</span>
                 </TableCell>
                 <TableCell className="px-4 py-2 text-center">
-                  <ActionButtons pool={pool} openModal={openModal} />
+                  <ActionButtons pool={adaptedPool} openModal={openModal} />
                 </TableCell>
               </TableRow>
             ))}

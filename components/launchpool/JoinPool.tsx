@@ -11,7 +11,20 @@ interface JoinPoolProps {
 }
 
 const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
-  const [amount, setAmount] = useState('');
+  const limit = Number(poolData?.limit) || 1;
+  const [amount, setAmount] = useState(limit.toString());
+
+  const infoList = [
+    { label: 'Asset Name', value: poolData?.assetName },
+    { label: 'Asset Protocol', value: poolData?.assetProtocol },
+    { label: 'Contract Type', value: poolData?.contractType },
+    { label: 'Contract URL', value: poolData?.contractURL },
+    { label: 'Enable Block', value: poolData?.enableBlock },
+    { label: 'Start Block', value: poolData?.startBlock },
+    { label: 'Launch Ration', value: poolData?.launchRation },
+    { label: 'Max Supply', value: poolData?.maxSupply },
+    { label: 'Limit', value: poolData?.limit },
+  ];
 
   const handleConfirm = async () => {
     const params = {
@@ -42,6 +55,15 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
         </button>
       </div>
 
+      <div className="mb-4 grid grid-cols-1 gap-y-2 text-sm text-zinc-300">
+        {infoList.map(({ label, value }) => (
+          <div key={label} className="mb-1">
+            <div className="font-semibold">{label}:</div>
+            <div className="truncate pl-2 text-zinc-100" title={value}>{value ?? '-'}</div>
+          </div>
+        ))}
+      </div>
+
       <div className="mb-6">
         <label className="block mb-2 text-zinc-300 font-semibold" htmlFor="amount">Amount to Join</label>
         <Input
@@ -49,6 +71,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
           type="number"
           placeholder="Enter amount"
           value={amount}
+          min={limit}
           onChange={e => setAmount(e.target.value)}
           className="mb-2"
         />

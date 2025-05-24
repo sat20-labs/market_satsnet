@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { useCommonStore, useAssetStore, useUtxoStore, useWalletStore } from '@/store';
 import { generateMempoolUrl } from '@/utils';
 import { useQueryClient } from '@tanstack/react-query';
-
+import { useHeight } from '@/lib/hooks/useHeight';
 
 const WalletConnectButton = () => {
 
@@ -42,8 +42,9 @@ const WalletConnectButton = () => {
   const { refreshAssets } = useAssetStore();
   const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
+  
   const queryClient = useQueryClient();
-
+  useHeight();
   const utxoAmount = useMemo(() => {
     return utxoList.reduce((acc, cur) => acc + cur.value, 0);
   }, [utxoList]);

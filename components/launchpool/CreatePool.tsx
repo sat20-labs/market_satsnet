@@ -7,13 +7,14 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/u
 import { Modal } from '@/components/ui/modal';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
+import { useCommonStore } from '@/store/common';
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
-  const [contractType, setContractType] = useState('');
   const [formData, setFormData] = useState({
-    protocol: '',
+    protocol: 'ordx',
     ticker: '',
     n: '',
     limit: '',
@@ -21,9 +22,15 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     maxSupply: '',
     startBlock: '0',
     endBlock: '0',
-    assetSymbol: '43252',
+    assetSymbol: '',
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // 使用store获取合约类型
+  const { satsnetHeight } = useCommonStore();
+  const { supportedContracts, isLoading } = useSupportedContracts();
+  const hasLaunchpool = supportedContracts.includes('launchpool.tc');
+  const contractType = 'launchpool.tc';
 
   const handleNextStep = () => setStep((prev) => prev + 1);
   const handlePrevStep = () => setStep((prev) => prev - 1);
@@ -34,7 +41,11 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
 
   async function handleConfirm(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
     event.preventDefault();
-
+    // 校验 endBlock
+    if (formData.endBlock !== '0' && Number(formData.endBlock) <= satsnetHeight) {
+      toast.error(t('End Block must be 0 or greater than current block height'));
+      return;
+    }
     setShowConfirmModal(false);
     // 构造 assetName 和 launchPool
     const assetName = {
@@ -46,29 +57,18 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
         return `${this.Protocol}:${this.Type}:${this.Ticker}`;
       }
     };
-    const launchPool = {
-      Protocol: assetName.Protocol,
-      AssetName: assetName.Ticker,
-      BindingSat: assetName.N,
-      Limit: Number(formData.limit),
-      LaunchRatio: Number(formData.launchRatio),
-      MaxSupply: Number(formData.maxSupply),
-      StartBlock: Number(formData.startBlock),
-      EndBlock: Number(formData.endBlock),
-      AssetSymbol: Number(formData.assetSymbol),
-    };
     // 组装参数，字段名与后端一致
     const params = {
-      contractType: 'launchpool.tc',
+      contractType: contractType,
       startBlock: Number(formData.startBlock),
       endBlock: Number(formData.endBlock),
       assetProtocol: formData.protocol,
       assetName: assetName.Ticker,
-      // assetSymbol: Number(formData.assetSymbol),
       bindingSat: Number(formData.n),
       limit: Number(formData.limit),
       maxSupply: Number(formData.maxSupply),
       launchRation: Number(formData.launchRatio), // 保持 launchRation 字段名与后端一致
+      ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol } : {}), // 仅 runes 协议时加 assetSymbol
     };
     const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1)
     console.log('result:', result);
@@ -80,33 +80,21 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     }
   }
 
-  const getSupportedContracts = async () => {
-    console.log('getSupportedContracts');
-
-    const result = await window.sat20.getSupportedContracts()
-    const { contractContents = [] } = result
-    const list = contractContents.filter(Boolean).map((item) => {
-      try {
-        return JSON.parse(item)
-      } catch (error) {
-        return null
-      }
-    })
-    const { contractType } = list[0]
-    setContractType(contractType)
-    console.log('getSupportedContracts', list);
-    // const params = await window.sat20.getParamForInvokeContract(contractType)
-
-  }
+  // 当 protocol 为 runes 时，n 自动设为 1000
   useEffect(() => {
-    getSupportedContracts()
-  }, [])
+    if (formData.protocol === 'runes' && formData.n !== '1000') {
+      setFormData((prev) => ({ ...prev, n: '1000' }));
+    }
+  }, [formData.protocol]);
 
   // 判断所有参数是否填写完整
   const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply);
   // 判断每一步是否填写完整
   const isStep1Complete = !!(formData.protocol && formData.ticker && formData.n);
   const isStep2Complete = !!(formData.limit && formData.launchRatio && formData.maxSupply);
+
+  // 协议label映射
+  const protocolLabels = { ordx: 'ORDX', runes: 'Runes' };
 
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
@@ -134,11 +122,11 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
             <div className="flex justify-items-start items-center mt-4 gap-4">
               <label className="block text-sm font-medium text-gray-300">{t('Protocol')}</label>
               <Select onValueChange={(value) => handleInputChange('protocol', value)} >
-                <SelectTrigger className="w-56 py-4 h-12">{formData.protocol || t('Select Protocol')}</SelectTrigger>
+                <SelectTrigger className="w-56 py-4 h-12">{protocolLabels[formData.protocol] || t('Select Protocol')}</SelectTrigger>
                 <SelectContent className="max-h-60 overflow-y-auto">
                   <SelectItem value="ordx" className="h-9 py-2">ORDX</SelectItem>
                   <SelectItem value="runes" className="h-9 py-2">Runes</SelectItem>
-                  <SelectItem value="brc20" className="h-9 py-2">BRC20</SelectItem>
+                  {/* <SelectItem value="brc20" className="h-9 py-2">BRC20</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>
@@ -154,6 +142,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               type="number"
               value={formData.n}
               onChange={(e) => handleInputChange('n', e.target.value)}
+              disabled={formData.protocol === 'runes'}
             />
           </div>
         )}
@@ -164,6 +153,9 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               <span className="px-4 py-2 border-l-6 border-purple-500">{t('Step 2: Configure Smart Contract')}</span>
             </div>
             <p className="text-sm text-zinc-400 mt-2">{t('Set up the smart contract parameters for your launch pool.')}</p>
+            <p className="text-sm text-zinc-400 mt-2">
+              {t('Current Block Height')}: <span className="font-bold text-white">{satsnetHeight}</span>
+            </p>
             <label className="block text-sm font-medium mt-4 text-gray-300 mb-1">{t('Limit')}</label>
             <Input
               placeholder={t('Limit')}
@@ -199,13 +191,17 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               value={formData.endBlock}
               onChange={(e) => handleInputChange('endBlock', e.target.value)}
             />
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Asset Symbol')}</label>
-            <Input
-              placeholder={t('Asset Symbol')}
-              type="number"
-              value={formData.assetSymbol}
-              onChange={(e) => handleInputChange('assetSymbol', e.target.value)}
-            />
+            {formData.protocol === 'runes' && (
+              <>
+                <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Asset Symbol')}</label>
+                <Input
+                  placeholder={t('Asset Symbol')}
+                  type="text"
+                  value={formData.assetSymbol}
+                  onChange={(e) => handleInputChange('assetSymbol', e.target.value)}
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -237,7 +233,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               className="w-40 sm:w-48"
               variant="outline"
               onClick={handleConfirm}
-              disabled={!isFormComplete}
+              disabled={!isFormComplete || !hasLaunchpool}
             >
               {t('Submit Template')}
             </Button>

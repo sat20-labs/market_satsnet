@@ -25,13 +25,11 @@ class ClientApi {
 
   private generatePath = (path: string, chain: string, network: string): string => {
     if (chain === 'SatoshiNet') {
-      return `${this.BASE_URL}/satsnet${
-        network === 'testnet' ? '/testnet' : '/mainnet'
-      }/${path}`;
+      return `${this.BASE_URL}/satsnet${network === 'testnet' ? '/testnet' : '/mainnet'
+        }/${path}`;
     } else {
-      return `${this.BASE_URL}${
-        network === 'testnet' ? '/btc/testnet' : '/btc/mainnet'
-      }/${path}`;
+      return `${this.BASE_URL}${network === 'testnet' ? '/btc/testnet' : '/btc/mainnet'
+        }/${path}`;
     }
   }
 
@@ -40,12 +38,10 @@ class ClientApi {
     params: RequestParams = {},
     method: 'GET' | 'POST' = 'GET',
   ): Promise<T> => {
-    const store = useCommonStore.getState();
-    const { network } = useReactWalletStore.getState();
-    const { chain } = store;
-    
+    const { chain, network } = useCommonStore.getState();
+
     const url = this.generatePath(path, chain, network);
-    
+
     const options: RequestInit = {
       method,
       headers: {
@@ -180,9 +176,8 @@ class ClientApi {
   getRecommendedFees = async (): Promise<any> => {
     const store = useCommonStore.getState();
     const { network } = store;
-    const url = `https://apiprd.ordx.market/${
-      network === 'mainnet' ? 'btc' : 'testnet/'
-    }ordx/GetRecommendedFees`;
+    const url = `https://apiprd.ordx.market/${network === 'mainnet' ? 'btc' : 'testnet/'
+      }ordx/GetRecommendedFees`;
     const response = await fetch(url);
     return response.json();
   }

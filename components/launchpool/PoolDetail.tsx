@@ -58,12 +58,12 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
                   <tbody>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400 w-1/3">Unit Price</td>
-                      <td className="p-2">{poolDetails.unitPrice}</td>
-                    </tr>
-                    <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Market Cap</td>
-                      <td className="p-2">{poolDetails.marketCap}</td>
+                      <td className="p-3 font-bold text-zinc-400 w-1/3">Status</td>
+                      <td className="p-2">
+                        <Badge className={`${statusColorMap[poolDetails.status]} text-white`}>
+                          {statusTextMap[poolDetails.status]}
+                        </Badge>
+                      </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400">Total Supply</td>
