@@ -48,27 +48,23 @@ function adaptPoolData(pool, satsnetHeight) {
     ? Math.floor(((pool.TotalMinted ?? pool.progress ?? 0) / launchCap) * 100)
     : (pool.progress ?? 0);
 
-  // 计算poolStatus
+  // 新的poolStatus逻辑
   let poolStatus = PoolStatus.NOT_STARTED;
-  const startBlock = Number(pool.startBlock);
+  const status = Number(pool.status);
+  const enableBlock = Number(pool.enableBlock);
   const endBlock = Number(pool.endBlock);
-  if (!isNaN(startBlock) && !isNaN(endBlock) && typeof satsnetHeight === 'number') {
-    if (endBlock === 0) {
-      // endBlock为0，永远ACTIVE（但未到startBlock前是NOT_STARTED）
-      if (satsnetHeight < startBlock) {
+  if (status === 100) {
+    if (!isNaN(enableBlock) && typeof satsnetHeight === 'number') {
+      if (satsnetHeight < enableBlock) {
         poolStatus = PoolStatus.NOT_STARTED;
-      } else {
+      } else if ((endBlock === 0 || satsnetHeight <= endBlock)) {
         poolStatus = PoolStatus.ACTIVE;
-      }
-    } else {
-      if (satsnetHeight < startBlock) {
-        poolStatus = PoolStatus.NOT_STARTED;
-      } else if (satsnetHeight >= startBlock && satsnetHeight <= endBlock) {
-        poolStatus = PoolStatus.ACTIVE;
-      } else if (satsnetHeight > endBlock) {
+      } else if (endBlock !== 0 && satsnetHeight > endBlock) {
         poolStatus = PoolStatus.EXPIRED;
       }
     }
+  } else {
+    poolStatus = PoolStatus.NOT_STARTED;
   }
 
   return {
