@@ -69,7 +69,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       limit: Number(formData.limit),
       maxSupply: Number(formData.maxSupply),
       launchRation: Number(formData.launchRatio), // 保持 launchRation 字段名与后端一致
-      ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol } : {}), // 仅 runes 协议时加 assetSymbol
+      ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol.charCodeAt(0) } : {}), // 仅 runes 协议时加 assetSymbol，且为uint32
     };
     const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1,bol)
     console.log('result:', result);
@@ -168,7 +168,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                   placeholder={t('Asset Symbol')}
                   type="text"
                   value={formData.assetSymbol}
-                  onChange={(e) => handleInputChange('assetSymbol', e.target.value)}
+                  maxLength={1}
+                  onChange={(e) => handleInputChange('assetSymbol', e.target.value.replace(/./g, c => c.length === 1 ? c : ''))}
                 />
               </>
             )}
