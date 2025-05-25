@@ -12,6 +12,7 @@ import { useCommonStore } from '@/store/common';
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const { t } = useTranslation();
+  const [bol, setBol] = useState(false);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     protocol: 'ordx',
@@ -70,7 +71,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       launchRation: Number(formData.launchRatio), // 保持 launchRation 字段名与后端一致
       ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol } : {}), // 仅 runes 协议时加 assetSymbol
     };
-    const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1)
+    const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1,bol)
     console.log('result:', result);
     const { txId } = result
     if (txId) {
@@ -119,6 +120,16 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               <span className="px-4 py-2 border-l-6 border-purple-500">{t('Step 1: Deploy Asset')}</span>
             </div>
             <p className="text-sm text-zinc-400 mt-2">{t('Select the protocol and provide basic details about your asset.')}</p>
+            <div className="flex justify-items-start items-center mt-4 gap-4">
+              <label className="block text-sm font-medium text-gray-300">{t('Network')}</label>
+              <Select value={bol ? 'btc' : 'satsnet'} onValueChange={(value) => setBol(value === 'btc')}>
+                <SelectTrigger className="w-56 py-4 h-12">{bol ? t('BTC主网') : t('聪网（SatsNet）')}</SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  <SelectItem value="btc" className="h-9 py-2">{t('BTC主网')}</SelectItem>
+                  <SelectItem value="satsnet" className="h-9 py-2">{t('聪网（SatsNet）')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex justify-items-start items-center mt-4 gap-4">
               <label className="block text-sm font-medium text-gray-300">{t('Protocol')}</label>
               <Select onValueChange={(value) => handleInputChange('protocol', value)} >
