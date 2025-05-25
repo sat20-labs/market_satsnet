@@ -7,8 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
 import JoinPool from './JoinPool';
 import { Modal } from '@/components/ui/modal';
+import { useQuery } from '@tanstack/react-query';
 
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
+  console.log(poolDetails);
+
   const canViewParticipants = () => {
     return [
       PoolStatus.ACTIVE,
@@ -17,7 +20,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
       PoolStatus.COMPLETED,
       PoolStatus.EXPIRED,
       PoolStatus.EXPIRED_UNFILLED,
-    ].includes(poolDetails.status);
+    ].includes(poolDetails.poolStatus);
   };
 
   const [activeTab, setActiveTabState] = React.useState<string>("basic");
@@ -26,6 +29,37 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
   function setActiveTab(tab: string): void {
     setActiveTabState(tab);
   }
+
+  // 获取参与者的异步函数
+  const fetchParticipants = async () => {
+    if (!poolDetails?.contractURL) return [];
+    try {
+      const result = await window.sat20.getAllAddressInContract(poolDetails.contractURL);
+      const list = JSON.parse(result.addresses)?.data || [];
+      const resultStatusList: any[] = [];
+      for (const item of list) {
+        const { status } = await window.sat20.getAddressStatusInContract(poolDetails.contractURL, item.address);
+        resultStatusList.push({
+          ...item,
+          ...JSON.parse(status)
+        });
+      }
+      console.log('resultStatusList', resultStatusList);
+      return resultStatusList;
+    } catch (e) {
+      console.error('获取参与者失败', e);
+      return [];
+    }
+  };
+
+  // 使用useQuery调用fetchParticipants
+  const { data: participantsData = [], isLoading: isParticipantsLoading } = useQuery({
+    queryKey: ['participants', poolDetails?.contractURL],
+    queryFn: fetchParticipants,
+    enabled: canViewParticipants() && !!poolDetails?.contractURL,
+  });
+  console.log('participantsData', participantsData);
+
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
@@ -49,8 +83,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-semibold">Pool Status</h3>
-                  <Badge className={`${statusColorMap[poolDetails.status]} text-white`}>
-                    {statusTextMap[poolDetails.status]}
+                  <Badge className={`${statusColorMap[poolDetails.poolDetails]} text-white`}>
+                    {statusTextMap[poolDetails.poolStatus]}
                   </Badge>
                 </div>
                 <p className="text-zinc-400 mb-4">{poolDetails.description}</p>
@@ -63,8 +97,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400 w-1/3">Status</td>
                       <td className="p-2">
-                        <Badge className={`${statusColorMap[poolDetails.status]} text-white`}>
-                          {statusTextMap[poolDetails.status]}
+                        <Badge className={`${statusColorMap[poolDetails.poolStatus]} text-white`}>
+                          {statusTextMap[poolDetails.poolStatus]}
                         </Badge>
                       </td>
                     </tr>
@@ -119,13 +153,16 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                   </tbody>
                 </table>
               </div>
-              
+
               <div className="flex space-x-4 mt-4">
-                {poolDetails.status === PoolStatus.ACTIVE && (
-                  <Button variant="outline" className="btn-gradient mt-2 w-36 sm:w-48 h-11" onClick={() => setShowJoinModal(true)}>
-                    Join Pool
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  className={`mt-2 w-36 sm:w-48 h-11 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
+                  onClick={() => poolDetails.poolStatus === PoolStatus.ACTIVE && setShowJoinModal(true)}
+                  disabled={poolDetails.poolStatus !== PoolStatus.ACTIVE}
+                >
+                  Join Pool
+                </Button>
                 <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11" onClick={closeModal}>
                   Close
                 </Button>
@@ -136,7 +173,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Template Info - {poolDetails.templateName}</h3>
                 <p className="text-zinc-400 mb-4">{poolDetails.templateDescription}</p>
-                
+
                 <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
                   <thead className="bg-zinc-800">
                     <tr>
@@ -154,7 +191,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                   </tbody>
                 </table>
               </div>
-              
+
               <Button variant="outline" className="w-full sm:w-48 mt-4" onClick={() => setActiveTab("basic")}>
                 Back to Basic Info
               </Button>
@@ -165,10 +202,10 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold mb-2">Participants Info</h3>
                   <div className="flex justify-between mb-3">
-                    <p className="text-zinc-400">Total Participants: {poolDetails.participants}</p>
-                    <p className="text-zinc-400">Total Deposited: {poolDetails.totalDeposited}</p>
+                    <p className="text-zinc-400">Total Participants: {participantsData.length}</p>
+                    <p className="text-zinc-400">Total Deposited: --</p>
                   </div>
-                  
+
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
                       <thead className="bg-zinc-800 sticky top-0">
@@ -180,19 +217,25 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                         </tr>
                       </thead>
                       <tbody>
-                        {poolDetails.participantsList.map((participant: any, index: number) => (
-                          <tr key={index} className="border-b border-zinc-700">
-                            <td className="p-3 whitespace-nowrap">{participant.address}</td>
-                            <td className="p-3 whitespace-nowrap">{participant.amount}</td>
-                            <td className="p-3 whitespace-nowrap">{participant.allocationTokens}</td>
-                            <td className="p-3 whitespace-nowrap">{participant.joinTime}</td>
+                        {participantsData.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="text-center p-4 text-zinc-400">暂无参与者</td>
                           </tr>
-                        ))}
+                        ) : (
+                          participantsData.map((participant: any, index: number) => (
+                            <tr key={index} className="border-b border-zinc-700">
+                              <td className="p-3 whitespace-nowrap">{participant.address}</td>
+                              <td className="p-3 whitespace-nowrap">{participant.valid?.MintHistory?.[0]?.Amt ?? '--'}</td>
+                              <td className="p-3 whitespace-nowrap">{participant.valid?.MintHistory?.[0]?.Amt ?? '--'}</td>
+                              <td className="p-3 whitespace-nowrap">--</td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
                 </div>
-                
+
                 <Button variant="outline" className="w-full sm:w-48 mt-4" onClick={() => setActiveTab("basic")}>
                   Back to Basic Info
                 </Button>
@@ -202,7 +245,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
         </Tabs>
       </div>
       {showJoinModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40" style={{top:0,left:0}}>
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40" style={{ top: 0, left: 0 }}>
           <div className="relative z-70">
             <JoinPool closeModal={() => setShowJoinModal(false)} poolData={poolDetails} />
           </div>
