@@ -45,9 +45,10 @@ function adaptPoolData(pool, satsnetHeight) {
     ? Math.floor((pool.maxSupply ?? pool.launchCap) * (pool.launchRation ?? 100) / 100)
     : (pool.launchCap ?? 0);
 
-  const progress = launchCap
+  const rawProgress = launchCap
     ? Math.floor(((pool.TotalMinted ?? pool.progress ?? 0) / launchCap) * 100)
     : (pool.progress ?? 0);
+  const progress = Math.min(rawProgress, 100);
 
   // 新的poolStatus逻辑
   let poolStatus = PoolStatus.NOT_STARTED;
@@ -65,6 +66,8 @@ function adaptPoolData(pool, satsnetHeight) {
         poolStatus = PoolStatus.EXPIRED;
       }
     }
+  } else if (status === 200) {
+    poolStatus = PoolStatus.COMPLETED;
   } else {
     poolStatus = PoolStatus.NOT_STARTED;
   }
