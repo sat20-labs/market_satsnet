@@ -23,6 +23,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
       PoolStatus.FULL,
       PoolStatus.DISTRIBUTING,
       PoolStatus.COMPLETED,
+      PoolStatus.CLOSED,
       PoolStatus.EXPIRED,
       PoolStatus.EXPIRED_UNFILLED,
     ].includes(poolDetails.poolStatus);

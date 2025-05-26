@@ -47,7 +47,7 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
         </Button>
       );
       break;
-
+    case PoolStatus.CLOSED:
     case PoolStatus.COMPLETED:
       mainAction = (
         <Button variant="outline" className='w-36' onClick={() => openModal('distribution', pool)}>

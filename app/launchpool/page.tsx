@@ -62,13 +62,15 @@ function adaptPoolData(pool, satsnetHeight) {
         poolStatus = PoolStatus.NOT_STARTED;
       } else if ((endBlock === 0 || satsnetHeight <= endBlock)) {
         poolStatus = PoolStatus.ACTIVE;
-      } else if (endBlock !== 0 && satsnetHeight > endBlock) {
-        poolStatus = PoolStatus.EXPIRED;
       }
     }
-  } else if (status === 200 || status === -1) {
+  } else if (status === 200) {
     poolStatus = PoolStatus.COMPLETED;
-  } else {
+  } else if (status === -1) {
+    poolStatus = PoolStatus.CLOSED;
+  }  else if (status === -2) {
+    poolStatus = PoolStatus.EXPIRED;
+  }else {
     poolStatus = PoolStatus.NOT_STARTED;
   }
 
