@@ -6,6 +6,7 @@ import JoinPool from '@/components/launchpool/JoinPool';
 import LaunchPoolDetails from '@/components/launchpool/PoolDetail';
 import LaunchPoolTemplate from '@/components/launchpool/[templateId]/TemplateDetailsClient';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
+import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
 import {
@@ -54,6 +55,7 @@ function adaptPoolData(pool, satsnetHeight) {
   const enableBlock = Number(pool.enableBlock);
   const endBlock = Number(pool.endBlock);
   if (status === 100) {
+    console.log('enableBlock', enableBlock, satsnetHeight);
     if (!isNaN(enableBlock) && typeof satsnetHeight === 'number') {
       if (satsnetHeight < enableBlock) {
         poolStatus = PoolStatus.NOT_STARTED;
@@ -123,8 +125,6 @@ const LaunchPool = () => {
       const { contractStatus } = result;
       console.log('contractStatus', contractStatus && JSON.parse(contractStatus));
       if (contractStatus) {
-        console.log('getDeployedContractsInServer', item);
-        console.log('getDeployedContractsInServer', JSON.parse(contractStatus));
         statusList.push({
           ...JSON.parse(contractStatus),
           contractURL: item,
@@ -139,19 +139,20 @@ const LaunchPool = () => {
     queryFn: getPoolList,
     refetchInterval: 30000, // 每10秒自动刷新一次
   });
-  console.log('poolList', poolList);
+  
 
   // 用 useMemo 结合 poolList 和 satsnetHeight 生成渲染用 list
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-
+  console.log('poolList', adaptedPoolList);
   const columns = [
     { key: 'assetName', label: 'Asset Name' },
     { key: 'poolStatus', label: 'Pool Status' },
     { key: 'totalSupply', label: 'Total Supply' },
-    { key: 'poolSize', label: 'Pool Size' },
+    { key: 'launchRation', label: 'Launch Ration' },
     { key: 'deployTime', label: 'Deploy Time' },
+    { key: 'enableBlock', label: 'Enable Block' },
     { key: 'startBlock', label: 'Start Block' },
     { key: 'endBlock', label: 'End Block' },
     { key: 'progress', label: 'Progress' },
@@ -199,9 +200,11 @@ const LaunchPool = () => {
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2">
-          <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/launchpool/create')}>
-            Create Pool
-          </Button>
+          <WalletConnectBus asChild>
+            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/launchpool/create')}>
+              Create Pool
+            </Button>
+          </WalletConnectBus>
         </div>
       </div>
       <div className="relative overflow-x-auto w-full px-3 pt-2 bg-zinc-900 rounded-lg">
@@ -244,12 +247,14 @@ const LaunchPool = () => {
                   </Badge>
                 </TableCell>
                 <TableCell className="px-4 py-2">{adaptedPool.totalSupply}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.poolSize}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.launchRation}%</TableCell>
+                {/* <TableCell className="px-4 py-2">{adaptedPool.poolSize}</TableCell> */}
                 <TableCell className="px-4 py-2">
                   {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                 </TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.startTime}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.endTime}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.enableBlock}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.startBlock}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.endBlock}</TableCell>
                 <TableCell className="px-4 py-2 min-w-[120px]">
                   <div className="w-full bg-gray-200 h-2 rounded">
                     <div

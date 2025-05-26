@@ -45,7 +45,7 @@ export const WalletConnectBus = ({
     return React.cloneElement(child, {
       onClick: (e: React.MouseEvent<any>) => {
         handleConnectClick(e); // Call our connect logic
-        child.props.onClick?.(e); // Call original onClick if it exists
+        // child.props.onClick?.(e); // Call original onClick if it exists
       },
       // Merge className if provided to the wrapper
       className: className ? `${child.props.className || ''} ${className}`.trim() : child.props.className,

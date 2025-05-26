@@ -12,9 +12,11 @@ import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
 import { hideStr } from '@/utils';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-
+import { WalletConnectBus } from '../wallet/WalletConnectBus';
+import { useCommonStore } from '@/store/common';
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
   console.log(poolDetails);
+  const { satsnetHeight } = useCommonStore();
   const { address } = useReactWalletStore();
   const canViewParticipants = () => {
     return [
@@ -41,7 +43,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
       const result = await window.sat20.getAllAddressInContract(poolDetails.contractURL);
       const list = JSON.parse(result.addresses)?.data || [];
       console.log('list', list);
-      
+
       const resultStatusList: any[] = [];
       for (const item of list) {
         const { status } = await window.sat20.getAddressStatusInContract(poolDetails.contractURL, item.address);
@@ -108,6 +110,11 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
 
               <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2">Basic Information</h3>
+                {/* 聪网高度静态提示 */}
+                <div className="text-zinc-400 text-sm mt-2">
+                  当前聪网高度：{satsnetHeight}
+                </div>
+
                 <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
                   <tbody>
                     <tr className="border-b border-zinc-700">
@@ -122,10 +129,10 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-3 font-bold text-zinc-400">Total Supply</td>
                       <td className="p-2">{poolDetails.totalSupply}</td>
                     </tr>
-                    <tr className="border-b border-zinc-700">
+                    {/* <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400">Pool Size</td>
                       <td className="p-2">{poolDetails.poolSize}</td>
-                    </tr>
+                    </tr> */}
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400">Launch Cap</td>
                       <td className="p-2">{poolDetails.launchCap}</td>
@@ -151,6 +158,10 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-2">{poolDetails.startTime}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400">EnableBlock</td>
+                      <td className="p-2">{poolDetails.enableBlock ?? '--'}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400">End Block</td>
                       <td className="p-2">{poolDetails.endTime}</td>
                     </tr>
@@ -168,7 +179,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                     </tr>
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400">On-chain Status</td>
-                      <td className="p-2">{onchainStatusTextMap[String(poolDetails.status)] ?? poolDetails.status ?? '-'}</td>
+                      <td className="p-2">{onchainStatusTextMap[String(poolDetails.status)] ?? poolDetails.status ?? '-'}({poolDetails.status})</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400">DeployTickerTxId</td>
@@ -213,15 +224,19 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 </table>
               </div>
 
+
+
               <div className="flex space-x-4 mt-4">
-                <Button
-                  variant="outline"
-                  className={`mt-2 w-36 sm:w-48 h-11 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
-                  onClick={() => poolDetails.poolStatus === PoolStatus.ACTIVE && setShowJoinModal(true)}
-                  disabled={poolDetails.poolStatus !== PoolStatus.ACTIVE}
-                >
-                  Join Pool
-                </Button>
+                <WalletConnectBus asChild>
+                  <Button
+                    variant="outline"
+                    className={`mt-2 w-36 sm:w-48 h-11 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
+                    onClick={() => poolDetails.poolStatus === PoolStatus.ACTIVE && setShowJoinModal(true)}
+                    disabled={poolDetails.poolStatus !== PoolStatus.ACTIVE}
+                  >
+                    Join Pool
+                  </Button>
+                </WalletConnectBus>
                 <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11" onClick={closeModal}>
                   Close
                 </Button>

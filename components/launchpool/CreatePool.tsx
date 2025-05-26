@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const { t } = useTranslation();
-  const [bol, setBol] = useState(false);
+  const [bol, setBol] = useState(true);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     protocol: 'ordx',
@@ -30,7 +30,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     assetSymbol: '',
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [poolStatus, setPoolStatus] = useState<any>(null);
   const [monitorTxId, setMonitorTxId] = useState<string | null>(null);
 
   // 使用store获取合约类型
