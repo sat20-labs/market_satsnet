@@ -8,10 +8,14 @@ import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
 import JoinPool from './JoinPool';
 import { Modal } from '@/components/ui/modal';
 import { useQuery } from '@tanstack/react-query';
+import { generateMempoolUrl } from '@/utils/url';
+import { Chain } from '@/types';
+import { hideStr } from '@/utils';
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
   console.log(poolDetails);
-
+  const { address } = useReactWalletStore();
   const canViewParticipants = () => {
     return [
       PoolStatus.ACTIVE,
@@ -36,6 +40,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
     try {
       const result = await window.sat20.getAllAddressInContract(poolDetails.contractURL);
       const list = JSON.parse(result.addresses)?.data || [];
+      console.log('list', list);
+      
       const resultStatusList: any[] = [];
       for (const item of list) {
         const { status } = await window.sat20.getAddressStatusInContract(poolDetails.contractURL, item.address);
@@ -44,6 +50,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
           ...JSON.parse(status)
         });
       }
+      // 按 address 升序排序
+      resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
       console.log('resultStatusList', resultStatusList);
       return resultStatusList;
     } catch (e) {
@@ -57,9 +65,17 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
     queryKey: ['participants', poolDetails?.contractURL],
     queryFn: fetchParticipants,
     enabled: canViewParticipants() && !!poolDetails?.contractURL,
+    refetchInterval: 2000,
   });
   console.log('participantsData', participantsData);
 
+  const onchainStatusTextMap = {
+    '-2': 'EXPIRED（已过期）',
+    '-1': 'CLOSED（已关闭）',
+    '0': 'INIT（初始化）',
+    '100': 'READY（正常工作阶段）',
+    '200': 'CLOSING（关闭中）',
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
@@ -149,6 +165,49 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400">Binding Sat</td>
                       <td className="p-2">{poolDetails.bindingSat ?? poolDetails.n}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400">On-chain Status</td>
+                      <td className="p-2">{onchainStatusTextMap[String(poolDetails.status)] ?? poolDetails.status ?? '-'}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400">DeployTickerTxId</td>
+                      <td className="p-2">
+                        {poolDetails.DeployTickerTxId ? (
+                          <a href={generateMempoolUrl({
+                            network: poolDetails.network || 'btc',
+                            path: `tx/${poolDetails.DeployTickerTxId}`,
+                            chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
+                            env: poolDetails.env || 'prod',
+                          })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolDetails.DeployTickerTxId, 6)}</a>
+                        ) : '-'}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400">MintTxId</td>
+                      <td className="p-2">
+                        {poolDetails.MintTxId ? (
+                          <a href={generateMempoolUrl({
+                            network: poolDetails.network || 'btc',
+                            path: `tx/${poolDetails.MintTxId}`,
+                            chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
+                            env: poolDetails.env || 'prod',
+                          })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolDetails.MintTxId, 6)}</a>
+                        ) : '-'}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400">AnchorTxId</td>
+                      <td className="p-2">
+                        {poolDetails.AnchorTxId ? (
+                          <a href={generateMempoolUrl({
+                            network: poolDetails.network || 'btc',
+                            path: `tx/${poolDetails.AnchorTxId}`,
+                            chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
+                            env: poolDetails.env || 'prod',
+                          })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolDetails.AnchorTxId, 6)}</a>
+                        ) : '-'}
+                      </td>
                     </tr>
                   </tbody>
                 </table>

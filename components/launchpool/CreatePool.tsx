@@ -9,6 +9,10 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useCommonStore } from '@/store/common';
+import { generateMempoolUrl } from '@/utils/url';
+import { Chain } from '@/types';
+import { hideStr } from '@/utils';
+import { useQuery } from '@tanstack/react-query';
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const { t } = useTranslation();
@@ -26,6 +30,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     assetSymbol: '',
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [poolStatus, setPoolStatus] = useState<any>(null);
+  const [monitorTxId, setMonitorTxId] = useState<string | null>(null);
 
   // 使用store获取合约类型
   const { satsnetHeight } = useCommonStore();
@@ -38,6 +44,29 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
 
   const handleInputChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // 用useQuery定时拉取池子状态
+  const { data: poolStatusData } = useQuery({
+    queryKey: ['poolStatus', monitorTxId],
+    queryFn: async () => {
+      if (!monitorTxId || step !== 3) return null;
+      const result = await window.sat20.getDeployedContractStatus(monitorTxId);
+      if (result && result.contractStatus) {
+        return JSON.parse(result.contractStatus);
+      }
+      return null;
+    },
+    enabled: !!monitorTxId && step === 3,
+    refetchInterval: 3000,
+  });
+
+  const statusTextMap = {
+    '-2': 'EXPIRED（已过期）',
+    '-1': 'CLOSED（已关闭）',
+    '0': 'INIT（初始化）',
+    '100': 'READY（正常工作阶段）',
+    '200': 'CLOSING（关闭中）',
   };
 
   async function handleConfirm(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
@@ -76,6 +105,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     const { txId } = result
     if (txId) {
       toast.success(`Contract deployed successfully, txid: ${txId}`);
+      setMonitorTxId(txId);
+      setStep(3);
     } else {
       toast.error('Contract deployment failed');
     }
@@ -230,12 +261,47 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
             </div>
             <p className="text-sm text-zinc-400 mt-2">{t('Monitor the progress of your launch pool and user participation.')}</p>
             <p className="mt-4">{t('Waiting for user participation and pool completion...')}</p>
-            {/* Add monitoring logic here */}
+            {monitorTxId && (
+              <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
+                <div className="mb-2 font-bold text-white">{t('Pool Status')}</div>
+                <div className="text-sm text-zinc-300 mb-2">{t('Status')}: {statusTextMap[String(poolStatusData?.status)] ?? poolStatusData?.status ?? '-'}</div>
+                <div className="text-sm text-zinc-300 mb-2">
+                  DeployTickerTxId: {poolStatusData?.DeployTickerTxId ? (
+                    <a href={generateMempoolUrl({
+                      network: 'testnet',
+                      path: `tx/${poolStatusData.DeployTickerTxId}`,
+                      chain: Chain.BTC,
+                      env: 'dev',
+                    })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolStatusData.DeployTickerTxId, 6)}</a>
+                  ) : '-'}
+                </div>
+                <div className="text-sm text-zinc-300 mb-2">
+                  MintTxId: {poolStatusData?.MintTxId ? (
+                    <a href={generateMempoolUrl({
+                      network: 'testnet',
+                      path: `tx/${poolStatusData.MintTxId}`,
+                      chain: Chain.BTC,
+                      env: 'dev',
+                    })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolStatusData.MintTxId, 6)}</a>
+                  ) : '-'}
+                </div>
+                <div className="text-sm text-zinc-300 mb-2">
+                  AnchorTxId: {poolStatusData?.AnchorTxId ? (
+                    <a href={generateMempoolUrl({
+                      network: 'testnet',
+                      path: `tx/${poolStatusData.AnchorTxId}`,
+                      chain: Chain.SATNET,
+                      env: 'dev',
+                    })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolStatusData.AnchorTxId, 6)}</a>
+                  ) : '-'}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         <div className="mt-4 py-4 flex justify-between">
-          {step > 1 && <Button className="w-40 sm:w-48" variant="outline" onClick={handlePrevStep}>{t('Previous')}</Button>}
+          {step > 1 && step < 3 && <Button className="w-40 sm:w-48" variant="outline" onClick={handlePrevStep}>{t('Previous')}</Button>}
           {step === 1 && (
             <Button
               className="w-40 sm:w-48"

@@ -2,8 +2,9 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 interface JoinPoolProps {
   closeModal: () => void;
@@ -12,7 +13,11 @@ interface JoinPoolProps {
 
 const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   const limit = Number(poolData?.limit) || 1;
-  const [amount, setAmount] = useState(limit.toString());
+  const [amount, setAmount] = useState('');
+  const { address } = useReactWalletStore();
+  const [minted, setMinted] = useState(0);
+  const [maxJoin, setMaxJoin] = useState(limit);
+  const [loading, setLoading] = useState(false);
 
   const infoList = [
     { label: 'Asset Name', value: poolData?.assetName },
@@ -25,10 +30,38 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     { label: 'Max Supply', value: poolData?.maxSupply },
     { label: 'Limit', value: poolData?.limit },
   ];
+  console.log('parsed', address, poolData?.contractURL, limit);
+  
+  useEffect(() => {
+    const fetchMinted = async () => {
+      if (!address || !poolData?.contractURL) return;
+      setLoading(true);
+      try {
+        const { status } = await window.sat20.getAddressStatusInContract(poolData.contractURL, address);
+        const parsed = JSON.parse(status);
+        console.log('parsed', parsed);
+        const mintedAmt = Number(parsed?.valid?.MintHistory?.[0]?.Amt || 0);
+        setMinted(mintedAmt);
+        setMaxJoin(Math.max(limit - mintedAmt, 0));
+        setAmount(prev => {
+          const n = Number(prev);
+          if (n > limit - mintedAmt) return String(Math.max(limit - mintedAmt, 0));
+          return prev;
+        });
+      } catch (e) {
+        setMinted(0);
+        setMaxJoin(limit);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMinted();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, poolData?.contractURL, limit]);
 
   const handleConfirm = async () => {
-    if (Number(amount) > limit) {
-      toast.error(`Amount must be less than or equal to limit (${limit})`);
+    if (Number(amount) > maxJoin) {
+      toast.error(`Amount must be less than or equal to your max join (${maxJoin})`);
       return;
     }
     const params = {
@@ -70,14 +103,19 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
 
       <div className="mb-6">
         <label className="block mb-2 text-zinc-300 font-semibold" htmlFor="amount">Amount to Join</label>
+        <div className="text-zinc-400 text-sm mb-1">
+          Max you can join: <span className="text-zinc-100 font-bold">{loading ? 'Loading...' : maxJoin}</span>
+        </div>
         <Input
           id="amount"
           type="number"
           placeholder="Enter amount"
           value={amount}
-          min={limit}
+          min={1}
+          max={maxJoin}
           onChange={e => setAmount(e.target.value)}
           className="mb-2"
+          disabled={loading || maxJoin === 0}
         />
         <div className="text-zinc-400 text-sm">Current amount: <span className="text-zinc-100 font-bold">{amount || 0}</span></div>
       </div>

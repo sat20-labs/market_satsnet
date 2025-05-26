@@ -90,8 +90,6 @@ function adaptPoolData(pool, satsnetHeight) {
     endTime: pool.endBlock !== undefined && pool.endBlock !== null
       ? String(pool.endBlock)
       : (pool.endTime ?? ''),
-    statusCode: pool.status ?? '',
-    status: PoolStatus.ACTIVE,
     poolStatus,
     deployTime: pool.deployTime ?? '',
   };
