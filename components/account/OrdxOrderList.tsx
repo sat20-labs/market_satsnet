@@ -80,7 +80,7 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
             if (!ticker) return [null, null];
             try {
               const infoRes = await clientApi.getTickerInfo(ticker);
-              const displayName = infoRes?.data?.displayname || infoRes?.data?.Ticker || ticker;
+              const displayName = infoRes?.data?.name.Ticker || infoRes?.data?.Ticker || ticker;
               return [ticker, displayName];
             } catch {
               return [ticker, ticker];
