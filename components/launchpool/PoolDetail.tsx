@@ -248,22 +248,20 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 <h3 className="text-lg font-semibold mb-2">Template Info - {poolDetails.templateName}</h3>
                 <p className="text-zinc-400 mb-4">{poolDetails.templateDescription}</p>
 
-                <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
-                  <thead className="bg-zinc-800">
-                    <tr>
-                      <th className="p-3 text-left">Parameter</th>
-                      <th className="p-3 text-left">Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {poolDetails.templateParameters.map((param: any, index: number) => (
-                      <tr key={index} className="border-b border-zinc-700">
-                        <td className="p-3 font-medium text-zinc-400">{param.key}</td>
-                        <td className="p-2">{param.value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {/* 原始合约模板JSON展示 */}
+                <div className="mt-6">
+                  <pre className="bg-zinc-800 text-zinc-100 rounded p-4 overflow-x-auto text-sm">
+                    {`{
+  "contractType": "launchpool.tc",
+  "ttl": 0,
+  "assetName": {"Protocol": "", "Type": "", "Ticker": ""},
+  "bindingSat": 0,
+  "limit": 0,
+  "maxSupply": 0,
+  "launchRation": 0
+}`}
+                  </pre>
+                </div>
               </div>
 
               <Button variant="outline" className="w-full sm:w-48 mt-4" onClick={() => setActiveTab("basic")}>
