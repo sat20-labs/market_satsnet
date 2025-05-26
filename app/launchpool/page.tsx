@@ -66,7 +66,7 @@ function adaptPoolData(pool, satsnetHeight) {
         poolStatus = PoolStatus.EXPIRED;
       }
     }
-  } else if (status === 200) {
+  } else if (status === 200 || status === -1) {
     poolStatus = PoolStatus.COMPLETED;
   } else {
     poolStatus = PoolStatus.NOT_STARTED;
@@ -167,6 +167,8 @@ const LaunchPool = () => {
   const [selectedPool, setSelectedPool] = useState<any | null>(null);
 
   const openModal = async (type: string, pool: any | null = null) => {
+    console.log('type', type, pool);
+    
     const result = await window.sat20.getParamForInvokeContract(pool.contractType)
     console.log('result:', result);
     setModalType(type);
@@ -197,7 +199,8 @@ const LaunchPool = () => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-
+  console.log('modalType', modalType, selectedPool);
+  
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
@@ -284,8 +287,8 @@ const LaunchPool = () => {
             {modalType === 'template' && (
               <LaunchPoolTemplate templateId={selectedTemplateId || ''} closeModal={closeModal} />
             )}
-            {modalType === 'distribute' && selectedPool && (
-              <DistributionList participantsList={selectedPool.participantsList} closeModal={closeModal} />
+            {modalType === 'distribution'&& (
+              <DistributionList contractURL={selectedPool.contractURL} closeModal={closeModal} />
             )}
             {modalType === 'autoDistribute' && (
               <div className="bg-zinc-900 p-6 rounded-lg shadow-md max-w-[600px]">

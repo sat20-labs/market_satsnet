@@ -15,7 +15,6 @@ import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { WalletConnectBus } from '../wallet/WalletConnectBus';
 import { useCommonStore } from '@/store/common';
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
-  console.log(poolDetails);
   const { satsnetHeight } = useCommonStore();
   const { address } = useReactWalletStore();
   const canViewParticipants = () => {
@@ -296,14 +295,19 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                             <td colSpan={4} className="text-center p-4 text-zinc-400">暂无参与者</td>
                           </tr>
                         ) : (
-                          participantsData.map((participant: any, index: number) => (
-                            <tr key={index} className="border-b border-zinc-700">
-                              <td className="p-3 whitespace-nowrap">{participant.address}</td>
-                              <td className="p-3 whitespace-nowrap">{participant.valid?.MintHistory?.[0]?.Amt ?? '--'}</td>
-                              <td className="p-3 whitespace-nowrap">{participant.valid?.MintHistory?.[0]?.Amt ?? '--'}</td>
-                              <td className="p-3 whitespace-nowrap">--</td>
-                            </tr>
-                          ))
+                          participantsData.map((participant: any, index: number) => {
+                            // 计算MintHistory中所有Amt的和
+                            const mintHistory = participant.valid?.MintHistory || [];
+                            const totalAmt = mintHistory.reduce((sum: number, item: any) => sum + (Number(item.Amt) || 0), 0);
+                            return (
+                              <tr key={index} className="border-b border-zinc-700">
+                                <td className="p-3 whitespace-nowrap">{participant.address}</td>
+                                <td className="p-3 whitespace-nowrap">{totalAmt || '--'}</td>
+                                <td className="p-3 whitespace-nowrap">{totalAmt || '--'}</td>
+                                <td className="p-3 whitespace-nowrap">--</td>
+                              </tr>
+                            );
+                          })
                         )}
                       </tbody>
                     </table>
