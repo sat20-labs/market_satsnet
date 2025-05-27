@@ -99,6 +99,7 @@ function adaptPoolData(pool, satsnetHeight) {
       : (pool.endTime ?? ''),
     poolStatus,
     deployTime: pool.deployTime ?? '',
+    assetSymbol: pool.assetSymbol ?? '',
   };
 }
 
@@ -239,7 +240,9 @@ const LaunchPool = () => {
                   <Avatar className="w-8 h-8">
                     <AvatarImage src={adaptedPool.logo} alt="Logo" />
                     <AvatarFallback>
-                      {adaptedPool.assetName?.charAt(0).toUpperCase()}
+                      {adaptedPool.assetSymbol
+                        ? String.fromCodePoint(adaptedPool.assetSymbol)
+                        : adaptedPool.assetName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <span
@@ -254,15 +257,15 @@ const LaunchPool = () => {
                     {statusTextMap[adaptedPool.poolStatus]}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.totalSupply}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.launchRation}%</TableCell>
-                {/* <TableCell className="px-4 py-2">{adaptedPool.poolSize}</TableCell> */}
+                <TableCell className="px-4 py-2">{parseInt(adaptedPool.totalSupply, 10)}</TableCell>
+                <TableCell className="px-4 py-2">{parseInt(adaptedPool.launchRation, 10)}%</TableCell>
+                {/* <TableCell className="px-4 py-2">{parseInt(adaptedPool.poolSize, 10)}</TableCell> */}
                 <TableCell className="px-4 py-2">
                   {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                 </TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.enableBlock}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.startBlock}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.endBlock}</TableCell>
+                <TableCell className="px-4 py-2">{parseInt(adaptedPool.enableBlock, 10)}</TableCell>
+                <TableCell className="px-4 py-2">{parseInt(adaptedPool.startBlock, 10)}</TableCell>
+                <TableCell className="px-4 py-2">{parseInt(adaptedPool.endBlock, 10)}</TableCell>
                 <TableCell className="px-4 py-2 min-w-[120px]">
                   <div className="w-full bg-gray-200 h-2 rounded">
                     <div

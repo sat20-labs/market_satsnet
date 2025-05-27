@@ -58,7 +58,11 @@ const DistributionList = ({ contractURL, closeModal }: { contractURL: string; cl
   const totalAmount = adaptedList.reduce(
     (total: number, participant: any) => total + (parseFloat(participant.amount) || 0),
     0
-  ).toFixed(2);
+  ).toFixed(0);
+  const totalValue = adaptedList.reduce(
+    (total: number, participant: any) => total + (parseFloat(participant.value) || 0),
+    0
+  ).toFixed(0);
 
   const totalTokens = adaptedList.reduce(
     (total: number, participant: any) => total + (parseInt(participant.amount.toString().replace(/,/g, ''), 10) || 0),
@@ -75,7 +79,7 @@ const DistributionList = ({ contractURL, closeModal }: { contractURL: string; cl
             <TableRow>
               <TableHead className="p-3 text-left">序号</TableHead>
               <TableHead className="p-3 text-left">地址</TableHead>
-              <TableHead className="p-3 text-left">聪</TableHead>
+              <TableHead className="p-3 text-left">资产数量/聪</TableHead>
               {/* <TableHead className="p-3 text-left">加入时间</TableHead> */}
             </TableRow>
           </TableHeader>
@@ -94,9 +98,9 @@ const DistributionList = ({ contractURL, closeModal }: { contractURL: string; cl
               ))
             )}
             <TableRow className="bg-gray-800 text-white font-bold">
-              <TableCell className="p-3">总计</TableCell>
+              <TableCell className="p-3">资产数量总量/聪总量</TableCell>
               <TableCell className="p-3">{adaptedList.length}</TableCell>
-              <TableCell className="p-3">{totalAmount} sats</TableCell>
+              <TableCell className="p-3">{totalAmount}/{totalValue}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
