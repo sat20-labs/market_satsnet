@@ -4,3 +4,4 @@ export * from './common';
 export * from './asset';
 export * from './utxo';
 export * from './wallet';
+export * from './contract';

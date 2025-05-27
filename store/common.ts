@@ -12,6 +12,7 @@ interface CommonState {
   chain: Chain;
   network: Network; // 将 network 类型改为 Network
   btcHeight: number;
+  satsnetHeight: number;
   btcPrice: number;
   appVersion: number;
   signature?: string;
@@ -22,6 +23,7 @@ interface CommonState {
   setEnv: (env: string) => void;
   setBtcPrice: (b: number) => void;
   setHeight: (h: number) => void;
+  setSatsnetHeight: (h: number) => void;
   setSignature: (signature: string) => void;
   setFeeRate: (feeRate: any) => void;
   reset: () => void;
@@ -38,6 +40,7 @@ export const useCommonStore = create<CommonState>()(
         chain: 'SatoshiNet',
         network: 'testnet', // 默认值改为 mainnet
         btcHeight: 0,
+        satsnetHeight: 0,
         runtimeEnv: 'dev',
         btcPrice: 0,
         appVersion: 0,
@@ -80,6 +83,11 @@ export const useCommonStore = create<CommonState>()(
         setHeight: (height) => {
           set({
             btcHeight: height,
+          });
+        },
+        setSatsnetHeight: (height) => {
+          set({
+            satsnetHeight: height,
           });
         },
         reset: () => {

@@ -1,0 +1,10 @@
+supported contracts: [{"contractType":"launchpool.tc","ttl":0,"assetName":{"Protocol":"","Type":"","Ticker":""},"bindingSat":0,"limit":0,"maxSupply":0,"launchRation":0}  ]
+deployed contracts: []
+deploy contract launchpool.tc need 60766 sats
+use RemoteDeployContract to deploy a contract on core channel in server node
+
+contract tb1qw86hsm7etf4jcqqg556x94s6ska9z0239ahl0tslsuvr5t5kd0nq7vh40m-ordx:f:testTicker-launchpool.tc is running
+deployed contracts: [tb1qw86hsm7etf4jcqqg556x94s6ska9z0239ahl0tslsuvr5t5kd0nq7vh40m-ordx:f:testTicker-launchpool.tc]
+deployed contracts tb1qw86hsm7etf4jcqqg556x94s6ska9z0239ahl0tslsuvr5t5kd0nq7vh40m-ordx:f:testTicker-launchpool.tc status
+ {"contractType":"launchpool.tc","ttl":0,"assetName":{"Protocol":"ordx","Type":"f","Ticker":"testTicker"},"bindingSat":1000,"limit":10000000,"maxSupply":56000000,"launchRation":70,"deployTime":0,"status":100,"DeployTickerTxId":"f78dacec37d17b9d76feb2a7e2d7277ffa30619c735174cd4b15edcf9e3b435a","MintTxId":"977641eb3247dbb5beac5714b735480601a420c8daa6ce0a15e0bf728dc34638","AnchorTxId":"6dd0ed66a2b09d7656cf210ce621c2bc8120ded2b14f9d67c1248769c886f0f6","HasDeployed":2,"HasMinted":2,"HasExpanded":2,"HasRun":1,"ResvId":1747366186598005,"ChannelId":"tb1qw86hsm7etf4jcqqg556x94s6ska9z0239ahl0tslsuvr5t5kd0nq7vh40m","TotalMinted":0,"TotalInvalid":0,"IsLaunching":false,"LaunchTxIDs":null,"RefundTxIDs":null,"InvalidMintMap":{}}
+need 1000 fee to invoke contract tb1qw86hsm7etf4jcqqg556x94s6ska9z0239ahl0tslsuvr5t5kd0nq7vh40m-ordx:f:testTicker-launchpool.tc with parameter {"assetName":"ordx:f:testTicker","amt":"1000000"}

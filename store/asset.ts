@@ -214,7 +214,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
                     const { ticker } = infoRes
                     const result = JSON.parse(ticker)
                     console.log('ticker result', result)
-                    label = result?.displayname || label
+                    label = result?.name.Ticker || label
                   }
                 } catch (error) {
                   console.error('error', error)

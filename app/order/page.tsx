@@ -39,7 +39,10 @@ function OrderPageContent() {
     enabled: !!asset,
   });
   const tickerInfo = useMemo(() => {
-    return tickerRes?.data || {};
+    return {
+      ...tickerRes?.data,
+      displayname: tickerRes?.data?.name.Ticker || tickerRes?.data?.Ticker || tickerRes?.data?.assets_name
+    };
   }, [tickerRes]);
   const { chain, network } = useCommonStore();
   // Transform asset summary

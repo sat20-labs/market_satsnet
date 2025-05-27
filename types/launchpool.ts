@@ -7,6 +7,7 @@ export enum PoolStatus {
   COMPLETED = "completed",     // Completed
   EXPIRED = "expired",         // Expired
   EXPIRED_UNFILLED = "expired_unfilled", // Expired but not filled
+  CLOSED = "closed", // Closed
 }
 
 // Status text mapping
@@ -18,6 +19,7 @@ export const statusTextMap: Record<string, string> = {
   [PoolStatus.COMPLETED]: "Completed",
   [PoolStatus.EXPIRED]: "Expired",
   [PoolStatus.EXPIRED_UNFILLED]: "Expired (Unfilled)",
+  [PoolStatus.CLOSED]: "Closed",
 };
 
 // Status color mapping

@@ -3,31 +3,27 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PoolStatus } from '@/types/launchpool';
+import { useCommonStore } from '@/store/common';
+import { WalletConnectBus } from '../wallet/WalletConnectBus';
 
 const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: string, pool: any) => void }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制菜单显示状态
   const moreActions: React.ReactNode[] = [];
   let mainAction: React.ReactNode = null;
 
-  switch (pool.status) {
+  console.log(pool.poolStatus);
+  switch (pool.poolStatus) {
     case PoolStatus.NOT_STARTED:
-      mainAction = (
-        <Button variant="outline" className='w-36' onClick={() => openModal('details', pool)}>
-          Details
-        </Button>
-      );
+      mainAction = null;
       break;
 
     case PoolStatus.ACTIVE:
       mainAction = (
-        <Button variant="outline" className="btn-gradient w-36" onClick={() => openModal('join', pool)}>
-          Join Pool
-        </Button>
-      );
-      moreActions.push(
-        <Button variant="outline" className='w-36' key="details" onClick={() => openModal('details', pool)}>
-          Details
-        </Button>
+        <WalletConnectBus asChild>
+          <Button variant="outline" className="btn-gradient w-36" onClick={() => openModal('join', pool)}>
+            Join Pool
+          </Button>
+        </WalletConnectBus>
       );
       break;
 
@@ -35,11 +31,6 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
       mainAction = (
         <Button variant="outline" className="btn-gradient w-36" onClick={() => openModal('distribute', pool)}>
           Start Distribution
-        </Button>
-      );
-      moreActions.push(
-        <Button variant="outline" className='w-36' key="details" onClick={() => openModal('details', pool)}>
-          Details
         </Button>
       );
       break;
@@ -56,7 +47,7 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
         </Button>
       );
       break;
-
+    case PoolStatus.CLOSED:
     case PoolStatus.COMPLETED:
       mainAction = (
         <Button variant="outline" className='w-36' onClick={() => openModal('distribution', pool)}>
@@ -67,11 +58,7 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
 
     case PoolStatus.EXPIRED:
     case PoolStatus.EXPIRED_UNFILLED:
-      mainAction = (
-        <Button variant="outline" className='w-36' onClick={() => openModal('details', pool)}>
-          Details
-        </Button>
-      );
+      mainAction = null;
       moreActions.push(
         <Button variant="outline" className='w-36' key="force" onClick={() => openModal('autoDistribute', pool)}>
           Force Distribution

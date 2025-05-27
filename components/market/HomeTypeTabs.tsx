@@ -3,9 +3,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface HomeTypeTabsProps {
   value: string;
   onChange?: (key: string) => void;
+  tabs?: { label: string; key: string }[];
 }
-export const HomeTypeTabs = ({ value, onChange }: HomeTypeTabsProps) => {
-  const list = [
+export const HomeTypeTabs = ({ value, onChange, tabs }: HomeTypeTabsProps) => {
+  const defaultList = [
     {
       label: 'OrdX',
       key: 'ordx',
@@ -14,8 +15,8 @@ export const HomeTypeTabs = ({ value, onChange }: HomeTypeTabsProps) => {
       label: 'Runes',
       key: 'runes',
     },
-    
   ];
+  const list = tabs && tabs.length > 0 ? tabs : defaultList;
   const changeHandler = (key: string) => {
     console.log(key);
     onChange?.(key);

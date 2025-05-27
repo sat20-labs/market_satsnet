@@ -137,7 +137,7 @@ function MarketContent() {
         list.map(async (item) => {
           try {
             const infoRes = await clientApi.getTickerInfo(item.assets_name);
-            const displayName = infoRes?.data?.displayname || infoRes?.data?.Ticker || item.assets_name;
+            const displayName = infoRes?.data?.name.Ticker || infoRes?.data?.Ticker || item.assets_name;
             return [item.assets_name, displayName];
           } catch {
             return [item.assets_name, item.assets_name];
