@@ -30,7 +30,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     assetSymbol: '',
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [monitorTxId, setMonitorTxId] = useState<string | null>(null);
+  const [contractURL, setcontractURL] = useState<string | null>(null);
 
   // 使用store获取合约类型
   const { satsnetHeight } = useCommonStore();
@@ -47,17 +47,16 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
 
   // 用useQuery定时拉取池子状态
   const { data: poolStatusData } = useQuery({
-    queryKey: ['poolStatus', monitorTxId],
+    queryKey: ['poolStatus', contractURL],
     queryFn: async () => {
-      if (!monitorTxId || step !== 3) return null;
-      const url = `${monitorTxId}_${formData.protocol}:f:${formData.ticker}_launchpool.tc`
-      const result = await window.sat20.getDeployedContractStatus(url);
+      if (!contractURL || step !== 3) return null;
+      const result = await window.sat20.getDeployedContractStatus(contractURL);
       if (result && result.contractStatus) {
         return JSON.parse(result.contractStatus);
       }
       return null;
     },
-    enabled: !!monitorTxId && step === 3,
+    enabled: !!contractURL && step === 3,
     refetchInterval: 3000,
   });
 
@@ -102,10 +101,10 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     };
     const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1,bol)
     console.log('create pool result:', result);
-    const { txId } = result
-    if (txId) {
+    const { contractURL, txId } = result
+    if (contractURL) {
       toast.success(`Contract deployed successfully, txid: ${txId}`);
-      setMonitorTxId(txId);
+      setcontractURL(contractURL);
       setStep(3);
     } else {
       toast.error('Contract deployment failed');
@@ -261,7 +260,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
             </div>
             <p className="text-sm text-zinc-400 mt-2">{t('Monitor the progress of your launch pool and user participation.')}</p>
             <p className="mt-4">{t('Waiting for user participation and pool completion...')}</p>
-            {monitorTxId && (
+            {contractURL && (
               <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
                 <div className="mb-2 font-bold text-white">{t('Pool Status')}</div>
                 <div className="text-sm text-zinc-300 mb-2">{t('Status')}: {statusTextMap[String(poolStatusData?.status)] ?? poolStatusData?.status ?? '-'}</div>
