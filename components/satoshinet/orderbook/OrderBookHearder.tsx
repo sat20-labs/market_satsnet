@@ -45,14 +45,14 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
           {t("common.makeorder")}
         </button>
         {/* SWAP UI */}
-       <button
+       {/* <button
           className={`flex justify-center items-center text-sm sm:text-base font-medium pb-2 ${
             activeTab === "swap" ? "border-b-2 border-purple-500" : "text-gray-400"
           }`}
           onClick={() => onTabChange("swap")}
         >
          <span>{t("common.swap")}</span><Icon icon="token-branded:xrune" color='red' className="w-6 h-6" />
-        </button>  
+        </button>   */}
 
       </div>
 

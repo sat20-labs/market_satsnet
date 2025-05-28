@@ -104,7 +104,7 @@ const Sell =  ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanc
   };
 
   return (
-    <div className="p-4 bg-[#0E0E10] text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
+    <div className="p-4 bg-zinc-900 text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
       {/* 输入框 */}
       <div className="flex items-center justify-between mb-4">
         <div className="text-sm text-gray-400">

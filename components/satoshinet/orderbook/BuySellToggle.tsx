@@ -7,7 +7,7 @@ const BuySellToggle = ({
   onChange,
   disableSell = false,
   disableBuy = false,
-  source = 'takeorder' // Default source is 'takeorder', can be 'markorder' or others
+  source = 'takeorder' // Default source is 'makeorder', can be 'markorder' or others
 }: {
   mode: "buy" | "sell";
   onChange: (val: "buy" | "sell") => void;
@@ -15,6 +15,7 @@ const BuySellToggle = ({
   disableBuy?: boolean;
   source?: string;
 }) => {
+  console.log(`BuySellToggle rendered with mode: ${mode}, source: ${source}`); // Debugging line
   const { t ,ready} = useTranslation();
 
   // Dynamically determine the translation key based on source and mode
@@ -31,13 +32,13 @@ const BuySellToggle = ({
   };
 
   return (
-    <div className="inline-flex my-6 rounded-lg overflow-hidden border border-gray-600 w-full">
+    <div className="inline-flex my-6 rounded-lg overflow-hidden  w-full">
       <button
         onClick={() => !disableBuy && onChange("buy")}
         disabled={disableBuy}
         className={`flex justify-center w-full gap-1 px-4 py-2 text-sm font-medium ${
           mode === "buy"
-            ? "bg-zinc-600 text-white"
+            ? "btn-gradient text-white"
             : "bg-zinc-800 text-zinc-400"
         } ${disableBuy ? "cursor-not-allowed" : ""}`}
       >
@@ -50,7 +51,7 @@ const BuySellToggle = ({
           mode === "sell"
             ? disableSell
               ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-              : "bg-zinc-600 text-white"
+              : "btn-gradient text-white"
             : "bg-zinc-800 text-zinc-400"
         }`}
       >
