@@ -50,7 +50,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     queryKey: ['poolStatus', monitorTxId],
     queryFn: async () => {
       if (!monitorTxId || step !== 3) return null;
-      const result = await window.sat20.getDeployedContractStatus(monitorTxId);
+      const url = `${monitorTxId}_${formData.protocol}:f:${formData.ticker}_launchpool.tc`
+      const result = await window.sat20.getDeployedContractStatus(url);
       if (result && result.contractStatus) {
         return JSON.parse(result.contractStatus);
       }
@@ -100,7 +101,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol.charCodeAt(0) } : {}), // 仅 runes 协议时加 assetSymbol，且为uint32
     };
     const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1,bol)
-    console.log('result:', result);
+    console.log('create pool result:', result);
     const { txId } = result
     if (txId) {
       toast.success(`Contract deployed successfully, txid: ${txId}`);
