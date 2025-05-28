@@ -34,7 +34,7 @@ export const AssetInfo = ({ assetData }: AssetInfoProps) => {
         {/* Volume */}
         <div className="border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.volume')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{volumeBtc} <span className="text-zinc-400">{t('common.btc')}</span></p>
+          <p className="text-zinc-200 text-lg font-bold">{volumeBtc} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs mb-3">${volumeUsd}</p>
         </div>
 

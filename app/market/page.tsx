@@ -376,9 +376,11 @@ function MarketContent() {
                         <TableCell key={columnKey} className="px-4 py-3">
                           <div
                             className={`flex text-sm md:text-base whitespace-nowrap ${
-                              numericValue > 0 ? 'text-green-500' : numericValue < 0 ? 'text-sky-500' : 'text-gray-300'
+                              numericValue > 0 ? 'text-red-500' : numericValue < 0 ? 'text-green-500' : 'text-gray-300'
                             }`}
                           >
+                            {numericValue > 0 ? '+' : '-'}
+                             
                             {typeof value === 'string' ? value : '-'}
                           </div>
                         </TableCell>
@@ -400,12 +402,13 @@ function MarketContent() {
                             <span
                               className={`text-xs ${
                                 numericChangeValue > 0
-                                  ? 'text-red-500'
-                                  : numericChangeValue < 0
                                   ? 'text-green-500'
+                                  : numericChangeValue < 0
+                                  ? 'text-red-500'
                                   : 'text-gray-300'
                               }`}
                             >
+                              {numericChangeValue > 0 ? '+' : '-'}
                               {typeof changeValue === 'string' ? changeValue : '-'}
                             </span>
                             )}
@@ -427,10 +430,10 @@ function MarketContent() {
                         <TableCell key={columnKey} className="px-4 py-3">
                           <div className="flex flex-col text-sm md:text-base whitespace-nowrap">
                             {/* 显示 BTC 值 */}
-                            <span>{formattedMarketCapInBtc} <span className='text-zinc-500 font-bold'>BTC</span></span>
+                            <span>{formattedMarketCapInBtc} <span className='text-zinc-500 font-bold text-sm'>BTC</span></span>
                     
                             {/* 显示美元值 */}
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-500">
                               $ <BtcPrice btc={marketCapInBtc} />
                             </span>
                           </div>
@@ -459,6 +462,7 @@ function MarketContent() {
                                   : 'text-gray-300'
                               }`}
                             >
+                              {changeValue > 0 ? '+' : '-'}
                               {typeof changeValue === 'string' ? changeValue : '-'}
                             </span>
                           )}
