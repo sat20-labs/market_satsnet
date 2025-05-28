@@ -55,7 +55,7 @@ export const OrderAnalyze = ({
     for (let i = 0; i < dataSource.length; i++) {
       const item = dataSource[i];
       const label =
-        type === '24h' ? item.time : item.date?.replace(/^\d{4}-/, '');
+        type === '24h' ? item.time : item.date?.replace(/^\d{4}-/, '').replace('-', '/');
       let value = Math.floor(item.avg_price);
       const volume = item.volume;
       let realValue = value;
@@ -63,7 +63,16 @@ export const OrderAnalyze = ({
         value = lineArr[i - 1]?.value;
       }
       const count = item.order_count;
-      lineArr.push({ label, value, count, realValue, volume });
+      // Add a formatted value with the "sats" suffix
+      const valueFormatted = value ? `${value} sats` : '-';
+      lineArr.push({ 
+        label, 
+        value, 
+        valueFormatted, // Add the formatted value with "sats"
+        count, 
+        realValue, 
+        volume 
+      });
     }
     return lineArr;
   }, [dataSource, type]);
@@ -127,6 +136,7 @@ export const OrderAnalyze = ({
               <Button
                 key={item.value}
                 variant={type === item.value ? 'default' : 'outline'}
+                className={type === item.value ? 'btn-gradient' : 'bg-zinc-700 hover:text-zinc-200'}
                 onClick={() => setType(item.value)}
                 size="sm"
               >
@@ -134,7 +144,8 @@ export const OrderAnalyze = ({
               </Button>
             ))}
           </div>
-        </div>        <div className="flex flex-col md:flex-row justify-between items-center gap-2">
+        </div>        
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2  bg-no-repeat bg-center bg-[url('/bg_satswap.png')]">
           <OrderLineChart data={lineChartData || []} />
           {/* <OrderPieChart data={marketData || []} /> */}
         </div>

@@ -17,8 +17,8 @@ export const ActivityTabs = ({ activeTab, onTabChange }: {
     <div className="flex gap-1 w-full sm:w-auto">
       <Button
         variant="ghost"
-        className={`text-sm sm:text-base font-medium h-auto px-3 py-1.5 ${activeTab === 'activities'
-          ? 'text-blue-500 border-b-2 border-blue-500 rounded-none'
+        className={`text-sm sm:text-base font-medium h-auto px-3 py-3  ${activeTab === 'activities'
+          ? 'text-zinc-300 border-b-2 border-purple-500 rounded-none'
           : 'text-gray-400 border-b-2 border-transparent rounded-none'
         }`}
         onClick={() => onTabChange('activities')}
@@ -27,8 +27,8 @@ export const ActivityTabs = ({ activeTab, onTabChange }: {
       </Button>
       <Button
         variant="ghost"
-        className={`text-sm sm:text-base font-medium h-auto px-3 py-1.5 ${activeTab === 'myActivities'
-          ? 'text-blue-500 border-b-2 border-blue-500 rounded-none'
+        className={`text-sm sm:text-base font-medium h-auto px-3 py-3 ${activeTab === 'myActivities'
+          ? 'text-zinc-300 border-b-2 border-purple-500 rounded-none'
           : 'text-gray-400 border-b-2 border-transparent rounded-none'
         }`}
         onClick={() => onTabChange('myActivities')}

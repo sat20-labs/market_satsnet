@@ -51,7 +51,7 @@ export const NetworkSelect = () => {
         className="flex items-center px-4 py-2 bg-[#181819] text-gray-300 text-sm sm:text-base rounded-xl"
         onClick={handleClick}
       >
-        {network === ('mainnet' as Network) ? 'mainnet' : 'TestNet'}
+        {network === ('mainnet' as Network) ? 'Mainnet' : 'Testnet'}
         <span className="ml-2">
           {isOpen ? (
             <Icon icon="mdi-light:chevron-up" className="text-gray-400 text-lg" />
@@ -64,22 +64,22 @@ export const NetworkSelect = () => {
       {/* 下拉菜单 */}
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-1 w-36 bg-[#272727] shadow-xl rounded-xl z-10"
+          className="absolute top-full left-0 py-2 mt-1 w-36 bg-[#272727] shadow-xl rounded-lg z-10"
           onMouseEnter={handleMouseEnter} // 鼠标移到菜单时保持打开
           onMouseLeave={handleMouseLeave} // 鼠标移出菜单时延迟关闭
         >
           <ul>
             <li
-              className="px-2 py-2 hover:bg-gray-700/50 text-gray-400 text-sm sm:text-base cursor-pointer rounded-t-xl"
+              className="px-2 py-1 mx-2 hover:bg-zinc-900 text-gray-400 text-sm sm:text-base cursor-pointer rounded-sm"
               onClick={() => handleSelectionChange('mainnet')}
             >
-              mainnet
+              Mainnet
             </li>
             <li
-              className="px-2 py-2 hover:bg-gray-700/50 text-gray-400 text-sm sm:text-base cursor-pointer rounded-b-xl"
+              className="px-2 py-1 mx-2 hover:bg-zinc-900 text-gray-400 text-sm sm:text-base cursor-pointer rounded-sm"
               onClick={() => handleSelectionChange('testnet')}
             >
-              TestNet
+              Testnet
             </li>
           </ul>
         </div>

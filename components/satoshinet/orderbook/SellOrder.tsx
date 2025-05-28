@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { SellUtxoInfo } from "@/types";
 import { useAssetStore } from '@/store/asset';
+import { useTranslation } from 'react-i18next';
 
 import { clientApi, marketApi } from "@/api";
 import { useCommonStore } from "@/store";
@@ -151,12 +152,12 @@ const buildAndSignOrder = async (
   return batchSignedPsbts?.data?.psbts;
 };
 
-
-
+// Helper function: Submit signed order with translation
 const submitSignedOrder = async (
   address: string,
   assetName: string,
-  signedPsbts: string[]
+  signedPsbts: string[],
+  t: any
 ): Promise<boolean> => {
   console.log('Submitting signed order...');
   const orders = signedPsbts.map((psbt) => ({
@@ -171,12 +172,12 @@ const submitSignedOrder = async (
 
     if (res.code === 200) {
       console.log('Sell order submitted successfully');
-      toast.success('Sell order submitted successfully!');
+      toast.success(t('common.sellSuccess'));
       return true;
     } else {
-      const errorMsg = res.message || 'Failed to submit sell order';
+      const errorMsg = res.message || t('sellOrder.sellFailed');
       console.error('Failed to submit sell order:', errorMsg);
-      toast.error(`Order submission failed: ${errorMsg}`);
+      toast.error(`${t('common.orderSubmissionFailed')} ${errorMsg}`);
       throw new Error(errorMsg);
     }
   } catch (error) {
@@ -186,6 +187,7 @@ const submitSignedOrder = async (
 };
 
 const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: SellOrderProps) => {
+  const { t } = useTranslation();
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
   const [isSelling, setIsSelling] = useState(false);
@@ -237,14 +239,14 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
 
     if (!isSellValid) {
       console.warn("Sell attempt with invalid input or state.");
-      if (Number(totalQuantity) > assetBalance.availableAmt) toast.error("Insufficient balance.");
-      else if (Number(totalQuantity) <= 0) toast.error("Quantity must be positive.");
-      else if (Number(price) <= 0) toast.error("Price must be positive.");
+      if (Number(totalQuantity) > assetBalance.availableAmt) toast.error(t('common.insufficientBalance'));
+      else if (Number(totalQuantity) <= 0) toast.error(t('common.quantityPositive'));
+      else if (Number(price) <= 0) toast.error(t('common.pricePositive'));
       return;
     }
     if (!address || !network || !btcWallet) {
       console.error("Missing address, network, or wallet connection.");
-      toast.error("Wallet not connected or network not selected.");
+      toast.error(t('common.walletNotConnected'));
       return;
     }
 
@@ -255,18 +257,10 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
     try {
       const [sellUtxoInfos, utxos] = await prepareSellData(assetInfo.assetName, sellQuantity, sellPrice, batchQuantity);
       const signedPsbts = await buildAndSignOrder(sellUtxoInfos, address, network, btcWallet);
-      const submissionSuccess = await submitSignedOrder(address, assetInfo.assetName, signedPsbts);
+      const submissionSuccess = await submitSignedOrder(address, assetInfo.assetName, signedPsbts, t);
 
       if (submissionSuccess) {
         queryClient.invalidateQueries({ queryKey: ['orders'] });
-        // for (const utxo of utxos) {
-        //   try {
-        //     await lockSellUtxo(utxo);
-        //   } catch (lockError) {
-        //     console.error(`Failed to lock UTXO ${utxo}:`, lockError);
-        //     toast.error(`Order submitted, but failed to lock UTXO ${utxo}. Please check manually.`);
-        //   }
-        // }
         setQuantity("");
         setPrice("");
         setBatchQuantity(1);
@@ -316,7 +310,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
             {tickerInfo?.displayname}
           </p>
           <p className="text-sm text-gray-400">
-            Your Balance: <span className="ml-2"> {displayBalance.toLocaleString()}</span>
+           {t('common.balance')} <span className="ml-2"> {displayBalance.toLocaleString()} {tickerInfo?.displayname}</span>
           </p>
         </div>
       </div>
@@ -324,7 +318,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
       {/* Quantity Input */}
       <div className="mb-4 space-y-1.5">
         <label htmlFor="sell-quantity" className="block text-sm text-gray-400 mb-1">
-          Quantity ({tickerInfo?.displayname}):
+         {t('common.quantity')} ({tickerInfo?.displayname}):
         </label>
         <div className="flex items-center gap-2">
           <Input
@@ -333,7 +327,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
             inputMode="decimal"
             value={quantity}
             onChange={handleQuantityChange}
-            placeholder="Enter quantity"
+            placeholder={t('common.quantity')}
             className="h-10"
             min="0"
             disabled={isLoading}
@@ -347,14 +341,16 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
             className={`h-10 whitespace-nowrap ${balanceLoading ? 'opacity-50' : ''}`}
             disabled={balanceLoading}
           >
-            Max
+           {t('common.max')}
           </Button>
         </div>
       </div>
 
       {/* Price Input */}
       <div className="mb-6 space-y-1.5">
-        <label htmlFor="sell-price" className="block text-sm text-gray-400 mb-1">Unit Price (sats/{tickerInfo?.displayname}):</label>
+        <label htmlFor="sell-price" className="block text-sm text-gray-400 mb-1">
+         {t('common.unitPrice', { ticker: tickerInfo?.displayname })}:
+        </label>
         <div className="flex items-center gap-2">
           <Input
             id="sell-price"
@@ -362,7 +358,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
             inputMode="decimal"
             value={price}
             onChange={handlePriceChange}
-            placeholder="Enter price per unit"
+            placeholder={t('common.unitPrice', { ticker: tickerInfo?.displayname })}
             className="h-10"
             min="0"
             disabled={isLoading}
@@ -371,7 +367,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
         </div>
       </div>
       <div className="mb-4">
-        <label className="block text-sm text-gray-400 mb-1">Repeat :</label>
+        <label className="block text-sm text-gray-400 mb-1">{t('common.repeat')}:</label>
         <div className="flex items-center gap-4">
           <Slider
             disabled={!quantity}
@@ -403,30 +399,30 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
       </div>
       <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 min-h-[100px] text-sm">
         <p className="flex justify-between gap-1 text-gray-400">
-          <span>Available Balance: </span>
-          <span className="gap-1">{displayAvailableAmt.toLocaleString()} </span>
+          <span>{t('common.availableBalance')} </span>
+          <span className="gap-1">{displayAvailableAmt.toLocaleString()} {tickerInfo?.displayname} </span>
         </p>
 
         {!balanceLoading && quantity !== "" && Number(quantity) > assetBalance.availableAmt && (
           <p className="text-red-500 font-medium mt-2">
-            Insufficient balance.
+           {t('common.insufficientBalance')}
           </p>
         )}
         {quantity !== "" && Number(quantity) <= 0 && (
           <p className="text-red-500 font-medium mt-2">
-            Quantity must be positive.
+           {t('common.quantityPositive')}
           </p>
         )}
         {price !== "" && Number(price) <= 0 && (
           <p className="text-red-500 font-medium mt-2">
-            Price must be positive.
+           {t('common.pricePositive')}
           </p>
         )}
 
         {calculatedBTC > 0 && !isLoading && (
           <div className="mt-4 pt-4 border-t border-zinc-800">
-            <p className="font-medium text-gray-400">
-              Est. Receive: <span className="font-semibold text-zinc-200">{calculatedBTC} sats</span>
+            <p className="flex justify-between font-medium text-gray-400">
+             {t('common.estReceive')}: <span className="font-semibold text-zinc-200 gap-2">{calculatedBTC} {t('common.sats')}</span>
             </p>
           </div>
         )}
@@ -442,7 +438,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
           disabled={(!isSellValid || isLoading)}
           size="lg"
         >
-          {isSelling ? "Processing..." : `Sell ${tickerInfo?.displayname}`}
+          {isSelling ? t('common.processing') : t('common.listsell', { ticker: tickerInfo?.displayname })}
         </Button>
       </WalletConnectBus>
     </div>

@@ -134,13 +134,13 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
           {/* 表头 */}
           <thead className="bg-zinc-800 text-zinc-400">
             <tr>
-              <th className="sticky bg-zinc-800 left-0 h-12 z-10 px-4 py-2 text-left">Name</th>
-              <th className="px-4 py-2 text-left">Type</th>
-              <th className="px-4 py-2 text-right">Quantity</th>
-              <th className="px-4 py-2 text-right">Unit Price</th>
-              <th className="px-4 py-2 text-right">Total Price</th>
-              <th className="px-4 py-2 text-right">Time</th>
-              <th className="px-4 py-2 text-center">Action</th>
+              <th className="sticky bg-zinc-800 left-0 h-12 z-10 px-4 py-2 text-left">{t('common.assets_name')}</th>
+              <th className="px-4 py-2 text-left">{t('common.assets_type')}</th>
+              <th className="px-4 py-2 text-right">{t('common.quantity')}</th>
+              <th className="px-4 py-2 text-right">{t('common.unit_price')}</th>
+              <th className="px-4 py-2 text-right">{t('common.price')}</th>
+              <th className="px-4 py-2 text-right">{t('common.time')}</th>
+              <th className="px-4 py-2 text-center">{t('common.action')}</th>
             </tr>
           </thead>
 

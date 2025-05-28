@@ -9,6 +9,7 @@ import { debounce, tryit } from "radash";
 import { toast } from "sonner";
 import { marketApi } from "@/api";
 import { MARKET_FEES, calculateServiceFee } from "@/config/fees";
+import { useTranslation } from "react-i18next";
 
 export interface TakeOrderUIProps {
   orders: any[];
@@ -48,6 +49,7 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
   onSellSuccess,
 }) => {
   // UI交互相关状态
+  const { t } = useTranslation();
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
   const [sliderValue, setSliderValue] = useState(0);
   const [isProcessingLock, setIsProcessingLock] = useState(false);
@@ -361,9 +363,9 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
   return (
     <div>
       <div className="grid grid-cols-3 text-sm font-semibold text-zinc-500 bg-transparent border-b border-zinc-800 px-2 py-3 rounded">
-        <div className="ml-1">Quantity</div>
-        <div>Price (unit)</div>
-        <div>Total</div>
+        <div className="ml-1">{t('common.quantity')}</div>
+        <div>{t('common.unit_price')}</div>
+        <div>{t('common.total_value')}</div>
       </div>
       <div className="space-y-0 max-h-80 text-sm overflow-y-auto pt-2 w-full scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200">
         {isLoading ? (
@@ -452,11 +454,11 @@ const TakeOrderUI: React.FC<TakeOrderUIProps> = ({
       <WalletConnectBus asChild>
         <Button
           onClick={handleBuy}
-          className={`w-full mt-4 ${!(selectedIndexes.length === 0 || !isBalanceSufficient) ? "btn-gradient" : ""}`}
+          className={`w-full mt-4 ${!(selectedIndexes.length === 0 || !isBalanceSufficient) ? "btn-gradient" : "bg-gray-600 text-zin-500 cursor-not-allowed opacity-60"}`}
           disabled={selectedIndexes.length === 0 || !isBalanceSufficient || isLoading || isFetching}
         >
           {(isLoading || (isFetching && !isLoadingMore)) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isLoading ? "Processing..." : (mode === 'buy' ? 'Buy' : 'Sell')}
+          {isLoading ? "Processing..." : (mode === 'buy' ? t('common.take_buy') : t('common.take_sell'))}
         </Button>
       </WalletConnectBus>
     </div>

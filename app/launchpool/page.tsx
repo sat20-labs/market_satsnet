@@ -29,17 +29,7 @@ import { useContractStore } from '@/store/contract';
 import { uniq } from 'lodash';
 
 const protocol = 'default';
-// supported contracts: [{"contractType":"launchpool.tc","ttl":0,"assetName":{"Protocol":"","Type":"","Ticker":""},"bindingSat":0,"limit":0,"maxSupply":0,"launchRation":0}  ]
-// deployed contracts: []
-// deploy contract launchpool.tc need 60766 sats
-// use RemoteDeployContract to deploy a contract on core channel in server node
 
-
-
-const protocolChange = (newProtocol) => { /* handle protocol change */ };
-const onSortChange = (newInterval) => { /* handle sort change */ };
-
-// 适配器函数：后端字段优先，没有则用前端字段
 function adaptPoolData(pool, satsnetHeight) {
   const launchCap = (pool.maxSupply ?? pool.launchCap) && (pool.launchRation ?? 0)
     ? Math.floor((pool.maxSupply ?? pool.launchCap) * (pool.launchRation ?? 100) / 100)
@@ -50,13 +40,11 @@ function adaptPoolData(pool, satsnetHeight) {
     : (pool.progress ?? 0);
   const progress = Math.min(rawProgress, 100);
 
-  // 新的poolStatus逻辑
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
   const enableBlock = Number(pool.enableBlock);
   const endBlock = Number(pool.endBlock);
   if (status === 100) {
-    console.log('enableBlock', enableBlock, satsnetHeight);
     if (!isNaN(enableBlock) && typeof satsnetHeight === 'number') {
       if (satsnetHeight < enableBlock) {
         poolStatus = PoolStatus.NOT_STARTED;
@@ -68,9 +56,9 @@ function adaptPoolData(pool, satsnetHeight) {
     poolStatus = PoolStatus.COMPLETED;
   } else if (status === -1) {
     poolStatus = PoolStatus.CLOSED;
-  }  else if (status === -2) {
+  } else if (status === -2) {
     poolStatus = PoolStatus.EXPIRED;
-  }else {
+  } else {
     poolStatus = PoolStatus.NOT_STARTED;
   }
 
@@ -104,10 +92,11 @@ function adaptPoolData(pool, satsnetHeight) {
 }
 
 const LaunchPool = () => {
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation(); // Specify the namespace 
+  console.log('Translation for launchpool.asset_name:', t('launchpool.asset_name')); // Debugging: Check translation key
+
   useSupportedContracts();
   const supportedContracts = useContractStore((state) => state.supportedContracts);
-  console.log('supportedContracts', supportedContracts);
   const { satsnetHeight } = useCommonStore();
   const sortList = useMemo(
     () => [
@@ -122,14 +111,11 @@ const LaunchPool = () => {
     const result = await window.sat20.getDeployedContractsInServer();
     const { contractURLs = [] } = result;
     const list = contractURLs.filter(Boolean);
-    console.log('getDeployedContractsInServer', list);
 
-    // 串行请求每个合约状态
     const statusList: any[] = [];
     for (const item of list) {
       const result = await window.sat20.getDeployedContractStatus(item);
       const { contractStatus } = result;
-      console.log('contractStatus', contractStatus && JSON.parse(contractStatus));
       if (contractStatus) {
         statusList.push({
           ...JSON.parse(contractStatus),
@@ -143,26 +129,24 @@ const LaunchPool = () => {
   const { data: poolList = [] } = useQuery({
     queryKey: ['poolList'],
     queryFn: getPoolList,
-    refetchInterval: 30000, // 每10秒自动刷新一次
+    refetchInterval: 30000,
   });
-  
 
-  // 用 useMemo 结合 poolList 和 satsnetHeight 生成渲染用 list
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-  console.log('poolList', adaptedPoolList);
+
   const columns = [
-    { key: 'assetName', label: 'Asset Name' },
-    { key: 'poolStatus', label: 'Pool Status' },
-    { key: 'totalSupply', label: 'Total Supply' },
-    { key: 'launchRation', label: 'Launch Ration' },
-    { key: 'deployTime', label: 'Deploy Time' },
-    { key: 'enableBlock', label: 'Enable Block' },
-    { key: 'startBlock', label: 'Start Block' },
-    { key: 'endBlock', label: 'End Block' },
-    { key: 'progress', label: 'Progress' },
-    { key: 'action', label: 'Action' },
+    { key: 'assetName', label: t('pages.launchpool.asset_name') },
+    { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
+    { key: 'totalSupply', label: t('pages.launchpool.total_supply') },
+    { key: 'launchRation', label: t('pages.launchpool.launch_ration') },
+    { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
+    { key: 'enableBlock', label: t('pages.launchpool.enable_block') },
+    { key: 'startBlock', label: t('pages.launchpool.start_block') },
+    { key: 'endBlock', label: t('pages.launchpool.end_block') },
+    { key: 'progress', label: t('pages.launchpool.progress') },
+    { key: 'action', label: t('pages.launchpool.action') },
   ];
 
   const [modalType, setModalType] = useState<string | null>(null);
@@ -170,10 +154,7 @@ const LaunchPool = () => {
   const [selectedPool, setSelectedPool] = useState<any | null>(null);
 
   const openModal = async (type: string, pool: any | null = null) => {
-    console.log('type', type, pool);
-    
-    const result = await window.sat20.getParamForInvokeContract(pool.contractType)
-    console.log('result:', result);
+    const result = await window.sat20.getParamForInvokeContract(pool.contractType);
     setModalType(type);
     if (type === 'template' && pool) {
       setSelectedTemplateId(pool.template);
@@ -190,40 +171,37 @@ const LaunchPool = () => {
   const [protocol, setProtocol] = useState('all');
   const protocolChange = (newProtocol) => setProtocol(newProtocol);
 
-  // 自动提取所有协议类型，生成 tab 列表
   const protocolTabs = [
-    { label: '全部', key: 'all' },
-    { label: 'OrdX', key: 'ordx' },
-    { label: 'Runes', key: 'runes' },
+    { label: t('pages.launchpool.all'), key: 'all' },
+    { label: t('pages.launchpool.ordx'), key: 'ordx' },
+    { label: t('pages.launchpool.runes'), key: 'runes' },
   ];
 
-  // 根据当前 protocol 筛选池子，并按 deployTime 降序排序
   const filteredPoolList = useMemo(() => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-  console.log('modalType', modalType, selectedPool);
-  
+
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mr-4">
           <WalletConnectBus asChild>
             <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/launchpool/create')}>
-              Create Pool
+              {t('pages.launchpool.create_pool')}
             </Button>
           </WalletConnectBus>
         </div>
       </div>
-      <div className="relative overflow-x-auto w-full px-3 pt-2 bg-zinc-900 rounded-lg">
-        <Table className="w-full border-collapse rounded-lg shadow-md min-w-[900px] bg-background">
+      <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
+        <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
-                  className="px-4 py-2 text-left font-semibold text-muted-foreground bg-muted"
+                  className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900"
                 >
                   {column.label}
                 </TableHead>
@@ -237,7 +215,7 @@ const LaunchPool = () => {
                 className="border-b border-border hover:bg-accent transition-colors"
               >
                 <TableCell className="flex items-center gap-2 px-4 py-2">
-                  <Avatar className="w-8 h-8">
+                  <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                     <AvatarImage src={adaptedPool.logo} alt="Logo" />
                     <AvatarFallback>
                       {adaptedPool.assetSymbol
@@ -259,7 +237,6 @@ const LaunchPool = () => {
                 </TableCell>
                 <TableCell className="px-4 py-2">{parseInt(adaptedPool.totalSupply, 10)}</TableCell>
                 <TableCell className="px-4 py-2">{parseInt(adaptedPool.launchRation, 10)}%</TableCell>
-                {/* <TableCell className="px-4 py-2">{parseInt(adaptedPool.poolSize, 10)}</TableCell> */}
                 <TableCell className="px-4 py-2">
                   {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                 </TableCell>
@@ -267,7 +244,7 @@ const LaunchPool = () => {
                 <TableCell className="px-4 py-2">{parseInt(adaptedPool.startBlock, 10)}</TableCell>
                 <TableCell className="px-4 py-2">{parseInt(adaptedPool.endBlock, 10)}</TableCell>
                 <TableCell className="px-4 py-2 min-w-[120px]">
-                  <div className="w-full bg-gray-200 h-2 rounded">
+                  <div className="w-full bg-gray-600/50 h-2 rounded">
                     <div
                       className="bg-purple-500 h-2 rounded"
                       style={{ width: `${adaptedPool.progress}%` }}
@@ -292,28 +269,24 @@ const LaunchPool = () => {
             {modalType === 'template' && (
               <LaunchPoolTemplate templateId={selectedTemplateId || ''} closeModal={closeModal} />
             )}
-            {modalType === 'distribution'&& (
+            {modalType === 'distribution' && (
               <DistributionList contractURL={selectedPool.contractURL} closeModal={closeModal} />
             )}
             {modalType === 'autoDistribute' && (
               <div className="bg-zinc-900 p-6 rounded-lg shadow-md max-w-[600px]">
-                <h2 className="text-xl font-bold mb-4">Auto Distribute Assets</h2>
-                <p className="text-zinc-400 mb-4">
-                  This operation will distribute assets based on the current participation ratio. Remaining assets will be added to the liquidity pool.
-                </p>
-                <p className="text-amber-500 mb-4">
-                  Warning: This operation is irreversible. Are you sure you want to proceed?
-                </p>
+                <h2 className="text-xl font-bold mb-4">{t('launchpool.auto_distribute_title')}</h2>
+                <p className="text-zinc-400 mb-4">{t('launchpool.auto_distribute_description')}</p>
+                <p className="text-amber-500 mb-4">{t('launchpool.auto_distribute_warning')}</p>
                 <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" onClick={closeModal}>Cancel</Button>
+                  <Button variant="outline" onClick={closeModal}>{t('launchpool.cancel')}</Button>
                   <Button
                     className="bg-indigo-600 hover:bg-indigo-700 text-white"
                     onClick={() => {
-                      alert('Auto distribution started!');
+                      alert(t('launchpool.auto_distribute_alert'));
                       closeModal();
                     }}
                   >
-                    Confirm Distribution
+                    {t('launchpool.confirm_distribution')}
                   </Button>
                 </div>
               </div>
@@ -321,23 +294,19 @@ const LaunchPool = () => {
 
             {modalType === 'autoRefund' && (
               <div className="bg-zinc-900 p-6 rounded-lg shadow-md max-w-[600px]">
-                <h2 className="text-xl font-bold mb-4">Auto Refund</h2>
-                <p className="text-zinc-400 mb-4">
-                  This operation will cancel the pool and refund all participants to their original addresses. The pool will be marked as closed.
-                </p>
-                <p className="text-red-500 mb-4">
-                  Warning: This operation is irreversible. Are you sure you want to proceed?
-                </p>
+                <h2 className="text-xl font-bold mb-4">{t('launchpool.auto_refund_title')}</h2>
+                <p className="text-zinc-400 mb-4">{t('launchpool.auto_refund_description')}</p>
+                <p className="text-red-500 mb-4">{t('launchpool.auto_refund_warning')}</p>
                 <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" onClick={closeModal}>Cancel</Button>
+                  <Button variant="outline" onClick={closeModal}>{t('launchpool.cancel')}</Button>
                   <Button
                     className="bg-red-600 hover:bg-red-700 text-white"
                     onClick={() => {
-                      alert('Auto refund started!');
+                      alert(t('launchpool.auto_refund_alert'));
                       closeModal();
                     }}
                   >
-                    Confirm Refund
+                    {t('launchpool.confirm_refund')}
                   </Button>
                 </div>
               </div>

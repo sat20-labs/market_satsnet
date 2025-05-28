@@ -4,13 +4,36 @@
     "version_update_title": "There is a new version, do you want to update it?"
   },
   "home": {
-    "title": "Home"
+    "title": "Home",
+    "all": "All",
+    "ordx": "OrdX",
+    "runes": "Runes"
   },
   "market": {
     "title": "MarketPlace"
   },
   "launchpool": {
-    "title": "LaunchPool"
+    "title": "LaunchPool",
+    "all": "All",
+    "ordx": "OrdX",
+    "runes": "Runes",
+    "create_pool": "Create Pool",
+    "asset_name": "Asset Name",
+    "pool_status": "Pool Status",
+    "total_supply": "Total Supply",
+    "launch_ration": "Launch Ration",
+    "deploy_time": "Deploy Time",
+    "enable_block": "Enable Block",
+    "start_block": "Start Block",
+    "end_block": "End Block",
+    "progress": "Progress",
+    "action": "Action",
+    "join_pool": "Join Pool",
+    "start_distribution": "Start Distribution",
+    "view_distribution": "View Distribution",
+    "continue": "Continue",
+    "force_distribution": "Force Distribution",
+    "auto_refund": "Auto Refund"
   },
   "tools": {
     "title": "Toolbox",
@@ -192,5 +215,119 @@
       "success": "Congratulations, you are eligible for the lottery! The list of winners will be announced on Twitter after the event, please stay tuned!",
       "error": "Sorry, you need to continue to complete the task!"
     }
+  },
+  "createPool": {
+    "title": "Create LaunchPool",
+    "description": "Create a new launch pool for your asset. Please fill in the details below.",
+    "step1": {
+      "title": "Step 1: Deploy Asset",
+      "description": "Select the protocol and provide basic details about your asset."
+    },
+    "step2": {
+      "title": "Step 2: Configure Smart Contract",
+      "description": "Set up the smart contract parameters for your launch pool.",
+      "currentBlockHeight": "Current Block Height"
+    },
+    "step3": {
+      "title": "Step 3: Monitor Pool",
+      "description": "Monitor the progress of your launch pool and user participation.",
+      "waitingForCompletion": "Waiting for user participation and pool completion...",
+      "poolStatus": "Pool Status",
+      "status": "Status",
+      "note": "Note",
+      "noteDescription": "Contract deployment may take some time. Please be patient."
+    },
+    
+    "network": {
+      "title": "Network", 
+      "btc": "BTC Mainnet",
+      "satsnet": "SatoshiNet"
+    },
+    "protocol": {
+      "title": "Protocol",
+      "ordx": "ORDX",
+      "runes": "Runes"
+    },
+    "currentBlockHeight": "Current Block Height",
+    "ticker": "Ticker",
+    "bindingSat": "N (BindingSat)",
+    "assetSymbol": "Asset Symbol",
+    "limit": "Limit(Max amount per address)",
+    "launchRatio": "Launch Ratio",
+    "maxSupply": "Max Supply",
+    "startBlock": "Start Block",
+    "endBlock": "End Block",
+    "next": "Next",
+    "previous": "Previous",
+    "submitTemplate": "Submit Template",
+    "close": "Close",
+    "viewPool": "View Pool"
+  },
+  "joinPool": {
+    "title": "Join Pool",
+    "asset_name": "Asset Name",
+    "asset_protocol": "Asset Protocol",
+    "contract_type": "Contract Type",
+    "contract_url": "Contract URL",
+    "enable_block": "Enable Block",
+    "start_block": "Start Block",
+    "launch_ration": "Launch Ration",
+    "max_supply": "Max Supply",
+    "limit": "Limit",
+    "amount_label": "Amount to Join",
+    "max_join": "Max you can join",
+    "loading": "Loading...",
+    "amount_placeholder": "Enter amount",
+    "current_amount": "Current amount",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "amount_error": "Amount must be less than or equal to your max join ({maxJoin})",
+    "success": "You have successfully joined the pool with amount: {amount}, TxId: {txId}",
+    "failure": "Join pool failed"
+  },
+  "poolDetail": {
+    "fetch_error": "Failed to fetch participants",
+    "tabs": {
+      "basic_info": "Basic Info",
+      "contract_template": "Contract Template",
+      "participants": "Participants"
+    },
+    "current_height": "Current SatsNet Height",
+    "status_label": "Status",
+    "total_supply": "Total Supply",
+    "launch_cap": "Launch Cap",
+    "progress": "Progress",
+    "protocol": "Protocol",
+    "start_block": "Start Block",
+    "enable_block": "Enable Block",
+    "end_block": "End Block",
+    "creator": "Creator",
+    "limit": "Limit",
+    "binding_sat": "Binding Sat",
+    "onchain_status": "On-chain Status",
+    "deploy_ticker_txid": "Deploy Ticker TxId",
+    "mint_txid": "Mint TxId",
+    "anchor_txid": "Anchor TxId",
+    "join_pool": "Join Pool",
+    "close": "Close",
+    "template_info": "Template Info",
+    "back_to_basic": "Back to Basic Info",
+    "participants_info": "Participants Info",
+    "total_participants": "Total Participants",
+    "total_deposited": "Total Deposited",
+    "address": "Address",
+    "amount": "Amount",
+    "allocated_tokens": "Allocated Tokens",
+    "join_time": "Join Time",
+    "no_participants": "No participants available",
+    "status": {
+      "expired": "EXPIRED",
+      "closed": "CLOSED",
+      "init": "INIT",
+      "ready": "READY",
+      "closing": "CLOSING"
+    }
   }
 }
+
+

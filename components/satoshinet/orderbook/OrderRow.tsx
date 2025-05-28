@@ -1,6 +1,7 @@
 import React from "react";
 import { MarketOrder } from "./TakeOrder";
 import { Icon } from '@iconify/react';
+import { useTranslation } from 'react-i18next';
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +26,7 @@ const OrderRow = React.memo(function OrderRow({
   isLocked = false,
   isProcessingLock = false,
 }: OrderRowProps) {
+  const { t } = useTranslation();
   const quantity = parseInt(order.assets?.amount ?? '0', 10);
   const priceInSats = order.price;
   const unitPrice = order.assets?.unit_price;

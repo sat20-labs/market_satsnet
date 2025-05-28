@@ -19,8 +19,8 @@ export const LanguageSelect = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="capitalize">
-          <Icon icon="iconoir:language" className="text-xl" />
+        <Button variant="ghost" size="icon" className="capitalize bg-zinc-600/50">
+          <Icon icon="iconoir:language" className="text-xl w-10 h-10" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

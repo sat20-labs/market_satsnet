@@ -338,7 +338,7 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
 
   return (
     <>
-      <BuySellToggle mode={mode} onChange={setMode} />
+      <BuySellToggle mode={mode} source="takeorder" onChange={setMode} />
       <TakeOrderUI
         tickerInfo={tickerInfo}
         orders={allOrders}

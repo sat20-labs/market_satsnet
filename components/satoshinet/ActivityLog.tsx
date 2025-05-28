@@ -153,9 +153,9 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
 
   return (
     <div className="bg-zinc-900/90 sm:p-6 rounded-lg text-zinc-200 w-full">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1 sm:gap-4 mb-4 mt-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1 sm:gap-4  mt-2">
         <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
-        <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 items-center">
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 mb-4 items-center">
           <FilterSelect
             value={apiFilter}
             options={filterList}
@@ -174,6 +174,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
           </Button>
         </div>
       </div>
+      <hr/>
       {activeTab === 'myActivities' && !address ? (
         <div className="flex flex-col items-center justify-center py-10 gap-4">
           <p className="text-gray-400">{t('common.connect_wallet_to_view')}</p>

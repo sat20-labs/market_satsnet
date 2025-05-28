@@ -4,13 +4,36 @@
     "version_update_title": "有新版本，您想更新吗？"
   },
   "home": {
-    "title": "首页"
+    "title": "首页",
+    "all": "全部",
+    "ordx": "OrdX",
+    "runes": "Runes"
   },
   "market": {
     "title": "市场"
   },
   "launchpool": {
-    "title": "发射池"
+    "title": "发射池",
+    "all": "全部",
+    "ordx": "OrdX",
+    "runes": "Runes",
+    "create_pool": "创建池子",
+    "asset_name": "资产名称",
+    "pool_status": "池子状态",
+    "total_supply": "总供应量",
+    "launch_ration": "启动比例",
+    "deploy_time": "部署时间",
+    "enable_block": "启用区块",
+    "start_block": "起始区块",
+    "end_block": "结束区块",
+    "progress": "进度",
+    "action": "操作",
+    "join_pool": "加入池子",
+    "start_distribution": "开始分发",
+    "view_distribution": "查看分发",
+    "continue": "继续",
+    "force_distribution": "强制分发",
+    "auto_refund": "自动退款"
   },
   "tools": {
     "title": "工具箱",
@@ -177,6 +200,116 @@
         "des": "祝贺您成功完成铭文。",
         "genesis_tx": "创世交易"
       }
+    }
+  },
+  "createPool": {
+    "title": "创建 LaunchPool",
+    "description": "为您的资产创建一个新的 LaunchPool。请填写以下详细信息。",
+    "step1": {
+      "title": "步骤 1: 部署资产",
+      "description": "选择协议并提供有关资产的基本信息。"
+    },
+    "step2": {
+      "title": "步骤 2: 配置智能合约",
+      "description": "为您的 LaunchPool 设置智能合约参数。",
+      "currentBlockHeight": "当前区块高度"
+    },
+    "step3": {
+      "title": "步骤 3: 监控池子",
+      "description": "监控您的 LaunchPool 进度和用户参与情况。",
+      "waitingForCompletion": "等待用户参与和池子完成...",
+      "poolStatus": "池子状态",
+      "status": "状态",
+      "note": "注意",
+      "noteDescription": "合约部署可能需要一些时间，请耐心等待。"
+    },
+    "network": {
+      "title": "网络",
+      "btc": "BTC 主网",
+      "satsnet": "聪网"
+    },
+    "protocol": {
+      "title": "协议",
+      "ordx": "ORDX",
+      "runes": "Runes"
+    }, 
+    "ticker": "资产名称",
+    "bindingSat": "N (每聪铸造的资产数量)",
+    "assetSymbol": "资产符号",
+    "limit": "限制（单地址领取的最大数）",
+    "launchRatio": "启动比例",
+    "maxSupply": "最大供应量",
+    "startBlock": "起始区块",
+    "endBlock": "结束区块",
+    "next": "下一步",
+    "previous": "上一步",
+    "submitTemplate": "提交合约",
+    "close": "关闭",
+    "viewPool": "查看池子"
+  },
+  "joinPool": {
+    "title": "加入池子",
+    "asset_name": "资产名称",
+    "asset_protocol": "资产协议",
+    "contract_type": "合约类型",
+    "contract_url": "合约地址",
+    "enable_block": "启用区块",
+    "start_block": "起始区块",
+    "launch_ration": "启动比例",
+    "max_supply": "最大供应量",
+    "limit": "限制",
+    "amount_label": "参与数量",
+    "max_join": "您最多可以参与的数量",
+    "loading": "加载中...",
+    "amount_placeholder": "输入数量",
+    "current_amount": "当前数量",
+    "confirm": "确认",
+    "cancel": "取消",
+    "amount_error": "数量必须小于或等于您的最大加入量 ({maxJoin})",
+    "success": "您已成功加入池子，数量: {amount}, 交易ID: {txId}",
+    "failure": "加入池子失败"
+  },
+  "poolDetail": {
+    "fetch_error": "获取参与者失败",
+    "tabs": {
+      "basic_info": "基本信息",
+      "contract_template": "合约模板",
+      "participants": "池子参与者"
+    },
+    "current_height": "当前聪网高度",
+    "status_label": "状态",
+    "total_supply": "总供应量",
+    "launch_cap": "启动上限",
+    "progress": "进度",
+    "protocol": "协议",
+    "start_block": "起始区块",
+    "enable_block": "启用区块",
+    "end_block": "结束区块",
+    "creator": "创建者",
+    "limit": "限制",
+    "binding_sat": "绑定聪",
+    "onchain_status": "链上状态",
+    "deploy_ticker_txid": "Deploy Ticker TxId",
+    "mint_txid": "Mint TxId",
+    "anchor_txid": "Anchor TxId",
+    "join_pool": "加入池子",
+    "close": "关闭",
+    "template_info": "模板信息",
+    "back_to_basic": "返回基本信息",
+    "participants_info": "参与者信息",
+    "total_participants": "总参与者",
+    "total_deposited": "总存入",
+    "address": "地址",
+    "amount": "数量",
+    "allocated_tokens": "分配的代币",
+    "join_time": "加入时间",
+    "no_participants": "暂无参与者",
+    "status": {
+      "expired": "已过期",
+      "closed": "已关闭",
+      "init": "初始化",
+      "ready": "正常运行",
+      "closing": "关闭中"
     }
   },
   "blog": {

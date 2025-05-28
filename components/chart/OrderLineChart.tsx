@@ -12,7 +12,6 @@ export const OrderLineChart = ({ data = [] }: Props) => {
   const chart = useRef<any>(null);
 
   function renderLineChart(container) {
-    // 如上
     const chart = new Chart({
       container: container,
       autoFit: true,
@@ -32,15 +31,35 @@ export const OrderLineChart = ({ data = [] }: Props) => {
       .scale('x', {
         nice: true,
       })
-      .scale('y', {
+      .scale('y', { 
         nice: true,
+        tickCount: 5,
+        formatter: (value) => `${value} sats`
       })
       .axis('x', {
         labelAutoRotate: false,
-        title: null,
+        title: null,       
       })
       .axis('y', {
         title: null,
+        label: {
+          formatter: (value) => `${value} sats`,
+          style: {
+            fill: '#ffffff',
+            fontSize: 11
+          },
+          autoHide: false,
+          offset: 8
+        },
+        grid: {
+          line: {
+            style: {
+              stroke: '#303030',
+              lineDash: [4, 4], // Add dashed style for horizontal grid lines
+              opacity: 0.3,      // Make them slightly transparent
+            },
+          },
+        },
       });
 
     chart
@@ -49,7 +68,8 @@ export const OrderLineChart = ({ data = [] }: Props) => {
       .encode('y', 'volume')
       .style('size', 30)
       .style('inset', 2)
-      .style('maxWidth', 10)
+      .style('maxWidth', 15)
+      .style('fill', '#555555') // Add this line to set the volume bar color
       .scale('y', { independent: true, domainMin: 0 })
       .axis('y', {
         position: 'right',
@@ -75,16 +95,38 @@ export const OrderLineChart = ({ data = [] }: Props) => {
       .line()
       .encode('shape', 'smooth')
       .style({
-        stroke: '#F7931A',
+        lineWidth: 2,
+        stroke: '#22c55e',
       })
-      .scale('y', { independent: true, domainMin: 0 })
+      .scale('y', { 
+        independent: true, 
+        domainMin: 0,
+        formatter: (value: any) => `${value} sats` 
+      })
       .axis('y', {
         position: 'left',
-        grid: false,
+        label: {
+          formatter: (value: any) => `${value} sats`,
+          style: {
+            fill: '#ffffff', 
+            fontSize: 11
+          },
+          autoHide: false,
+          offset: 8
+        },
+        grid: {
+          line: {
+            style: {
+              stroke: '#303030',
+              lineDash: [4, 4], // Add dashed style for horizontal grid lines
+              opacity: 0.5,      // Make them slightly transparent
+            },
+          },
+        },
       })
       .tooltip((d) => ({
         name: 'Avg Price',
-        value: d.realValue ? `${d.realValue} sat` : '-',
+        value: d.valueFormatted || (d.realValue ? `${d.realValue} sats` : '-'),
       }));
     chart.render();
     return chart;

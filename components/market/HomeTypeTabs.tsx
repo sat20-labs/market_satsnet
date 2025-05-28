@@ -1,4 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTranslation } from 'react-i18next';
 
 interface HomeTypeTabsProps {
   value: string;
@@ -6,13 +7,15 @@ interface HomeTypeTabsProps {
   tabs?: { label: string; key: string }[];
 }
 export const HomeTypeTabs = ({ value, onChange, tabs }: HomeTypeTabsProps) => {
+  const { t } = useTranslation(); // Specify the namespace
+
   const defaultList = [
     {
-      label: 'OrdX',
+      label: t('pages.home.ordx'), // Use translation key for OrdX
       key: 'ordx',
     },
     {
-      label: 'Runes',
+      label: t('pages.home.runes'), // Use translation key for Runes
       key: 'runes',
     },
   ];
@@ -26,7 +29,7 @@ export const HomeTypeTabs = ({ value, onChange, tabs }: HomeTypeTabsProps) => {
     <Tabs
       value={value}
       onValueChange={changeHandler}
-      className=" h-full"
+      className="h-full"
     >
       <TabsList className="h-full">
         {list.map((item) => (

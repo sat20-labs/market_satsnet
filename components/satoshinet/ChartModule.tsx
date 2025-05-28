@@ -16,7 +16,7 @@ export const ChartModule = ({ assets_name, tickerInfo }: ChartModuleProps) => {
   }, [assets_name]);
 
   return (
-    <div className="w-full h-full bg-zinc-900 rounded-lg">
+    <div className="w-full h-full bg-zinc-900/50 border-1 border-zinc-700/50 rounded-lg">
       <h2 className="text-lg font-bold text-zinc-400 ml-4 py-4">Chart for {tickerInfo?.displayname}</h2>
       <OrderAnalyze assets_name={assets_name} />
       {/* <TradingViewWidget
