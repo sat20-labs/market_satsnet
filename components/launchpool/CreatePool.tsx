@@ -122,7 +122,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
 
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
-      <div className="sticky top-0 text bg-gradient-to-br to-purple-700/90 border border-zinc-800 z-10 p-4 rounded-lg shadow-lg">
+      <div className="sticky top-0 text bg-zinc-800/50 border border-zinc-800 z-10 p-4 rounded-lg shadow-lg">
         <h2 className="text-xl font-bold mb-2">🚀 {t('pages.createPool.title')}</h2>
         <p className="text-zinc-400">{t('pages.createPool.description')}</p>
         <button
@@ -134,7 +134,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       </div>
 
       <hr className="mb-6 h-1" />
-      <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-600 rounded-lg shadow-lg">
+      <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-800 rounded-lg shadow-lg">
         {step === 1 && (
           <div className="mt-4">
             <div className="text-lg font-bold h-10">

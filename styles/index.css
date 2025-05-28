@@ -17,7 +17,7 @@ body {
 }
 /* 通用渐变按钮样式 */
 .btn-gradient {
-  background: linear-gradient(to right, #8c5cf6, #d846ef);
+  background: linear-gradient(to right, #7342dbd5, #d846efc4);
   /* 渐变背景色 */
   color: #e2e2e2b0;
   /* 按钮文字颜色 */
@@ -28,7 +28,7 @@ body {
 }
 
 .btn-gradient:hover {
-  background: linear-gradient(to right, #8c5cf6, #d846ef);
+  background: linear-gradient(to right, #7342dbd5, #d846efc4);
   /* 悬停时反转渐变色 */
   transform: scale(1.05);
   /* 悬停时放大 */
