@@ -67,7 +67,7 @@ const Buy =({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLo
         />
         <div className="absolute right-4 top-2/4 transform -translate-y-2/4 flex items-center gap-2">
           <span className="text-sm text-gray-400">BTC</span>
-           <Icon icon="cryptocurrency:btc" className="text-sm custom-btc-icon" />
+           <Icon icon="cryptocurrency:btc" className="text-sm custom-btc-small-icon" />
         </div>
       </div>
 
