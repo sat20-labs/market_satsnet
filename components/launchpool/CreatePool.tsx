@@ -51,7 +51,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     queryKey: ['poolStatus', monitorTxId],
     queryFn: async () => {
       if (!monitorTxId || step !== 3) return null;
-      const result = await window.sat20.getDeployedContractStatus(monitorTxId);
+      const url = `${monitorTxId}_${formData.protocol}:f:${formData.ticker}_launchpool.tc`
+      const result = await window.sat20.getDeployedContractStatus(url);
       if (result && result.contractStatus) {
         return JSON.parse(result.contractStatus);
       }
