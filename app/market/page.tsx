@@ -266,17 +266,17 @@ function MarketContent() {
         ></SortDropdown>
       </div>
       {type === 'ns' && <NameMarketNav />}
-      <div className="relative overflow-x-auto w-full px-3 pt-2 bg-zinc-900 rounded-lg">
+      <div className="relative overflow-x-auto w-full px-3 py-2 bg-zinc-950/50 rounded-lg">
         <Table className="w-full ">
-          <TableHeader className="top-0 z-20 bg-zinc-800">
+          <TableHeader className="top-0 z-20 bg-zinc-900">
             <TableRow className="rounded-2xl">
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
                   onClick={() => handleSort(column.key)}
-                  className={`h-12 py-3 text-sm font-medium text-gray-300  whitespace-nowrap ${column.allowsSorting ? 'cursor-pointer hover:bg-zinc-700' : ''
+                  className={`h-12 py-3 text-sm font-medium text-gray-300  whitespace-nowrap ${column.allowsSorting ? 'cursor-pointer hover:bg-zinc-800' : ''
                     } ${column.key === 'assets_name'
-                      ? 'z-30 bg-zinc-800 pl-8 pr-4'
+                      ? 'z-30 bg-zinc-900 pl-8 pr-4'
                       : 'px-4'
                     }`}
                 >
@@ -346,7 +346,7 @@ function MarketContent() {
                               />
                             ) : (
                               <Avatar className="w-9 h-9 flex-shrink-0">
-                                <AvatarFallback className="text-xl text-gray-300 font-black bg-zinc-700">
+                                <AvatarFallback className="text-xl text-gray-300 font-medium bg-zinc-700">
                                   {typeof ticker === 'string' ? ticker.slice(0, 1).toUpperCase() : '?'}
                                 </AvatarFallback>
                               </Avatar>
@@ -379,6 +379,8 @@ function MarketContent() {
                               numericValue > 0 ? 'text-red-500' : numericValue < 0 ? 'text-green-500' : 'text-gray-300'
                             }`}
                           >
+                            {numericValue > 0 ? '+' : '-'}
+                             
                             {typeof value === 'string' ? value : '-'}
                           </div>
                         </TableCell>
@@ -400,12 +402,13 @@ function MarketContent() {
                             <span
                               className={`text-xs ${
                                 numericChangeValue > 0
-                                  ? 'text-red-500'
-                                  : numericChangeValue < 0
                                   ? 'text-green-500'
+                                  : numericChangeValue < 0
+                                  ? 'text-red-500'
                                   : 'text-gray-300'
                               }`}
                             >
+                              {numericChangeValue > 0 ? '+' : '-'}
                               {typeof changeValue === 'string' ? changeValue : '-'}
                             </span>
                             )}
@@ -427,10 +430,10 @@ function MarketContent() {
                         <TableCell key={columnKey} className="px-4 py-3">
                           <div className="flex flex-col text-sm md:text-base whitespace-nowrap">
                             {/* 显示 BTC 值 */}
-                            <span>{formattedMarketCapInBtc} <span className='text-zinc-500 font-bold'>BTC</span></span>
+                            <span>{formattedMarketCapInBtc} <span className='text-zinc-500 font-bold text-sm'>BTC</span></span>
                     
                             {/* 显示美元值 */}
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-500">
                               $ <BtcPrice btc={marketCapInBtc} />
                             </span>
                           </div>
@@ -453,12 +456,13 @@ function MarketContent() {
                             <span
                               className={`text-xs ${
                                 numericChangeValue > 0
-                                  ? 'text-red-500'
-                                  : numericChangeValue < 0
                                   ? 'text-green-500'
+                                  : numericChangeValue < 0
+                                  ? 'text-red-500'
                                   : 'text-gray-300'
                               }`}
                             >
+                              {changeValue > 0 ? '+' : '-'}
                               {typeof changeValue === 'string' ? changeValue : '-'}
                             </span>
                           )}

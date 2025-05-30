@@ -1,3 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap');
+
+body, p, span, div, li, td, th, input, button {
+  font-family: 'Roboto', Arial, sans-serif;
+}
+h1, h2, h3 {
+  font-family: 'Montserrat', Arial, sans-serif;
+}
+
 body {
   background: linear-gradient(180deg,
       rgb(18, 18, 18) 100%,
@@ -8,9 +17,9 @@ body {
 }
 /* 通用渐变按钮样式 */
 .btn-gradient {
-  background: linear-gradient(to right, #5b00d3, #7b00ac);
+  background: linear-gradient(to right, #7342dbd5, #d846efc4);
   /* 渐变背景色 */
-  color: #e2e2e2;
+  color: #e2e2e2b0;
   /* 按钮文字颜色 */
   border: 1;
   /* 移除边框 */
@@ -19,7 +28,7 @@ body {
 }
 
 .btn-gradient:hover {
-  background: linear-gradient(to right, #5b00d3, #7b00ac);
+  background: linear-gradient(to right, #7342dbd5, #d846efc4);
   /* 悬停时反转渐变色 */
   transform: scale(1.05);
   /* 悬停时放大 */

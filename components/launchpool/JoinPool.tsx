@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import { Icon } from "@iconify/react";
+import { useTranslation } from 'react-i18next';
 
 interface JoinPoolProps {
   closeModal: () => void;
@@ -12,6 +14,7 @@ interface JoinPoolProps {
 }
 
 const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
+  const { t } = useTranslation(); // Specify the namespace
   const limit = Number(poolData?.limit) || 1;
   const [amount, setAmount] = useState('');
   const { address } = useReactWalletStore();
@@ -20,18 +23,18 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   const [loading, setLoading] = useState(false);
 
   const infoList = [
-    { label: 'Asset Name', value: poolData?.assetName },
-    { label: 'Asset Protocol', value: poolData?.assetProtocol },
-    { label: 'Contract Type', value: poolData?.contractType },
-    { label: 'Contract URL', value: poolData?.contractURL },
-    { label: 'Enable Block', value: poolData?.enableBlock },
-    { label: 'Start Block', value: poolData?.startBlock },
-    { label: 'Launch Ration', value: poolData?.launchRation },
-    { label: 'Max Supply', value: poolData?.maxSupply },
-    { label: 'Limit', value: poolData?.limit },
+    { label: t('pages.joinPool.asset_name'), value: poolData?.assetName },
+    { label: t('pages.joinPool.asset_protocol'), value: poolData?.assetProtocol },
+    { label: t('pages.joinPool.contract_type'), value: poolData?.contractType },
+    { label: t('pages.joinPool.contract_url'), value: poolData?.contractURL },
+    { label: t('pages.joinPool.enable_block'), value: poolData?.enableBlock },
+    { label: t('pages.joinPool.start_block'), value: poolData?.startBlock },
+    { label: t('pages.joinPool.launch_ration'), value: poolData?.launchRation },
+    { label: t('pages.joinPool.max_supply'), value: poolData?.maxSupply },
+    { label: t('pages.joinPool.limit'), value: poolData?.limit },
   ];
   console.log('parsed', address, poolData?.contractURL, limit);
-  
+
   useEffect(() => {
     const fetchMinted = async () => {
       if (!address || !poolData?.contractURL) return;
@@ -61,29 +64,31 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
 
   const handleConfirm = async () => {
     if (Number(amount) > maxJoin) {
-      toast.error(`Amount must be less than or equal to your max join (${maxJoin})`);
+      toast.error(t('pages.joinPool.amount_error', { maxJoin }));
       return;
     }
     const params = {
       action: 'mint',
       param: amount.toString()
-    }
+    };
     const result = await window.sat20.invokeContract_SatsNet(
-      poolData.contractURL, JSON.stringify(params), '1')
+      poolData.contractURL, JSON.stringify(params), '1');
     console.log('result:', result);
     if (result.txId) {
-      toast.success(`You have successfully joined the pool with amount: ${amount}, TxId: ${result.txId}`);
+      toast.success(t('pages.joinPool.success', { amount, txId: result.txId }));
       closeModal();
     } else {
-      toast.error('Join pool failed');
+      toast.error(t('pages.joinPool.failure'));
     }
-    
   };
 
   return (
-    <div className="p-6 w-full sm:w-[480px] mx-auto bg-zinc-900 rounded-lg shadow-lg relative">
-      <div className="relative flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Join Pool</h2>
+    <div className="p-6 w-full sm:w-[1280px] mx-auto bg-zinc-900 rounded-lg shadow-lg relative">
+      <div className="relative flex justify-between items-center my-4 gap-4 border-b border-zinc-700 pb-4">
+        <h2 className="flex justify-start items-center text-2xl font-bold">
+          <Icon icon="lucide:plus" className="w-8 h-8 mr-2 text-zinc-400" />
+          {t('pages.joinPool.title')}
+        </h2>
         <button
           className="absolute top-0 right-0 text-zinc-400 hover:text-white"
           onClick={closeModal}
@@ -94,38 +99,38 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
 
       <div className="mb-4 grid grid-cols-1 gap-y-2 text-sm text-zinc-300">
         {infoList.map(({ label, value }) => (
-          <div key={label} className="mb-1">
-            <div className="font-semibold">{label}:</div>
-            <div className="truncate pl-2 text-zinc-100" title={value}>{value ?? '-'}</div>
+          <div key={label} className="border-b py-2 border-zinc-700/50">
+            <span className="font-semibold text-zinc-400">{label}:</span>
+            <span className="truncate pl-2 text-zinc-100" title={value}>{value ?? '-'}</span>
           </div>
         ))}
       </div>
 
       <div className="mb-6">
-        <label className="block mb-2 text-zinc-300 font-semibold" htmlFor="amount">Amount to Join</label>
+        <label className="block mb-2 text-zinc-300 font-semibold" htmlFor="amount">{t('pages.joinPool.amount_label')}</label>
         <div className="text-zinc-400 text-sm mb-1">
-          Max you can join: <span className="text-zinc-100 font-bold">{loading ? 'Loading...' : maxJoin}</span>
+          {t('pages.joinPool.max_join')}: <span className="text-zinc-100 font-bold">{loading ? t('pages.joinPool.loading') : maxJoin}</span>
         </div>
         <Input
           id="amount"
           type="number"
-          placeholder="Enter amount"
+          placeholder={t('pages.joinPool.amount_placeholder')}
           value={amount}
           min={1}
           max={maxJoin}
           onChange={e => setAmount(e.target.value)}
-          className="mb-2"
+          className="mb-2 w-full"
           disabled={loading || maxJoin === 0}
         />
-        <div className="text-zinc-400 text-sm">Current amount: <span className="text-zinc-100 font-bold">{amount || 0}</span></div>
+        <div className="text-zinc-400 text-sm">{t('pages.joinPool.current_amount')}: <span className="text-zinc-100 font-bold">{amount || 0}</span></div>
       </div>
 
-      <div className="flex justify-start mt-6 gap-4">
-        <Button variant="outline" className="w-full sm:w-48 h-11 text-white" onClick={handleConfirm}>
-          Confirm
+      <div className="flex justify-start my-6 gap-4">
+        <Button variant="outline" className="w-40 sm:w-48 h-11 text-zinc-300 text-base btn-gradient" onClick={handleConfirm}>
+          {t('pages.joinPool.confirm')}
         </Button>
-        <Button variant="outline" className="w-full sm:w-48 h-11 text-white" onClick={closeModal}>
-          Cancel
+        <Button variant="outline" className="w-40 sm:w-48 h-11 text-zinc-300 text-base" onClick={closeModal}>
+          {t('pages.joinPool.cancel')}
         </Button>
       </div>
     </div>

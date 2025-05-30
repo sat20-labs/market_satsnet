@@ -119,7 +119,7 @@ export const Header = () => {
                   <NextLink
                     href={item.href}
                     target={item.target}
-                    className={`flex items-center text-sm font-medium transition-colors ${
+                    className={`flex items-center text-base font-medium transition-colors ${
                       active ? 'text-foreground' : 'text-muted-foreground'
                     } hover:text-foreground/80`}
                   >
@@ -142,7 +142,7 @@ export const Header = () => {
              <NetworkSelect />
              <ChainSelect />
              <FeerateSelectButton />
-             <LanguageSelect />
+             <LanguageSelect /> {/* Ensure this is correctly rendered */}
           </div>
 
           <div className="">

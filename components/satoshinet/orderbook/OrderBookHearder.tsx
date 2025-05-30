@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input";
+import { useTranslation } from 'react-i18next';
 
 interface OrderBookHeaderProps {
   activeTab: "takeOrder" | "makeOrder" | "swap"; 
@@ -13,6 +14,7 @@ interface OrderBookHeaderProps {
 }
 
 const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }: OrderBookHeaderProps) => {
+  const { t } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false); // 控制弹窗显示
   const [showOngoingTrades, setShowOngoingTrades] = useState(false); // 是否显示进行中的交易
   const [maxBidPrice, setMaxBidPrice] = useState<number>(0); // 最高报价价格
@@ -33,24 +35,25 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
             }`}
           onClick={() => onTabChange("takeOrder")}
         >
-          Take Order
+          {t("common.takeorder")}
         </button>
         <button
           className={`text-sm sm:text-base font-medium pb-2 ${activeTab === "makeOrder" ? "text-zinc-200 border-b-2 border-purple-500" : "text-gray-400"
             }`}
           onClick={() => onTabChange("makeOrder")}
         >
-          Make Order
+          {t("common.makeorder")}
         </button>
         {/* SWAP UI */}
-        {/* <button
+       {/* <button
           className={`flex justify-center items-center text-sm sm:text-base font-medium pb-2 ${
             activeTab === "swap" ? "border-b-2 border-purple-500" : "text-gray-400"
           }`}
           onClick={() => onTabChange("swap")}
         >
-         <span>Swap</span><Icon icon="token-branded:xrune" color='red' className="w-6 h-6" />
-        </button>  */}
+         <span>{t("common.swap")}</span><Icon icon="token-branded:xrune" color='red' className="w-6 h-6" />
+        </button>   */}
+
       </div>
 
       {/* 设置和刷新图标 */}

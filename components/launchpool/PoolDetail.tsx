@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
 import JoinPool from './JoinPool';
 import { Modal } from '@/components/ui/modal';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
@@ -14,9 +15,14 @@ import { hideStr } from '@/utils';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { WalletConnectBus } from '../wallet/WalletConnectBus';
 import { useCommonStore } from '@/store/common';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Icon } from "@iconify/react";
+
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
+  const { t } = useTranslation(); // Specify the namespace
   const { satsnetHeight } = useCommonStore();
   const { address } = useReactWalletStore();
+
   const canViewParticipants = () => {
     return [
       PoolStatus.ACTIVE,
@@ -29,21 +35,14 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
     ].includes(poolDetails.poolStatus);
   };
 
-  const [activeTab, setActiveTabState] = React.useState<string>("basic");
+  const [tabValue, setTabValue] = React.useState<string>("basic");
   const [showJoinModal, setShowJoinModal] = React.useState(false);
 
-  function setActiveTab(tab: string): void {
-    setActiveTabState(tab);
-  }
-
-  // 获取参与者的异步函数
   const fetchParticipants = async () => {
     if (!poolDetails?.contractURL) return [];
     try {
       const result = await window.sat20.getAllAddressInContract(poolDetails.contractURL);
       const list = JSON.parse(result.addresses)?.data || [];
-      console.log('list', list);
-
       const resultStatusList: any[] = [];
       for (const item of list) {
         const { status } = await window.sat20.getAddressStatusInContract(poolDetails.contractURL, item.address);
@@ -52,95 +51,85 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
           ...JSON.parse(status)
         });
       }
-      // 按 address 升序排序
       resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
-      console.log('resultStatusList', resultStatusList);
       return resultStatusList;
     } catch (e) {
-      console.error('获取参与者失败', e);
+      console.error(t('pages.poolDetail.fetch_error'), e);
       return [];
     }
   };
 
-  // 使用useQuery调用fetchParticipants
   const { data: participantsData = [], isLoading: isParticipantsLoading } = useQuery({
     queryKey: ['participants', poolDetails?.contractURL],
     queryFn: fetchParticipants,
     enabled: canViewParticipants() && !!poolDetails?.contractURL,
     refetchInterval: 2000,
   });
-  console.log('participantsData', participantsData);
 
   const onchainStatusTextMap = {
-    '-2': 'EXPIRED（已过期）',
-    '-1': 'CLOSED（已关闭）',
-    '0': 'INIT（初始化）',
-    '100': 'READY（正常工作阶段）',
-    '200': 'CLOSING（关闭中）',
+    '-2': t('pages.poolDetail.status.expired'),
+    '-1': t('pages.poolDetail.status.closed'),
+    '0': t('pages.poolDetail.status.init'),
+    '100': t('pages.poolDetail.status.ready'),
+    '200': t('pages.poolDetail.status.closing'),
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="p-6 bg-zinc-900 rounded-lg shadow-lg relative w-full max-w-[1360px] mx-auto overflow-hidden">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 overflow-y-auto">
+      <div className="p-6 bg-zinc-900 rounded-lg shadow-lg relative w-full max-w-[1360px] mx-auto mt-10 sm:mt-0 overflow-hidden">
         <div className="relative flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{poolDetails.assetName} Details</h2>
+          <h2 className="flex justify-between items-center text-xl font-bold">
+            <Avatar className="w-10 h-10 mr-2">
+              <AvatarImage src={poolDetails.logo} alt="Logo" />
+              <AvatarFallback>
+                {poolDetails.assetSymbol
+                  ? String.fromCodePoint(poolDetails.assetSymbol)
+                  : poolDetails.assetName?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {poolDetails.assetName}
+          </h2>
           <button className="absolute top-0 right-0 text-zinc-400 hover:text-white" onClick={closeModal}>
             ✕
           </button>
         </div>
 
-        <Tabs defaultValue="basic">
-          <TabsList className="w-full grid grid-cols-3 mb-4">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="template">Contract Template</TabsTrigger>
-            {canViewParticipants() && <TabsTrigger value="participants">Participants</TabsTrigger>}
+        <Tabs value={tabValue} onValueChange={setTabValue}>
+          <TabsList className="w-full grid grid-cols-3 h-10 mb-4">
+            <TabsTrigger value="basic" className='h-full'>{t('pages.poolDetail.tabs.basic_info')}</TabsTrigger>
+            <TabsTrigger value="template">{t('pages.poolDetail.tabs.contract_template')}</TabsTrigger>
+            {canViewParticipants() && <TabsTrigger value="participants">{t('pages.poolDetail.tabs.participants')}</TabsTrigger>}
           </TabsList>
 
-          <div className="h-[680px] overflow-y-auto">
+          <div className="h-[600px] overflow-y-auto">
             <TabsContent value="basic">
               <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold">Pool Status</h3>
-                  <Badge className={`${statusColorMap[poolDetails.poolDetails]} text-white`}>
-                    {statusTextMap[poolDetails.poolStatus]}
-                  </Badge>
-                </div>
-                <p className="text-zinc-400 mb-4">{poolDetails.description}</p>
-              </div>
-
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">Basic Information</h3>
-                {/* 聪网高度静态提示 */}
-                <div className="text-zinc-400 text-sm mt-2">
-                  当前聪网高度：{satsnetHeight}
+                <div className="text-zinc-200 text-sm font-bold my-2">
+                  {t('pages.poolDetail.current_height')}: <span className='text-green-400'>{satsnetHeight}</span>
                 </div>
 
-                <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
+                <table className="w-full table-auto border-collapse border border-gray-700 rounded-lg shadow-md">
                   <tbody>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400 w-1/3">Status</td>
-                      <td className="p-2">
+                      <td className="p-3 font-bold text-zinc-400 w-1/3 whitespace-nowrap">{t('pages.poolDetail.status_label')}</td>
+                      <td className="p-2 whitespace-nowrap">
                         <Badge className={`${statusColorMap[poolDetails.poolStatus]} text-white`}>
                           {statusTextMap[poolDetails.poolStatus]}
                         </Badge>
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Total Supply</td>
-                      <td className="p-2">{poolDetails.totalSupply}</td>
-                    </tr>
-                    {/* <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Pool Size</td>
-                      <td className="p-2">{poolDetails.poolSize}</td>
-                    </tr> */}
-                    <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Launch Cap</td>
-                      <td className="p-2">{poolDetails.launchCap}</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.total_supply')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.totalSupply}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Progress</td>
-                      <td className="p-2">
-                        <div className="w-full bg-gray-200 h-2 rounded">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.launch_cap')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.launchCap}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.progress')}</td>
+                      <td className="p-2 whitespace-nowrap">
+                        <div className="w-full bg-gray-600/50 h-2 rounded">
                           <div
                             className="bg-purple-500 h-2 rounded"
                             style={{ width: `${poolDetails.progress}%` }}
@@ -150,105 +139,105 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Protocol</td>
-                      <td className="p-2">{poolDetails.protocol}</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.protocol')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.protocol}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Start Block</td>
-                      <td className="p-2">{poolDetails.startTime}</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.start_block')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.startTime}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">EnableBlock</td>
-                      <td className="p-2">{poolDetails.enableBlock ?? '--'}</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.enable_block')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.enableBlock ?? '--'}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">End Block</td>
-                      <td className="p-2">{poolDetails.endTime}</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.end_block')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.endTime}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Creator</td>
-                      <td className="p-2">{poolDetails.deployer}</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.creator')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.deployer}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Limit</td>
-                      <td className="p-2">{poolDetails.limit}</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.limit')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.limit}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">Binding Sat</td>
-                      <td className="p-2">{poolDetails.bindingSat ?? poolDetails.n}</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.binding_sat')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.bindingSat ?? poolDetails.n}</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">On-chain Status</td>
-                      <td className="p-2">{onchainStatusTextMap[String(poolDetails.status)] ?? poolDetails.status ?? '-'}({poolDetails.status})</td>
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.onchain_status')}</td>
+                      <td className="p-2 whitespace-nowrap">{onchainStatusTextMap[String(poolDetails.status)] ?? poolDetails.status ?? '-'}({poolDetails.status})</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">DeployTickerTxId</td>
-                      <td className="p-2">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.deploy_ticker_txid')}</td>
+                      <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.DeployTickerTxId ? (
                           <a href={generateMempoolUrl({
                             network: poolDetails.network || 'btc',
                             path: `tx/${poolDetails.DeployTickerTxId}`,
                             chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
                             env: poolDetails.env || 'prod',
-                          })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolDetails.DeployTickerTxId, 6)}</a>
+                          })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.DeployTickerTxId, 6)}</a>
                         ) : '-'}
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">MintTxId</td>
-                      <td className="p-2">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.mint_txid')}</td>
+                      <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.MintTxId ? (
                           <a href={generateMempoolUrl({
                             network: poolDetails.network || 'btc',
                             path: `tx/${poolDetails.MintTxId}`,
                             chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
                             env: poolDetails.env || 'prod',
-                          })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolDetails.MintTxId, 6)}</a>
+                          })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.MintTxId, 6)}</a>
                         ) : '-'}
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
-                      <td className="p-3 font-bold text-zinc-400">AnchorTxId</td>
-                      <td className="p-2">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.anchor_txid')}</td>
+                      <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.AnchorTxId ? (
                           <a href={generateMempoolUrl({
                             network: poolDetails.network || 'btc',
                             path: `tx/${poolDetails.AnchorTxId}`,
                             chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
                             env: poolDetails.env || 'prod',
-                          })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolDetails.AnchorTxId, 6)}</a>
+                          })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.AnchorTxId, 6)}</a>
                         ) : '-'}
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-
-
-              <div className="flex space-x-4 mt-4">
+              <div className="flex space-x-4 my-4">
                 <WalletConnectBus asChild>
                   <Button
                     variant="outline"
-                    className={`mt-2 w-36 sm:w-48 h-11 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
+                    className={`mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
                     onClick={() => poolDetails.poolStatus === PoolStatus.ACTIVE && setShowJoinModal(true)}
                     disabled={poolDetails.poolStatus !== PoolStatus.ACTIVE}
                   >
-                    Join Pool
+                    {t('pages.poolDetail.join_pool')}
                   </Button>
                 </WalletConnectBus>
-                <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11" onClick={closeModal}>
-                  Close
+                <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300" onClick={closeModal}>
+                  {t('pages.poolDetail.close')}
                 </Button>
               </div>
             </TabsContent>
 
             <TabsContent value="template">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">Template Info - {poolDetails.templateName}</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('pages.poolDetail.template_info')} - {poolDetails.templateName}</h3>
                 <p className="text-zinc-400 mb-4">{poolDetails.templateDescription}</p>
 
-                {/* 原始合约模板JSON展示 */}
                 <div className="mt-6">
                   <pre className="bg-zinc-800 text-zinc-100 rounded p-4 overflow-x-auto text-sm">
                     {`{
@@ -264,38 +253,37 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full sm:w-48 mt-4" onClick={() => setActiveTab("basic")}>
-                Back to Basic Info
+              <Button variant="outline" className="w-full sm:w-60 h-11 mt-4 text-zinc-300 text-base" onClick={() => setTabValue("basic")}>               
+                {t('pages.poolDetail.back_to_basic')}
               </Button>
             </TabsContent>
 
             {canViewParticipants() && (
               <TabsContent value="participants">
                 <div className="mb-4">
-                  <h3 className="text-lg font-semibold mb-2">Participants Info</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('pages.poolDetail.participants_info')}</h3>
                   <div className="flex justify-between mb-3">
-                    <p className="text-zinc-400">Total Participants: {participantsData.length}</p>
-                    <p className="text-zinc-400">Total Deposited: --</p>
+                    <p className="text-zinc-400">{t('pages.poolDetail.total_participants')}: {participantsData.length}</p>
+                    <p className="text-zinc-400">{t('pages.poolDetail.total_deposited')}: --</p>
                   </div>
 
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
                       <thead className="bg-zinc-800 sticky top-0">
                         <tr>
-                          <th className="p-3 text-left whitespace-nowrap">Address</th>
-                          <th className="p-3 text-left whitespace-nowrap">Amount</th>
-                          <th className="p-3 text-left whitespace-nowrap">Allocated Tokens</th>
-                          <th className="p-3 text-left whitespace-nowrap">Join Time</th>
+                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.address')}</th>
+                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.amount')}</th>
+                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.allocated_tokens')}</th>
+                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.join_time')}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {participantsData.length === 0 ? (
                           <tr>
-                            <td colSpan={4} className="text-center p-4 text-zinc-400">暂无参与者</td>
+                            <td colSpan={4} className="text-center p-4 text-zinc-400">{t('pages.poolDetail.no_participants')}</td>
                           </tr>
                         ) : (
                           participantsData.map((participant: any, index: number) => {
-                            // 计算MintHistory中所有Amt的和
                             const mintHistory = participant.valid?.MintHistory || [];
                             const totalAmt = mintHistory.reduce((sum: number, item: any) => sum + (Number(item.Amt) || 0), 0);
                             return (
@@ -313,8 +301,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full sm:w-48 mt-4" onClick={() => setActiveTab("basic")}>
-                  Back to Basic Info
+                <Button variant="outline" className="w-full sm:w-48 mt-4 text-base text-zinc-300" onClick={() => setTabValue("basic")}>
+                  {t('pages.poolDetail.back_to_basic')}
                 </Button>
               </TabsContent>
             )}

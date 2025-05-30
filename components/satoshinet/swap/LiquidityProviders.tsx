@@ -22,7 +22,7 @@ const LiquidityProviders = () => {
   ];
 
   return (
-    <div className="mt-6 p-4 bg-[#0E0E10] text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
+    <div className="mt-6 p-4 bg-zinc-900 text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
       <h3 className="text-base font-semibold mb-4">Liquidity Providers</h3>
       <ul className="space-y-2">
         {providers.map((provider, index) => (

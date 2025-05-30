@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Icon } from '@iconify/react';
 import { BtcPrice } from "../../BtcPrice";
+import { useTranslation } from 'react-i18next';
 
 interface BuyProps {
     assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
@@ -17,6 +18,7 @@ interface BuyProps {
   }
 
 const Buy =({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: BuyProps) => {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState<string>('0.003');
   const [tokensReceived, setTokensReceived] = useState<number>(858.9);
   const [priceImpact, setPriceImpact] = useState<number>(0.16);
@@ -43,7 +45,7 @@ const Buy =({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLo
   const handleBuy = async () => {
     // 这里可以添加购买逻辑
     if (!amount || parseFloat(amount) <= 0) {
-      alert('Please enter a valid amount to buy.');
+      alert(t('common.swap_enterValidAmount'));
       return;
     }
   }
@@ -52,10 +54,10 @@ const Buy =({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLo
   const isLoading = balanceLoading || isBuying;
 
   return (
-    <div className="p-4 bg-[#0E0E10] text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
+    <div className="p-4 bg-zinc-900 text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
       {/* 输入框 */}
       <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-gray-400">Your Balance: {displayBalance.toLocaleString()} sats</div>
+        <div className="text-sm text-gray-400">{t('common.swap_balance')} : {displayBalance.toLocaleString()} sats</div>
         <div className="text-sm text-gray-400">~$<BtcPrice btc={displayBalance/1e8} /></div>
       </div>
       <div className="relative mb-4">
@@ -64,6 +66,7 @@ const Buy =({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLo
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           className="w-full bg-transparent border border-zinc-600 rounded-lg px-4 py-2 text-lg text-white"
+          placeholder={t('common.swap_enterAmount')}
         />
         <div className="absolute right-4 top-2/4 transform -translate-y-2/4 flex items-center gap-2">
           <span className="text-sm text-gray-400">BTC</span>
@@ -89,11 +92,11 @@ const Buy =({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLo
       {/* Tokens Received 和 Price Impact */}
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex justify-between">
-          <span className="text-sm text-gray-400">Tokens Received</span>
+          <span className="text-sm text-gray-400">{t('common.swap_youReceive')}</span>
           <span className="text-sm text-white">~ {tokensReceived.toFixed(1)} {tickerInfo?.displayname}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-sm text-gray-400">Price Impact</span>
+          <span className="text-sm text-gray-400">{t('common.swap_priceImpact')}</span>
           <span className="text-sm text-white">{priceImpact.toFixed(2)}%</span>
         </div>
       </div>
@@ -109,7 +112,7 @@ const Buy =({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLo
                 disabled={(!isBuyValid || isLoading)}
                 size="lg"
               >
-                {isBuying ? "Processing..." : `Buy ${tickerInfo?.displayname}`}
+                {isBuying ? t('common.swap_buyingAsset') : t('common.swap_confirmBuy', { ticker: tickerInfo?.displayname })}
               </Button>
             </WalletConnectBus>
     </div>

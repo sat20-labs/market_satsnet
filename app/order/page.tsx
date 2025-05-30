@@ -117,7 +117,7 @@ function OrderPageContent() {
     }
   };
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 sm:p-4 h-full w-ful">
+    <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 p-2 sm:p-4 h-full w-ful">
       {/* Chart and Asset Info Container */}
       <div className="sm:col-span-2 flex flex-col gap-4 mb-8 sm:mb-0">
         {/* Tradingview Chart */}
@@ -129,7 +129,7 @@ function OrderPageContent() {
         </div>
       </div>
       <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
-        <div className="max-w-full mx-auto p-4 bg-[#0E0E10] text-zinc-200 rounded-2xl shadow-lg border border-zinc-700 w-full h-full">
+        <div className="max-w-full mx-auto p-4 bg-zinc-900 text-zinc-200 rounded-2xl shadow-lg border border-zinc-700/50 w-full h-full">
           <OrderBookHeader
             activeTab={activeTab}
             onTabChange={handleTabChange}

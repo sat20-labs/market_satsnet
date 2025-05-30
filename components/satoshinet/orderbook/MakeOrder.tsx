@@ -15,7 +15,7 @@ const MakeOrder = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSell
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
   return (
     <div>
-      <BuySellToggle mode={mode} onChange={setMode} />
+      <BuySellToggle mode={mode} source="makeorder" onChange={setMode} />
       {/* Conditionally render BuyOrder or SellOrder */}
       {mode === "buy" ? (
         <BuyOrder

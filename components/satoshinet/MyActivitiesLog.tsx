@@ -22,6 +22,7 @@ import { CustomPagination } from "@/components/ui/CustomPagination";
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
 import { FilterSelect } from './FilterSelect';
 
+
 interface MyActivitiesLogProps {
   assets_name?: string | null;
   address: string;

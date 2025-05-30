@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import SellOrderModal from './SellOrderModal'; // 引入挂单弹窗组件
 import { AssetItem } from '@/store/asset';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 import {
   Table,
@@ -16,21 +17,21 @@ import {
 
 
 interface AssetListProps {
-  // assets_type: string; // 资产类型
   assets: AssetItem[];
   // onListClick?: (assetId: string) => void;
 }
 
 export const AssetsList = ({ assets }: AssetListProps) => {
+  const { t, ready } = useTranslation();
 
   const [isModalOpen, setIsModalOpen] = useState(false); // 控制弹窗显示状态
   const [selectedAsset, setSelectedAsset] = useState<any>(null); // 当前选中的资产
   const [tickerInfo, setTickerInfo] = useState<any>(null); // 当前选中的资产
   const columns = [
-    { key: 'name', label: 'Name' },
-    { key: 'balance', label: 'Balance' },
-    { key: 'price', label: 'Price' },
-    { key: 'action', label: 'Action' },
+    { key: 'name', label: t('common.assets_name') },
+    { key: 'balance', label: t('common.balance') },
+    { key: 'price', label: t('common.price') },
+    { key: 'action', label: t('common.action') },
   ];
 
 
@@ -53,14 +54,14 @@ export const AssetsList = ({ assets }: AssetListProps) => {
 
   return (
 
-    <div>
-    <Table aria-label="Assets List Table" cellPadding={0} cellSpacing={0} className="w-full bg-accent/50 rounded-lg shadow-md border-collapse">
+    <div className='bg-zinc-950/50 text-zinc-200 rounded-xl shadow-lg p-2'>
+    <Table aria-label="Assets List Table" cellPadding={0} cellSpacing={0} className="w-full  bg-zinc-950/50 rounded-lg shadow-md border-collapse">
       <TableHeader columns={columns}>
         {(column) => (
           <TableColumn
             key={column.key}
             align={column.key === 'action' || column.key === 'price' ? 'end' : 'start'}
-            className={column.key === 'action' || column.key === 'price' ? 'h-12 text-right bg-accent' : 'text-left bg-accent'}
+            className={column.key === 'action' || column.key === 'price' ? 'h-12 mr-2 text-right bg-zinc-900' : 'text-left mr-2 bg-zinc-900'}
           >
             {column.label}
           </TableColumn>
@@ -70,15 +71,15 @@ export const AssetsList = ({ assets }: AssetListProps) => {
         {(asset) => (
           <TableRow
           key={asset.id}
-          className="hover:bg-accent/50 cursor-pointer border-b-1 border-zinc-700/50"
+          className="hover:bg-accent/50 cursor-pointer border-b-1 border-zinc-800"
         >
             <TableCell>
               <div className="flex flex-col">
-                <span className="font-medium text-white">{asset.label}</span>
+                <span className="font-medium text-zinc-300">{asset.label}</span>
               </div>
             </TableCell>
             <TableCell>
-              <span className="text-white">{asset.amount}</span>
+              <span className="text-zinc-300">{asset.amount}</span>
             </TableCell>
             <TableCell className="text-right">
               <span className="text-sm text-gray-400">-{}</span>
@@ -88,11 +89,11 @@ export const AssetsList = ({ assets }: AssetListProps) => {
                 size="sm"
                 color="secondary"   
                 variant="outline"          
-                className="text-sm"
+                className="text-sm px-4"
                 // onPress={() => onListClick?.(asset.key)}
                 onClick={() => handleSellClick(asset)} // 打开挂单弹窗
               >
-                List
+                {t('common.list')}
               </Button>
             </TableCell>
           </TableRow>

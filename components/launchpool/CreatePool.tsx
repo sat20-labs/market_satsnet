@@ -15,7 +15,10 @@ import { hideStr } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation(); // Specify the namespace
+  console.log('Current Language:', i18n.language); // Debugging: Check current language
+  console.log('Translation for createPool.title:', t('createPool.title')); // Debugging: Check translation key
+
   const [bol, setBol] = useState(true);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -32,7 +35,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [contractURL, setcontractURL] = useState<string | null>(null);
 
-  // 使用store获取合约类型
   const { satsnetHeight } = useCommonStore();
   const { supportedContracts, isLoading } = useSupportedContracts();
   const hasLaunchpool = supportedContracts.includes('launchpool.tc');
@@ -45,7 +47,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  // 用useQuery定时拉取池子状态
   const { data: poolStatusData } = useQuery({
     queryKey: ['poolStatus', contractURL],
     queryFn: async () => {
@@ -61,22 +62,20 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   });
 
   const statusTextMap = {
-    '-2': 'EXPIRED（已过期）',
-    '-1': 'CLOSED（已关闭）',
-    '0': 'INIT（初始化）',
-    '100': 'READY（正常工作阶段）',
-    '200': 'CLOSING（关闭中）',
+    '-2': t('pages.status.expired'),
+    '-1': t('pages.status.closed'),
+    '0': t('pages.status.init'),
+    '100': t('pages.status.ready'),
+    '200': t('pages.status.closing'),
   };
 
   async function handleConfirm(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
     event.preventDefault();
-    // 校验 endBlock
     if (formData.endBlock !== '0' && Number(formData.endBlock) <= satsnetHeight) {
       toast.error(t('End Block must be 0 or greater than current block height'));
       return;
     }
     setShowConfirmModal(false);
-    // 构造 assetName 和 launchPool
     const assetName = {
       Protocol: formData.protocol,
       Type: 'f',
@@ -86,7 +85,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
         return `${this.Protocol}:${this.Type}:${this.Ticker}`;
       }
     };
-    // 组装参数，字段名与后端一致
     const params = {
       contractType: contractType,
       startBlock: Number(formData.startBlock),
@@ -96,12 +94,12 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       bindingSat: Number(formData.n),
       limit: Number(formData.limit),
       maxSupply: Number(formData.maxSupply),
-      launchRation: Number(formData.launchRatio), // 保持 launchRation 字段名与后端一致
-      ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol.charCodeAt(0) } : {}), // 仅 runes 协议时加 assetSymbol，且为uint32
+      launchRation: Number(formData.launchRatio),
+      ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol.charCodeAt(0) } : {}),
     };
-    const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1,bol)
-    console.log('create pool result:', result);
-    const { contractURL, txId } = result
+    const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1, bol);
+    console.log('result:', result);
+    const { contractURL, txId } = result;
     if (contractURL) {
       toast.success(`Contract deployed successfully, txid: ${txId}`);
       setcontractURL(contractURL);
@@ -111,28 +109,21 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     }
   }
 
-  // 当 protocol 为 runes 时，n 自动设为 1000
   useEffect(() => {
     if (formData.protocol === 'runes' && formData.n !== '1000') {
       setFormData((prev) => ({ ...prev, n: '1000' }));
     }
   }, [formData.protocol]);
 
-  // 判断所有参数是否填写完整
   const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply);
-  // 判断每一步是否填写完整
   const isStep1Complete = !!(formData.protocol && formData.ticker && formData.n);
   const isStep2Complete = !!(formData.limit && formData.launchRatio && formData.maxSupply);
 
-  // 协议label映射
-  const protocolLabels = { ordx: 'ORDX', runes: 'Runes' };
-
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
-      {/* Fixed Header */}
-      <div className="sticky top-0 bg-gray-900/50 border border-zinc-600 z-10 p-4  rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-2">{t('Create LaunchPool')}</h2>
-        <p className="text-zinc-400">{t('Create a new launch pool for your asset. Please fill in the details below')}</p>
+      <div className="sticky top-0 text bg-zinc-800/50 border border-zinc-800 z-10 p-4 rounded-lg shadow-lg">
+        <h2 className="text-xl font-bold mb-2">🚀 {t('pages.createPool.title')}</h2>
+        <p className="text-zinc-400">{t('pages.createPool.description')}</p>
         <button
           className="absolute top-4 right-6 text-zinc-400 hover:text-white"
           onClick={closeModal}
@@ -142,38 +133,36 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       </div>
 
       <hr className="mb-6 h-1" />
-      {/* Step Content */}
-      <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-600 rounded-lg shadow-lg">
+      <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-800 rounded-lg shadow-lg">
         {step === 1 && (
           <div className="mt-4">
             <div className="text-lg font-bold h-10">
-              <span className="px-4 py-2 border-l-6 border-purple-500">{t('Step 1: Deploy Asset')}</span>
+              <span className="px-4 py-2 border-l-6 border-purple-500">{t('pages.createPool.step1.title')}</span>
             </div>
-            <p className="text-sm text-zinc-400 mt-2">{t('Select the protocol and provide basic details about your asset.')}</p>
+            <p className="text-sm text-zinc-400 mt-2">{t('pages.createPool.step1.description')}</p>
             <div className="flex justify-items-start items-center mt-4 gap-4">
-              <label className="block text-sm font-medium text-gray-300">{t('Network')}</label>
+              <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.network.title')}</label>
               <Select value={bol ? 'btc' : 'satsnet'} onValueChange={(value) => setBol(value === 'btc')}>
-                <SelectTrigger className="w-56 py-4 h-12">{bol ? t('BTC主网') : t('聪网（SatsNet）')}</SelectTrigger>
+                <SelectTrigger className="w-56 py-4 h-12">{bol ? t('pages.createPool.network.btc') : t('pages.createPool.network.satsnet')}</SelectTrigger>
                 <SelectContent className="max-h-60 overflow-y-auto">
-                  <SelectItem value="btc" className="h-9 py-2">{t('BTC主网')}</SelectItem>
-                  <SelectItem value="satsnet" className="h-9 py-2">{t('聪网（SatsNet）')}</SelectItem>
+                  <SelectItem value="btc" className="h-9 py-2">{t('pages.createPool.network.btc')}</SelectItem>
+                  <SelectItem value="satsnet" className="h-9 py-2">{t('pages.createPool.network.satsnet')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex justify-items-start items-center mt-4 gap-4">
-              <label className="block text-sm font-medium text-gray-300">{t('Protocol')}</label>
+              <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.protocol.title')}</label>
               <Select onValueChange={(value) => handleInputChange('protocol', value)} >
-                <SelectTrigger className="w-56 py-4 h-12">{protocolLabels[formData.protocol] || t('Select Protocol')}</SelectTrigger>
+                <SelectTrigger className="w-56 py-4 h-12">{t(`pages.createPool.protocol.${formData.protocol}`) || t('pages.createPool.selectProtocol')}</SelectTrigger>
                 <SelectContent className="max-h-60 overflow-y-auto">
-                  <SelectItem value="ordx" className="h-9 py-2">ORDX</SelectItem>
-                  <SelectItem value="runes" className="h-9 py-2">Runes</SelectItem>
-                  {/* <SelectItem value="brc20" className="h-9 py-2">BRC20</SelectItem> */}
+                  <SelectItem value="ordx" className="h-9 py-2">{t('pages.createPool.protocol.ordx')}</SelectItem>
+                  <SelectItem value="runes" className="h-9 py-2">{t('pages.createPool.protocol.runes')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Ticker')}</label>
+            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.ticker')}</label>
             <Input
-              placeholder={t('Ticker')}
+              placeholder={t('pages.createPool.ticker')}
               value={formData.ticker}
               onChange={(e) => {
                 let value = e.target.value;
@@ -183,9 +172,9 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                 handleInputChange('ticker', value);
               }}
             />
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('N (BindingSat)')}</label>
+            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.bindingSat')}</label>
             <Input
-              placeholder={t('N (BindingSat)')}
+              placeholder={t('pages.createPool.bindingSat')}
               type="number"
               value={formData.n}
               onChange={(e) => handleInputChange('n', e.target.value)}
@@ -193,9 +182,9 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
             />
             {formData.protocol === 'runes' && (
               <>
-                <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Asset Symbol')}</label>
+                <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.assetSymbol')}</label>
                 <Input
-                  placeholder={t('Asset Symbol')}
+                  placeholder={t('pages.createPool.assetSymbol')}
                   type="text"
                   value={formData.assetSymbol}
                   maxLength={1}
@@ -209,43 +198,43 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
         {step === 2 && (
           <div className="mt-4">
             <div className="text-base font-bold h-10">
-              <span className="px-4 py-2 border-l-6 border-purple-500">{t('Step 2: Configure Smart Contract')}</span>
+              <span className="px-4 py-2 border-l-6 border-purple-500">{t('pages.createPool.step2.title')}</span>
             </div>
-            <p className="text-sm text-zinc-400 mt-2">{t('Set up the smart contract parameters for your launch pool.')}</p>
+            <p className="text-sm text-zinc-400 mt-2">{t('pages.createPool.step2.description')}</p>
             <p className="text-sm text-zinc-400 mt-2">
-              {t('Current Block Height')}: <span className="font-bold text-white">{satsnetHeight}</span>
+              {t('pages.createPool.step2.currentBlockHeight')}: <span className="font-bold text-white">{satsnetHeight}</span>
             </p>
-            <label className="block text-sm font-medium mt-4 text-gray-300 mb-1">{t('Limit')}</label>
+            <label className="block text-sm font-medium mt-4 text-gray-300 mb-1">{t('pages.createPool.limit')}</label>
             <Input
-              placeholder={t('Limit')}
+              placeholder={t('pages.createPool.limit')}
               type="number"
               value={formData.limit}
               onChange={(e) => handleInputChange('limit', e.target.value)}
             />
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Launch Ratio')}</label>
+            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.launchRatio')}</label>
             <Input
-              placeholder={t('Launch Ratio')}
+              placeholder={t('pages.createPool.launchRatio')}
               type="number"
               value={formData.launchRatio}
               onChange={(e) => handleInputChange('launchRatio', e.target.value)}
             />
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Max Supply')}</label>
+            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.maxSupply')}</label>
             <Input
-              placeholder={t('Max Supply')}
+              placeholder={t('pages.createPool.maxSupply')}
               type="number"
               value={formData.maxSupply}
               onChange={(e) => handleInputChange('maxSupply', e.target.value)}
             />
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('Start Block')}</label>
+            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.startBlock')}</label>
             <Input
-              placeholder={t('Start Block')}
+              placeholder={t('pages.createPool.startBlock')}
               type="number"
               value={formData.startBlock}
               onChange={(e) => handleInputChange('startBlock', e.target.value)}
             />
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('End Block')}</label>
+            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.endBlock')}</label>
             <Input
-              placeholder={t('End Block')}
+              placeholder={t('pages.createPool.endBlock')}
               type="number"
               value={formData.endBlock}
               onChange={(e) => handleInputChange('endBlock', e.target.value)}
@@ -256,14 +245,14 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
         {step === 3 && (
           <div className="mt-4">
             <div className="text-base font-bold h-10">
-              <span className="px-4 py-2 border-l-6 border-purple-500">{t('Step 3: Monitor Pool')}</span>
+              <span className="px-4 py-2 border-l-6 border-purple-500">{t('pages.createPool.step3.title')}</span>
             </div>
             <p className="text-sm text-zinc-400 mt-2">{t('Monitor the progress of your launch pool and user participation.')}</p>
             <p className="mt-4">{t('Waiting for user participation and pool completion...')}</p>
             {contractURL && (
               <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
-                <div className="mb-2 font-bold text-white">{t('Pool Status')}</div>
-                <div className="text-sm text-zinc-300 mb-2">{t('Status')}: {statusTextMap[String(poolStatusData?.status)] ?? poolStatusData?.status ?? '-'}</div>
+                <div className="mb-2 font-bold text-white">{t('pages.createPool.step3.poolStatus')}</div>
+                <div className="text-sm text-zinc-300 mb-2">{t('pages.createPool.step3.status')}: {statusTextMap[String(poolStatusData?.status)] ?? poolStatusData?.status ?? '-'}</div>
                 <div className="text-sm text-zinc-300 mb-2">
                   DeployTickerTxId: {poolStatusData?.DeployTickerTxId ? (
                     <a href={generateMempoolUrl({
@@ -294,32 +283,54 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                     })} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{hideStr(poolStatusData.AnchorTxId, 6)}</a>
                   ) : '-'}
                 </div>
-              </div>
+              </div>              
             )}
+            <p className='text-red-500 text-xs font-bold mt-3'>{t('pages.createPool.step3.note')}: <span className='ml-1 text-zinc-300'>{t('pages.createPool.step3.noteDescription')}</span></p>
           </div>
         )}
 
         <div className="mt-4 py-4 flex justify-between">
-          {step > 1 && step < 3 && <Button className="w-40 sm:w-48" variant="outline" onClick={handlePrevStep}>{t('Previous')}</Button>}
+          {step > 1 && step < 3 && <Button className="w-40 sm:w-48" variant="outline" onClick={handlePrevStep}>{t('pages.createPool.previous')}</Button>}
           {step === 1 && (
             <Button
-              className="w-40 sm:w-48"
+              className="w-40 sm:w-48 btn-gradient"
               variant="outline"
               onClick={handleNextStep}
               disabled={!isStep1Complete}
             >
-              {t('Next')}
+              {t('pages.createPool.next')}
             </Button>
           )}
           {step === 2 && (
             <Button
-              className="w-40 sm:w-48"
+              className="w-36 sm:w-48 btn-gradient"
               variant="outline"
               onClick={handleConfirm}
               disabled={!isFormComplete || !hasLaunchpool}
             >
-              {t('Submit Template')}
+              {t('pages.createPool.submitTemplate')}
             </Button>
+          )}
+          {step === 3 && (
+            <>
+              <Button
+                className="w-36 sm:w-48"
+                variant="outline"
+                onClick={closeModal}
+                disabled={!isFormComplete || !hasLaunchpool}
+              >
+                {t('pages.createPool.close')}
+              </Button>
+
+              <Button
+                className="w-36 sm:w-48 btn-gradient"
+                variant="outline"
+                onClick={closeModal}
+                disabled={!isFormComplete || !hasLaunchpool}
+              >
+                {t('pages.createPool.viewPool')}
+              </Button>            
+            </>
           )}
         </div>
       </div>

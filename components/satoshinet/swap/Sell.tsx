@@ -6,6 +6,7 @@ import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BtcPrice } from "../../BtcPrice";
+import { useTranslation } from 'react-i18next';
 
 interface SellProps {
     assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
@@ -16,6 +17,7 @@ interface SellProps {
   }
 
 const Sell =  ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: SellProps) => {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState<string>('0.0');
   const [btcReceived, setBtcReceived] = useState<string>('-');
   const [priceImpact, setPriceImpact] = useState<string>('-');
@@ -86,11 +88,11 @@ const Sell =  ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanc
     try {
       // Simulate sell process
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Replace with actual API call
-      alert(`Successfully sold ${amount} ${tickerInfo?.displayname}`);
+      alert(t('common.swap_sell_success', { amount, ticker: tickerInfo?.displayname }));
       if (onSellSuccess) onSellSuccess();
     } catch (error) {
       console.error("Sell failed:", error);
-      alert("Sell failed. Please try again.");
+      alert(t('common.swap_sell_failed'));
     } finally {
       setIsLoading(false);
       setIsSelling(false);
@@ -102,11 +104,11 @@ const Sell =  ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanc
   };
 
   return (
-    <div className="p-4 bg-[#0E0E10] text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
+    <div className="p-4 bg-zinc-900 text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
       {/* 输入框 */}
       <div className="flex items-center justify-between mb-4">
         <div className="text-sm text-gray-400">
-            Your Balance: <span className="ml-2"> {displayBalance.toLocaleString()}</span>
+            {t('common.swap_sell_balance')} <span className="ml-2"> {displayBalance.toLocaleString()}</span>
             <span> ${tickerInfo?.displayname}</span></div>
         {/* <div className="text-sm text-gray-400">~$0.00</div> */}
       </div>
@@ -116,10 +118,10 @@ const Sell =  ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanc
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           className="w-full bg-transparent border border-zinc-600 rounded-lg px-4 py-2 text-lg text-white"
+          placeholder={t('common.swap_sell_enterAmount')}
         />
         <div className="absolute right-4 top-2/4 transform -translate-y-2/4 flex items-center gap-2">
           <span className="text-sm text-gray-400">${tickerInfo?.displayname}</span>
-         
         </div>
       </div>
 
@@ -143,30 +145,30 @@ const Sell =  ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanc
       {/* BTC Received 和 Price Impact */}
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex justify-between">
-          <span className="text-sm text-gray-400">BTC Received</span>
-          <span className="text-sm text-white"><span className="font-semibold text-zinc-200">{calculatedBTC} sats</span></span>
+          <span className="text-sm text-gray-400">{t('common.swap_sell_btcReceived')}</span>
+          <span className="text-sm text-white"><span className="font-semibold text-zinc-200">{calculatedBTC} {t('common.sats')}</span></span>
         </div>
         <div className="flex justify-between">
-          <span className="text-sm text-gray-400">Price Impact</span>
+          <span className="text-sm text-gray-400">{t('common.swap_sell_priceImpact')}</span>
           <span className="text-sm text-white">{priceImpact}%</span>
         </div>
       </div>
 
       {/* Connect 按钮 */}
       <WalletConnectBus asChild>
-              <Button
-                type="button"
-                onClick={handleSell}
-                className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${!isSellValid || isLoading
-                  ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60"
-                  : "btn-gradient"
-                  }`}
-                disabled={(!isSellValid || isLoading)}
-                size="lg"
-              >
-                {isSelling ? "Processing..." : `Sell ${tickerInfo?.displayname}`}
-              </Button>
-            </WalletConnectBus>
+        <Button
+          type="button"
+          onClick={handleSell}
+          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${!isSellValid || isLoading
+            ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60"
+            : "btn-gradient"
+            }`}
+          disabled={(!isSellValid || isLoading)}
+          size="lg"
+        >
+          {isSelling ? t('common.swap_sell_processing') : t('common.swap_sell_sellButton', { ticker: tickerInfo?.displayname })}
+        </Button>
+      </WalletConnectBus>
     </div>
   );
 };

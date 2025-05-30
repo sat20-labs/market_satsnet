@@ -39,13 +39,13 @@ export const ActivityTable = ({ activities, isLoading, error }: ActivityTablePro
       header: t('common.event'),
       cell: ({ row }) => {
         const activity = row.original;
-        const label = activity.eventTypeLabel;
+        const label = activity.eventTypeLabel;      
     
         // 根据事件类型设置颜色
         const colorClass =
-          label === 'Sell'
+          label === 'Sell'  || label === '卖出'
             ? 'text-[#cc098b] px-1 border border-[#cc098b] rounded-sm' // 卖出显示红色
-            : label === 'Buy'
+            : label === 'Buy' || label === '买入'
             ? 'text-green-600 px-1 border border-green-600 bg-gray-800/90 rounded-sm' // 买入显示绿色
             : 'text-gray-300'; // 其他显示灰色
     
