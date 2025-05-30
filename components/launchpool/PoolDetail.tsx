@@ -175,7 +175,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.DeployTickerTxId ? (
                           <a href={generateMempoolUrl({
-                            network: poolDetails.network || 'btc',
+                            network: 'testnet',
                             path: `tx/${poolDetails.DeployTickerTxId}`,
                             chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
                             env: poolDetails.env || 'prod',
@@ -189,7 +189,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.MintTxId ? (
                           <a href={generateMempoolUrl({
-                            network: poolDetails.network || 'btc',
+                            network: 'testnet',
                             path: `tx/${poolDetails.MintTxId}`,
                             chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
                             env: poolDetails.env || 'prod',
@@ -203,7 +203,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.AnchorTxId ? (
                           <a href={generateMempoolUrl({
-                            network: poolDetails.network || 'btc',
+                            network: 'testnet',
                             path: `tx/${poolDetails.AnchorTxId}`,
                             chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
                             env: poolDetails.env || 'prod',

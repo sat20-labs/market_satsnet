@@ -24,7 +24,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const [formData, setFormData] = useState({
     protocol: 'ordx',
     ticker: '',
-    n: '',
+    n: '1000',
     limit: '',
     launchRatio: '70',
     maxSupply: '',
@@ -109,11 +109,11 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     }
   }
 
-  useEffect(() => {
-    if (formData.protocol === 'runes' && formData.n !== '1000') {
-      setFormData((prev) => ({ ...prev, n: '1000' }));
-    }
-  }, [formData.protocol]);
+  // useEffect(() => {
+  //   if (formData.protocol === 'runes' && formData.n !== '1000') {
+  //     setFormData((prev) => ({ ...prev, n: '1000' }));
+  //   }
+  // }, [formData.protocol]);
 
   const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply);
   const isStep1Complete = !!(formData.protocol && formData.ticker && formData.n);
