@@ -121,7 +121,7 @@ const LaunchPool = () => {
     queryKey: ['poolList'],
     queryFn: getPoolList,
     gcTime: 0,
-    refetchInterval: 30000,
+    refetchInterval: 3000,
   });
 
   const adaptedPoolList = useMemo(() => {
