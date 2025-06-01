@@ -26,9 +26,7 @@ import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useContractStore } from '@/store/contract';
-import { uniq } from 'lodash';
 
-const protocol = 'default';
 
 function adaptPoolData(pool, satsnetHeight) {
   const launchCap = (pool.maxSupply ?? pool.launchCap) && (pool.launchRation ?? 0)
@@ -135,7 +133,8 @@ const LaunchPool = () => {
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-
+  console.log('adaptedPoolList', satsnetHeight);
+  console.log('adaptedPoolList', poolList);
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },

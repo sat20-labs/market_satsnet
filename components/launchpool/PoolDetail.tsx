@@ -177,8 +177,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                           <a href={generateMempoolUrl({
                             network: 'testnet',
                             path: `tx/${poolDetails.DeployTickerTxId}`,
-                            chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
-                            env: poolDetails.env || 'prod',
+                            chain: Chain.BTC,
+                            env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.DeployTickerTxId, 6)}</a>
                         ) : '-'}
                         <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
@@ -191,8 +191,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                           <a href={generateMempoolUrl({
                             network: 'testnet',
                             path: `tx/${poolDetails.MintTxId}`,
-                            chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
-                            env: poolDetails.env || 'prod',
+                            chain: Chain.BTC,
+                            env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.MintTxId, 6)}</a>
                         ) : '-'}
                         <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
@@ -205,8 +205,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                           <a href={generateMempoolUrl({
                             network: 'testnet',
                             path: `tx/${poolDetails.AnchorTxId}`,
-                            chain: poolDetails.network === 'satnet' ? Chain.SATNET : Chain.BTC,
-                            env: poolDetails.env || 'prod',
+                            chain: Chain.SATNET,
+                            env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.AnchorTxId, 6)}</a>
                         ) : '-'}
                         <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>

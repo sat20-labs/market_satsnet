@@ -100,7 +100,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1, bol);
     console.log('result:', result);
     const { contractURL, txId } = result;
-    if (contractURL) {
+    if (txId) {
       toast.success(`Contract deployed successfully, txid: ${txId}`);
       setcontractURL(contractURL);
       setStep(3);
