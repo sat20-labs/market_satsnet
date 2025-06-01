@@ -51,6 +51,7 @@ function AccountContent() {
   console.log('totalSatValue', totalSatValue);
 
   return (
+    <div className='p-2'>
     <Tabs
       value={tabKey}
       defaultValue={paramTab}
@@ -72,6 +73,7 @@ function AccountContent() {
         <OrdxOrderList address={address} />
       </TabsContent>
     </Tabs>
+    </div>
   );
 }
 

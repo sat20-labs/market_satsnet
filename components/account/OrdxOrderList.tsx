@@ -137,7 +137,7 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
             <tr>
               <th className="sticky bg-zinc-800 left-0 h-12 z-10 px-4 py-2 text-left">{t('common.assets_name')}</th>
               <th className="px-4 py-2 text-left">{t('common.assets_type')}</th>
-              <th className="px-4 py-2 text-right">{t('common.quantity')}</th>
+              <th className="px-4 py-2 text-right whitespace-nowrap">{t('common.quantity')}</th>
               <th className="px-4 py-2 text-right">{t('common.unit_price')}</th>
               <th className="px-4 py-2 text-right">{t('common.price')}</th>
               <th className="px-4 py-2 text-right">{t('common.time')}</th>

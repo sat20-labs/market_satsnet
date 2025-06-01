@@ -43,7 +43,8 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
 }) => {
   const { t } = useTranslation();
   const isMobile = useMediaQuery({ maxWidth: 640 });
-  const MAX_VISIBLE_PAGES = isMobile ? 3 : 5;
+  // Reduce visible pages on mobile
+  const MAX_VISIBLE_PAGES = isMobile ? 1 : 5;
 
   const handlePrevious = () => {
     if (currentPage > 1 && !isLoading) {
@@ -71,6 +72,22 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
 
   const renderPageNumbers = () => {
     const pageNumbers: React.ReactNode[] = [];
+    
+    // For mobile, show a simplified version
+    if (isMobile) {
+      // Just show current page number
+      pageNumbers.push(
+        <PaginationItem key={currentPage}>
+          <PaginationLink isActive={true}>
+            {currentPage}
+          </PaginationLink>
+        </PaginationItem>
+      );
+      
+      return pageNumbers;
+    }
+    
+    // For desktop, show the standard pagination
     const startPage = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGES / 2));
     const endPage = Math.min(totalPages, startPage + MAX_VISIBLE_PAGES - 1);
 
@@ -116,7 +133,7 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
   if (totalPages <= 0) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+    <div className="flex flex-row justify-between items-center gap-4 my-4">
       <Pagination className="justify-start flex-grow">
         <PaginationContent>
           <PaginationItem>
@@ -137,14 +154,14 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
         </PaginationContent>
       </Pagination>
 
-      <div className="flex items-center gap-2 justify-end mb-4">
+      <div className="flex items-center gap-1 justify-end">
         <span className="text-sm text-gray-400 whitespace-nowrap">{t('common.items_per_page')}</span>
         <Select
           value={String(pageSize)}
           onValueChange={handleSizeChange}
           disabled={isLoading}
         >
-          <SelectTrigger className="w-[70px] h-8 text-xs sm:text-sm bg-zinc-800 border-zinc-700 text-gray-300">
+          <SelectTrigger className="w-[65px] h-8 text-xs sm:text-sm bg-zinc-800 border-zinc-700 text-gray-300">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-zinc-800 border-zinc-700 text-gray-300">
@@ -158,4 +175,4 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
       </div>
     </div>
   );
-}; 
+};

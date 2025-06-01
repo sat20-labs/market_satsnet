@@ -152,25 +152,28 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
   };
 
   return (
-    <div className="bg-zinc-900/90 sm:p-6 rounded-lg text-zinc-200 w-full">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1 sm:gap-4  mt-2">
-        <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
-        <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 mb-4 items-center">
+    <div className="bg-zinc-900/90 py-2 sm:p-6 rounded-lg text-zinc-200 w-full">
+      <div className="flex flex-row items-center justify-between gap-2 px-1 pt-3">
+        <div className="flex-shrink-0">
+          <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
+        <div className="flex items-center gap-2">
           <FilterSelect
             value={apiFilter}
             options={filterList}
             onChange={(val) => setApiFilter(Number(val))}
-            placeholder={t('common.filter_placeholder')}
-            className="w-[150px] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm"
+            placeholder={t('common.filter_placeholder')}           
+            className="bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs"
+           
           />
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-white transition-colors h-8 w-8"
+            className="text-gray-400 hover:text-white transition-colors h-8 w-8 flex-shrink-0 p-0"
             aria-label={t('common.refresh')}
             onClick={handleRefresh}
           >
-            <Icon icon="mdi:refresh" className="h-5 w-5" />
+            <Icon icon="mdi:refresh" className="h-4 w-4" />
           </Button>
         </div>
       </div>

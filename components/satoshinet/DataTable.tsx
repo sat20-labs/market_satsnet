@@ -59,7 +59,7 @@ export function DataTable<TData, TValue>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
+              <TableRow className=" whitespace-nowrap"
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
               >
