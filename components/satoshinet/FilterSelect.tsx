@@ -15,6 +15,7 @@ import {
  * @param {(value: string|number) => void} props.onChange 选中变化回调
  * @param {string} [props.placeholder] 占位符
  * @param {string} [props.className] 额外样式
+ * @param {string} [props.width] 宽度，如 "150px" 或 "100%"
  */
 export const FilterSelect = ({
   value,
@@ -22,19 +23,24 @@ export const FilterSelect = ({
   onChange,
   placeholder = '',
   className = '',
+  width = '150px', // 添加默认宽度参数
 }: {
   value: string | number,
   options: { label: string, value: string | number }[],
   onChange: (value: string | number) => void,
   placeholder?: string,
   className?: string,
+  width?: string, // 添加宽度参数类型
 }) => {
+  // 合并默认样式和传入的className
+  const combinedClassName = `w-full max-w-[${width}] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm ${className}`;
+  
   return (
     <Select
-      value={String(value)}
+      value={String(value)}         
       onValueChange={(val) => onChange(typeof value === 'number' ? Number(val) : val)}
     >
-      <SelectTrigger className={className}>
+      <SelectTrigger className={combinedClassName}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -46,4 +52,4 @@ export const FilterSelect = ({
       </SelectContent>
     </Select>
   );
-}; 
+};

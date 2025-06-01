@@ -107,7 +107,7 @@
   "select_option": "选择选项",
   "activity": "交易历史",
   "my_activities": "我的交易",
-  "items_per_page": "每页项目",
+  "items_per_page": "每页",
   "unit_price_sats": "单价(sats)",
   "total_value_sats": "总价(sats)",
   "quantity": "数量",

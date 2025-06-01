@@ -135,12 +135,12 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
   };
 
   return (
-    <div className="bg-zinc-900/90 sm:p-6 rounded-lg text-zinc-200 w-full">
+    <div className="bg-zinc-900/90 p-2 sm:py-6 rounded-lg text-zinc-200 w-full">
       <div className="flex justify-end flex-col sm:flex-row items-start sm:items-center gap-2 px-1 sm:gap-4 mb-4 mt-4">
-        <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 items-center">
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-4 items-center mt-1">
           <FilterSelect
             value={apiFilter}
-            options={filterList}
+            options={filterList}           
             onChange={(val) => setApiFilter(Number(val))}
             placeholder={t('common.filter_placeholder')}
             className="w-[150px] bg-zinc-800 border-zinc-700 text-gray-300 h-8 text-xs sm:text-sm"
@@ -156,7 +156,7 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
           </Button>
         </div>
       </div>
-      <div className="mt-4">
+      <div className="my-2">
         <ActivityTable
           activities={activities}
           isLoading={myActivitiesQuery.isLoading}

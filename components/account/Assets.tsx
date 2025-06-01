@@ -9,10 +9,10 @@ import { AssetsList } from './AssetsList';
 export const Assets = () => {
   const [protocol, setProtocol] = useState<string>('ordx');   
   const { assets } = useAssetStore();
-  console.log('assets', assets);
-  console.log('assets', protocol);
+  // console.log('assets', assets);
+  // console.log('assets', protocol);
   const onProtocolChange = (t: string) => {
-    console.log('onProtocolChange', t);
+    // console.log('onProtocolChange', t);
     
     if (t !== protocol) {
       setProtocol(t);
