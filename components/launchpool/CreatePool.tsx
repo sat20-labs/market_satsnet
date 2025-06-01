@@ -24,7 +24,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const [formData, setFormData] = useState({
     protocol: 'ordx',
     ticker: '',
-    n: '',
+    n: '1000',
     limit: '',
     launchRatio: '70',
     maxSupply: '',
@@ -33,7 +33,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     assetSymbol: '',
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [monitorTxId, setMonitorTxId] = useState<string | null>(null);
+  const [contractURL, setcontractURL] = useState<string | null>(null);
 
   const { satsnetHeight } = useCommonStore();
   const { supportedContracts, isLoading } = useSupportedContracts();
@@ -48,17 +48,16 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   };
 
   const { data: poolStatusData } = useQuery({
-    queryKey: ['poolStatus', monitorTxId],
+    queryKey: ['poolStatus', contractURL],
     queryFn: async () => {
-      if (!monitorTxId || step !== 3) return null;
-      const url = `${monitorTxId}_${formData.protocol}:f:${formData.ticker}_launchpool.tc`
-      const result = await window.sat20.getDeployedContractStatus(url);
+      if (!contractURL || step !== 3) return null;
+      const result = await window.sat20.getDeployedContractStatus(contractURL);
       if (result && result.contractStatus) {
         return JSON.parse(result.contractStatus);
       }
       return null;
     },
-    enabled: !!monitorTxId && step === 3,
+    enabled: !!contractURL && step === 3,
     refetchInterval: 3000,
   });
 
@@ -100,21 +99,21 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     };
     const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1, bol);
     console.log('result:', result);
-    const { txId } = result;
+    const { contractURL, txId } = result;
     if (txId) {
       toast.success(`Contract deployed successfully, txid: ${txId}`);
-      setMonitorTxId(txId);
+      setcontractURL(contractURL);
       setStep(3);
     } else {
       toast.error('Contract deployment failed');
     }
   }
 
-  useEffect(() => {
-    if (formData.protocol === 'runes' && formData.n !== '1000') {
-      setFormData((prev) => ({ ...prev, n: '1000' }));
-    }
-  }, [formData.protocol]);
+  // useEffect(() => {
+  //   if (formData.protocol === 'runes' && formData.n !== '1000') {
+  //     setFormData((prev) => ({ ...prev, n: '1000' }));
+  //   }
+  // }, [formData.protocol]);
 
   const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply);
   const isStep1Complete = !!(formData.protocol && formData.ticker && formData.n);
@@ -248,9 +247,9 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
             <div className="text-base font-bold h-10">
               <span className="px-4 py-2 border-l-6 border-purple-500">{t('pages.createPool.step3.title')}</span>
             </div>
-            <p className="text-sm text-zinc-400 mt-2">{t('pages.createPool.step3.description')}</p>
-            <p className="text-sm mt-4 text-zinc-400">{t('pages.createPool.step3.waitingForCompletion')}</p>
-            {monitorTxId && (
+            <p className="text-sm text-zinc-400 mt-2">{t('Monitor the progress of your launch pool and user participation.')}</p>
+            <p className="mt-4">{t('Waiting for user participation and pool completion...')}</p>
+            {contractURL && (
               <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
                 <div className="mb-2 font-bold text-white">{t('pages.createPool.step3.poolStatus')}</div>
                 <div className="text-sm text-zinc-300 mb-2">{t('pages.createPool.step3.status')}: {statusTextMap[String(poolStatusData?.status)] ?? poolStatusData?.status ?? '-'}</div>

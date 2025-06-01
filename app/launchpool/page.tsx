@@ -26,20 +26,12 @@ import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useContractStore } from '@/store/contract';
-import { uniq } from 'lodash';
 
-const protocol = 'default';
 
 function adaptPoolData(pool, satsnetHeight) {
-  const launchCap = (pool.maxSupply ?? pool.launchCap) && (pool.launchRation ?? 0)
-    ? Math.floor((pool.maxSupply ?? pool.launchCap) * (pool.launchRation ?? 100) / 100)
-    : (pool.launchCap ?? 0);
-
-  const rawProgress = launchCap
-    ? Math.floor(((pool.TotalMinted ?? pool.progress ?? 0) / launchCap) * 100)
-    : (pool.progress ?? 0);
-  const progress = Math.min(rawProgress, 100);
-
+  console.log('pool', pool);
+  const totalMinted = pool.TotalMinted / pool.maxSupply * 100
+  const progress = Math.floor(Math.min(totalMinted / pool.launchRation, 1) * 100);
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
   const enableBlock = Number(pool.enableBlock);
@@ -71,7 +63,6 @@ function adaptPoolData(pool, satsnetHeight) {
     marketCap: pool.marketCap ?? '',
     totalSupply: pool.maxSupply ?? pool.totalSupply ?? '',
     poolSize: pool.limit ?? pool.poolSize ?? '',
-    launchCap,
     progress,
     protocol: pool.assetProtocol ?? pool.protocol ?? '',
     template: pool.template ?? '',
@@ -129,13 +120,15 @@ const LaunchPool = () => {
   const { data: poolList = [] } = useQuery({
     queryKey: ['poolList'],
     queryFn: getPoolList,
+    gcTime: 0,
     refetchInterval: 30000,
   });
 
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-
+  console.log('adaptedPoolList', satsnetHeight);
+  console.log('adaptedPoolList', poolList);
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
