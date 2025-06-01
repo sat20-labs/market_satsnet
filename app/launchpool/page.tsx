@@ -194,7 +194,7 @@ const LaunchPool = () => {
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
-                  className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900"
+                  className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap"
                 >
                   {column.label}
                 </TableHead>
@@ -205,7 +205,7 @@ const LaunchPool = () => {
             {filteredPoolList.map((adaptedPool, index) => (
               <TableRow
                 key={adaptedPool.id ?? index}
-                className="border-b border-border hover:bg-accent transition-colors"
+                className="border-b border-border hover:bg-accent transition-colors  whitespace-nowrap"
               >
                 <TableCell className="flex items-center gap-2 px-4 py-2">
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">

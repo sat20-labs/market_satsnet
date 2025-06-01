@@ -84,7 +84,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
 
   return (
     <div className="p-6 w-full sm:w-[1280px] mx-auto bg-zinc-900 rounded-lg shadow-lg relative">
-      <div className="relative flex justify-between items-center my-4 gap-4 border-b border-zinc-700 pb-4">
+      <div className="relative flex justify-between items-center mb-4 gap-4 border-b border-zinc-700 pb-4">
         <h2 className="flex justify-start items-center text-2xl font-bold">
           <Icon icon="lucide:plus" className="w-8 h-8 mr-2 text-zinc-400" />
           {t('pages.joinPool.title')}
@@ -97,41 +97,55 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
         </button>
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-y-2 text-sm text-zinc-300">
-        {infoList.map(({ label, value }) => (
-          <div key={label} className="border-b py-2 border-zinc-700/50">
-            <span className="font-semibold text-zinc-400">{label}:</span>
-            <span className="truncate pl-2 text-zinc-100" title={value}>{value ?? '-'}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="mb-6">
-        <label className="block mb-2 text-zinc-300 font-semibold" htmlFor="amount">{t('pages.joinPool.amount_label')}</label>
-        <div className="text-zinc-400 text-sm mb-1">
-          {t('pages.joinPool.max_join')}: <span className="text-zinc-100 font-bold">{loading ? t('pages.joinPool.loading') : maxJoin}</span>
+      {/* Add max-height and overflow-y-auto for scrollable content */}
+      <div className="max-h-[60vh] overflow-y-auto pr-2">
+        <div className="mb-4 grid grid-cols-1 gap-y-2 text-sm text-zinc-300">
+          {infoList.map(({ label, value }) => (
+            <div key={label} className="border-b py-2 border-zinc-700/50">
+              <span className="font-semibold text-zinc-400 whitespace-nowrap">{label}:</span>
+              <span className="truncate pl-2 text-zinc-100 whitespace-break-spaces" title={value}>{value ?? '-'}</span>
+            </div>
+          ))}
         </div>
-        <Input
-          id="amount"
-          type="number"
-          placeholder={t('pages.joinPool.amount_placeholder')}
-          value={amount}
-          min={1}
-          max={maxJoin}
-          onChange={e => setAmount(e.target.value)}
-          className="mb-2 w-full"
-          disabled={loading || maxJoin === 0}
-        />
-        <div className="text-zinc-400 text-sm">{t('pages.joinPool.current_amount')}: <span className="text-zinc-100 font-bold">{amount || 0}</span></div>
-      </div>
 
-      <div className="flex justify-start my-6 gap-4">
-        <Button variant="outline" className="w-40 sm:w-48 h-11 text-zinc-300 text-base btn-gradient" onClick={handleConfirm}>
-          {t('pages.joinPool.confirm')}
-        </Button>
-        <Button variant="outline" className="w-40 sm:w-48 h-11 text-zinc-300 text-base" onClick={closeModal}>
-          {t('pages.joinPool.cancel')}
-        </Button>
+        <div className="mb-6">
+          <label className="block mb-2 text-zinc-300 font-semibold" htmlFor="amount">{t('pages.joinPool.amount_label')}</label>
+          <div className="text-zinc-400 text-sm mb-1">
+            {t('pages.joinPool.max_join')}: <span className="text-zinc-100 font-bold">{loading ? t('pages.joinPool.loading') : maxJoin}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              id="amount"
+              type="number"
+              placeholder={t('pages.joinPool.amount_placeholder')}
+              value={amount}
+              min={1}
+              max={maxJoin}
+              onChange={e => setAmount(e.target.value)}
+              className="mb-2 w-full"
+              disabled={loading || maxJoin === 0}
+            />
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="h-10 mb-2 whitespace-nowrap bg-zinc-800 hover:bg-zinc-700"
+              onClick={() => setAmount(String(maxJoin))}
+              disabled={loading || maxJoin === 0}
+            >
+              Max
+            </Button>
+          </div>
+          <div className="text-zinc-400 text-sm">{t('pages.joinPool.current_amount')}: <span className="text-zinc-100 font-bold">{amount || 0}</span></div>
+        </div>
+
+        <div className="flex justify-start mb-2 gap-4">
+          <Button variant="outline" className="w-40 sm:w-48 h-11 text-zinc-300 text-base btn-gradient" onClick={handleConfirm}>
+            {t('pages.joinPool.confirm')}
+          </Button>
+          <Button variant="outline" className="w-40 sm:w-48 h-11 text-zinc-300 text-base" onClick={closeModal}>
+            {t('pages.joinPool.cancel')}
+          </Button>
+        </div>
       </div>
     </div>
   );
