@@ -172,6 +172,11 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                 handleInputChange('ticker', value);
               }}
             />
+             {formData.protocol === 'runes' && (
+                <p className="mt-1 text-xs text-gray-400">
+                  {t('pages.createPool.runesTickerNote')}
+                </p>
+              )}
             <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.bindingSat')}</label>
             <Input
               placeholder={t('pages.createPool.bindingSat')}

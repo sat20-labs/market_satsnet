@@ -245,7 +245,8 @@
     "previous": "上一步",
     "submitTemplate": "提交合约",
     "close": "关闭",
-    "viewPool": "查看池子"
+    "viewPool": "查看池子",
+    "runesTickerNote": "可输入空格分隔代替Runes符号，如：XXX YYY ZZZ"
   },
   "joinPool": {
     "title": "加入池子",
