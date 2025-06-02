@@ -40,6 +40,7 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
       const response = await marketApi.getOrders({
         address: storeAddress || address,
         offset: (page - 1) * pageSize,
+        sort: 4,
         size: pageSize,
       });
       setTotalCount(response.data.total || 0);
