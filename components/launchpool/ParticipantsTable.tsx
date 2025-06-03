@@ -131,6 +131,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                           <ul className="space-y-1 mb-2">
                             {participant.valid.MintHistory.map((item: any, i: number) => {
                               const txid = item.Utxo?.split(':')[0];
+                              const amt = item.Amt;
                               return (
                                 <li key={i} className="flex items-center space-x-2">
                                   <a href={generateMempoolUrl({
@@ -138,7 +139,9 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                                     path: `tx/${txid}`,
                                     chain: Chain.SATNET,
                                     env: 'dev',
-                                  })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{txid}</a>
+                                  })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                                    {txid} <span >({amt})</span>
+                                  </a>
                                 </li>
                               );
                             })}
@@ -151,6 +154,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                           <ul className="space-y-1">
                             {participant.invalid.MintHistory.map((item: any, i: number) => {
                               const txid = item.Utxo?.split(':')[0];
+                              const amt = item.Amt;
                               return (
                                 <li key={i} className="flex items-center space-x-2">
                                   <a href={generateMempoolUrl({
@@ -158,7 +162,9 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                                     path: `tx/${txid}`,
                                     chain: Chain.SATNET,
                                     env: 'dev',
-                                  })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{txid}</a>
+                                  })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                                    {txid} <span className="text-zinc-400">(资产: {amt})</span>
+                                  </a>
                                 </li>
                               );
                             })}
