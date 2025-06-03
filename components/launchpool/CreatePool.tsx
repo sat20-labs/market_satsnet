@@ -140,16 +140,30 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               <span className="px-4 py-2 border-l-6 border-purple-500">{t('pages.createPool.step1.title')}</span>
             </div>
             <p className="text-sm text-zinc-400 mt-2">{t('pages.createPool.step1.description')}</p>
-            <div className="flex justify-items-start items-center mt-4 gap-4">
-              <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.network.title')}</label>
-              <Select value={bol ? 'btc' : 'satsnet'} onValueChange={(value) => setBol(value === 'btc')}>
-                <SelectTrigger className="w-56 py-4 h-12">{bol ? t('pages.createPool.network.btc') : t('pages.createPool.network.satsnet')}</SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto">
-                  <SelectItem value="btc" className="h-9 py-2">{t('pages.createPool.network.btc')}</SelectItem>
-                  <SelectItem value="satsnet" className="h-9 py-2">{t('pages.createPool.network.satsnet')}</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col mt-4 gap-2"> 
+  
+              <div className="flex items-center gap-4">
+              <label className="block text-sm font-medium text-gray-300">
+                {t('pages.createPool.network.title')}
+              </label>
+                <Select value={bol ? 'btc' : 'satsnet'} onValueChange={(value) => setBol(value === 'btc')}>
+                  <SelectTrigger className="w-56 py-4 h-12">
+                    {bol ? t('pages.createPool.network.btc') : t('pages.createPool.network.satsnet')}
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60 overflow-y-auto">
+                    <SelectItem value="btc" className="h-9 py-2">
+                      {t('pages.createPool.network.btc')}
+                    </SelectItem>
+                    <SelectItem value="satsnet" className="h-9 py-2">
+                      {t('pages.createPool.network.satsnet')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <p className="text-gray-400 text-xs">{t('pages.createPool.deployFeeTip')}</p>
             </div>
+
             <div className="flex justify-items-start items-center mt-4 gap-4">
               <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.protocol.title')}</label>
               <Select onValueChange={(value) => handleInputChange('protocol', value)} >
@@ -172,6 +186,11 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                 handleInputChange('ticker', value);
               }}
             />
+             {formData.protocol === 'runes' && (
+                <p className="mt-1 text-xs text-gray-400">
+                  {t('pages.createPool.runesTickerNote')}
+                </p>
+              )}
             <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.bindingSat')}</label>
             <Input
               placeholder={t('pages.createPool.bindingSat')}

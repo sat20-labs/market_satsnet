@@ -261,7 +261,9 @@
     "previous": "Previous",
     "submitTemplate": "Submit Template",
     "close": "Close",
-    "viewPool": "View Pool"
+    "viewPool": "View Pool",
+    "runesTickerNote": "* Input spaces as separators to replace Runes symbols, e.g.,: XXX YYY ZZZ",
+    "deployFeeTip": "* Deployment fees can be paid via Mainnet or SatoshiNet."
   },
   "joinPool": {
     "title": "Join Pool",
