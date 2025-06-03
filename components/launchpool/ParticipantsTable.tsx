@@ -25,6 +25,8 @@ const fetchParticipants = async (contractURL: string, bindingSat: number) => {
   if (!contractURL) return [];
   try {
     const result = await window.sat20.getAllAddressInContract(contractURL);
+    console.log('getAllAddressInContract', result);
+    console.log('JSON.parse(result.addresses)', JSON.parse(result.addresses));
     const list = JSON.parse(result.addresses)?.data || [];
     const resultStatusList: any[] = [];
     for (const item of list) {
@@ -61,9 +63,9 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
     queryKey: ['participants', contractURL],
     queryFn: () => fetchParticipants(contractURL, bindingSat),
     enabled: !!contractURL,
-    refetchInterval: 2000,
+    // refetchInterval: 2000,
   });
-
+  console.log('participantsList', participantsList);
   // 适配 amount 字段
   const adaptedList = participantsList.map((participant: any) => {
     const TotalMint = participant.valid?.TotalMint || [];
@@ -154,7 +156,8 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                           <ul className="space-y-1">
                             {participant.invalid.MintHistory.map((item: any, i: number) => {
                               const txid = item.Utxo?.split(':')[0];
-                              const amt = item.Amt;
+                              const amt = item.RefundValue
+                              ;
                               return (
                                 <li key={i} className="flex items-center space-x-2">
                                   <a href={generateMempoolUrl({
@@ -163,7 +166,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                                     chain: Chain.SATNET,
                                     env: 'dev',
                                   })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-                                    {txid} <span className="text-zinc-400">(资产: {amt})</span>
+                                    {txid} <span className="text-zinc-400">({amt})</span>
                                   </a>
                                 </li>
                               );

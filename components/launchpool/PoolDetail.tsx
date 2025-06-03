@@ -6,32 +6,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
 import JoinPool from './JoinPool';
-import { Modal } from '@/components/ui/modal';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
 import { hideStr } from '@/utils';
-import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { WalletConnectBus } from '../wallet/WalletConnectBus';
 import { useCommonStore } from '@/store/common';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Icon } from "@iconify/react";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
 import ParticipantsTable from './ParticipantsTable';
 
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
   const { t } = useTranslation(); // Specify the namespace
   const { satsnetHeight } = useCommonStore();
-  const { address } = useReactWalletStore();
-
+  console.log('poolDetails', poolDetails);
   const canViewParticipants = () => {
     return [
       PoolStatus.ACTIVE,
@@ -46,44 +34,6 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
 
   const [tabValue, setTabValue] = React.useState<string>("basic");
   const [showJoinModal, setShowJoinModal] = React.useState(false);
-  const [expandedRows, setExpandedRows] = React.useState<string[]>([]);
-
-  const fetchParticipants = async () => {
-    if (!poolDetails?.contractURL) return [];
-    try {
-      const result = await window.sat20.getAllAddressInContract(poolDetails.contractURL);
-      const list = JSON.parse(result.addresses)?.data || [];
-      const resultStatusList: any[] = [];
-      for (const item of list) {
-        const { status } = await window.sat20.getAddressStatusInContract(poolDetails.contractURL, item.address);
-        resultStatusList.push({
-          ...item,
-          ...JSON.parse(status)
-        });
-      }
-      resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
-      console.log('resultStatusList', resultStatusList);
-      return resultStatusList.map(v => {
-        const TotalMint = v.valid?.TotalMint || [];
-        return {
-          ...v,
-          amount: TotalMint + poolDetails.bindingSat - 1,
-          bindingSat: poolDetails.bindingSat
-        };
-      });
-    } catch (e) {
-      console.error(t('pages.poolDetail.fetch_error'), e);
-      return [];
-    }
-  };
-
-  const { data: participantsData = [], isLoading: isParticipantsLoading } = useQuery({
-    queryKey: ['participants', poolDetails?.contractURL],
-    queryFn: fetchParticipants,
-    enabled: canViewParticipants() && !!poolDetails?.contractURL,
-    refetchInterval: 2000,
-  });
-
   const onchainStatusTextMap = {
     '-2': t('pages.poolDetail.status.expired'),
     '-1': t('pages.poolDetail.status.closed'),
@@ -92,22 +42,6 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
     '200': t('pages.poolDetail.status.closing'),
   };
 
-  // 提取所有 MintHistory 的 txid
-  const getAllTxids = (participant: any) => {
-    const validHistory = participant.valid?.MintHistory || [];
-    const invalidHistory = participant.invalid?.MintHistory || [];
-    const all = [...validHistory, ...invalidHistory];
-    // 只保留 txid 部分
-    return all.map((item: any) => item.Utxo?.split(':')[0]).filter(Boolean);
-  };
-
-  const handleToggleRow = (address: string) => {
-    setExpandedRows(prev =>
-      prev.includes(address)
-        ? prev.filter(a => a !== address)
-        : [...prev, address]
-    );
-  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 overflow-y-auto">
@@ -248,6 +182,66 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                         <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500' />
                       </td>
                     </tr>
+                    {/* LaunchTxIDs */}
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap align-top">Launch TxIDs</td>
+                      <td className="p-2 whitespace-nowrap">
+                        {Array.isArray(poolDetails.LaunchTxIDs) && poolDetails.LaunchTxIDs.length > 0 ? (
+                          <div className="flex flex-col space-y-1 max-h-32 overflow-y-auto">
+                            {poolDetails.LaunchTxIDs.map((txid: string, idx: number) => (
+                              <div key={txid} className="flex items-center">
+                                <a
+                                  href={generateMempoolUrl({
+                                    network: 'testnet',
+                                    path: `tx/${txid}`,
+                                    chain: Chain.SATNET,
+                                    env: 'dev',
+                                  })}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline"
+                                >
+                                  {hideStr(txid, 6)}
+                                </a>
+                                <Icon icon="lucide:square-arrow-out-up-right" className='w-4 h-4 ml-2 text-zinc-500' />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span>-</span>
+                        )}
+                      </td>
+                    </tr>
+                    {/* RefundTxIDs */}
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap align-top">Refund TxIDs</td>
+                      <td className="p-2 whitespace-nowrap">
+                        {Array.isArray(poolDetails.RefundTxIDs) && poolDetails.RefundTxIDs.length > 0 ? (
+                          <div className="flex flex-col space-y-1 max-h-32 overflow-y-auto">
+                            {poolDetails.RefundTxIDs.map((txid: string, idx: number) => (
+                              <div key={txid} className="flex items-center">
+                                <a
+                                  href={generateMempoolUrl({
+                                    network: 'testnet',
+                                    path: `tx/${txid}`,
+                                    chain: Chain.SATNET,
+                                    env: 'dev',
+                                  })}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline"
+                                >
+                                  {hideStr(txid, 6)}
+                                </a>
+                                <Icon icon="lucide:square-arrow-out-up-right" className='w-4 h-4 ml-2 text-zinc-500' />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span>-</span>
+                        )}
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -308,7 +302,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       bindingSat={poolDetails.bindingSat}
                       showMintHistory={true}
                       showIndex={false}
-                      tableHeaders={[t('pages.poolDetail.address'), t('pages.poolDetail.amount'), t('pages.poolDetail.allocated_tokens'), t('pages.poolDetail.join_time')]}
+                      tableHeaders={[t('pages.poolDetail.address'), '资产数量/聪']}
                     />
                   </div>
                 </div>
