@@ -117,7 +117,7 @@ const LaunchPool = () => {
     queryKey: ['poolList'],
     queryFn: getPoolList,
     gcTime: 0,
-    refetchInterval: 6000,
+    // refetchInterval: 60000,
   });
 
   const adaptedPoolList = useMemo(() => {
@@ -170,7 +170,8 @@ const LaunchPool = () => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-
+  console.log('filteredPoolList', filteredPoolList);
+  
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">

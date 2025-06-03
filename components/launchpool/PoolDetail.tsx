@@ -246,21 +246,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 </table>
               </div>
 
-              <div className="flex space-x-4 my-4">
-                <WalletConnectBus asChild>
-                  <Button
-                    variant="outline"
-                    className={`mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
-                    onClick={() => poolDetails.poolStatus === PoolStatus.ACTIVE && setShowJoinModal(true)}
-                    disabled={poolDetails.poolStatus !== PoolStatus.ACTIVE}
-                  >
-                    {t('pages.poolDetail.join_pool')}
-                  </Button>
-                </WalletConnectBus>
-                <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300" onClick={closeModal}>
-                  {t('pages.poolDetail.close')}
-                </Button>
-              </div>
+
             </TabsContent>
 
             <TabsContent value="template">
@@ -283,9 +269,6 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full sm:w-60 h-11 mt-4 text-zinc-300 text-base" onClick={() => setTabValue("basic")}>
-                {t('pages.poolDetail.back_to_basic')}
-              </Button>
             </TabsContent>
 
             {canViewParticipants() && (
@@ -306,11 +289,24 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                     />
                   </div>
                 </div>
-                <Button variant="outline" className="w-full sm:w-48 mt-4 text-base text-zinc-300" onClick={() => setTabValue("basic")}>
-                  {t('pages.poolDetail.back_to_basic')}
-                </Button>
+
               </TabsContent>
             )}
+            <div className="flex space-x-4 my-4">
+              <WalletConnectBus asChild>
+                <Button
+                  variant="outline"
+                  className={`mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
+                  onClick={() => poolDetails.poolStatus === PoolStatus.ACTIVE && setShowJoinModal(true)}
+                  disabled={poolDetails.poolStatus !== PoolStatus.ACTIVE}
+                >
+                  {t('pages.poolDetail.join_pool')}
+                </Button>
+              </WalletConnectBus>
+              <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300" onClick={closeModal}>
+                {t('pages.poolDetail.close')}
+              </Button>
+            </div>
           </div>
         </Tabs>
       </div>

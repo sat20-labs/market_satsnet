@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableHeader,
@@ -21,16 +21,15 @@ interface ParticipantsTableProps {
   onClose?: () => void;
 }
 
-const fetchParticipants = async (contractURL: string, bindingSat: number) => {
+const fetchParticipants = async (contractURL: string, bindingSat: number, pageStart: number = 0, pageLimit: number = 20) => {
   if (!contractURL) return [];
   try {
     const result = await window.sat20.getAllAddressInContract(contractURL);
-    console.log('getAllAddressInContract', result);
-    console.log('JSON.parse(result.addresses)', JSON.parse(result.addresses));
     const list = JSON.parse(result.addresses)?.data || [];
     const resultStatusList: any[] = [];
     for (const item of list) {
       const { status } = await window.sat20.getAddressStatusInContract(contractURL, item.address);
+      console.log('status', contractURL, item.address, JSON.parse(status));
       resultStatusList.push({
         ...item,
         ...JSON.parse(status)
@@ -38,11 +37,11 @@ const fetchParticipants = async (contractURL: string, bindingSat: number) => {
     }
     resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
     return resultStatusList.map(v => {
-      const TotalMint = v.valid?.TotalMint || [];
+      const TotalMint = v.valid?.TotalMint || 0;
       return {
         ...v,
-        amount: TotalMint + bindingSat - 1,
-        bindingSat: bindingSat
+        amount: TotalMint,
+        sats: Math.ceil((TotalMint + bindingSat - 1) / bindingSat),
       };
     });
   } catch (e) {
@@ -59,20 +58,35 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   tableHeaders = ['地址', '资产数量/聪'],
   onClose,
 }) => {
-  const { data: participantsList = [], isLoading } = useQuery({
-    queryKey: ['participants', contractURL],
-    queryFn: () => fetchParticipants(contractURL, bindingSat),
-    enabled: !!contractURL,
-    // refetchInterval: 2000,
-  });
+  const [participantsList, setParticipantsList] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchData = async () => {
+      if (!contractURL) {
+        setParticipantsList([]);
+        return;
+      }
+      setIsLoading(true);
+      const data = await fetchParticipants(contractURL, bindingSat, 0, 20);
+      if (isMounted) {
+        setParticipantsList(data);
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+    return () => { isMounted = false; };
+  }, [contractURL, bindingSat]);
   console.log('participantsList', participantsList);
+  
   // 适配 amount 字段
   const adaptedList = participantsList.map((participant: any) => {
-    const TotalMint = participant.valid?.TotalMint || [];
+    const TotalMint = participant.valid?.TotalMint || 0;
     return {
       ...participant,
-      amount: TotalMint + bindingSat - 1,
-      bindingSat: bindingSat
+      amount: TotalMint ,
+      sats: Math.ceil((TotalMint + bindingSat - 1) / bindingSat)
     };
   });
 
@@ -100,7 +114,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow><TableCell colSpan={showIndex ? tableHeaders.length + 1 : tableHeaders.length} className="text-center p-4 text-zinc-400">加载中...</TableCell></TableRow>
-          ) : adaptedList.length === 0 ? (
+          ) : participantsList.length === 0 ? (
             <TableRow><TableCell colSpan={showIndex ? tableHeaders.length + 1 : tableHeaders.length} className="text-center p-4 text-zinc-400">暂无参与者</TableCell></TableRow>
           ) : (
             adaptedList.map((participant: any, index: number) => {
@@ -121,7 +135,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                         participant.address
                       )}
                     </TableCell>
-                    <TableCell className="p-3">{participant.amount}/{participant.bindingSat}</TableCell>
+                    <TableCell className="p-3">{participant.amount ? `${participant.amount}/${participant.sats}` : '-'}</TableCell>
                   </TableRow>
                   {showMintHistory && isExpanded && (
                     <TableRow>

@@ -74,6 +74,9 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     const result = await window.sat20.invokeContract_SatsNet(
       poolData.contractURL, JSON.stringify(params), '1');
     if (result.txId) {
+      console.log('result', result);
+      console.log('result.txId', result.txId);
+      
       toast.success(t('pages.joinPool.success', { amount, txId: result.txId }));
       closeModal();
     } else {
