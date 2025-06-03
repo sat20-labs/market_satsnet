@@ -17,6 +17,15 @@ import { WalletConnectBus } from '../wallet/WalletConnectBus';
 import { useCommonStore } from '@/store/common';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Icon } from "@iconify/react";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import ParticipantsTable from './ParticipantsTable';
 
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
   const { t } = useTranslation(); // Specify the namespace
@@ -37,6 +46,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
 
   const [tabValue, setTabValue] = React.useState<string>("basic");
   const [showJoinModal, setShowJoinModal] = React.useState(false);
+  const [expandedRows, setExpandedRows] = React.useState<string[]>([]);
 
   const fetchParticipants = async () => {
     if (!poolDetails?.contractURL) return [];
@@ -52,7 +62,15 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
         });
       }
       resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
-      return resultStatusList;
+      console.log('resultStatusList', resultStatusList);
+      return resultStatusList.map(v => {
+        const TotalMint = v.valid?.TotalMint || [];
+        return {
+          ...v,
+          amount: TotalMint + poolDetails.bindingSat - 1,
+          bindingSat: poolDetails.bindingSat
+        };
+      });
     } catch (e) {
       console.error(t('pages.poolDetail.fetch_error'), e);
       return [];
@@ -72,6 +90,23 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
     '0': t('pages.poolDetail.status.init'),
     '100': t('pages.poolDetail.status.ready'),
     '200': t('pages.poolDetail.status.closing'),
+  };
+
+  // 提取所有 MintHistory 的 txid
+  const getAllTxids = (participant: any) => {
+    const validHistory = participant.valid?.MintHistory || [];
+    const invalidHistory = participant.invalid?.MintHistory || [];
+    const all = [...validHistory, ...invalidHistory];
+    // 只保留 txid 部分
+    return all.map((item: any) => item.Utxo?.split(':')[0]).filter(Boolean);
+  };
+
+  const handleToggleRow = (address: string) => {
+    setExpandedRows(prev =>
+      prev.includes(address)
+        ? prev.filter(a => a !== address)
+        : [...prev, address]
+    );
   };
 
   return (
@@ -164,7 +199,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                     </tr>
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.binding_sat')}</td>
-                      <td className="p-2 whitespace-nowrap">{poolDetails.bindingSat ?? poolDetails.n}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.bindingSat
+                      }</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.onchain_status')}</td>
@@ -181,7 +217,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                             env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.DeployTickerTxId, 6)}</a>
                         ) : '-'}
-                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500' />
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
@@ -195,7 +231,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                             env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.MintTxId, 6)}</a>
                         ) : '-'}
-                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500' />
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
@@ -209,7 +245,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                             env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.AnchorTxId, 6)}</a>
                         ) : '-'}
-                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500' />
                       </td>
                     </tr>
                   </tbody>
@@ -253,7 +289,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full sm:w-60 h-11 mt-4 text-zinc-300 text-base" onClick={() => setTabValue("basic")}>               
+              <Button variant="outline" className="w-full sm:w-60 h-11 mt-4 text-zinc-300 text-base" onClick={() => setTabValue("basic")}>
                 {t('pages.poolDetail.back_to_basic')}
               </Button>
             </TabsContent>
@@ -263,44 +299,19 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold mb-2">{t('pages.poolDetail.participants_info')}</h3>
                   <div className="flex justify-between mb-3">
-                    <p className="text-zinc-400">{t('pages.poolDetail.total_participants')}: {participantsData.length}</p>
+                    <p className="text-zinc-400">{t('pages.poolDetail.total_participants')}: --</p>
                     <p className="text-zinc-400">{t('pages.poolDetail.total_deposited')}: --</p>
                   </div>
-
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
-                      <thead className="bg-zinc-800 sticky top-0">
-                        <tr>
-                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.address')}</th>
-                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.amount')}</th>
-                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.allocated_tokens')}</th>
-                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.join_time')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {participantsData.length === 0 ? (
-                          <tr>
-                            <td colSpan={4} className="text-center p-4 text-zinc-400">{t('pages.poolDetail.no_participants')}</td>
-                          </tr>
-                        ) : (
-                          participantsData.map((participant: any, index: number) => {
-                            const mintHistory = participant.valid?.MintHistory || [];
-                            const totalAmt = mintHistory.reduce((sum: number, item: any) => sum + (Number(item.Amt) || 0), 0);
-                            return (
-                              <tr key={index} className="border-b border-zinc-700">
-                                <td className="p-3 whitespace-nowrap">{participant.address}</td>
-                                <td className="p-3 whitespace-nowrap">{totalAmt || '--'}</td>
-                                <td className="p-3 whitespace-nowrap">{totalAmt || '--'}</td>
-                                <td className="p-3 whitespace-nowrap">--</td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
+                    <ParticipantsTable
+                      contractURL={poolDetails.contractURL}
+                      bindingSat={poolDetails.bindingSat}
+                      showMintHistory={true}
+                      showIndex={false}
+                      tableHeaders={[t('pages.poolDetail.address'), t('pages.poolDetail.amount'), t('pages.poolDetail.allocated_tokens'), t('pages.poolDetail.join_time')]}
+                    />
                   </div>
                 </div>
-
                 <Button variant="outline" className="w-full sm:w-48 mt-4 text-base text-zinc-300" onClick={() => setTabValue("basic")}>
                   {t('pages.poolDetail.back_to_basic')}
                 </Button>

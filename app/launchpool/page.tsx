@@ -70,12 +70,8 @@ function adaptPoolData(pool, satsnetHeight) {
     templateDescription: pool.templateDescription ?? '',
     templateParameters: pool.templateParameters ?? [],
     participantsList: pool.participantsList ?? [],
-    startTime: pool.startBlock !== undefined && pool.startBlock !== null
-      ? String(pool.startBlock)
-      : (pool.startTime ?? ''),
-    endTime: pool.endBlock !== undefined && pool.endBlock !== null
-      ? String(pool.endBlock)
-      : (pool.endTime ?? ''),
+    startTime: Number(pool.startBlock) > 0 ? pool.startBlock : '-',
+    endTime: Number(pool.endBlock) > 0 ? pool.endBlock : '-',
     poolStatus,
     deployTime: pool.deployTime ?? '',
     assetSymbol: pool.assetSymbol ?? '',
@@ -228,14 +224,14 @@ const LaunchPool = () => {
                     {statusTextMap[adaptedPool.poolStatus]}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-2">{parseInt(adaptedPool.totalSupply, 10)}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.totalSupply}</TableCell>
                 <TableCell className="px-4 py-2">{parseInt(adaptedPool.launchRation, 10)}%</TableCell>
                 <TableCell className="px-4 py-2">
                   {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                 </TableCell>
-                <TableCell className="px-4 py-2">{parseInt(adaptedPool.enableBlock, 10)}</TableCell>
-                <TableCell className="px-4 py-2">{parseInt(adaptedPool.startBlock, 10)}</TableCell>
-                <TableCell className="px-4 py-2">{parseInt(adaptedPool.endBlock, 10)}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.enableBlock > 0 ? adaptedPool.enableBlock : '-'}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.startTime}</TableCell>
+                <TableCell className="px-4 py-2">{adaptedPool.endTime}</TableCell>
                 <TableCell className="px-4 py-2 min-w-[120px]">
                   <div className="w-full bg-gray-600/50 h-2 rounded">
                     <div
@@ -263,7 +259,7 @@ const LaunchPool = () => {
               <LaunchPoolTemplate templateId={selectedTemplateId || ''} closeModal={closeModal} />
             )}
             {modalType === 'distribution' && (
-              <DistributionList contractURL={selectedPool.contractURL} closeModal={closeModal} />
+              <DistributionList contractURL={selectedPool.contractURL} closeModal={closeModal} bindingSat={selectedPool.bindingSat} />
             )}
             {modalType === 'autoDistribute' && (
               <div className="bg-zinc-900 p-6 rounded-lg shadow-md max-w-[600px]">
