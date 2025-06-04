@@ -17,6 +17,7 @@ import { useQueryKey } from '@/lib/hooks/useQueryKey';
 import { useCommonStore } from '@/store';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import Trade from '@/components/satoshinet/swap/SwapTrade';
+import ListOrder from '@/components/satoshinet/limitorder/LimitOrder';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -69,8 +70,8 @@ function OrderPageContent() {
   }, [data]);
 
   // Wallet and order book state
-  const [activeTab, setActiveTab] = useState<'takeOrder' | 'makeOrder' | 'swap'>('takeOrder');
-  const handleTabChange = (tab: 'takeOrder' | 'makeOrder' | 'swap') => {
+  const [activeTab, setActiveTab] = useState<'takeOrder' | 'makeOrder' | 'swap' | 'limitOrder'>('takeOrder');
+  const handleTabChange = (tab: 'takeOrder' | 'makeOrder' | 'swap' | 'limitOrder') => {
     setActiveTab(tab);
   };
   const [settings, setSettings] = useState({ showOngoingTrades: false, maxBidPrice: 0 });
@@ -111,8 +112,6 @@ function OrderPageContent() {
   const handleRefresh = async () => {
     console.log("handleRefresh");
     if (activeTab === "takeOrder" && takeOrderRef.current) {
-
-
       await takeOrderRef.current.forceRefresh();
     }
   };
@@ -158,12 +157,14 @@ function OrderPageContent() {
             }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} />
           ) : activeTab === 'swap' ? (
             <Trade  assetInfo={{
-            assetLogo: summary.assetLogo,
-            assetName: summary.assetName,
-            AssetId: summary.assetId,
-            floorPrice: parseFloat(summary.floorPrice),
-          }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} 
-            /> // 确保这里渲染 Trade 组件
+              assetLogo: summary.assetLogo,
+              assetName: summary.assetName,
+              AssetId: summary.assetId,
+              floorPrice: parseFloat(summary.floorPrice),
+            }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} 
+            />
+          ) : activeTab === 'limitOrder' ? (
+            <ListOrder />
           ) : null}
           <div className="mt-4 text-sm text-gray-400">
             {settings.showOngoingTrades && <p>Show pending transactions...</p>}
