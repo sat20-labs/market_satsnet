@@ -6,23 +6,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
 import JoinPool from './JoinPool';
-import { Modal } from '@/components/ui/modal';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
 import { hideStr } from '@/utils';
-import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { WalletConnectBus } from '../wallet/WalletConnectBus';
 import { useCommonStore } from '@/store/common';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Icon } from "@iconify/react";
+import ParticipantsTable from './ParticipantsTable';
 
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
   const { t } = useTranslation(); // Specify the namespace
   const { satsnetHeight } = useCommonStore();
-  const { address } = useReactWalletStore();
-
+  console.log('poolDetails', poolDetails);
   const canViewParticipants = () => {
     return [
       PoolStatus.ACTIVE,
@@ -37,35 +34,6 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
 
   const [tabValue, setTabValue] = React.useState<string>("basic");
   const [showJoinModal, setShowJoinModal] = React.useState(false);
-
-  const fetchParticipants = async () => {
-    if (!poolDetails?.contractURL) return [];
-    try {
-      const result = await window.sat20.getAllAddressInContract(poolDetails.contractURL);
-      const list = JSON.parse(result.addresses)?.data || [];
-      const resultStatusList: any[] = [];
-      for (const item of list) {
-        const { status } = await window.sat20.getAddressStatusInContract(poolDetails.contractURL, item.address);
-        resultStatusList.push({
-          ...item,
-          ...JSON.parse(status)
-        });
-      }
-      resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
-      return resultStatusList;
-    } catch (e) {
-      console.error(t('pages.poolDetail.fetch_error'), e);
-      return [];
-    }
-  };
-
-  const { data: participantsData = [], isLoading: isParticipantsLoading } = useQuery({
-    queryKey: ['participants', poolDetails?.contractURL],
-    queryFn: fetchParticipants,
-    enabled: canViewParticipants() && !!poolDetails?.contractURL,
-    refetchInterval: 2000,
-  });
-
   const onchainStatusTextMap = {
     '-2': t('pages.poolDetail.status.expired'),
     '-1': t('pages.poolDetail.status.closed'),
@@ -73,6 +41,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
     '100': t('pages.poolDetail.status.ready'),
     '200': t('pages.poolDetail.status.closing'),
   };
+
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 overflow-y-auto">
@@ -164,7 +133,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                     </tr>
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.binding_sat')}</td>
-                      <td className="p-2 whitespace-nowrap">{poolDetails.bindingSat ?? poolDetails.n}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.bindingSat
+                      }</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.onchain_status')}</td>
@@ -181,7 +151,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                             env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.DeployTickerTxId, 6)}</a>
                         ) : '-'}
-                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500' />
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
@@ -195,7 +165,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                             env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.MintTxId, 6)}</a>
                         ) : '-'}
-                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500' />
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-700">
@@ -209,28 +179,74 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                             env: 'dev',
                           })} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{hideStr(poolDetails.AnchorTxId, 6)}</a>
                         ) : '-'}
-                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500'/>
+                        <Icon icon="lucide:square-arrow-out-up-right" className='w-5 h-5 ml-2 text-zinc-500' />
+                      </td>
+                    </tr>
+                    {/* LaunchTxIDs */}
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap align-top">Launch TxIDs</td>
+                      <td className="p-2 whitespace-nowrap">
+                        {Array.isArray(poolDetails.LaunchTxIDs) && poolDetails.LaunchTxIDs.length > 0 ? (
+                          <div className="flex flex-col space-y-1 max-h-32 overflow-y-auto">
+                            {poolDetails.LaunchTxIDs.map((txid: string, idx: number) => (
+                              <div key={txid} className="flex items-center">
+                                <a
+                                  href={generateMempoolUrl({
+                                    network: 'testnet',
+                                    path: `tx/${txid}`,
+                                    chain: Chain.SATNET,
+                                    env: 'dev',
+                                  })}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline"
+                                >
+                                  {hideStr(txid, 6)}
+                                </a>
+                                <Icon icon="lucide:square-arrow-out-up-right" className='w-4 h-4 ml-2 text-zinc-500' />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span>-</span>
+                        )}
+                      </td>
+                    </tr>
+                    {/* RefundTxIDs */}
+                    <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap align-top">Refund TxIDs</td>
+                      <td className="p-2 whitespace-nowrap">
+                        {Array.isArray(poolDetails.RefundTxIDs) && poolDetails.RefundTxIDs.length > 0 ? (
+                          <div className="flex flex-col space-y-1 max-h-32 overflow-y-auto">
+                            {poolDetails.RefundTxIDs.map((txid: string, idx: number) => (
+                              <div key={txid} className="flex items-center">
+                                <a
+                                  href={generateMempoolUrl({
+                                    network: 'testnet',
+                                    path: `tx/${txid}`,
+                                    chain: Chain.SATNET,
+                                    env: 'dev',
+                                  })}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 underline"
+                                >
+                                  {hideStr(txid, 6)}
+                                </a>
+                                <Icon icon="lucide:square-arrow-out-up-right" className='w-4 h-4 ml-2 text-zinc-500' />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span>-</span>
+                        )}
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <div className="flex space-x-4 my-4">
-                <WalletConnectBus asChild>
-                  <Button
-                    variant="outline"
-                    className={`mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
-                    onClick={() => poolDetails.poolStatus === PoolStatus.ACTIVE && setShowJoinModal(true)}
-                    disabled={poolDetails.poolStatus !== PoolStatus.ACTIVE}
-                  >
-                    {t('pages.poolDetail.join_pool')}
-                  </Button>
-                </WalletConnectBus>
-                <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300" onClick={closeModal}>
-                  {t('pages.poolDetail.close')}
-                </Button>
-              </div>
+
             </TabsContent>
 
             <TabsContent value="template">
@@ -253,9 +269,6 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full sm:w-60 h-11 mt-4 text-zinc-300 text-base" onClick={() => setTabValue("basic")}>               
-                {t('pages.poolDetail.back_to_basic')}
-              </Button>
             </TabsContent>
 
             {canViewParticipants() && (
@@ -263,49 +276,37 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold mb-2">{t('pages.poolDetail.participants_info')}</h3>
                   <div className="flex justify-between mb-3">
-                    <p className="text-zinc-400">{t('pages.poolDetail.total_participants')}: {participantsData.length}</p>
+                    <p className="text-zinc-400">{t('pages.poolDetail.total_participants')}: --</p>
                     <p className="text-zinc-400">{t('pages.poolDetail.total_deposited')}: --</p>
                   </div>
-
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-700 rounded-lg shadow-md">
-                      <thead className="bg-zinc-800 sticky top-0">
-                        <tr>
-                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.address')}</th>
-                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.amount')}</th>
-                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.allocated_tokens')}</th>
-                          <th className="p-3 text-left whitespace-nowrap">{t('pages.poolDetail.join_time')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {participantsData.length === 0 ? (
-                          <tr>
-                            <td colSpan={4} className="text-center p-4 text-zinc-400">{t('pages.poolDetail.no_participants')}</td>
-                          </tr>
-                        ) : (
-                          participantsData.map((participant: any, index: number) => {
-                            const mintHistory = participant.valid?.MintHistory || [];
-                            const totalAmt = mintHistory.reduce((sum: number, item: any) => sum + (Number(item.Amt) || 0), 0);
-                            return (
-                              <tr key={index} className="border-b border-zinc-700">
-                                <td className="p-3 whitespace-nowrap">{participant.address}</td>
-                                <td className="p-3 whitespace-nowrap">{totalAmt || '--'}</td>
-                                <td className="p-3 whitespace-nowrap">{totalAmt || '--'}</td>
-                                <td className="p-3 whitespace-nowrap">--</td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
+                    <ParticipantsTable
+                      contractURL={poolDetails.contractURL}
+                      bindingSat={poolDetails.bindingSat}
+                      showMintHistory={true}
+                      showIndex={false}
+                      tableHeaders={[t('pages.poolDetail.address'), '资产数量/聪']}
+                    />
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full sm:w-48 mt-4 text-base text-zinc-300" onClick={() => setTabValue("basic")}>
-                  {t('pages.poolDetail.back_to_basic')}
-                </Button>
               </TabsContent>
             )}
+            <div className="flex space-x-4 my-4">
+              <WalletConnectBus asChild>
+                <Button
+                  variant="outline"
+                  className={`mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300 ${poolDetails.poolStatus === PoolStatus.ACTIVE ? 'btn-gradient' : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}
+                  onClick={() => poolDetails.poolStatus === PoolStatus.ACTIVE && setShowJoinModal(true)}
+                  disabled={poolDetails.poolStatus !== PoolStatus.ACTIVE}
+                >
+                  {t('pages.poolDetail.join_pool')}
+                </Button>
+              </WalletConnectBus>
+              <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300" onClick={closeModal}>
+                {t('pages.poolDetail.close')}
+              </Button>
+            </div>
           </div>
         </Tabs>
       </div>

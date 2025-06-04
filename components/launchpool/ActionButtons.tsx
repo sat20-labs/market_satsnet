@@ -13,7 +13,6 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
   const moreActions: React.ReactNode[] = [];
   let mainAction: React.ReactNode = null;
 
-  console.log(pool.poolStatus);
   switch (pool.poolStatus) {
     case PoolStatus.NOT_STARTED:
       mainAction = null;

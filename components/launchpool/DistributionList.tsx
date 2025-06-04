@@ -2,15 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@/components/ui/table';
+import ParticipantsTable from './ParticipantsTable';
 
 const fetchParticipants = async (contractURL: string) => {
   if (!contractURL) return [];
@@ -33,7 +25,7 @@ const fetchParticipants = async (contractURL: string) => {
   }
 };
 
-const DistributionList = ({ contractURL, closeModal }: { contractURL: string; closeModal: () => void }) => {
+const DistributionList = ({ contractURL, closeModal, bindingSat }: { contractURL: string; closeModal: () => void, bindingSat: number }) => {
   const { data: participantsList = [], isLoading } = useQuery({
     queryKey: ['participants', contractURL],
     queryFn: () => fetchParticipants(contractURL),
@@ -44,23 +36,20 @@ const DistributionList = ({ contractURL, closeModal }: { contractURL: string; cl
   // 适配 amount、allocationTokens、joinTime 字段
   const adaptedList = participantsList.map((participant: any) => {
     // 计算总金额
-    const mintHistory = participant.valid?.MintHistory || [];
-    const totalAmt = mintHistory.reduce((sum: number, item: any) => sum + (Number(item.Amt) || 0), 0);
-    const totalValue = mintHistory.reduce((sum: number, item: any) => sum + (Number(item.Value) || 0), 0);
+    const TotalMint = participant.valid?.TotalMint || [];
     return {
       ...participant,
-      amount: totalAmt,
-      value: totalValue
+      amount: TotalMint + bindingSat - 1,
+      bindingSat: bindingSat
     };
   });
-  console.log('adaptedList', adaptedList);
   
   const totalAmount = adaptedList.reduce(
     (total: number, participant: any) => total + (parseFloat(participant.amount) || 0),
     0
   ).toFixed(0);
   const totalValue = adaptedList.reduce(
-    (total: number, participant: any) => total + (parseFloat(participant.value) || 0),
+    (total: number, participant: any) => total + (parseFloat(participant.bindingSat) || 0),
     0
   ).toFixed(0);
 
@@ -70,7 +59,7 @@ const DistributionList = ({ contractURL, closeModal }: { contractURL: string; cl
   ).toLocaleString();
 
   return (
-    <div className="w-[400px] sm:w-[1280px]  bg-zinc-900 p-6 rounded-lg shadow-md">
+    <div className="w-[400px] sm:w-[1280px] max-w-10/12 mx-auto bg-zinc-900 p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-bold mb-4">参与池子列表</h2>
       
       <p className="text-zinc-400 mb-4">以下是参与该池子的用户及其分配详情：</p>
@@ -79,31 +68,13 @@ const DistributionList = ({ contractURL, closeModal }: { contractURL: string; cl
        </button>
       <div className="max-h-[600px] overflow-y-auto w-full">
         <div className="relative overflow-x-auto"> {/* Ensure horizontal scrolling */}
-          <Table className="table-fix mx-auto mb-4 border-collapse border border-gray-700 rounded-lg shadow-md">
-            <TableHeader className="bg-zinc-800">
-              <TableRow>
-                <TableHead className="p-3 text-left">序号</TableHead>
-                <TableHead className="p-3 text-left">地址</TableHead>
-                <TableHead className="p-3 text-left">资产数量/聪</TableHead>               
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center p-4 text-zinc-400">加载中...</TableCell></TableRow>
-              ) : adaptedList.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center p-4 text-zinc-400">暂无参与者</TableCell></TableRow>
-              ) : (
-                adaptedList.map((participant: any, index: number) => (
-                  <TableRow key={index} className="border-b border-gray-700">
-                    <TableCell className="p-3">{index + 1}</TableCell>
-                    <TableCell className="p-3">{participant.address}</TableCell>
-                    <TableCell className="p-3">{participant.amount}/{participant.value}</TableCell>
-                    
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <ParticipantsTable
+            contractURL={contractURL}
+            bindingSat={bindingSat}
+            showMintHistory={true}
+            showIndex={true}
+            tableHeaders={['地址', '资产数量/聪']}
+          />
         </div>
       </div>
      

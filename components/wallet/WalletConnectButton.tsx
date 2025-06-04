@@ -27,7 +27,6 @@ import { useHeight } from '@/lib/hooks/useHeight';
 const WalletConnectButton = () => {
 
   const { network } = useCommonStore();
-  const { list: utxoList } = useUtxoStore();
   const { t } = useTranslation();
   const { theme } = useTheme();
   const {
@@ -45,9 +44,6 @@ const WalletConnectButton = () => {
   
   const queryClient = useQueryClient();
   useHeight();
-  const utxoAmount = useMemo(() => {
-    return utxoList.reduce((acc, cur) => acc + cur.value, 0);
-  }, [utxoList]);
   useEffect(() => {
     console.log('address', address);
     console.log('connected', connected);
@@ -57,6 +53,7 @@ const WalletConnectButton = () => {
   }, [address, connected]);
   const initCheck = async () => {
     console.log('initCheck');
+    
     await check();
   };
 
@@ -136,39 +133,38 @@ const WalletConnectButton = () => {
     return formatBtcAmount(btcValue);
   }, [balance]);
   const checkSignature = async () => {
-    if (signature && publicKey) {
-      console.log('checkSignature', signature);
+    // if (signature && publicKey) {
+    //   console.log('checkSignature', signature);
 
-      try {
-        // const bol = message.verifyMessageOfECDSA(
-        //   publicKey,
-        //   process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
-        //   signature,
-        // );
-        // console.log('publicKey', publicKey);
-        // console.log('bol', bol);
+    //   try {
+    //     const bol = message.verifyMessageOfECDSA(
+    //       publicKey,
+    //       process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
+    //       signature,
+    //     );
+    //     console.log('publicKey', publicKey);
+    //     console.log('bol', bol);
 
-        // if (!bol) {
-        //   notification.warning({
-        //     message: 'Signature Verification Failed',
-        //     description: 'Please check your signature and try connect again',
-        //   });
-        //   handlerDisconnect();
-        // }
-      } catch (error) {
-        console.log('checkSignature', error);
-        toast.warning('Signature Verification Failed', {
-          description: 'Please check your signature and try connect again',
-        });
-        handlerDisconnect();
-      }
-    }
+    //     if (!bol) {
+    //       notification.warning({
+    //         message: 'Signature Verification Failed',
+    //         description: 'Please check your signature and try connect again',
+    //       });
+    //       handlerDisconnect();
+    //     }
+    //   } catch (error) {
+    //     console.log('checkSignature', error);
+    //     toast.warning('Signature Verification Failed', {
+    //       description: 'Please check your signature and try connect again',
+    //     });
+    //     handlerDisconnect();
+    //   }
+    // }
   };
   useEffect(() => {
     console.log('connected', connected);
     if (connected) {
       setTimeout(() => {
-        checkSignature();
         getBalance();
       }, 1000);
       btcWallet?.on('accountsChanged', accountAndNetworkChange);

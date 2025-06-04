@@ -232,7 +232,7 @@
       "title": "协议",
       "ordx": "ORDX",
       "runes": "Runes"
-    }, 
+    },
     "ticker": "资产名称",
     "bindingSat": "N (每聪铸造的资产数量)",
     "assetSymbol": "资产符号",
@@ -326,6 +326,11 @@
     "totast": {
       "success": "恭喜，你已符合抽奖！中间名单将在活动结束后在推特公布，敬请留意！",
       "error": "对不起，你需要继续完成任务！"
+    }
+  },
+  "pages": {
+    "joinPool": {
+      "success": ""
     }
   }
 }

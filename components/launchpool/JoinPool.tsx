@@ -73,8 +73,10 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     };
     const result = await window.sat20.invokeContract_SatsNet(
       poolData.contractURL, JSON.stringify(params), '1');
-    console.log('result:', result);
     if (result.txId) {
+      console.log('result', result);
+      console.log('result.txId', result.txId);
+      
       toast.success(t('pages.joinPool.success', { amount, txId: result.txId }));
       closeModal();
     } else {
@@ -83,7 +85,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   };
 
   return (
-    <div className="p-6 w-full sm:w-[1280px] mx-auto bg-zinc-900 rounded-lg shadow-lg relative">
+    <div className="p-6 w-full sm:w-[1280px] max-w-10/12  mx-auto bg-zinc-900 rounded-lg shadow-lg relative">
       <div className="relative flex justify-between items-center mb-4 gap-4 border-b border-zinc-700 pb-4">
         <h2 className="flex justify-start items-center text-2xl font-bold">
           <Icon icon="lucide:plus" className="w-8 h-8 mr-2 text-zinc-400" />
