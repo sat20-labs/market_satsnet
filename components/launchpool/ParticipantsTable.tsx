@@ -25,16 +25,16 @@ const fetchParticipants = async (contractURL: string, bindingSat: number, pageSt
   if (!contractURL) return [];
   try {
     const result = await window.sat20.getAllAddressInContract(contractURL);
-    const resultStatusList = JSON.parse(result.addresses)?.data || [];
-    // const resultStatusList: any[] = [];
-    // for (const item of list) {
-    //   const { status } = await window.sat20.getAddressStatusInContract(contractURL, item.address);
-    //   console.log('status', contractURL, item.address, JSON.parse(status));
-    //   resultStatusList.push({
-    //     ...item,
-    //     ...JSON.parse(status)
-    //   });
-    // }
+    const list = JSON.parse(result.addresses)?.data || [];
+    const resultStatusList: any[] = [];
+    for (const item of list) {
+      const { status } = await window.sat20.getAddressStatusInContract(contractURL, item.address);
+      console.log('status', contractURL, item.address, JSON.parse(status));
+      resultStatusList.push({
+        ...item,
+        ...JSON.parse(status)
+      });
+    }
     resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
     return resultStatusList.map(v => {
       const TotalMint = v.valid?.TotalMint || 0;
