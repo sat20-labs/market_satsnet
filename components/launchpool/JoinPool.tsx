@@ -72,11 +72,11 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
       param: amount.toString()
     };
     const result = await window.sat20.invokeContract_SatsNet(
-      poolData.contractURL, JSON.stringify(params), '1');
+      poolData.contractURL, JSON.stringify(params), '::', '1');
     if (result.txId) {
       console.log('result', result);
       console.log('result.txId', result.txId);
-      
+
       toast.success(t('pages.joinPool.success', { amount, txId: result.txId }));
       closeModal();
     } else {
@@ -127,8 +127,8 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
               className="mb-2 w-full"
               disabled={loading || maxJoin === 0}
             />
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               className="h-10 mb-2 whitespace-nowrap bg-zinc-800 hover:bg-zinc-700"
               onClick={() => setAmount(String(maxJoin))}
