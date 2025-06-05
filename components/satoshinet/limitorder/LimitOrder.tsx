@@ -8,11 +8,15 @@ import { DatePicker } from "@/components/ui/datepicker";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import axios from "axios";
 import { Label } from "@radix-ui/react-dropdown-menu";
-// import axios from "axios"; // 注释掉真实接口
-
+import { useSupportedContracts } from "@/lib/hooks/useSupportedContracts";
+// 合约模版：{"contractType":"swap.tc","startBlock":0,"endBlock":0,"assetName":{"Protocol":"","Type":"","Ticker":""}}
+// 支持两个接口，统一的接口调用方式：{"action":"xxx","param":xxx} 
+// 第一个接口是swap，参数："{\"orderType\":0,\"assetName\":\"\",\"unitPrice\":\"\"}"
+// 第二个接口是refund，参数随便填个字符串当reason
 export default function OrderBook() {
     const [date, setDate] = useState<Date | undefined>(undefined);
-
+    const { supportedContracts } = useSupportedContracts();
+    console.log('supportedContracts', supportedContracts);
     const [buyOrders, setBuyOrders] = useState<{ price: number; quantity: number }[]>([]);
     const [sellOrders, setSellOrders] = useState<{ price: number; quantity: number }[]>([]);
     const [price, setPrice] = useState(0);
