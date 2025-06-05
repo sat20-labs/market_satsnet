@@ -53,6 +53,10 @@ export const Header = () => {
         href: '/launchpool',
       },
       {
+        label: 'Swap',
+        href: '/swap',
+      },
+      {
         label: t('pages.explorer.title'),
         href: network === 'testnet' ? 'https://testnet.sat20.org/browser/app/' : 'https://mainnet.sat20.org/browser/app/',
         target: '_blank',

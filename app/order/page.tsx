@@ -17,7 +17,7 @@ import { useQueryKey } from '@/lib/hooks/useQueryKey';
 import { useCommonStore } from '@/store';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import Trade from '@/components/satoshinet/swap/SwapTrade';
-import ListOrder from '@/components/satoshinet/limitorder/LimitOrder';
+import LimitOrder from '@/components/satoshinet/limitorder/LimitOrder';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -164,7 +164,7 @@ function OrderPageContent() {
             }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} 
             />
           ) : activeTab === 'limitOrder' ? (
-            <ListOrder />
+            <LimitOrder tickerInfo={tickerInfo} />
           ) : null}
           <div className="mt-4 text-sm text-gray-400">
             {settings.showOngoingTrades && <p>Show pending transactions...</p>}

@@ -72,7 +72,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
       param: amount.toString()
     };
     const result = await window.sat20.invokeContract_SatsNet(
-      poolData.contractURL, JSON.stringify(params), '::', '1');
+      poolData.contractURL, JSON.stringify(params), '1');
     if (result.txId) {
       console.log('result', result);
       console.log('result.txId', result.txId);
