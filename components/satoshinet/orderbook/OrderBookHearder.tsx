@@ -5,12 +5,14 @@ import { Icon } from '@iconify/react';
 import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input";
 import { useTranslation } from 'react-i18next';
+// 新增导入
+import LimitOrder from '../limitorder/LimitOrder';
 
 interface OrderBookHeaderProps {
-  activeTab: "takeOrder" | "makeOrder" | "swap"; 
-  onTabChange: (tab: "takeOrder" | "makeOrder" | "swap") => void;
+  activeTab: "takeOrder" | "makeOrder" | "swap" | "limitOrder";
+  onTabChange: (tab: "takeOrder" | "makeOrder" | "swap" | "limitOrder") => void;
   onRefresh: () => void;
-  onSettingsChange: (settings: { showOngoingTrades: boolean; maxBidPrice: number }) => void; // 新增回调
+  onSettingsChange: (settings: { showOngoingTrades: boolean; maxBidPrice: number }) => void;
 }
 
 const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }: OrderBookHeaderProps) => {
@@ -44,16 +46,24 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
         >
           {t("common.makeorder")}
         </button>
+         {/* 新增 ListOrder 标签 */}
+         <button
+          className={`text-sm sm:text-base font-medium pb-2 ${activeTab === "limitOrder" ? "text-zinc-200 border-b-2 border-purple-500" : "text-gray-400"
+            }`}
+          onClick={() => onTabChange("limitOrder")}
+        >
+          LimitOrder
+        </button>
         {/* SWAP UI */}
-       {/* <button
+        <button
           className={`flex justify-center items-center text-sm sm:text-base font-medium pb-2 ${
             activeTab === "swap" ? "border-b-2 border-purple-500" : "text-gray-400"
           }`}
           onClick={() => onTabChange("swap")}
         >
          <span>{t("common.swap")}</span><Icon icon="token-branded:xrune" color='red' className="w-6 h-6" />
-        </button>   */}
-
+        </button>
+       
       </div>
 
       {/* 设置和刷新图标 */}
