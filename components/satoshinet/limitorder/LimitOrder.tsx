@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import DepthPanel from "./DepthPanel";
 import MyOrdersPanel from "./MyOrdersPanel";
 import TradeHistoryPanel from "./TradeHistoryPanel";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 /*
 status mock data:
 {
@@ -150,20 +150,24 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
   } = useQuery({
     queryKey: ["swapContractUrl", tickerInfo.displayname],
     queryFn: () => getSwapContractUrl(tickerInfo.displayname),
-    staleTime: 60 * 1000,
+    staleTime: 10 * 1000,
+    refetchInterval: 10000,
   });
 
   // 2. 获取 swapStatus，依赖 swapContractUrl
   const {
     data: swapStatus,
     isLoading: isSwapStatusLoading,
+    refetch: refetchSwapStatus,
   } = useQuery({
     queryKey: ["swapStatus", swapContractUrl],
     queryFn: () => swapContractUrl ? getSwapStatus(swapContractUrl) : Promise.resolve(null),
     enabled: !!swapContractUrl,
     staleTime: 10 * 1000,
+    refetchInterval: 10000,
   });
-  console.log('swapStatus', swapStatus);
+
+  const queryClient = useQueryClient();
 
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(0);
@@ -271,6 +275,12 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
     setIsPlacingOrder(false);
     setPrice(0);
     setQuantity(0);
+
+    // 先失效缓存再刷新盘口
+    await queryClient.invalidateQueries({ queryKey: ["swapStatus", swapContractUrl] });
+    refetchSwapStatus();
+    fetchMyOrders();
+    fetchTradeHistory();
   };
 
   // 处理 loading 和未找到合约的 UI

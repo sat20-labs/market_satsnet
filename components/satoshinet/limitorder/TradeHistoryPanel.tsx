@@ -61,6 +61,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
     queryKey: ["tradeHistory", contractURL],
     queryFn: () => fetchTradeHistory(contractURL),
     enabled: !!contractURL,
+    refetchInterval: 10000,
   });
   console.log('tradeHistory', tradeHistory);
   
