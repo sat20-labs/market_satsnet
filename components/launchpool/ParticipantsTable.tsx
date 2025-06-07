@@ -1,5 +1,6 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Table,
   TableHeader,
@@ -21,15 +22,14 @@ interface ParticipantsTableProps {
   onClose?: () => void;
 }
 
-const fetchParticipants = async (contractURL: string, bindingSat: number, pageStart: number = 0, pageLimit: number = 20) => {
+const fetchParticipants = async (contractURL: string, bindingSat: number, pageStart: number = 0, pageLimit: number = 0) => {
   if (!contractURL) return [];
   try {
-    const result = await window.sat20.getAllAddressInContract(contractURL);
+    const result = await window.sat20.getAllAddressInContract(contractURL, pageStart, pageLimit);
     const list = JSON.parse(result.addresses)?.data || [];
     const resultStatusList: any[] = [];
     for (const item of list) {
       const { status } = await window.sat20.getAddressStatusInContract(contractURL, item.address);
-      console.log('status', contractURL, item.address, JSON.parse(status));
       resultStatusList.push({
         ...item,
         ...JSON.parse(status)
@@ -45,7 +45,6 @@ const fetchParticipants = async (contractURL: string, bindingSat: number, pageSt
       };
     });
   } catch (e) {
-    console.error('获取参与者失败', e);
     return [];
   }
 };
@@ -58,28 +57,12 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   tableHeaders = ['地址', '资产数量/聪'],
   onClose,
 }) => {
-  const [participantsList, setParticipantsList] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: participantsList = [], isLoading } = useQuery({
+    queryKey: ['participants', contractURL, bindingSat],
+    queryFn: () => fetchParticipants(contractURL, bindingSat, 0, 0),
+    enabled: !!contractURL,
+  });
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchData = async () => {
-      if (!contractURL) {
-        setParticipantsList([]);
-        return;
-      }
-      setIsLoading(true);
-      const data = await fetchParticipants(contractURL, bindingSat, 0, 20);
-      if (isMounted) {
-        setParticipantsList(data);
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-    return () => { isMounted = false; };
-  }, [contractURL, bindingSat]);
-  console.log('participantsList', participantsList);
-  
   // 适配 amount 字段
   const adaptedList = participantsList.map((participant: any) => {
     const TotalMint = participant.valid?.TotalMint || 0;

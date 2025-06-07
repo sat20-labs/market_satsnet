@@ -42,6 +42,9 @@ export const Header = () => {
     }
     return pathname === href;
   };
+  const SWAP_WHITELIST = [
+    'tb1pvcdrd5gumh8z2nkcuw9agmz7e6rm6mafz0h8f72dwp6erjqhevuqf2uhtv',
+  ];
   const navMenus = useMemo(() => {
     const menus = [
       {
@@ -52,10 +55,13 @@ export const Header = () => {
         label: t('pages.launchpool.title'), // 新增 LaunchPool 菜单
         href: '/launchpool',
       },
-      {
-        label: 'Swap',
-        href: '/swap',
-      },
+      // 只有白名单地址才显示 Swap
+      ...(address && SWAP_WHITELIST.includes(address)
+        ? [{
+            label: 'Swap',
+            href: '/swap',
+          }]
+        : []),
       {
         label: t('pages.explorer.title'),
         href: network === 'testnet' ? 'https://testnet.sat20.org/browser/app/' : 'https://mainnet.sat20.org/browser/app/',
@@ -77,7 +83,7 @@ export const Header = () => {
       },
     ];
     return menus;
-  }, [i18n.language, network, t]);
+  }, [i18n.language, network, t, address]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

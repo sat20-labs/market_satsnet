@@ -89,8 +89,11 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       contractType: contractType,
       startBlock: Number(formData.startBlock),
       endBlock: Number(formData.endBlock),
-      assetProtocol: formData.protocol,
-      assetName: assetName.Ticker,
+      assetName: {
+        Protocol: formData.protocol,
+        Type: 'f',
+        Ticker: formData.ticker,
+      },
       bindingSat: Number(formData.n),
       limit: Number(formData.limit),
       maxSupply: Number(formData.maxSupply),

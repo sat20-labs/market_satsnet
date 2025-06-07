@@ -208,9 +208,9 @@ const LaunchPool = () => {
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                     <AvatarImage src={adaptedPool.logo} alt="Logo" />
                     <AvatarFallback>
-                      {adaptedPool.assetSymbol
+                      {adaptedPool?.assetSymbol
                         ? String.fromCodePoint(adaptedPool.assetSymbol)
-                        : adaptedPool.assetName?.charAt(0).toUpperCase()}
+                        : adaptedPool?.assetName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <span
