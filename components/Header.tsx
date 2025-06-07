@@ -44,6 +44,7 @@ export const Header = () => {
   };
   const SWAP_WHITELIST = [
     'tb1pvcdrd5gumh8z2nkcuw9agmz7e6rm6mafz0h8f72dwp6erjqhevuqf2uhtv',
+    'tb1pydmhr3ud7e28g6lq7xgmfrz2e3uzxvw0zatv0d8auhwnatzrqawshjhh34',
   ];
   const navMenus = useMemo(() => {
     const menus = [
