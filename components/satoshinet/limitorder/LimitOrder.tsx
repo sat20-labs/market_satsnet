@@ -276,11 +276,14 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
     setPrice(0);
     setQuantity(0);
 
-    // 先失效缓存再刷新盘口
-    await queryClient.invalidateQueries({ queryKey: ["swapStatus", swapContractUrl] });
-    refetchSwapStatus();
-    fetchMyOrders();
-    fetchTradeHistory();
+    // 先失效缓存再刷新盘口\
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ["swapStatus", swapContractUrl] });
+      refetchSwapStatus();
+      fetchMyOrders();
+      fetchTradeHistory();
+    }, 200);
+    
   };
 
   // 处理 loading 和未找到合约的 UI
