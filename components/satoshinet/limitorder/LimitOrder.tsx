@@ -181,31 +181,27 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
 
   // 计算最大数量宽度对齐的变量，直接依赖 swapStatus 的数据
   const sellDepth = useMemo(() => {
-    const arr = (swapStatus && swapStatus.sellDepth)
-      ? swapStatus.sellDepth.map((item: any) => ({
+    if (!swapStatus || !swapStatus.sellDepth) return [];
+    // 过滤掉数量为0的，按价格从高到低排序
+    return swapStatus.sellDepth
+      .map((item: any) => ({
         price: Number(item.Price),
         quantity: Number(item.Amt),
       }))
-      : [];
-    // 补齐到 10 档
-    while (arr.length < 10) {
-      arr.push({ price: 0, quantity: 0 });
-    }
-    return arr.slice(0, 10);
+      .filter((item: any) => item.quantity > 0)
+      .sort((a: any, b: any) => b.price - a.price);
   }, [swapStatus]);
 
   const buyDepth = useMemo(() => {
-    const arr = (swapStatus && swapStatus.buyDepth)
-      ? swapStatus.buyDepth.map((item: any) => ({
+    if (!swapStatus || !swapStatus.buyDepth) return [];
+    // 过滤掉数量为0的，按价格从高到低排序
+    return swapStatus.buyDepth
+      .map((item: any) => ({
         price: Number(item.Price),
         quantity: Number(item.Amt),
       }))
-      : [];
-    // 补齐到 10 档
-    while (arr.length < 10) {
-      arr.push({ price: 0, quantity: 0 });
-    }
-    return arr.slice(0, 10);
+      .filter((item: any) => item.quantity > 0)
+      .sort((a: any, b: any) => b.price - a.price);
   }, [swapStatus]);
   console.log('sellDepth', sellDepth);
   console.log('buyDepth', buyDepth);
