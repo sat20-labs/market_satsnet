@@ -1,9 +1,15 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
+import { useWalletStore } from "@/store";
+import { useTranslation } from 'react-i18next';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // 直接内联 DepthList 组件
 function DepthList({ depth, type, maxQtyLen }: { depth: { price: number; quantity: number }[]; type: 'buy' | 'sell'; maxQtyLen: number }) {
@@ -106,9 +112,8 @@ const QuickPriceButtons: React.FC<QuickPriceButtonsProps> = ({
           key={btn.label}
           type="button"
           variant="outline"
-          className={`flex flex-col items-center justify-center h-16 ${
-            btn.selected ? "btn-gradient" : "bg-gray-700"
-          }`}
+          className={`flex flex-col items-center justify-center h-16 ${btn.selected ? "btn-gradient" : "bg-gray-700"
+            }`}
           size="sm"
           onClick={btn.onClick}
           disabled={btn.disabled}
@@ -123,35 +128,166 @@ const QuickPriceButtons: React.FC<QuickPriceButtonsProps> = ({
   );
 };
 
+interface DepthPanelProps {
+  assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
+  tickerInfo: any;
+  assetBalance: { availableAmt: number; lockedAmt: number };
+  balanceLoading: boolean;
+  onOrderSuccess?: () => void;
+}
+
 export default function DepthPanel({
-  sellDepth,
-  buyDepth,
-  maxSellQtyLen,
-  maxBuyQtyLen,
-  orderType,
-  setOrderType,
-  price,
-  setPrice,
-  quantity,
-  setQuantity,
-  isPlacingOrder,
-  submitHandler
-}: {
-  sellDepth: any[],
-  buyDepth: any[],
-  maxSellQtyLen: number,
-  maxBuyQtyLen: number,
-  orderType: string,
-  setOrderType: (v: string) => void,
-  price: string,
-  setPrice: (v: string) => void,
-  quantity: string,
-  setQuantity: (v: string) => void,
-  isPlacingOrder: boolean,
-  submitHandler: () => void
-}) {
+  assetInfo,
+  tickerInfo,
+  assetBalance,
+  balanceLoading,
+  onOrderSuccess
+}: DepthPanelProps) {
+  const { t } = useTranslation();
+  const { balance } = useWalletStore();
+  const queryClient = useQueryClient();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [orderType, setOrderType] = useState("buy");
+  const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [confirmData, setConfirmData] = useState({
+    paySats: '',
+    bidPrice: '',
+    feeSats: '',
+    netFeeSats: '',
+    walletSats: ''
+  });
+
+  const MARKET_FEE_RATE = 0.01;
+  const NETWORK_FEE_SATS = 1000;
+  const WALLET_SATS = balance.availableAmt;
+
+  const displayBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
+  const displayAvailableAmt = assetBalance.availableAmt;
+  const ticker = useMemo(() => assetInfo.assetName.split(':').pop() || assetInfo.assetName, [assetInfo.assetName]);
+
+  // 获取深度数据
+  const { data: swapContractUrl } = useQuery({
+    queryKey: ["swapContractUrl", tickerInfo.displayname],
+    queryFn: async () => {
+      const result = await window.sat20.getDeployedContractsInServer();
+      const { contractURLs = [] } = result;
+      const list = contractURLs.filter(c => c.indexOf(tickerInfo.displayname) > -1);
+      return list[0];
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 10000,
+  });
+  console.log('swapContractUrl', swapContractUrl);
+
+  const { data: depthData } = useQuery({
+    queryKey: ["depthData", swapContractUrl],
+    queryFn: async () => {
+      if (!swapContractUrl) return null;
+      const result = await window.sat20.getDeployedContractStatus(swapContractUrl);
+      return result?.contractStatus ? JSON.parse(result?.contractStatus) : null;
+    },
+    enabled: !!swapContractUrl,
+    staleTime: 10 * 1000,
+    refetchInterval: 10000,
+  });
+  console.log('depthData', depthData);
+  // 处理深度数据
+  const { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen } = useMemo(() => {
+    if (!depthData) return { sellDepth: [], buyDepth: [], maxSellQtyLen: 1, maxBuyQtyLen: 1 };
+
+    const processDepth = (depth: any[]) => {
+      return depth
+        .map((item: any) => ({
+          price: Number(item.Price),
+          quantity: Number(item.Amt),
+        }))
+        .filter((item: any) => item.quantity > 0)
+        .sort((a: any, b: any) => b.price - a.price);
+    };
+
+    const sellDepth = processDepth(depthData.sellDepth || []);
+    const buyDepth = processDepth(depthData.buyDepth || []);
+
+    const maxSellQtyLen = Math.max(...sellDepth.map(o => o.quantity.toString().length), 1);
+    const maxBuyQtyLen = Math.max(...buyDepth.map(o => o.quantity.toString().length), 1);
+
+    return { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen };
+  }, [depthData]);
+
+  const handleSubmitClick = () => {
+    const priceNum = parseFloat(price);
+    const quantityNum = parseFloat(quantity);
+    if (!price || isNaN(priceNum) || priceNum <= 0 || !quantity || isNaN(quantityNum) || quantityNum <= 0) {
+      setShowConfirm(true);
+      setConfirmData({
+        paySats: '--', bidPrice: '--', feeSats: '--', netFeeSats: '--', walletSats: '--'
+      });
+      return;
+    }
+    // 计算
+    const paySats = (quantityNum * priceNum).toLocaleString();
+    const bidPrice = priceNum.toLocaleString();
+    const feeSats = orderType === 'buy' ? '10' : '0';
+    const netFeeSats = NETWORK_FEE_SATS.toLocaleString();
+    const walletSats = WALLET_SATS.toLocaleString();
+    setConfirmData({
+      paySats, bidPrice, feeSats, netFeeSats, walletSats
+    });
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = async () => {
+    setShowConfirm(false);
+    const priceNum = parseFloat(price);
+    const quantityNum = parseFloat(quantity);
+    if (!price || isNaN(priceNum) || priceNum <= 0) {
+      toast.error('价格必须大于0');
+      return;
+    }
+    if (!quantity || isNaN(quantityNum) || quantityNum <= 0) {
+      toast.error('数量必须大于0');
+      return;
+    }
+    setIsPlacingOrder(true);
+    const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
+    const unitPrice = priceNum.toString();
+    const params = {
+      action: 'swap',
+      param: JSON.stringify({
+        orderType: orderType === 'buy' ? 2 : 1,
+        assetName: assetInfo.assetName,
+        unitPrice: unitPrice
+      })
+    };
+    const amt = orderType === 'buy' ? (quantityNum) * priceNum : quantityNum;
+    const serviceFee = orderType === 'buy' ? 10 : 0;
+    try {
+      const result = await window.sat20.invokeContractV2_SatsNet(
+        swapContractUrl, JSON.stringify(params), _asset, amt.toString(), Number(unitPrice), serviceFee, '1');
+      const { txId } = result;
+      if (txId) {
+        toast.success(`Order placed successfully, txid: ${txId}`);
+        setIsPlacingOrder(false);
+        setPrice("");
+        setQuantity("");
+        if (onOrderSuccess) onOrderSuccess();
+        return;
+      } else {
+        toast.error('Order placement failed');
+      }
+    } catch (error) {
+      toast.error('Order placement failed');
+    }
+    setIsPlacingOrder(false);
+    setPrice("");
+    setQuantity("");
+  };
+
   return (
     <>
+
       <div className="flex flex-col md:flex-row gap-4">
         <Card className="w-full">
           <CardContent className="p-2">
@@ -179,6 +315,7 @@ export default function DepthPanel({
           </CardContent>
         </Card>
       </div>
+
       <div className="mt-4 flex flex-col gap-2 flex-wrap">
         <Select value={orderType} onValueChange={setOrderType}>
           <SelectTrigger className="w-36 h-14 bg-white text-zinc-300 border px-2 py-2 rounded">
@@ -189,6 +326,7 @@ export default function DepthPanel({
             <SelectItem value="sell">Sell</SelectItem>
           </SelectContent>
         </Select>
+
         <div className="mt-2 flex flex-col gap-4 flex-wrap">
           <Label className="text-sm text-gray-500">Price (sats)</Label>
           <QuickPriceButtons price={price} setPrice={setPrice} sellDepth={sellDepth} buyDepth={buyDepth} />
@@ -213,11 +351,65 @@ export default function DepthPanel({
             min={1}
             required
           />
-          <Button onClick={submitHandler} disabled={isPlacingOrder} className="min-w-[80px]">
-            {isPlacingOrder ? "Submitting..." : "Submit"}
-          </Button>
+
+          <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 min-h-[100px] text-sm">
+            <p className="flex justify-between gap-1 text-gray-400">
+              <span>{t('common.availableBalance')} </span>
+              <span className="gap-1">
+                {orderType === 'buy'
+                  ? `${balance.availableAmt.toLocaleString()} ${t('common.sats')}`
+                  : `${displayAvailableAmt.toLocaleString()} ${tickerInfo?.displayname}`
+                }
+              </span>
+            </p>
+
+            {orderType === 'buy' && quantity !== "" && price !== "" && (
+              <div className="mt-4 pt-4 border-t border-zinc-800">
+                <p className="flex justify-between font-medium text-gray-400">
+                  {t('common.estPay')} <span className="font-semibold text-zinc-200 gap-2">
+                    {(Number(quantity) * Number(price)).toLocaleString()} {t('common.sats')}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            {orderType === 'sell' && quantity !== "" && (
+              <div className="mt-4 pt-4 border-t border-zinc-800">
+                <p className="flex justify-between font-medium text-gray-400">
+                  {t('common.estReceive')} <span className="font-semibold text-zinc-200 gap-2">
+                    {(Number(quantity) * Number(price)).toLocaleString()} {t('common.sats')}
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+          <WalletConnectBus asChild>
+            <Button onClick={handleSubmitClick} disabled={isPlacingOrder} className="min-w-[80px]">
+              {isPlacingOrder ? "Submitting..." : "Submit"}
+            </Button>
+          </WalletConnectBus>
+
         </div>
       </div>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <div className="font-bold text-lg mb-2 flex justify-between">
+            <span>You Pay</span>
+            <span>{confirmData.paySats} sats</span>
+          </div>
+          <div className="flex justify-between"><span>Bid Price</span><span>{confirmData.bidPrice} sats</span></div>
+          {
+            confirmData.feeSats && (<div className="flex justify-between"><span>Marketplace Fee </span><span>{confirmData.feeSats} sats</span></div>)
+          }
+
+          <div className="flex justify-between"><span>Wallet Balance</span><span>{balance.availableAmt.toLocaleString()} sats</span></div>
+          <DialogFooter>
+            <Button onClick={handleConfirm}>确认提交</Button>
+            <Button variant="outline" onClick={() => setShowConfirm(false)}>取消</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 } 

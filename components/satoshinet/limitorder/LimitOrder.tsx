@@ -14,6 +14,7 @@ import DepthPanel from "./DepthPanel";
 import MyOrdersPanel from "./MyOrdersPanel";
 import TradeHistoryPanel from "./TradeHistoryPanel";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 /*
 status mock data:
 {
@@ -138,10 +139,24 @@ const getSwapStatus = async (contractUrl: string) => {
   return result?.contractStatus ? JSON.parse(result?.contractStatus) : null;
 }
 
+interface OrderBookProps {
+  tickerInfo: any;
+  assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
+  assetBalance: { availableAmt: number; lockedAmt: number };
+  balanceLoading: boolean;
+  onSellSuccess?: () => void;
+}
 
-export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
+export default function OrderBook({ 
+  tickerInfo, 
+  assetInfo, 
+  assetBalance, 
+  balanceLoading, 
+  onSellSuccess 
+}: OrderBookProps) {
   console.log('tickerInfo', tickerInfo);
   const assetName = `${tickerInfo.name.Protocol}:${tickerInfo.name.Type}:${tickerInfo.name.Ticker}`;
+  const { address } = useReactWalletStore();
 
   // 1. 获取 swapContractUrl
   const {
@@ -232,58 +247,6 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
     setTradeHistory([]);
   };
 
-  const submitHandler = async () => {
-    // 校验
-    const priceNum = parseFloat(price);
-    const quantityNum = parseFloat(quantity);
-    if (!price || isNaN(priceNum) || priceNum <= 0) {
-      toast.error('价格必须大于0');
-      return;
-    }
-    if (!quantity || isNaN(quantityNum) || quantityNum <= 0) {
-      toast.error('数量必须大于0');
-      return;
-    }
-    setIsPlacingOrder(true);
-    const _asset = orderType === 'buy' ? '::' : assetName;
-    console.log();
-
-    const params = {
-      action: 'swap',
-      param: JSON.stringify({
-        orderType: orderType === 'buy' ? 2 : 1,
-        assetName: assetName,
-        unitPrice: priceNum.toString()
-      })
-    };
-    const amt = orderType === 'buy' ? (quantityNum) * priceNum + 10 : quantityNum;
-
-    try {
-      const result = await window.sat20.invokeContractV2_SatsNet(
-        swapContractUrl, JSON.stringify(params), _asset, amt.toString(), '1');
-      const { txId } = result;
-      if (txId) {
-        toast.success(`Order placed successfully, txid: ${txId}`);
-      } else {
-        toast.error('Order placement failed');
-      }
-    } catch (error) {
-      toast.error('Order placement failed');
-    }
-    setIsPlacingOrder(false);
-    setPrice("");
-    setQuantity("");
-
-    // 先失效缓存再刷新盘口\
-    setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ["swapStatus", swapContractUrl] });
-      refetchSwapStatus();
-      fetchMyOrders();
-      fetchTradeHistory();
-    }, 200);
-    
-  };
-
   // 处理 loading 和未找到合约的 UI
   if (isContractUrlLoading) {
     return <div className="w-full mt-4 text-center text-gray-400">加载中...</div>;
@@ -308,27 +271,20 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
 
       <TabsContent value="depth">
         <DepthPanel
-          sellDepth={sellDepth}
-          buyDepth={buyDepth}
-          maxSellQtyLen={maxSellQtyLen}
-          maxBuyQtyLen={maxBuyQtyLen}
-          orderType={orderType}
-          setOrderType={setOrderType}
-          price={price}
-          setPrice={setPrice}
-          quantity={quantity}
-          setQuantity={setQuantity}
-          isPlacingOrder={isPlacingOrder}
-          submitHandler={submitHandler}
+          assetInfo={assetInfo}
+          tickerInfo={tickerInfo}
+          assetBalance={assetBalance}
+          balanceLoading={balanceLoading}
+          onOrderSuccess={onSellSuccess}
         />
       </TabsContent>
 
       <TabsContent value="myOrders">
-        <MyOrdersPanel contractURL={swapContractUrl || ""} />
+        <MyOrdersPanel contractURL={assetInfo.assetName} />
       </TabsContent>
 
       <TabsContent value="trades">
-        <TradeHistoryPanel contractURL={swapContractUrl || ""} />
+        <TradeHistoryPanel contractURL={assetInfo.assetName} />
       </TabsContent>
     </Tabs>
   );

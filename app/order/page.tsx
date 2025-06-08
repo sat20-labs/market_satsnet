@@ -164,7 +164,18 @@ function OrderPageContent() {
             }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} 
             />
           ) : activeTab === 'limitOrder' ? (
-            <LimitOrder tickerInfo={tickerInfo} />
+            <LimitOrder 
+              tickerInfo={tickerInfo} 
+              assetInfo={{
+                assetLogo: summary.assetLogo,
+                assetName: summary.assetName,
+                AssetId: summary.assetId,
+                floorPrice: parseFloat(summary.floorPrice),
+              }}
+              assetBalance={assetBalance}
+              balanceLoading={balanceLoading}
+              onSellSuccess={handleSellSuccess}
+            />
           ) : null}
           <div className="mt-4 text-sm text-gray-400">
             {settings.showOngoingTrades && <p>Show pending transactions...</p>}
