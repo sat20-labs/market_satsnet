@@ -45,8 +45,8 @@ function DepthList({ depth, type, maxQtyLen }: { depth: { price: number; quantit
 type DepthItem = { price: number; quantity: number };
 
 interface QuickPriceButtonsProps {
-  price: number;
-  setPrice: (v: number) => void;
+  price: string;
+  setPrice: (v: string) => void;
   sellDepth: DepthItem[];
   buyDepth: DepthItem[];
 }
@@ -79,22 +79,22 @@ const QuickPriceButtons: React.FC<QuickPriceButtonsProps> = ({
     {
       label: "Lowest Ask",
       value: lowestAsk,
-      onClick: () => lowestAsk !== undefined && setPrice(lowestAsk),
-      selected: price === lowestAsk,
+      onClick: () => lowestAsk !== undefined && setPrice(String(lowestAsk)),
+      selected: price === String(lowestAsk),
       disabled: lowestAsk === undefined,
     },
     {
       label: "Mid",
       value: mid,
-      onClick: () => mid !== undefined && setPrice(mid),
-      selected: price === mid,
+      onClick: () => mid !== undefined && setPrice(String(mid)),
+      selected: price === String(mid),
       disabled: mid === undefined,
     },
     {
       label: "Top Bid",
       value: topBid,
-      onClick: () => topBid !== undefined && setPrice(topBid),
-      selected: price === topBid,
+      onClick: () => topBid !== undefined && setPrice(String(topBid)),
+      selected: price === String(topBid),
       disabled: topBid === undefined,
     },
   ];
@@ -143,10 +143,10 @@ export default function DepthPanel({
   maxBuyQtyLen: number,
   orderType: string,
   setOrderType: (v: string) => void,
-  price: number,
-  setPrice: (v: number) => void,
-  quantity: number,
-  setQuantity: (v: number) => void,
+  price: string,
+  setPrice: (v: string) => void,
+  quantity: string,
+  setQuantity: (v: string) => void,
   isPlacingOrder: boolean,
   submitHandler: () => void
 }) {
@@ -197,7 +197,7 @@ export default function DepthPanel({
               type="number"
               placeholder="Price"
               value={price}
-              onChange={(e) => setPrice(parseFloat(e.target.value))}
+              onChange={(e) => setPrice(e.target.value)}
               className="h-10"
               min={1}
               required
@@ -208,7 +208,7 @@ export default function DepthPanel({
             type="number"
             placeholder="Quantity"
             value={quantity}
-            onChange={(e) => setQuantity(parseFloat(e.target.value))}
+            onChange={(e) => setQuantity(e.target.value)}
             className="h-10"
             min={1}
             required

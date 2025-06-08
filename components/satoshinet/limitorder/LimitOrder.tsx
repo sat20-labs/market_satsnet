@@ -169,8 +169,8 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
 
   const queryClient = useQueryClient();
 
-  const [price, setPrice] = useState(0);
-  const [quantity, setQuantity] = useState(0);
+  const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState("");
   const [orderType, setOrderType] = useState("buy");
   const [myOrders, setMyOrders] = useState<{ id: number; side: string; price: number; quantity: number; status: string }[]>([]);
   const [tradeHistory, setTradeHistory] = useState<{ time: string; price: number; quantity: number }[]>([]);
@@ -234,11 +234,13 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
 
   const submitHandler = async () => {
     // 校验
-    if (!price || price <= 0) {
+    const priceNum = parseFloat(price);
+    const quantityNum = parseFloat(quantity);
+    if (!price || isNaN(priceNum) || priceNum <= 0) {
       toast.error('价格必须大于0');
       return;
     }
-    if (!quantity || quantity <= 0) {
+    if (!quantity || isNaN(quantityNum) || quantityNum <= 0) {
       toast.error('数量必须大于0');
       return;
     }
@@ -251,10 +253,10 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
       param: JSON.stringify({
         orderType: orderType === 'buy' ? 2 : 1,
         assetName: assetName,
-        unitPrice: price.toString()
+        unitPrice: priceNum.toString()
       })
     };
-    const amt = orderType === 'buy' ? (quantity) * price + 10 : quantity;
+    const amt = orderType === 'buy' ? (quantityNum) * priceNum + 10 : quantityNum;
 
     try {
       const result = await window.sat20.invokeContractV2_SatsNet(
@@ -269,8 +271,8 @@ export default function OrderBook({ tickerInfo }: { tickerInfo: any }) {
       toast.error('Order placement failed');
     }
     setIsPlacingOrder(false);
-    setPrice(0);
-    setQuantity(0);
+    setPrice("");
+    setQuantity("");
 
     // 先失效缓存再刷新盘口\
     setTimeout(() => {
