@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Label } from "@radix-ui/react-dropdown-menu";
@@ -42,49 +42,86 @@ function DepthList({ depth, type, maxQtyLen }: { depth: { price: number; quantit
   );
 }
 
-// 直接内联 QuickPriceButtons 组件
-function QuickPriceButtons({ price, setPrice, sellDepth, buyDepth }: { price: number; setPrice: (v: number) => void; sellDepth: any[]; buyDepth: any[] }) {
-  const lowestAskRaw = sellDepth.length > 0 ? sellDepth[sellDepth.length - 1].price : 0;
-  const topBidRaw = buyDepth.length > 0 ? buyDepth[0].price : 0;
-  const midRaw = sellDepth.length > 0 && buyDepth.length > 0 ? (lowestAskRaw + topBidRaw) / 2 : 0;
-  const lowestAsk = Math.round(lowestAskRaw);
-  const topBid = Math.round(topBidRaw);
-  const mid = Math.round(midRaw);
+type DepthItem = { price: number; quantity: number };
+
+interface QuickPriceButtonsProps {
+  price: number;
+  setPrice: (v: number) => void;
+  sellDepth: DepthItem[];
+  buyDepth: DepthItem[];
+}
+
+const QuickPriceButtons: React.FC<QuickPriceButtonsProps> = ({
+  price,
+  setPrice,
+  sellDepth,
+  buyDepth,
+}) => {
+  // 计算最低卖价、最高买价、中间价
+  const { lowestAsk, topBid, mid } = useMemo(() => {
+    const validSell = sellDepth?.filter((d) => d.price > 0);
+    const validBuy = buyDepth?.filter((d) => d.price > 0);
+    const lowestAsk = validSell?.length ? validSell[validSell.length - 1].price : undefined;
+    const topBid = validBuy?.length ? validBuy[0].price : undefined;
+    const mid =
+      lowestAsk !== undefined && topBid !== undefined
+        ? Math.round((lowestAsk + topBid) / 2)
+        : undefined;
+    return {
+      lowestAsk: lowestAsk !== undefined ? Math.round(lowestAsk) : undefined,
+      topBid: topBid !== undefined ? Math.round(topBid) : undefined,
+      mid,
+    };
+  }, [sellDepth, buyDepth]);
+
+  // 按钮配置
+  const buttons = [
+    {
+      label: "Lowest Ask",
+      value: lowestAsk,
+      onClick: () => lowestAsk !== undefined && setPrice(lowestAsk),
+      selected: price === lowestAsk,
+      disabled: lowestAsk === undefined,
+    },
+    {
+      label: "Mid",
+      value: mid,
+      onClick: () => mid !== undefined && setPrice(mid),
+      selected: price === mid,
+      disabled: mid === undefined,
+    },
+    {
+      label: "Top Bid",
+      value: topBid,
+      onClick: () => topBid !== undefined && setPrice(topBid),
+      selected: price === topBid,
+      disabled: topBid === undefined,
+    },
+  ];
+
   return (
-    <div className="flex gap-2 sm:gap-4 mb-2">
-      <Button
-        type="button"
-        variant="outline"
-        className={`flex flex-col items-center justify-center sm:-4 sm:px-8 h-16 ${price === lowestAsk ? "btn-gradient" : "bg-gray-700"}`}
-        size="sm"
-        onClick={() => setPrice(lowestAsk)}
-      >
-        Lowest Ask
-        <span className="ml-1 text-xs text-gray-400">{lowestAsk || "--"}</span>
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        className={`flex flex-col items-center justify-center px-8 h-16 ${price === mid ? "btn-gradient" : "bg-gray-700"}`}
-        size="sm"
-        onClick={() => setPrice(mid)}
-      >
-        Mid
-        <span className="ml-1 text-xs text-gray-400">{mid || "--"}</span>
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        className={`flex flex-col items-center justify-center px-8 h-16 ${price === topBid ? "btn-gradient" : "bg-gray-700"}`}
-        size="sm"
-        onClick={() => setPrice(topBid)}
-      >
-        Top Bid
-        <span className="ml-1 text-xs text-gray-400">{topBid || "--"}</span>
-      </Button>
+    <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-2">
+      {buttons.map((btn) => (
+        <Button
+          key={btn.label}
+          type="button"
+          variant="outline"
+          className={`flex flex-col items-center justify-center h-16 ${
+            btn.selected ? "btn-gradient" : "bg-gray-700"
+          }`}
+          size="sm"
+          onClick={btn.onClick}
+          disabled={btn.disabled}
+        >
+          {btn.label}
+          <span className="ml-1 text-xs text-gray-400">
+            {btn.value !== undefined ? btn.value : "--"}
+          </span>
+        </Button>
+      ))}
     </div>
   );
-}
+};
 
 export default function DepthPanel({
   sellDepth,
