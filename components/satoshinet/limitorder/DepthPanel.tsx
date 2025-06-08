@@ -159,13 +159,8 @@ export default function DepthPanel({
     walletSats: ''
   });
 
-  const MARKET_FEE_RATE = 0.01;
-  const NETWORK_FEE_SATS = 1000;
-  const WALLET_SATS = balance.availableAmt;
 
-  const displayBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
   const displayAvailableAmt = assetBalance.availableAmt;
-  const ticker = useMemo(() => assetInfo.assetName.split(':').pop() || assetInfo.assetName, [assetInfo.assetName]);
 
   // 获取深度数据
   const { data: swapContractUrl } = useQuery({
@@ -216,32 +211,10 @@ export default function DepthPanel({
     return { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen };
   }, [depthData]);
 
-  const handleSubmitClick = () => {
+  const handleSubmitClick = async () => {
     const priceNum = parseFloat(price);
     const quantityNum = parseFloat(quantity);
-    if (!price || isNaN(priceNum) || priceNum <= 0 || !quantity || isNaN(quantityNum) || quantityNum <= 0) {
-      setShowConfirm(true);
-      setConfirmData({
-        paySats: '--', bidPrice: '--', feeSats: '--', netFeeSats: '--', walletSats: '--'
-      });
-      return;
-    }
-    // 计算
-    const paySats = (quantityNum * priceNum).toLocaleString();
-    const bidPrice = priceNum.toLocaleString();
-    const feeSats = orderType === 'buy' ? '10' : '0';
-    const netFeeSats = NETWORK_FEE_SATS.toLocaleString();
-    const walletSats = WALLET_SATS.toLocaleString();
-    setConfirmData({
-      paySats, bidPrice, feeSats, netFeeSats, walletSats
-    });
-    setShowConfirm(true);
-  };
-
-  const handleConfirm = async () => {
-    setShowConfirm(false);
-    const priceNum = parseFloat(price);
-    const quantityNum = parseFloat(quantity);
+    
     if (!price || isNaN(priceNum) || priceNum <= 0) {
       toast.error('价格必须大于0');
       return;
@@ -250,9 +223,37 @@ export default function DepthPanel({
       toast.error('数量必须大于0');
       return;
     }
-    setIsPlacingOrder(true);
+
+    // 计算订单金额和费用
     const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
-    const unitPrice = priceNum.toString();
+    const unitPrice = Math.ceil(priceNum).toString();
+    const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : Math.ceil(quantityNum);
+    const serviceFee = orderType === 'buy' ? 10 : 0;
+
+    // 设置确认对话框数据
+    setConfirmData({
+      paySats: amt.toString(),
+      bidPrice: unitPrice,
+      feeSats: serviceFee.toString(),
+      netFeeSats: (amt + serviceFee).toString(),
+      walletSats: balance.availableAmt.toString()
+    });
+
+    // 显示确认对话框
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = async () => {
+    setShowConfirm(false);
+    setIsPlacingOrder(true);
+
+    const priceNum = parseFloat(price);
+    const quantityNum = parseFloat(quantity);
+    const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
+    const unitPrice = Math.ceil(priceNum).toString();
+    const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : quantityNum;
+    const serviceFee = orderType === 'buy' ? 10 : 0;
+
     const params = {
       action: 'swap',
       param: JSON.stringify({
@@ -261,11 +262,10 @@ export default function DepthPanel({
         unitPrice: unitPrice
       })
     };
-    const amt = orderType === 'buy' ? (quantityNum) * priceNum : quantityNum;
-    const serviceFee = orderType === 'buy' ? 10 : 0;
+
     try {
       const result = await window.sat20.invokeContractV2_SatsNet(
-        swapContractUrl, JSON.stringify(params), _asset, amt.toString(), Number(unitPrice), serviceFee, '1');
+        swapContractUrl, JSON.stringify(params), _asset, amt.toString(), Number(unitPrice), quantityNum, serviceFee, '1');
       const { txId } = result;
       if (txId) {
         toast.success(`Order placed successfully, txid: ${txId}`);
@@ -367,7 +367,7 @@ export default function DepthPanel({
               <div className="mt-4 pt-4 border-t border-zinc-800">
                 <p className="flex justify-between font-medium text-gray-400">
                   {t('common.estPay')} <span className="font-semibold text-zinc-200 gap-2">
-                    {(Number(quantity) * Number(price)).toLocaleString()} {t('common.sats')}
+                    {Math.ceil(Number(quantity) * Number(price)).toLocaleString()} {t('common.sats')}
                   </span>
                 </p>
               </div>
@@ -377,7 +377,7 @@ export default function DepthPanel({
               <div className="mt-4 pt-4 border-t border-zinc-800">
                 <p className="flex justify-between font-medium text-gray-400">
                   {t('common.estReceive')} <span className="font-semibold text-zinc-200 gap-2">
-                    {(Number(quantity) * Number(price)).toLocaleString()} {t('common.sats')}
+                    {Math.ceil(Number(quantity) * Number(price)).toLocaleString()} {t('common.sats')}
                   </span>
                 </p>
               </div>
