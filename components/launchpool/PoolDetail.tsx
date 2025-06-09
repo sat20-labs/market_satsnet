@@ -53,10 +53,10 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
               <AvatarFallback>
                 {poolDetails.assetSymbol
                   ? String.fromCodePoint(poolDetails.assetSymbol)
-                  : poolDetails.assetName?.charAt(0).toUpperCase()}
+                  : poolDetails.assetName?.Ticker?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            {poolDetails.assetName}
+            {poolDetails.assetName?.Ticker}
           </h2>
           <button className="absolute top-0 right-0 text-zinc-400 hover:text-white" onClick={closeModal}>
             ✕
