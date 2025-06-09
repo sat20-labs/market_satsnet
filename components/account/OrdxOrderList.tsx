@@ -51,23 +51,21 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
 
   // 处理 assets_name，兼容 assets 为数组的情况
   const ordersList = useMemo(() => {
-    if (!ordersData) return [];
-    return ordersData.map((order: any) => {
-      let assetsArr = Array.isArray(order.assets) ? order.assets : [order.assets];
-      const newAssetsArr = assetsArr.map((asset: any) => {
-        const assets_name = getLabelForAssets(asset?.assets_name);
-        return {
-          ...asset,
-          assets_name,
-          protocol: asset.assets_name.Protocol,
-        };
-      });
+    return ordersData?.map((order: any) => {
+      const asset = Array.isArray(order.assets) ? order.assets[0] : order.assets;
+      const ticker = typeof asset?.assets_name === 'object'
+        ? `${asset.assets_name.Protocol}:${asset.assets_name.Type}:${asset.assets_name.Ticker}`
+        : asset?.assets_name;
+      const protocol = asset?.protocol || asset?.Protocol || (typeof asset?.assets_name === 'object' ? asset.assets_name.Protocol : undefined);
+      const label = ticker ? labelMap[ticker] || ticker : 'N/A';
       return {
         ...order,
-        assets: newAssetsArr,
+        ticker,
+        protocol,
+        label,
       };
-    });
-  }, [ordersData]);
+    }) || [];
+  }, [ordersData, labelMap]);
 
   // 获取每个订单的 label
   useEffect(() => {
@@ -155,10 +153,9 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
               </tr>
             ) : (
               ordersList && ordersList.map((order: any, index: number) => {
-                const asset = Array.isArray(order.assets) ? order.assets[0] : order.assets;
-                const ticker = asset?.assets_name;
-                const protocol = asset?.protocol || asset?.Protocol || (typeof asset?.assets_name === 'object' ? asset.assets_name.Protocol : undefined);
-                const label = ticker ? labelMap[ticker] || ticker : 'N/A';
+                const ticker = order.ticker;
+                const protocol = order.protocol;
+                const label = order.label;
                 return (
                   <tr
                     key={order.order_id || `mock-${index}`}
@@ -177,13 +174,13 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
 
                     {/* Quantity */}
                     <td className="px-4 py-2 text-right">
-                      <span>{asset?.amount?.toLocaleString() || 0}</span>
+                      <span>{order?.amount?.toLocaleString() || 0}</span>
                     </td>
 
                     {/* Price */}
                     <td className="px-4 py-2 text-right">
                       <span className="font-bold">
-                        {asset?.unit_price}
+                        {order?.unit_price}
                       </span>
                       <span className="pl-1 text-zinc-400">sats</span>
                     </td>

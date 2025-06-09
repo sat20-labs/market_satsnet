@@ -121,7 +121,9 @@ function MarketContent() {
 
   const list = useMemo(() => {
     return queryData?.map((item) => {
-      const key = getLabelForAssets(item.assets_name)
+      const key = typeof item.assets_name === 'object' 
+        ? `${item.assets_name.Protocol}:${item.assets_name.Type}:${item.assets_name.Ticker}`
+        : item.assets_name;
       return {
         ...item,
         assets_name: key,

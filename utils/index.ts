@@ -104,7 +104,13 @@ export const removeObjectEmptyValue = (obj: any) => {
 export const getLabelForAssets = (asset: any) => {
   console.log('asset', asset);
   
-  return `${asset.Protocol}:${asset.Type}:${asset.Ticker}`
+  // 如果 asset 是一个对象，并且有 assets_name 属性
+  if (asset && typeof asset === 'object') {
+    const name = asset.assets_name || asset;
+    return `${name.Protocol || ''}:${name.Type || ''}:${name.Ticker || ''}`;
+  }
+  
+  return '';
 };
 
 

@@ -210,14 +210,14 @@ const LaunchPool = () => {
                     <AvatarFallback>
                       {adaptedPool?.assetSymbol
                         ? String.fromCodePoint(adaptedPool.assetSymbol)
-                        : adaptedPool?.assetName?.charAt(0).toUpperCase()}
+                        : ''}
                     </AvatarFallback>
                   </Avatar>
                   <span
                     className="cursor-pointer text-primary hover:underline"
                     onClick={() => openModal('details', adaptedPool)}
                   >
-                    {adaptedPool.assetName}
+                    {adaptedPool.assetName?.Ticker}
                   </span>
                 </TableCell>
                 <TableCell className="px-4 py-2">
