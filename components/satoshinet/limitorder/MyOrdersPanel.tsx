@@ -2,6 +2,7 @@ import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInfiniteQuery, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
+import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -19,6 +20,7 @@ interface Order {
   price: number;
   quantity: number;
   status: string;
+  expectedAmt: number;
   remainingAmt: number;
   remainingValue: number;
   rawData: OrderData;
@@ -32,6 +34,10 @@ interface OrderData {
   OrderTime: number;
   AssetName: string;
   UnitPrice: {
+    Precision: number;
+    Value: number;
+  };
+  ExpectedAmt: {
     Precision: number;
     Value: number;
   };
@@ -94,12 +100,10 @@ interface MyOrdersPanelProps {
 }
 
 // 时间格式化函数
-function formatDateTime(ts: number) {
-  if (!ts) return '';
-  // 判断是否为秒级时间戳（小于10位则为秒）
-  if (ts < 1e11) ts = ts * 1000;
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+
+function formatTimeToMonthDayHourMinute(orderTime: number) {
+  const date = new Date(orderTime / 1000);
+  return format(date, 'MM-dd HH:mm');
 }
 
 export default function MyOrdersPanel({
@@ -113,13 +117,6 @@ export default function MyOrdersPanel({
 
   const queryClient = useQueryClient();
 
-  // const {
-  //   data: statusData
-  // } = useQuery({
-  //   queryKey: ['my-contract-status', contractURL, address],
-  //   queryFn: () => getMyStatus(contractURL, address),
-  //   refetchInterval: 20000,
-  // })
   const {
     data,
     fetchNextPage,
@@ -141,7 +138,7 @@ export default function MyOrdersPanel({
     const price = orderData.UnitPrice.Value / Math.pow(10, orderData.UnitPrice.Precision);
     const inAmt = orderData.InAmt.Value / Math.pow(10, orderData.InAmt.Precision);
     const inValue = orderData.InValue; // 聪本身无精度，直接显示
-
+    const expectedAmt = orderData.ExpectedAmt.Value / Math.pow(10, orderData.ExpectedAmt.Precision);
     const outAmt = orderData.OutAmt.Value / Math.pow(10, orderData.OutAmt.Precision); // 买到的资产数量
     const outValue = orderData.OutValue; // 剩余退款，聪本身无精度
     const remainingAmt = orderData.RemainingAmt?.Value ? orderData.RemainingAmt.Value / Math.pow(10, orderData.RemainingAmt.Precision) : 0; // 剩余未卖出
@@ -165,6 +162,7 @@ export default function MyOrdersPanel({
       rawData: orderData,
       done: orderData.Done,
       outAmt,
+      expectedAmt,
       outValue,
       inValue,
       inAmt,
@@ -224,7 +222,6 @@ export default function MyOrdersPanel({
             <TableHead className="text-center whitespace-nowrap">成交数量</TableHead>
             <TableHead className="text-center whitespace-nowrap">成交金额（sats）</TableHead>
             <TableHead className="text-center whitespace-nowrap">完成</TableHead>
-            {/* <TableHead className="text-center whitespace-nowrap">操作</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -235,15 +232,15 @@ export default function MyOrdersPanel({
               <TableCell className={`text-center font-bold ${order.side === "buy" ? "text-green-600" : "text-red-500"}`}>
                 {order.side === "buy" ? "买" : "卖"}
               </TableCell>
-              <TableCell className="text-center">{formatDateTime(order.rawData.OrderTime)}</TableCell>
+              <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.rawData.OrderTime)}</TableCell>
               <TableCell className="text-center">{Number(order.price).toFixed(10)}</TableCell>
-              <TableCell className="text-center">{order.inAmt}</TableCell>
+              <TableCell className="text-center">{order.side === "sell" ? order.inAmt : order.expectedAmt}</TableCell>
               <TableCell className="text-center">{order.inValue}</TableCell>
               <TableCell className="text-center">
                 {order.outAmt}
               </TableCell>
               <TableCell className="text-center">
-                {order.side === "buy" ? order.inValue - order.outValue : '-'}
+                {(order.side === "buy" && order.done !== 0) ? order.inValue - order.outValue : '-'}
               </TableCell>
               <TableCell className="text-center">
                 <span

@@ -30,7 +30,8 @@ import { useContractStore } from '@/store/contract';
 
 function adaptPoolData(pool, satsnetHeight) {
   // 适配 contractStatus 结构
-  const assetNameObj = pool.assetName || {};
+  console.log('pool', pool);
+  const assetNameObj = pool.Contract.assetName || {};
   const ticker = assetNameObj.Ticker || '-';
   const protocol = assetNameObj.Protocol || '-';
   // 状态适配
@@ -67,8 +68,6 @@ const Swap = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
   console.log('Translation for launchpool.asset_name:', t('launchpool.asset_name')); // Debugging: Check translation key
 
-  useSupportedContracts();
-  const supportedContracts = useContractStore((state) => state.supportedContracts);
   const { satsnetHeight } = useCommonStore();
   const sortList = useMemo(
     () => [
@@ -88,10 +87,8 @@ const Swap = () => {
     console.log('list', list);
     const statusList: any[] = [];
     for (const item of list) {
-      console.log('item', item);
    
       const result = await window.sat20.getDeployedContractStatus(item);
-      console.log('result', result);
       const { contractStatus } = result;
       if (contractStatus) {
         statusList.push({
@@ -100,6 +97,8 @@ const Swap = () => {
         });
       }
     }
+    console.log('statusList', statusList);
+    
     return statusList;
   };
 

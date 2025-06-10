@@ -216,7 +216,7 @@ export default function DepthPanel({
   const handleSubmitClick = async () => {
     console.log('satsnetHeight', satsnetHeight);
     console.log('depthData?.enableBlock', depthData?.enableBlock);
-    
+
     if (satsnetHeight < depthData?.enableBlock) {
       console.log('satsnetHeight < depthData?.enableBlock');
       toast.error('Please wait for the contract to be enabled');
@@ -224,7 +224,7 @@ export default function DepthPanel({
     }
     const priceNum = parseFloat(price);
     const quantityNum = parseFloat(quantity);
-    
+
     if (!price || isNaN(priceNum) || priceNum <= 0) {
       toast.error('价格必须大于0');
       return;
@@ -269,13 +269,20 @@ export default function DepthPanel({
       param: JSON.stringify({
         orderType: orderType === 'buy' ? 2 : 1,
         assetName: assetInfo.assetName,
+        amt: quantityNum.toString(),
         unitPrice: unitPrice
       })
     };
 
     try {
       const result = await window.sat20.invokeContractV2_SatsNet(
-        swapContractUrl, JSON.stringify(params), _asset, amt.toString(), Number(unitPrice), quantityNum, serviceFee, '1');
+        swapContractUrl, JSON.stringify(params), _asset, amt.toString(), '1', {
+        unitPrice: unitPrice,
+        quantity: quantityNum,
+        serviceFee: serviceFee,
+        netFeeSats: (amt + serviceFee).toString(),
+        walletSats: balance.availableAmt.toString()
+      });
       const { txId } = result;
       if (txId) {
         toast.success(`Order placed successfully, txid: ${txId}`);
