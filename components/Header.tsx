@@ -122,7 +122,7 @@ export const Header = () => {
             <FeerateSelectButton />
           </div> */}
 
-          <ul className="hidden lg:flex gap-4 items-center">
+          <ul className="hidden xl:flex gap-4 items-center">
             {navMenus.map((item) => {
               const active = isActive(item.href);
               return (
@@ -160,7 +160,7 @@ export const Header = () => {
             <WalletConnectButton />
           </div>
 
-          <div className="lg:hidden">
+          <div className="xl:hidden">
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">

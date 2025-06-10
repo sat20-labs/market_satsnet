@@ -147,12 +147,12 @@ interface OrderBookProps {
   onSellSuccess?: () => void;
 }
 
-export default function OrderBook({ 
-  tickerInfo, 
-  assetInfo, 
-  assetBalance, 
-  balanceLoading, 
-  onSellSuccess 
+export default function OrderBook({
+  tickerInfo,
+  assetInfo,
+  assetBalance,
+  balanceLoading,
+  onSellSuccess
 }: OrderBookProps) {
   console.log('tickerInfo', tickerInfo);
   const assetName = `${tickerInfo.name.Protocol}:${tickerInfo.name.Type}:${tickerInfo.name.Ticker}`;
@@ -280,11 +280,11 @@ export default function OrderBook({
       </TabsContent>
 
       <TabsContent value="myOrders">
-        <MyOrdersPanel contractURL={assetInfo.assetName} />
+        <MyOrdersPanel contractURL={swapContractUrl} tickerInfo={tickerInfo} assetInfo={assetInfo} />
       </TabsContent>
 
       <TabsContent value="trades">
-        <TradeHistoryPanel contractURL={assetInfo.assetName} />
+        <TradeHistoryPanel contractURL={swapContractUrl} />
       </TabsContent>
     </Tabs>
   );

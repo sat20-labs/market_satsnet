@@ -83,7 +83,6 @@ const LaunchPool = () => {
   console.log('Translation for launchpool.asset_name:', t('launchpool.asset_name')); // Debugging: Check translation key
 
   useSupportedContracts();
-  const supportedContracts = useContractStore((state) => state.supportedContracts);
   const { satsnetHeight } = useCommonStore();
   const sortList = useMemo(
     () => [

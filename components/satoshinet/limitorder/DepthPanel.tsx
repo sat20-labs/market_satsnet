@@ -9,6 +9,7 @@ import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { useWalletStore } from "@/store";
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCommonStore } from "@/store/common";
 import { toast } from "sonner";
 
 // 直接内联 DepthList 组件
@@ -144,6 +145,7 @@ export default function DepthPanel({
   onOrderSuccess
 }: DepthPanelProps) {
   const { t } = useTranslation();
+  const { satsnetHeight } = useCommonStore();
   const { balance } = useWalletStore();
   const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -212,6 +214,14 @@ export default function DepthPanel({
   }, [depthData]);
 
   const handleSubmitClick = async () => {
+    console.log('satsnetHeight', satsnetHeight);
+    console.log('depthData?.enableBlock', depthData?.enableBlock);
+    
+    if (satsnetHeight < depthData?.enableBlock) {
+      console.log('satsnetHeight < depthData?.enableBlock');
+      toast.error('Please wait for the contract to be enabled');
+      return;
+    }
     const priceNum = parseFloat(price);
     const quantityNum = parseFloat(quantity);
     

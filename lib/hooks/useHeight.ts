@@ -7,6 +7,7 @@ export const useHeight = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['bestHeight'],
     queryFn: clientApi.getBestHeight,
+    refetchInterval: 2000,
   });
   const setSatsnetHeight = useCommonStore((s) => s.setSatsnetHeight);
 
