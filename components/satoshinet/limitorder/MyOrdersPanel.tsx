@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast } from "sonner";
 
 interface Order {
   side: string;
@@ -62,9 +63,9 @@ interface OrderResponse {
 const getMyContractStatus = async (contractURL: string, address: string, pageStart: number = 0, pageLimit: number = 20): Promise<OrderData[]> => {
   try {
     const result = await window.sat20.getContractInvokeHistoryByAddressInServer(contractURL, address, pageStart, pageLimit);
-    
+
     if (!result?.history) return [];
-    
+
     const parsedHistory = JSON.parse(result.history) as OrderResponse;
     console.log('parsedHistory', parsedHistory);
     return parsedHistory.data;
@@ -92,9 +93,9 @@ export default function MyOrdersPanel({
     cancelled: "bg-gray-600 text-gray-500 border-gray-400",
     expired: "bg-red-500 text-red-700 border-red-400",
   };
-  
+
   const { address } = useReactWalletStore();
-  
+  const queryClient = useQueryClient();
   const {
     data,
     fetchNextPage,
@@ -110,7 +111,7 @@ export default function MyOrdersPanel({
     initialPageParam: 0,
     refetchInterval: 20000,
   });
-
+  console.log('data', data);
   const mapOrderData = (orderData: OrderData): Order => ({
     side: orderData.OrderType === 2 ? "buy" : "sell",
     price: (orderData.UnitPrice.Value / Math.pow(10, orderData.UnitPrice.Precision)),
@@ -124,15 +125,20 @@ export default function MyOrdersPanel({
   const cancelOrder = async (order: Order) => {
     const params = {
       action: 'refund',
-      param: 'cancel'
-    }; 
-    console.log('tickerInfo', assetInfo);
-    
+    };
+
     const _asset = order.rawData.OrderType === 2 ? '::' : assetInfo.assetName;
     const result = await window.sat20.invokeContractV2_SatsNet(
-      contractURL, JSON.stringify(params), _asset, Math.ceil(order.price * order.quantity).toString(), 
+      contractURL, JSON.stringify(params), _asset, Math.ceil(order.price * order.quantity).toString(),
       order.price, order.quantity, 0, '1');
     console.log('result', result);
+    if (result.txId) {
+      toast.success(`Order cancelled successfully, txid: ${result.txId}`);
+      queryClient.invalidateQueries({ queryKey: ['myOrdersStatus', contractURL, address] });
+      return;
+    } else {
+      toast.error('Order cancellation failed');
+    }
   };
 
   if (isLoading) {
@@ -157,7 +163,7 @@ export default function MyOrdersPanel({
         </TableHeader>
         <TableBody>
           {allOrders.map((order, i) => (
-            <TableRow 
+            <TableRow
               key={`${order.rawData.Id}-${i}`}
             >
               <TableCell className={`text-center font-bold ${order.side === "buy" ? "text-green-600" : "text-red-500"}`}>
@@ -166,7 +172,7 @@ export default function MyOrdersPanel({
               <TableCell className="text-center">{order.price}</TableCell>
               <TableCell className="text-center">{order.quantity}</TableCell>
               <TableCell className="text-center">
-                <span 
+                <span
                   className={`px-2 py-0.5 rounded border text-xs font-semibold ${statusColor[order.status] || "bg-gray-700 text-gray-500 border-gray-500"}`}
                   title={order.status}
                 >
@@ -174,8 +180,8 @@ export default function MyOrdersPanel({
                 </span>
               </TableCell>
               <TableCell className="text-center">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => cancelOrder(order)}
                   disabled={order.status === "filled"}
@@ -189,8 +195,8 @@ export default function MyOrdersPanel({
       </Table>
       {hasNextPage && (
         <div className="text-center py-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
           >
