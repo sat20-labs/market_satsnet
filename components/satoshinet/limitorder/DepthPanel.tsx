@@ -260,7 +260,7 @@ export default function DepthPanel({
     const priceNum = parseFloat(price);
     const quantityNum = parseFloat(quantity);
     const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
-    const unitPrice = Math.ceil(priceNum).toString();
+    const unitPrice = priceNum.toString();
     const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : quantityNum;
     const serviceFee = orderType === 'buy' ? 10 : 0;
 

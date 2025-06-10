@@ -17,6 +17,7 @@ async function fetchTradeHistory(contractURL: string, pageStart: number = 0, pag
     if (result && result.history) {
       try {
         const historyObj = JSON.parse(result.history);
+        console.log('historyObj', historyObj);
         const data = Array.isArray(historyObj.data) ? historyObj.data : [];
         tradeList = data.map((item: any) => {
           // 价格处理：Value / 10^Precision

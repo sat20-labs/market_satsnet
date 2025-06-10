@@ -19,6 +19,7 @@ interface Order {
   quantity: number;
   status: string;
   rawData: OrderData;
+  done: number; // 0:进行中 1:已成交 2:已撤销
 }
 
 interface OrderData {
@@ -51,7 +52,7 @@ interface OrderData {
   };
   OutValue: number;
   Valid: boolean;
-  Done: boolean;
+  Done: number; // 0:进行中 1:已成交 2:已撤销
 }
 
 interface OrderResponse {
@@ -112,15 +113,49 @@ export default function MyOrdersPanel({
     refetchInterval: 20000,
   });
   console.log('data', data);
-  const mapOrderData = (orderData: OrderData): Order => ({
-    side: orderData.OrderType === 2 ? "buy" : "sell",
-    price: (orderData.UnitPrice.Value / Math.pow(10, orderData.UnitPrice.Precision)),
-    quantity: (orderData.InValue / Math.pow(10, orderData.InAmt.Precision)),
-    status: orderData.Done ? "filled" : "open",
-    rawData: orderData
-  });
+  const mapOrderData = (orderData: OrderData): Order & { outAmt: number; outValue: number; inAmt: number; inValue: number } => {
+    const isBuy = orderData.OrderType === 2;
+    // 精度处理
+    const price = orderData.UnitPrice.Value / Math.pow(10, orderData.UnitPrice.Precision);
+    const inAmt = orderData.InAmt.Value / Math.pow(10, orderData.InAmt.Precision);
+    const inValue = orderData.InValue; // 聪本身无精度，直接显示
+    // 买单
+    let outAmt = 0;
+    let outValue = 0;
+    if (isBuy) {
+      outAmt = orderData.OutAmt.Value / Math.pow(10, orderData.OutAmt.Precision); // 买到的资产数量
+      outValue = orderData.OutValue; // 剩余退款，聪本身无精度
+    } else {
+      outAmt = orderData.OutAmt.Value / Math.pow(10, orderData.OutAmt.Precision); // 剩余未卖出
+      outValue = orderData.OutValue; // 卖出去的货款，聪本身无精度
+    }
+    // 状态映射
+    let status: string;
+    switch (orderData.Done) {
+      case 1:
+        status = "已成交";
+        break;
+      case 2:
+        status = "已撤销";
+        break;
+      default:
+        status = "进行中";
+    }
+    return {
+      side: isBuy ? "buy" : "sell",
+      price,
+      quantity: inAmt,
+      status,
+      rawData: orderData,
+      done: orderData.Done,
+      outAmt,
+      outValue,
+      inValue,
+      inAmt,
+    };
+  };
 
-  const allOrders = data?.pages.flat().map(mapOrderData) ?? [];
+  const allOrders: (Order & { outAmt: number; outValue: number; inAmt: number; inValue: number })[] = data?.pages.flat().map(mapOrderData) ?? [];
 
   const cancelOrder = async (order: Order) => {
     const params = {
@@ -154,11 +189,14 @@ export default function MyOrdersPanel({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-center">Side</TableHead>
-            <TableHead className="text-center">Price</TableHead>
-            <TableHead className="text-center">Quantity</TableHead>
-            <TableHead className="text-center">Status</TableHead>
-            <TableHead className="text-center">Action</TableHead>
+            <TableHead className="text-center">类型</TableHead>
+            <TableHead className="text-center">单价</TableHead>
+            <TableHead className="text-center">输入资产数量</TableHead>
+            <TableHead className="text-center">输入聪</TableHead>
+            <TableHead className="text-center">{`买到/卖出数量`}</TableHead>
+            <TableHead className="text-center">{`剩余退款/未卖出`}</TableHead>
+            <TableHead className="text-center">完成</TableHead>
+            <TableHead className="text-center">操作</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -167,13 +205,26 @@ export default function MyOrdersPanel({
               key={`${order.rawData.Id}-${i}`}
             >
               <TableCell className={`text-center font-bold ${order.side === "buy" ? "text-green-600" : "text-red-500"}`}>
-                {order.side}
+                {order.side === "buy" ? "买" : "卖"}
               </TableCell>
               <TableCell className="text-center">{order.price}</TableCell>
-              <TableCell className="text-center">{order.quantity}</TableCell>
+              <TableCell className="text-center">{order.inAmt}</TableCell>
+              <TableCell className="text-center">{order.inValue}</TableCell>
+              <TableCell className="text-center">
+                {order.side === "buy" ? order.outAmt : order.outValue}
+              </TableCell>
+              <TableCell className="text-center">
+                {order.side === "buy" ? order.outValue : order.outAmt}
+              </TableCell>
               <TableCell className="text-center">
                 <span
-                  className={`px-2 py-0.5 rounded border text-xs font-semibold ${statusColor[order.status] || "bg-gray-700 text-gray-500 border-gray-500"}`}
+                  className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${
+                    Number(order.done) === 1
+                      ? "bg-green-500 text-green-700 border-green-400"
+                      : Number(order.done) === 2
+                      ? "bg-gray-500 text-gray-700 border-gray-400"
+                      : "bg-blue-500 text-blue-700 border-blue-400"
+                  }`}
                   title={order.status}
                 >
                   {order.status}
@@ -184,9 +235,9 @@ export default function MyOrdersPanel({
                   variant="outline"
                   size="sm"
                   onClick={() => cancelOrder(order)}
-                  disabled={order.status === "filled"}
+                  disabled={Number(order.done) !== 0}
                 >
-                  Cancel
+                  撤销
                 </Button>
               </TableCell>
             </TableRow>
@@ -200,7 +251,7 @@ export default function MyOrdersPanel({
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
           >
-            {isFetchingNextPage ? 'Loading more...' : 'Load More'}
+            {isFetchingNextPage ? '加载中...' : '加载更多'}
           </Button>
         </div>
       )}
