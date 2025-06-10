@@ -236,7 +236,7 @@ export default function DepthPanel({
 
     // 计算订单金额和费用
     const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
-    const unitPrice = Math.ceil(priceNum).toString();
+    const unitPrice = priceNum.toString();
     const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : Math.ceil(quantityNum);
     const serviceFee = orderType === 'buy' ? 10 : 0;
 

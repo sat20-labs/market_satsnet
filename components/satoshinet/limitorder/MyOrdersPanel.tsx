@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
 
 interface Order {
   side: string;
@@ -61,7 +62,7 @@ interface OrderResponse {
   data: OrderData[];
 }
 
-const getMyContractStatus = async (contractURL: string, address: string, pageStart: number = 0, pageLimit: number = 20): Promise<OrderData[]> => {
+const getMyContractHistory = async (contractURL: string, address: string, pageStart: number = 0, pageLimit: number = 20): Promise<OrderData[]> => {
   try {
     const result = await window.sat20.getContractInvokeHistoryByAddressInServer(contractURL, address, pageStart, pageLimit);
 
@@ -73,6 +74,14 @@ const getMyContractStatus = async (contractURL: string, address: string, pageSta
   } catch (e) {
     console.error('Error fetching orders:', e);
     return [];
+  }
+}
+const getMyStatus = async (contractURL: string, address: string) => {
+  const { status } = await window.sat20.getAddressStatusInContract(contractURL, address);
+  try {
+    return JSON.parse(status)?.status;
+  } catch (error) {
+    return {};
   }
 }
 
@@ -96,7 +105,18 @@ export default function MyOrdersPanel({
   };
 
   const { address } = useReactWalletStore();
+
+
   const queryClient = useQueryClient();
+
+  const {
+    data: statusData
+  } = useQuery({
+    queryKey: ['my-contract-status', contractURL, address],
+    queryFn: () => getMyStatus(contractURL, address),
+    refetchInterval: 20000,
+  })
+  console.log('statusData', statusData);
   const {
     data,
     fetchNextPage,
@@ -105,7 +125,7 @@ export default function MyOrdersPanel({
     isLoading,
   } = useInfiniteQuery({
     queryKey: ['myOrdersStatus', contractURL, address],
-    queryFn: ({ pageParam = 0 }) => getMyContractStatus(contractURL, address, pageParam * 20, 20),
+    queryFn: ({ pageParam = 0 }) => getMyContractHistory(contractURL, address, pageParam * 20, 20),
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === 20 ? allPages.length : undefined;
     },
@@ -186,6 +206,32 @@ export default function MyOrdersPanel({
 
   return (
     <div className="max-w-full overflow-x-auto">
+      {statusData && (
+        <Card className="mb-4 p-4">
+          <div className="font-bold mb-2">账户状态</div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            {Object.entries(statusData).map(([key, value]) => {
+              let displayValue = value;
+              if (
+                value &&
+                typeof value === 'object' &&
+                'Precision' in value &&
+                'Value' in value &&
+                typeof value.Precision === 'number' &&
+                typeof value.Value === 'number'
+              ) {
+                displayValue = value.Value / Math.pow(10, value.Precision);
+              }
+              return (
+                <React.Fragment key={key}>
+                  <div className="text-gray-500 whitespace-nowrap">{key}</div>
+                  <div className="break-all">{String(displayValue)}</div>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </Card>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
@@ -207,7 +253,7 @@ export default function MyOrdersPanel({
               <TableCell className={`text-center font-bold ${order.side === "buy" ? "text-green-600" : "text-red-500"}`}>
                 {order.side === "buy" ? "买" : "卖"}
               </TableCell>
-              <TableCell className="text-center">{order.price}</TableCell>
+              <TableCell className="text-center">{Number(order.price).toFixed(10)}</TableCell>
               <TableCell className="text-center">{order.inAmt}</TableCell>
               <TableCell className="text-center">{order.inValue}</TableCell>
               <TableCell className="text-center">
