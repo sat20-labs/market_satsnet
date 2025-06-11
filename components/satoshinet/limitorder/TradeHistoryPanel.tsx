@@ -147,7 +147,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
             <TableRow key={`${order.rawData.Id || i}-${i}`}>  {/* Id 可能不存在 */}
               <TableCell className={`text-center font-bold ${order.side === "撤销" ? "text-gray-600" : order.side === "买" ? "text-green-600" : "text-red-500"}`}>{order.side}</TableCell>
               <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
-              <TableCell className="text-center">{Number(order.price).toFixed(10)}</TableCell>
+              <TableCell className="text-center">{Number(order.price)}</TableCell>
               <TableCell className="text-center">{order.side === "撤销" ? "-" : (order.side === "卖" ? order.inAmt : order.expectedAmt)}</TableCell>
               <TableCell className="text-center">{order.side === "撤销" ? "-" : order.inValue}</TableCell>
               <TableCell className="text-center">{order.side === "撤销" ? "-" : order.outAmt}</TableCell>

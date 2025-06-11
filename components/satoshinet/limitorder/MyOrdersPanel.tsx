@@ -246,7 +246,7 @@ export default function MyOrdersPanel({
                 {order.side}
               </TableCell>
               <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.rawData.OrderTime)}</TableCell>
-              <TableCell className="text-center">{Number(order.price).toFixed(10)}</TableCell>
+              <TableCell className="text-center">{Number(order.price)}</TableCell>
               <TableCell className="text-center">{order.side === "撤销" ? "-" : (order.side === "卖" ? order.inAmt : order.expectedAmt)}</TableCell>
               <TableCell className="text-center">{order.side === "撤销" ? "-" : order.inValue}</TableCell>
               <TableCell className="text-center">

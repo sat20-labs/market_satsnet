@@ -13,7 +13,7 @@ import { useCommonStore } from "@/store/common";
 import { toast } from "sonner";
 
 // 直接内联 DepthList 组件
-function DepthList({ depth, type, maxQtyLen }: { depth: { price: number; quantity: number }[]; type: 'buy' | 'sell'; maxQtyLen: number }) {
+function DepthList({ depth, type, maxQtyLen }: { depth: { price: number; quantity: number; totalValue: number }[]; type: 'buy' | 'sell'; maxQtyLen: number }) {
   const isSell = type === 'sell';
   return (
     <div className="w-full">
@@ -40,7 +40,7 @@ function DepthList({ depth, type, maxQtyLen }: { depth: { price: number; quantit
               />
               <span className="relative z-10">{order.price}</span>
               <span className="relative z-10" style={{ minWidth: maxQtyLen + "ch", textAlign: "right" }}>{order.quantity}</span>
-              <span className="relative z-10" style={{ minWidth: "8ch", textAlign: "right" }}>{((order.price * order.quantity) / 100_000_000).toFixed(8)}</span>
+              <span className="relative z-10" style={{ minWidth: "8ch", textAlign: "right" }}>{(order.totalValue / 100_000_000).toFixed(8)}</span>
             </div>
           );
         })}
@@ -199,6 +199,7 @@ export default function DepthPanel({
         .map((item: any) => ({
           price: Number(item.Price),
           quantity: Number(item.Amt),
+          totalValue: Number(item.Value)
         }))
         .filter((item: any) => item.quantity > 0)
         .sort((a: any, b: any) => b.price - a.price);
