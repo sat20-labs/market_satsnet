@@ -102,7 +102,7 @@ interface MyOrdersPanelProps {
 // 时间格式化函数
 
 function formatTimeToMonthDayHourMinute(orderTime: number) {
-  const date = new Date(orderTime / 1000);
+  const date = new Date(orderTime * 1000);
   return format(date, 'MM-dd HH:mm');
 }
 
@@ -134,33 +134,40 @@ export default function MyOrdersPanel({
   });
   const mapOrderData = (orderData: OrderData): Order & { outAmt: number; outValue: number; inAmt: number; inValue: number, remainingAmt: number, remainingValue: number } => {
     const isBuy = orderData.OrderType === 2;
+    const isCancelled = orderData.OrderType === 3;
+    // 如果是撤销订单，显示撤销，否则根据原始订单类型判断买卖方向
+    const side = isCancelled ? "撤销" : (isBuy ? "买" : "卖");
     // 精度处理
-    const price = orderData.UnitPrice.Value / Math.pow(10, orderData.UnitPrice.Precision);
-    const inAmt = orderData.InAmt.Value / Math.pow(10, orderData.InAmt.Precision);
+    const price = orderData.UnitPrice?.Value ? orderData.UnitPrice.Value / Math.pow(10, orderData.UnitPrice.Precision) : 0;
+    const inAmt = orderData.InAmt?.Value ? orderData.InAmt.Value / Math.pow(10, orderData.InAmt.Precision) : 0;
     const inValue = orderData.InValue; // 聪本身无精度，直接显示
-    const expectedAmt = orderData.ExpectedAmt.Value / Math.pow(10, orderData.ExpectedAmt.Precision);
-    const outAmt = orderData.OutAmt.Value / Math.pow(10, orderData.OutAmt.Precision); // 买到的资产数量
+    const expectedAmt = orderData.ExpectedAmt?.Value ? orderData.ExpectedAmt.Value / Math.pow(10, orderData.ExpectedAmt.Precision) : 0;
+    const outAmt = orderData.OutAmt?.Value ? orderData.OutAmt.Value / Math.pow(10, orderData.OutAmt.Precision) : 0; // 买到的资产数量
     const outValue = orderData.OutValue; // 剩余退款，聪本身无精度
     const remainingAmt = orderData.RemainingAmt?.Value ? orderData.RemainingAmt.Value / Math.pow(10, orderData.RemainingAmt.Precision) : 0; // 剩余未卖出
     const remainingValue = orderData.RemainingValue; // 剩余未
     let status: string;
-    switch (orderData.Done) {
-      case 1:
-        status = "已成交";
-        break;
-      case 2:
-        status = "已撤销";
-        break;
-      default:
-        status = "进行中";
+    if (isCancelled) {
+      status = "已撤销";
+    } else {
+      switch (orderData.Done) {
+        case 1:
+          status = "已成交";
+          break;
+        case 2:
+          status = "已撤销";
+          break;
+        default:
+          status = "进行中";
+      }
     }
     return {
-      side: isBuy ? "buy" : "sell",
+      side,
       price,
       quantity: inAmt,
       status,
       rawData: orderData,
-      done: orderData.Done,
+      done: isCancelled ? 2 : orderData.Done,
       outAmt,
       expectedAmt,
       outValue,
@@ -170,7 +177,7 @@ export default function MyOrdersPanel({
       remainingValue,
     };
   };
-
+  console.log('assetInfo', data?.pages);
 
   const allOrders: (Order & { outAmt: number; outValue: number; inAmt: number; inValue: number })[] = data?.pages.flat().map(mapOrderData) ?? [];
   console.log('allOrders', allOrders);
@@ -181,8 +188,14 @@ export default function MyOrdersPanel({
     };
 
     const result = await window.sat20.invokeContractV2_SatsNet(
-      contractURL, JSON.stringify(params), assetInfo.assetName, '0',
-      '0', 0, 0, '1');
+      contractURL, JSON.stringify(params), assetInfo.assetName, '1',
+      '1', {
+      unitPrice: 0,
+      quantity: 0,
+      serviceFee: 0,
+      netFeeSats: 0,
+      walletSats: 0
+    });
     if (result.txId) {
       toast.success(`Order cancelled successfully, txid: ${result.txId}`);
       queryClient.invalidateQueries({ queryKey: ['myOrdersStatus', contractURL, address] });
@@ -229,18 +242,18 @@ export default function MyOrdersPanel({
             <TableRow
               key={`${order.rawData.Id}-${i}`}
             >
-              <TableCell className={`text-center font-bold ${order.side === "buy" ? "text-green-600" : "text-red-500"}`}>
-                {order.side === "buy" ? "买" : "卖"}
+              <TableCell className={`text-center font-bold ${order.side === "撤销" ? "text-gray-600" : order.side === "买" ? "text-green-600" : "text-red-500"}`}>
+                {order.side}
               </TableCell>
               <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.rawData.OrderTime)}</TableCell>
               <TableCell className="text-center">{Number(order.price).toFixed(10)}</TableCell>
-              <TableCell className="text-center">{order.side === "sell" ? order.inAmt : order.expectedAmt}</TableCell>
-              <TableCell className="text-center">{order.inValue}</TableCell>
+              <TableCell className="text-center">{order.side === "撤销" ? "-" : (order.side === "卖" ? order.inAmt : order.expectedAmt)}</TableCell>
+              <TableCell className="text-center">{order.side === "撤销" ? "-" : order.inValue}</TableCell>
               <TableCell className="text-center">
-                {order.outAmt}
+                {order.side === "撤销" ? "-" : order.outAmt}
               </TableCell>
               <TableCell className="text-center">
-                {(order.side === "buy" && order.done !== 0) ? order.inValue - order.outValue : '-'}
+                {order.side === "撤销" ? "-" : (order.side === "买" && order.done !== 0) ? order.inValue - order.outValue : '-'}
               </TableCell>
               <TableCell className="text-center">
                 <span
@@ -255,16 +268,6 @@ export default function MyOrdersPanel({
                   {order.status}
                 </span>
               </TableCell>
-              {/* <TableCell className="text-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => cancelOrder(order)}
-                  disabled={Number(order.done) !== 0}
-                >
-                  撤销
-                </Button>
-              </TableCell> */}
             </TableRow>
           ))}
         </TableBody>

@@ -28,6 +28,9 @@ const fetchTradeHistory = async (contractURL: string, pageStart: number = 0, pag
         tradeList = data.map((item: any) => {
           // 类型
           const isBuy = item.OrderType === 2;
+          const isCancelled = item.OrderType === 3;
+          // 如果是撤销订单，显示撤销，否则根据原始订单类型判断买卖方向
+          const side = isCancelled ? "撤销" : (isBuy ? "买" : "卖");
           // 单价
           const price = item.UnitPrice && typeof item.UnitPrice.Value === 'number' && typeof item.UnitPrice.Precision === 'number'
             ? item.UnitPrice.Value / Math.pow(10, item.UnitPrice.Precision)
@@ -50,22 +53,26 @@ const fetchTradeHistory = async (contractURL: string, pageStart: number = 0, pag
           const outValue = typeof item.OutValue === 'number' ? item.OutValue : 0;
           // 完成状态
           let status: string;
-          switch (item.Done) {
-            case 1:
-              status = "已成交";
-              break;
-            case 2:
-              status = "已撤销";
-              break;
-            default:
-              status = "进行中";
+          if (isCancelled) {
+            status = "已撤销";
+          } else {
+            switch (item.Done) {
+              case 1:
+                status = "已成交";
+                break;
+              case 2:
+                status = "已撤销";
+                break;
+              default:
+                status = "进行中";
+            }
           }
           return {
-            side: isBuy ? "buy" : "sell",
+            side,
             price,
             quantity: inAmt,
             status,
-            done: item.Done,
+            done: isCancelled ? 2 : item.Done,
             outAmt,
             expectedAmt,
             outValue,
@@ -88,7 +95,7 @@ const fetchTradeHistory = async (contractURL: string, pageStart: number = 0, pag
 };
 
 function formatTimeToMonthDayHourMinute(orderTime: number) {
-  const date = new Date(orderTime / 1000);
+  const date = new Date(orderTime * 1000);
   return format(date, 'MM-dd HH:mm');
 }
 
@@ -138,13 +145,13 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
         <TableBody>
           {allOrders.map((order, i) => (
             <TableRow key={`${order.rawData.Id || i}-${i}`}>  {/* Id 可能不存在 */}
-              <TableCell className={`text-center font-bold ${order.side === "buy" ? "text-green-600" : "text-red-500"}`}>{order.side === "buy" ? "买" : "卖"}</TableCell>
+              <TableCell className={`text-center font-bold ${order.side === "撤销" ? "text-gray-600" : order.side === "买" ? "text-green-600" : "text-red-500"}`}>{order.side}</TableCell>
               <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
               <TableCell className="text-center">{Number(order.price).toFixed(10)}</TableCell>
-              <TableCell className="text-center">{order.side === "sell" ? order.inAmt : order.expectedAmt}</TableCell>
-              <TableCell className="text-center">{order.inValue}</TableCell>
-              <TableCell className="text-center">{order.outAmt}</TableCell>
-              <TableCell className="text-center">{(order.side === "buy" && order.done !== 0) ? order.inValue - order.outValue : '-'}</TableCell>
+              <TableCell className="text-center">{order.side === "撤销" ? "-" : (order.side === "卖" ? order.inAmt : order.expectedAmt)}</TableCell>
+              <TableCell className="text-center">{order.side === "撤销" ? "-" : order.inValue}</TableCell>
+              <TableCell className="text-center">{order.side === "撤销" ? "-" : order.outAmt}</TableCell>
+              <TableCell className="text-center">{order.side === "撤销" ? "-" : (order.side === "买" && order.done !== 0) ? order.inValue - order.outValue : '-'}</TableCell>
               <TableCell className="text-center">
                 <span
                   className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${Number(order.done) === 1
