@@ -190,11 +190,9 @@ export default function MyOrdersPanel({
     const result = await window.sat20.invokeContractV2_SatsNet(
       contractURL, JSON.stringify(params), assetInfo.assetName, '1',
       '1', {
-      unitPrice: 0,
-      quantity: 0,
-      serviceFee: 0,
-      netFeeSats: 0,
-      walletSats: 0
+      action: 'refund',
+      assetName: assetInfo.assetName,
+      netFeeSats: 10,
     });
     if (result.txId) {
       toast.success(`Order cancelled successfully, txid: ${result.txId}`);
