@@ -37,8 +37,16 @@ function adaptPoolData(pool, satsnetHeight) {
   // 状态适配
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
+  const enableBlock = Number(pool.enableBlock);
+  const endBlock = Number(pool.endBlock);
   if (status === 100) {
-    poolStatus = PoolStatus.ACTIVE;
+    if (!isNaN(enableBlock) && typeof satsnetHeight === 'number') {
+      if (satsnetHeight < enableBlock) {
+        poolStatus = PoolStatus.NOT_STARTED;
+      } else if ((endBlock === 0 || satsnetHeight <= endBlock)) {
+        poolStatus = PoolStatus.ACTIVE;
+      }
+    }
   } else if (status === 200) {
     poolStatus = PoolStatus.COMPLETED;
   } else if (status === -1) {
