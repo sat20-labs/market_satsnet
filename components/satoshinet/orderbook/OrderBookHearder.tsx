@@ -52,7 +52,7 @@ const OrderBookHeader = ({ activeTab, onTabChange, onRefresh, onSettingsChange }
             }`}
           onClick={() => onTabChange("limitOrder")}
         >
-          LimitOrder
+         {t("common.limitorder")}
         </button>
         {/* SWAP UI */}
         <button

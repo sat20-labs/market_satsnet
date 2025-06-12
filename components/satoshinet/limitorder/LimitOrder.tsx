@@ -15,6 +15,8 @@ import MyOrdersPanel from "./MyOrdersPanel";
 import TradeHistoryPanel from "./TradeHistoryPanel";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
+import { useTranslation } from 'react-i18next';
+
 /*
 status mock data:
 {
@@ -157,6 +159,7 @@ export default function OrderBook({
   console.log('tickerInfo', tickerInfo);
   const assetName = `${tickerInfo.name.Protocol}:${tickerInfo.name.Type}:${tickerInfo.name.Ticker}`;
   const { address } = useReactWalletStore();
+  const { t } = useTranslation();
 
   // 1. 获取 swapContractUrl
   const {
@@ -264,9 +267,9 @@ export default function OrderBook({
   return (
     <Tabs defaultValue="depth" className="w-full mt-4">
       <TabsList className="mb-2">
-        <TabsTrigger value="depth">Depth</TabsTrigger>
-        <TabsTrigger value="myOrders">My Orders</TabsTrigger>
-        <TabsTrigger value="trades">History</TabsTrigger>
+        <TabsTrigger value="depth">{t('common.limitorder_depth')}</TabsTrigger>
+        <TabsTrigger value="myOrders">{t('common.limitorder_myorders')}</TabsTrigger> {/* Update label for My Orders */}
+        <TabsTrigger value="trades">{t('common.limitorder_history')}</TabsTrigger> {/* Update label for History */}
       </TabsList>
 
       <TabsContent value="depth">

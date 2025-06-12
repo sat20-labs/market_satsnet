@@ -206,18 +206,19 @@ export default function MyOrdersPanel({
   };
 
   if (isLoading) {
-    return <div className="text-center py-4">Loading orders...</div>;
+    return <div className="text-center py-2">Loading orders...</div>;
   }
 
   if (allOrders.length === 0) {
-    return <div className="text-center py-4 text-gray-500">No orders found</div>;
+    return <div className="text-center py-2 text-gray-500">No orders found</div>;
   }
 
   return (
     <div className="max-w-full overflow-x-auto">
-      <div>
+      <div className="flex justify-between items-center mb-4">
         <Button
           variant="outline"
+          className="px-4"
           size="sm"
           onClick={cancelOrder}
         >
@@ -226,20 +227,23 @@ export default function MyOrdersPanel({
       </div>
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-zinc-800 text-gray-500 text-xs">
             <TableHead className="text-center whitespace-nowrap">类型</TableHead>
             <TableHead className="text-center whitespace-nowrap">挂单时间</TableHead>
-            <TableHead className="text-center whitespace-nowrap">单价</TableHead>
-            <TableHead className="text-center whitespace-nowrap">挂单数量</TableHead>
-            <TableHead className="text-center whitespace-nowrap">挂单金额（sats）</TableHead>
+            <TableHead className="text-center ">单价（sats）</TableHead>
+            <TableHead className="text-center whitespace-nowrap">数量</TableHead>
+            <TableHead className="text-center ">金额（sats）</TableHead>
             <TableHead className="text-center whitespace-nowrap">成交数量</TableHead>
-            <TableHead className="text-center whitespace-nowrap">成交金额（sats）</TableHead>
-            <TableHead className="text-center whitespace-nowrap">完成</TableHead>
+            <TableHead className="text-center w-36">成交金额（sats）</TableHead>
+            <TableHead className="text-center whitespace-nowrap">状态</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {allOrders.map((order, i) => (
-            <TableRow
+        {allOrders
+            .slice() // 不改变原数组
+            .sort((a, b) => b.rawData.OrderTime - a.rawData.OrderTime)
+            .map((order, i) => (
+            <TableRow className="text-xs"
               key={`${order.rawData.Id}-${i}`}
             >
               <TableCell className={`text-center font-bold ${order.side === "撤销" ? "text-gray-600" : order.side === "买" ? "text-green-600" : "text-red-500"}`}>
@@ -273,7 +277,7 @@ export default function MyOrdersPanel({
         </TableBody>
       </Table>
       {hasNextPage && (
-        <div className="text-center py-4">
+        <div className="text-center py-2">
           <Button
             variant="outline"
             onClick={() => fetchNextPage()}
