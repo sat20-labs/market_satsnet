@@ -157,7 +157,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
     <div className="max-w-full overflow-x-auto">
       <Table>
         <TableHeader>         
-          <TableRow>
+          <TableRow className="bg-zinc-800 text-gray-500 text-xs">
             <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
             <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
             <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_unit_price")}</TableHead>
@@ -170,7 +170,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
         </TableHeader>
         <TableBody>
           {allOrders.map((order, i) => (
-            <TableRow key={`${order.rawData.Id || i}-${i}`}>
+            <TableRow  className="text-xs" key={`${order.rawData.Id || i}-${i}`}>
             <TableCell className={`text-center font-bold ${order.side === "Cancelled" ? "text-gray-600" : order.side === "Buy" ? "text-green-600" : order.side === "Sell" ? "text-red-500" : "text-red-500"}`}>{order.side}</TableCell>
             <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
             <TableCell className="text-center">{Number(order.price)}</TableCell>

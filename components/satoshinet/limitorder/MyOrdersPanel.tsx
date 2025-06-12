@@ -229,11 +229,11 @@ export default function MyOrdersPanel({
           <TableRow className="bg-zinc-800 text-gray-500 text-xs">
             <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
             <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
-            <TableHead className="text-center ">{t("common.limitorder_history_unit_price")}</TableHead>
+            <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_unit_price")}</TableHead>
             <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_quantity")}</TableHead>
-            <TableHead className="text-center ">{t("common.limitorder_history_order_amount_sats")}</TableHead>
+            <TableHead className="text-center  whitespace-nowrap">{t("common.limitorder_history_order_amount_sats")}</TableHead>
             <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_quantity")}</TableHead>
-            <TableHead className="text-center w-36">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
+            <TableHead className="text-center  whitespace-nowrap">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
             <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_status")}</TableHead>
           </TableRow>
         </TableHeader>
