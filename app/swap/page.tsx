@@ -43,7 +43,7 @@ function adaptPoolData(pool, satsnetHeight) {
     if (!isNaN(enableBlock) && typeof satsnetHeight === 'number') {
       if (satsnetHeight < enableBlock) {
         poolStatus = PoolStatus.NOT_STARTED;
-      } else if ((endBlock === 0 || satsnetHeight <= endBlock)) {
+      } else {
         poolStatus = PoolStatus.ACTIVE;
       }
     }
