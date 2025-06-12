@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQueryClient, useQuery } from "@tanstack/react-quer
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
+import { useTranslation } from 'react-i18next';
 import {
   Table,
   TableBody,
@@ -113,7 +114,7 @@ export default function MyOrdersPanel({
 }: MyOrdersPanelProps) {
 
   const { address } = useReactWalletStore();
-
+  const { t } = useTranslation();
 
   const queryClient = useQueryClient();
 
@@ -136,7 +137,7 @@ export default function MyOrdersPanel({
     const isBuy = orderData.OrderType === 2;
     const isCancelled = orderData.OrderType === 3;
     // 如果是撤销订单，显示撤销，否则根据原始订单类型判断买卖方向
-    const side = isCancelled ? "撤销" : (isBuy ? "买" : "卖");
+    const side = isCancelled ? "Cancelled" : (isBuy ? "Buy" : "Sell");
     // 精度处理
     const price = orderData.UnitPrice?.Value ? orderData.UnitPrice.Value / Math.pow(10, orderData.UnitPrice.Precision) : 0;
     const inAmt = orderData.InAmt?.Value ? orderData.InAmt.Value / Math.pow(10, orderData.InAmt.Precision) : 0;
@@ -148,17 +149,17 @@ export default function MyOrdersPanel({
     const remainingValue = orderData.RemainingValue; // 剩余未
     let status: string;
     if (isCancelled) {
-      status = "已撤销";
+      status = "Cancelled";
     } else {
       switch (orderData.Done) {
         case 1:
-          status = "已成交";
+          status = t("common.limitorder_status_completed");
           break;
         case 2:
-          status = "已撤销";
+          status = t("common.limitorder_status_cancelled");
           break;
         default:
-          status = "进行中";
+          status = t("common.limitorder_status_pending");
       }
     }
     return {
@@ -220,20 +221,20 @@ export default function MyOrdersPanel({
           size="sm"
           onClick={cancelOrder}
         >
-          撤销
+          Cancel
         </Button>
       </div>
       <Table>
         <TableHeader>
           <TableRow className="bg-zinc-800 text-gray-500 text-xs">
-            <TableHead className="text-center whitespace-nowrap">类型</TableHead>
-            <TableHead className="text-center whitespace-nowrap">挂单时间</TableHead>
-            <TableHead className="text-center ">单价（sats）</TableHead>
-            <TableHead className="text-center whitespace-nowrap">数量</TableHead>
-            <TableHead className="text-center ">金额（sats）</TableHead>
-            <TableHead className="text-center whitespace-nowrap">成交数量</TableHead>
-            <TableHead className="text-center w-36">成交金额（sats）</TableHead>
-            <TableHead className="text-center whitespace-nowrap">状态</TableHead>
+            <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
+            <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
+            <TableHead className="text-center ">{t("common.limitorder_history_unit_price")}</TableHead>
+            <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_quantity")}</TableHead>
+            <TableHead className="text-center ">{t("common.limitorder_history_order_amount_sats")}</TableHead>
+            <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_quantity")}</TableHead>
+            <TableHead className="text-center w-36">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
+            <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_status")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -244,18 +245,18 @@ export default function MyOrdersPanel({
             <TableRow className="text-xs"
               key={`${order.rawData.Id}-${i}`}
             >
-              <TableCell className={`text-center font-bold ${order.side === "撤销" ? "text-gray-600" : order.side === "买" ? "text-green-600" : "text-red-500"}`}>
+              <TableCell className={`text-center font-bold ${order.side === "Cancelled" ? "text-gray-600" : order.side === "Buy" ? "text-green-600" : "text-red-500"}`}>
                 {order.side}
               </TableCell>
               <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.rawData.OrderTime)}</TableCell>
               <TableCell className="text-center">{Number(order.price)}</TableCell>
-              <TableCell className="text-center">{order.side === "撤销" ? "-" : (order.side === "卖" ? order.inAmt : order.expectedAmt)}</TableCell>
-              <TableCell className="text-center">{order.side === "撤销" ? "-" : order.inValue}</TableCell>
+              <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
+              <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell>
               <TableCell className="text-center">
-                {order.side === "撤销" ? "-" : order.outAmt}
+                {order.side === "Cancelled" ? "-" : order.outAmt}
               </TableCell>
               <TableCell className="text-center">
-                {order.side === "撤销" ? "-" : (order.side === "买" && order.done !== 0) ? order.inValue - order.outValue : '-'}
+                {order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : '-'}
               </TableCell>
               <TableCell className="text-center">
                 <span
@@ -281,7 +282,7 @@ export default function MyOrdersPanel({
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
           >
-            {isFetchingNextPage ? '加载中...' : '加载更多'}
+            {isFetchingNextPage ? 'Loadding...' : 'Load More'}
           </Button>
         </div>
       )}
