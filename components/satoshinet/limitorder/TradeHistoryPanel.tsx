@@ -166,6 +166,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
             <TableHead className="text-center whitespace-nowrap">成交金额（sats）</TableHead>
             <TableHead className="text-center whitespace-nowrap">完成</TableHead>
             <TableHead className="text-center whitespace-nowrap">交易</TableHead>
+            <TableHead className="text-center whitespace-nowrap">UTXO</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -195,6 +196,20 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
                 {order.status === "已成交" && order.rawData.OutTxId ? (
                   <a
                     href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: Chain.SATNET, env: 'dev' })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center hover:text-primary"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                ) : (
+                  "-"
+                )}
+              </TableCell>
+              <TableCell className="text-center">
+                {order.rawData.InUtxo ? (
+                  <a
+                    href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.InUtxo}`, chain: Chain.SATNET, env: 'dev' })}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center hover:text-primary"
