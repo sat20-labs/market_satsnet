@@ -10,6 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ExternalLink } from 'lucide-react';
+import { generateMempoolUrl } from '@/utils/url';
+import { Chain } from "@/types";
 
 interface TradeHistoryPanelProps {
   contractURL: string;
@@ -140,7 +143,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
 
   const allOrders = data?.pages.flatMap(page => page.data) ?? [];
   const total = data?.pages[0]?.total ?? 0;
-
+  console.log('allOrders', allOrders);
   if (isLoading) {
     return <div className="text-center py-4">加载中...</div>;
   }
@@ -162,6 +165,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
             <TableHead className="text-center whitespace-nowrap">成交数量</TableHead>
             <TableHead className="text-center whitespace-nowrap">成交金额（sats）</TableHead>
             <TableHead className="text-center whitespace-nowrap">完成</TableHead>
+            <TableHead className="text-center whitespace-nowrap">交易</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -186,6 +190,20 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
                 >
                   {order.status}
                 </span>
+              </TableCell>
+              <TableCell className="text-center">
+                {order.status === "已成交" && order.rawData.OutTxId ? (
+                  <a
+                    href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: Chain.SATNET, env: 'dev' })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center hover:text-primary"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                ) : (
+                  "-"
+                )}
               </TableCell>
             </TableRow>
           ))}
