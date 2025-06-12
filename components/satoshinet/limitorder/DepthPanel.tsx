@@ -266,7 +266,7 @@ export default function DepthPanel({
     const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
     const unitPrice = priceNum.toString();
     const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : quantityNum;
-    const serviceFee = orderType === 'buy' ? 10 : 0;
+    const serviceFee = orderType === 'buy' ? Math.max(10, Math.ceil(amt * 0.008)) : 0;
 
     const params = {
       action: 'swap',
@@ -281,11 +281,14 @@ export default function DepthPanel({
     try {
       const result = await window.sat20.invokeContractV2_SatsNet(
         swapContractUrl, JSON.stringify(params), _asset, amt.toString(), '1', {
+        action: 'swap',
+        orderType: orderType === 'buy' ? 2 : 1,
+        assetName: assetInfo.assetName,
+        amt: quantityNum.toString(),
         unitPrice: unitPrice,
         quantity: quantityNum,
         serviceFee: serviceFee,
-        netFeeSats: (amt + serviceFee).toString(),
-        walletSats: balance.availableAmt.toString()
+        netFeeSats: 10,
       });
       const { txId } = result;
       if (txId) {

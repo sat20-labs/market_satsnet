@@ -59,7 +59,7 @@ const Trade = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSellSucc
         />
       )}
       {/* Add Liquidity Providers List */}
-      <LiquidityProviders />
+      {/* <LiquidityProviders /> */}
     </div>
   );
 };

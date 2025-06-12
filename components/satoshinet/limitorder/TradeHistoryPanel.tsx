@@ -1,5 +1,5 @@
-import React from "react";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useEffect, useRef, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import {
@@ -17,31 +17,27 @@ interface TradeHistoryPanelProps {
 
 // TradeHistory 数据结构映射到 MyOrdersPanel 的表格字段
 const fetchTradeHistory = async (contractURL: string, pageStart: number = 0, pageLimit: number = 20) => {
-  if (!contractURL) return [];
+  if (!contractURL) return { data: [], total: 0 };
   try {
     const result = await window.sat20.getContractInvokeHistoryInServer(contractURL, pageStart, pageLimit);
     let tradeList: any[] = [];
+    let total = 0;
     if (result && result.history) {
       try {
         const historyObj = JSON.parse(result.history);
-        const data = Array.isArray(historyObj.data) ? historyObj.data : [];
+        const data = Array.isArray(historyObj.data) ? historyObj.data.filter(Boolean) : [];
+        total = historyObj.total || data.length;
         tradeList = data.map((item: any) => {
-          // 类型
           const isBuy = item.OrderType === 2;
           const isCancelled = item.OrderType === 3;
-          // 如果是撤销订单，显示撤销，否则根据原始订单类型判断买卖方向
           const side = isCancelled ? "撤销" : (isBuy ? "买" : "卖");
-          // 单价
           const price = item.UnitPrice && typeof item.UnitPrice.Value === 'number' && typeof item.UnitPrice.Precision === 'number'
             ? item.UnitPrice.Value / Math.pow(10, item.UnitPrice.Precision)
             : 0;
-          // 挂单数量
           const inAmt = item.InAmt && typeof item.InAmt.Value === 'number' && typeof item.InAmt.Precision === 'number'
             ? item.InAmt.Value / Math.pow(10, item.InAmt.Precision)
             : 0;
-          // 挂单金额（聪）
           const inValue = typeof item.InValue === 'number' ? item.InValue : 0;
-          // 期望数量
           const expectedAmt = item.ExpectedAmt && typeof item.ExpectedAmt.Value === 'number' && typeof item.ExpectedAmt.Precision === 'number'
             ? item.ExpectedAmt.Value / Math.pow(10, item.ExpectedAmt.Precision)
             : 0;
@@ -88,9 +84,9 @@ const fetchTradeHistory = async (contractURL: string, pageStart: number = 0, pag
         console.error('history parse error', e);
       }
     }
-    return tradeList;
+    return { data: tradeList, total };
   } catch (e) {
-    return [];
+    return { data: [], total: 0 };
   }
 };
 
@@ -100,6 +96,9 @@ function formatTimeToMonthDayHourMinute(orderTime: number) {
 }
 
 export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProps) {
+  const pageSize = 20;
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   const {
     data,
     fetchNextPage,
@@ -108,16 +107,39 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
     isLoading,
   } = useInfiniteQuery({
     queryKey: ['tradeHistoryPanel', contractURL],
-    queryFn: ({ pageParam = 0 }) => fetchTradeHistory(contractURL, pageParam * 20, 20),
+    queryFn: ({ pageParam = 0 }) => fetchTradeHistory(contractURL, pageParam * pageSize, pageSize),
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === 20 ? allPages.length : undefined;
+      if (!lastPage.data.length) return undefined;
+      return allPages.length;
     },
     initialPageParam: 0,
     refetchInterval: 10000,
     enabled: !!contractURL,
   });
 
-  const allOrders = data?.pages.flat() ?? [];
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const allOrders = data?.pages.flatMap(page => page.data) ?? [];
+  const total = data?.pages[0]?.total ?? 0;
 
   if (isLoading) {
     return <div className="text-center py-4">加载中...</div>;
@@ -144,7 +166,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
         </TableHeader>
         <TableBody>
           {allOrders.map((order, i) => (
-            <TableRow key={`${order.rawData.Id || i}-${i}`}>  {/* Id 可能不存在 */}
+            <TableRow key={`${order.rawData.Id || i}-${i}`}>
               <TableCell className={`text-center font-bold ${order.side === "撤销" ? "text-gray-600" : order.side === "买" ? "text-green-600" : "text-red-500"}`}>{order.side}</TableCell>
               <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
               <TableCell className="text-center">{Number(order.price)}</TableCell>
@@ -169,17 +191,15 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
           ))}
         </TableBody>
       </Table>
-      {hasNextPage && (
-        <div className="text-center py-4">
-          <Button
-            variant="outline"
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-          >
-            {isFetchingNextPage ? '加载中...' : '加载更多'}
-          </Button>
-        </div>
-      )}
+      <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+        {isFetchingNextPage ? (
+          <div className="text-gray-500">加载中...</div>
+        ) : hasNextPage ? (
+          <div className="text-gray-500">向下滚动加载更多</div>
+        ) : (
+          <div className="text-gray-500">没有更多数据了</div>
+        )}
+      </div>
     </div>
   );
 } 
