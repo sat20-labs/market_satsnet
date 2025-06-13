@@ -142,7 +142,8 @@ const LaunchPool = () => {
   const [selectedPool, setSelectedPool] = useState<any | null>(null);
 
   const openModal = async (type: string, pool: any | null = null) => {
-    const result = await window.sat20.getParamForInvokeContract(pool.contractType);
+    const result = await window.sat20.getParamForInvokeContract('amm.tc');
+    console.log('result', result);
     setModalType(type);
     if (type === 'template' && pool) {
       setSelectedTemplateId(pool.template);

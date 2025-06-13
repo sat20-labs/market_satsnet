@@ -6,3 +6,8 @@
 .next
 .husky
 .vscode
+/node_modules
+/build
+/temp
+.gitignore
+/xnotes

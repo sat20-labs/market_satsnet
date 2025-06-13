@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectItem,SelectTrigger, SelectContent, SelectValue  } from '@/components/ui/select';
 import BuySellToggle from "@/components/satoshinet/orderbook/BuySellToggle";
 import Buy from './Buy';
 import Sell from './Sell'; // Adjusted path to locate Sell
 import LiquidityProviders from './LiquidityProviders'; // Import the new component
+import { useQuery } from '@tanstack/react-query';
 
 interface SwapProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
@@ -15,20 +14,26 @@ interface SwapProps {
   balanceLoading: boolean;
   onSellSuccess?: () => void;
 }
+const getAmmContractUrl = async (assetName: string) => {
+  const result = await window.sat20.getDeployedContractsInServer();
+  const { contractURLs = [] } = result;
+  const list = contractURLs.filter(c => c.indexOf(`${assetName}_amm.tc`) > -1);
+  return list[0];
+}
 
 const Trade = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSellSuccess }: SwapProps) => {
   const [protocol, setProtocol] = useState<'ORDX' | 'Runes' | ''>('');
   const [asset, setAsset] = useState<string>('');
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
 
-  const handleProtocolChange = (value: 'ORDX' | 'Runes') => {
-    setProtocol(value);
-    setAsset(''); // 重置资产选择
-  };
-
-  const handleAssetChange = (value: string) => {
-    setAsset(value);
-  };
+  const {
+    data: ammContractUrl,
+  } = useQuery({
+    queryKey: ["ammContractUrl", tickerInfo.displayname],
+    queryFn: () => getAmmContractUrl(tickerInfo.displayname),
+    staleTime: 10 * 1000,
+    refetchInterval: 10000,
+  });
 
   const handleSwap = () => {
     if (!protocol || !asset) {
@@ -38,12 +43,13 @@ const Trade = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSellSucc
     alert(`Swapping asset ${asset} using protocol ${protocol}`);
   };
 
-  return (  
+  return (
     <div>
       <BuySellToggle mode={mode} onChange={setMode} />
       {/* Conditionally render BuyOrder or SellOrder */}
       {mode === "buy" ? (
         <Buy
+          contractUrl={ammContractUrl}
           assetInfo={assetInfo}
           tickerInfo={tickerInfo}
           assetBalance={assetBalance}
@@ -51,6 +57,7 @@ const Trade = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSellSucc
         />
       ) : (
         <Sell
+          contractUrl={ammContractUrl}
           assetInfo={assetInfo}
           tickerInfo={tickerInfo}
           assetBalance={assetBalance}
