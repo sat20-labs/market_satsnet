@@ -26,6 +26,8 @@ import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useContractStore } from '@/store/contract';
+import { Icon } from '@iconify/react';
+import { useRouter } from 'next/navigation';
 
 
 function adaptPoolData(pool, satsnetHeight) {
@@ -172,6 +174,8 @@ const LaunchPool = () => {
   }, [adaptedPoolList, protocol]);
   console.log('filteredPoolList', filteredPoolList);
   
+  const router = useRouter();
+  
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
@@ -243,7 +247,15 @@ const LaunchPool = () => {
                   <span className="text-xs text-muted-foreground">{adaptedPool.progress}%</span>
                 </TableCell>
                 <TableCell className="px-4 py-2 text-center">
-                  <ActionButtons pool={adaptedPool} openModal={openModal} />
+                  <div className="flex items-center h-full gap-2">
+                    <ActionButtons pool={adaptedPool} openModal={openModal} />
+                    <button
+                      className="mt-2 text-zinc-400 hover:text-indigo-500 transition-colors"
+                      onClick={() => router.push(`/order/?asset=${adaptedPool.assetName.Protocol}:f:${adaptedPool.assetName.Ticker}`)}
+                    >
+                      <Icon icon="mdi:open-in-new" className="w-5 h-5" />
+                    </button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

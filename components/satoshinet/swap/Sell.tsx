@@ -25,6 +25,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
   const [slippage, setSlippage] = useState<string>("1"); // 滑点百分比，默认1%
   const [isSelling, setIsSelling] = useState<boolean>(false);
   const { getBalance, balance } = useWalletStore();
+  const { satsnetHeight } = useCommonStore();
   const displayBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
 
 
@@ -85,6 +86,10 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
   };
 
   const handleSell = async () => {
+    if (satsnetHeight < ammData?.enableBlock) {
+      toast.error('Please wait for the contract to be enabled');
+      return;
+    }
     if (!isSellValid) {
       toast.error(t("common.swap_enterValidAmount"));
       return;

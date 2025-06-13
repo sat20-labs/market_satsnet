@@ -28,6 +28,7 @@ const Trade = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSellSucc
 
   const {
     data: ammContractUrl,
+    isLoading: isContractUrlLoading,
   } = useQuery({
     queryKey: ["ammContractUrl", tickerInfo.displayname],
     queryFn: () => getAmmContractUrl(tickerInfo.displayname),
@@ -35,13 +36,19 @@ const Trade = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSellSucc
     refetchInterval: 10000,
   });
 
-  const handleSwap = () => {
-    if (!protocol || !asset) {
-      alert('Please select a protocol and an asset to proceed.');
-      return;
-    }
-    alert(`Swapping asset ${asset} using protocol ${protocol}`);
-  };
+ // 处理 loading 和未找到合约的 UI
+ if (isContractUrlLoading) {
+  return <div className="w-full mt-4 text-center text-gray-400">加载中...</div>;
+}
+if (!ammContractUrl) {
+  return (
+    <div className="w-full mt-4">
+      <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
+        未找到合约，请联系管理员添加
+      </div>
+    </div>
+  );
+}
 
   return (
     <div>
