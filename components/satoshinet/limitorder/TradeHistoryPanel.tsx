@@ -173,7 +173,9 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
           </TableRow>
         </TableHeader>
         <TableBody>
-          {allOrders.map((order, i) => (
+          {allOrders .slice() // 不改变原数组
+            .sort((a, b) => b.rawData.OrderTime - a.rawData.OrderTime)
+            .map((order, i) => (
             <TableRow className="text-xs" key={`${order.rawData.Id || i}-${i}`}>
               <TableCell className={`text-center font-bold ${order.side === "Cancelled" ? "text-gray-600" : order.side === "Buy" ? "text-green-600" : order.side === "Sell" ? "text-red-500" : "text-red-500"}`}>{order.side}</TableCell>
               <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
