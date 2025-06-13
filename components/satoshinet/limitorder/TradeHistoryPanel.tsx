@@ -118,7 +118,8 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
       return allPages.length;
     },
     initialPageParam: 0,
-    refetchInterval: 10000,
+    refetchInterval: 3000,
+    refetchIntervalInBackground: false,
     enabled: !!contractURL,
   });
 
@@ -179,8 +180,8 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
               <TableCell className="text-center">{Number(order.price)}</TableCell>
               <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
               <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell>
-              <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.outAmt}</TableCell>
-              <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : '-'}</TableCell>
+              <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.side === "Buy" ? order.outAmt : order.expectedAmt}</TableCell>
+              <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : order.outValue}</TableCell>
               <TableCell className="text-center">
                 <span
                   className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${Number(order.done) === 1

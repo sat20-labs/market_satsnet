@@ -189,8 +189,8 @@ export default function DepthPanel({
       return result?.contractStatus ? JSON.parse(result?.contractStatus) : null;
     },
     enabled: !!swapContractUrl,
-    staleTime: 10 * 1000,
-    refetchInterval: 10000,
+    refetchInterval: 3000,
+    refetchIntervalInBackground: false,
   });
   console.log('depthData', depthData);
   // 处理深度数据

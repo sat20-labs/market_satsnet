@@ -134,7 +134,8 @@ export default function MyOrdersPanel({
       return lastPage.length === 20 ? allPages.length : undefined;
     },
     initialPageParam: 0,
-    refetchInterval: 20000,
+    refetchInterval: 3000,
+    refetchIntervalInBackground: false,
   });
   const mapOrderData = (orderData: OrderData): Order & { outAmt: number; outValue: number; inAmt: number; inValue: number, remainingAmt: number, remainingValue: number } => {
     const isBuy = orderData.OrderType === 2;
@@ -243,69 +244,61 @@ export default function MyOrdersPanel({
           </TableRow>
         </TableHeader>
         <TableBody>
-        {allOrders
+          {allOrders
             .slice() // 不改变原数组
             .sort((a, b) => b.rawData.OrderTime - a.rawData.OrderTime)
             .map((order, i) => (
-            <TableRow className="text-xs"
-              key={`${order.rawData.Id}-${i}`}
-            >
-              <TableCell className={`text-center font-bold ${order.side === "Cancelled" ? "text-gray-600" : order.side === "Buy" ? "text-green-600" : "text-red-500"}`}>
-                {order.side}
-              </TableCell>
-              <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.rawData.OrderTime)}</TableCell>
-              <TableCell className="text-center">{Number(order.price)}</TableCell>
-              <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
-              <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell>
-              <TableCell className="text-center">
-                {order.side === "Cancelled" ? "-" : order.outAmt}
-              </TableCell>
-              <TableCell className="text-center">
-                {order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : '-'}
-              </TableCell>
-              <TableCell className="text-center">
-                <span
-                  className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${Number(order.done) === 1
-                    ? "bg-green-500 text-green-700 border-green-400"
-                    : Number(order.done) === 2
-                      ? "bg-gray-500 text-gray-700 border-gray-400"
-                      : "bg-blue-500 text-blue-700 border-blue-400"
-                    }`}
-                  title={order.status}
-                >
-                  {order.status}
-                </span>
-              </TableCell>
-              <TableCell className="text-center">
-                {order.status === t("common.limitorder_status_completed") && order.rawData.OutTxId ? (
-                  <a
-                    href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: Chain.SATNET, env: 'dev' })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center hover:text-primary"
+              <TableRow className="text-xs" key={`${order.rawData.Id || i}-${i}`}>
+                <TableCell className={`text-center font-bold ${order.side === "Cancelled" ? "text-gray-600" : order.side === "Buy" ? "text-green-600" : order.side === "Sell" ? "text-red-500" : "text-red-500"}`}>{order.side}</TableCell>
+                <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.rawData.OrderTime)}</TableCell>
+                <TableCell className="text-center">{Number(order.price)}</TableCell>
+                <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
+                <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell>
+                <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.side === "Buy" ? order.outAmt : order.expectedAmt}</TableCell>
+                <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : order.outValue}</TableCell>
+                <TableCell className="text-center">
+                  <span
+                    className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${Number(order.done) === 1
+                      ? "bg-green-500 text-green-700 border-green-400"
+                      : Number(order.done) === 2
+                        ? "bg-gray-500 text-gray-700 border-gray-400"
+                        : "bg-blue-500 text-blue-700 border-blue-400"
+                      }`}
+                    title={order.status}
                   >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                ) : (
-                  "-"
-                )}
-              </TableCell>
-              <TableCell className="text-center">
-                {order.rawData.InUtxo ? (
-                  <a
-                    href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.InUtxo}`, chain: Chain.SATNET, env: 'dev' })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center hover:text-primary"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                ) : (
-                  "-"
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
+                    {order.status}
+                  </span>
+                </TableCell>
+                <TableCell className="text-center">
+                  {order.status === t("common.limitorder_status_completed") && order.rawData.OutTxId ? (
+                    <a
+                      href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: Chain.SATNET, env: 'dev' })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center hover:text-primary"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell className="text-center">
+                  {order.rawData.InUtxo ? (
+                    <a
+                      href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.InUtxo}`, chain: Chain.SATNET, env: 'dev' })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center hover:text-primary"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
       {hasNextPage && (
