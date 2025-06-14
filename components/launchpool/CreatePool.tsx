@@ -35,6 +35,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [contractURL, setcontractURL] = useState<string | null>(null);
 
+  const [errorMessage, setErrorMessage] = useState('');
+
   const { satsnetHeight } = useCommonStore();
   const { supportedContracts, isLoading } = useSupportedContracts();
   const hasLaunchpool = supportedContracts.includes('launchpool.tc');
@@ -199,9 +201,19 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               placeholder={t('pages.createPool.bindingSat')}
               type="number"
               value={formData.n}
-              onChange={(e) => handleInputChange('n', e.target.value)}
-              disabled={formData.protocol === 'runes'}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                if (value > 0 && value % 10 === 0) {
+                  handleInputChange('n', value.toString());
+                  setErrorMessage(''); // 清除错误信息
+                } else {
+                  setErrorMessage(t('pages.createPool.bindingSatError')); // 设置错误信息
+                }
+              }}
             />
+            {errorMessage && (
+              <><p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p></>
+            )}
             {formData.protocol === 'runes' && (
               <>
                 <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.assetSymbol')}</label>

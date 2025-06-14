@@ -247,7 +247,9 @@
     "close": "关闭",
     "viewPool": "查看池子",
     "runesTickerNote": "* 可输入空格代替Runes符号，如：XXX YYY ZZZ",
-    "deployFeeTip": "* 部署发射池的费用，可选择主网或聪网支付交易"
+    "deployFeeTip": "* 部署发射池的费用，可选择主网或聪网支付交易",
+    "bindingSatError": "绑定聪必须大于0且为10的整数倍"
+    
   },
   "joinPool": {
     "title": "加入池子",

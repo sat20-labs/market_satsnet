@@ -263,7 +263,9 @@
     "close": "Close",
     "viewPool": "View Pool",
     "runesTickerNote": "* Input spaces as separators to replace Runes symbols, e.g.,: XXX YYY ZZZ",
-    "deployFeeTip": "* Deployment fees can be paid via Mainnet or SatoshiNet."
+    "deployFeeTip": "* Deployment fees can be paid via Mainnet or SatoshiNet.",
+    "bindingSatError": "BindingSat must be greater than 0 and a multiple of 10"
+    
   },
   "joinPool": {
     "title": "Join Pool",
