@@ -156,11 +156,11 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           className="w-full bg-transparent border border-zinc-600 rounded-lg px-4 py-2 text-lg text-white"
-          placeholder="输入卖出数量 (sats)"
+          placeholder="输入卖出数量"
           min={1}
         />
         <div className="absolute right-4 top-2/4 transform -translate-y-2/4 flex items-center gap-2">
-          <span className="text-sm text-gray-400">sats</span>
+          <span className="text-sm text-gray-400">{tickerInfo?.displayname}</span>
         </div>
       </div>
       {/* 快捷金额按钮 */}

@@ -170,8 +170,8 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
   return (
     <div className="max-w-full">
       <div className="mb-2 font-bold text-sm">{t("swap.my_orders")}</div>
-      <ScrollArea className="w-full max-h-80 rounded-md border">
-        <Table>
+      <div className="w-full max-h-80 rounded-md border overflow-y-auto">
+        <Table className="overflow-x-auto">
           <TableHeader>
             <TableRow className="bg-zinc-800 text-gray-500 text-xs">
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
@@ -242,7 +242,7 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
               ))}
           </TableBody>
         </Table>
-      </ScrollArea>
+      </div>
       {hasNextPage && (
         <div className="text-center py-2">
           <Button
