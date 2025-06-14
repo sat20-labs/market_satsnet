@@ -62,6 +62,7 @@ if (!ammContractUrl) {
           tickerInfo={tickerInfo}
           assetBalance={assetBalance}
           balanceLoading={balanceLoading}
+          onSellSuccess={onSellSuccess}
         />
       ) : (
         <Sell

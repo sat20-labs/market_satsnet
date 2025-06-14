@@ -70,6 +70,7 @@ export const useAssets = () => {
         throw err;
       }
     },
+    refetchInterval: 3000,
     enabled: false,
   });
 

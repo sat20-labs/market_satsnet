@@ -9,6 +9,7 @@ import { Icon } from '@iconify/react';
 import { BtcPrice } from "../../BtcPrice";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
+import { sleep } from "radash";
 import { toast } from "sonner";
 
 interface BuyProps {
@@ -138,7 +139,8 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
         toast.success(`Swap成功，txid: ${txId}`);
         setAmount("");
         setSlippage("0");
-        if (onSellSuccess) onSellSuccess();
+        await sleep(1000);
+        onSellSuccess?.();
       } else {
         toast.error("Swap失败");
       }
