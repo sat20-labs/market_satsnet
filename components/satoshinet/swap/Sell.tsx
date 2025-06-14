@@ -105,7 +105,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
         assetName: assetInfo.assetName,
       };
       if (Number(slippage) > 0) {
-        paramObj.amt = amount;
+        paramObj.amt = minReceiveSats.toString();
       }
       const params = {
         action: "swap",
