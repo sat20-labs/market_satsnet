@@ -203,7 +203,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
       {/* 预估最小可接受成交量 */}
       <div className="flex justify-between mb-2 text-sm text-gray-400">
         <span>当前价格: <span className="text-white">{currentPrice || '--'}</span> sats/{tickerInfo?.displayname}</span>
-        <span>最少卖出: <span className="text-white">{minReceiveSats || '--'}</span> {tickerInfo?.displayname}</span>
+        <span>最少获得: <span className="text-white">{minReceiveSats || '--'}</span> sats</span>
       </div>
       <WalletConnectBus asChild>
         <Button
