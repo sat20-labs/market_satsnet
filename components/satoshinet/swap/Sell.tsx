@@ -113,7 +113,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
         contractUrl,
         JSON.stringify(params),
         assetInfo.assetName,
-        minReceiveSats.toString(),
+        amount.toString(),
         "1",
         {
           action: "swap",
