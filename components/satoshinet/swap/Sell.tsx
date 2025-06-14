@@ -57,7 +57,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
   // 获取当前卖出价格（取买一价）
   const currentPrice = useMemo(() => {
     if (!satValue || !assetAmt) return 0;
-    return Number((satValue / assetAmt).toFixed(2));
+    return Number((satValue / assetAmt).toFixed(10));
   }, [satValue, assetAmt]);
 
   // AMM swap公式计算本次卖出能收到的聪数量
@@ -78,8 +78,8 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
 
   const isSellValid = useMemo(() => {
     const numAmount = Number(amount);
-    return numAmount > 0 && numAmount <= assetBalance.availableAmt && currentPrice > 0 && !balanceLoading;
-  }, [amount, assetBalance.availableAmt, currentPrice, balanceLoading]);
+    return numAmount > 0 && numAmount <= assetBalance.availableAmt && !balanceLoading;
+  }, [amount, assetBalance.availableAmt, balanceLoading]);
 
   const handleQuickAmount = (value: string) => {
     setAmount(value);
@@ -110,6 +110,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
       const params = {
         action: "swap",
         param: JSON.stringify(paramObj),
+        amt: 0,
       };
       // 发送交易
       const result = await window.sat20.invokeContractV2_SatsNet(

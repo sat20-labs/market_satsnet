@@ -58,7 +58,7 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
   }, [swapData]);
   const currentPrice = useMemo(() => {
     if (!satValue || !assetAmt) return 0;
-    return Number((satValue / assetAmt).toFixed(2));
+    return Number((satValue / assetAmt).toFixed(10));
   }, [satValue, assetAmt]);
 
   // AMM swap公式计算本次买入能获得的资产数量
@@ -78,8 +78,8 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
   }, [receiveAsset, slippage]);
 
   const isBuyValid = useMemo(() => {
-    return amount !== "" && Number(amount) > 0 && Number(amount) <= balance.availableAmt && currentPrice > 0 && !balanceLoading;
-  }, [amount, balance.availableAmt, currentPrice, balanceLoading]);
+    return amount !== "" && Number(amount) > 0 && Number(amount) <= balance.availableAmt && !balanceLoading;
+  }, [amount, balance.availableAmt, balanceLoading]);
 
   const handleQuickAmount = (value: string) => {
     setAmount(value);
@@ -106,6 +106,7 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
       const paramObj: any = {
         orderType: 2, // buy
         assetName: assetInfo.assetName,
+        amt: 0,
       };
       if (Number(slippage) > 0) {
         paramObj.amt = minReceiveAsset.toString(); // 只有滑点>0时才传amt
