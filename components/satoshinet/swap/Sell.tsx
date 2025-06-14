@@ -105,7 +105,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
         param: JSON.stringify({
           orderType: 1, // sell
           assetName: assetInfo.assetName,
-          amt: minReceiveSats.toString(),
+          amt: amount,
         }),
       };
       // 发送交易
@@ -113,7 +113,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
         contractUrl,
         JSON.stringify(params),
         assetInfo.assetName,
-        amount,
+        minReceiveSats.toString(),
         "1",
         {
           action: "swap",
