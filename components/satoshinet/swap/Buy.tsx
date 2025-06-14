@@ -47,11 +47,14 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
   const contractK = useMemo(() => {
     return swapData?.Contract?.k || 0;
   }, [swapData]);
-  const assetAmt = useMemo(() => {
-    return swapData?.Contract?.assetAmt || 0;
+  const assetAmtRaw = useMemo(() => {
+    return swapData?.AssetAmtInPool || { Precision: 0, Value: 0 };
   }, [swapData]);
+  const assetAmt = useMemo(() => {
+    return assetAmtRaw.Value / Math.pow(10, assetAmtRaw.Precision);
+  }, [assetAmtRaw]);
   const satValue = useMemo(() => {
-    return swapData?.Contract?.satValue || 0;
+    return swapData?.SatsValueInPool || 0;
   }, [swapData]);
   const currentPrice = useMemo(() => {
     if (!satValue || !assetAmt) return 0;

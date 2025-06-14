@@ -44,11 +44,14 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
   const contractK = useMemo(() => {
     return ammData?.Contract?.k || 0;
   }, [ammData]);
-  const assetAmt = useMemo(() => {
-    return ammData?.Contract?.assetAmt || 0;
+  const assetAmtRaw = useMemo(() => {
+    return ammData?.AssetAmtInPool || { Precision: 0, Value: 0 };
   }, [ammData]);
+  const assetAmt = useMemo(() => {
+    return assetAmtRaw.Value / Math.pow(10, assetAmtRaw.Precision);
+  }, [assetAmtRaw]);
   const satValue = useMemo(() => {
-    return ammData?.Contract?.satValue || 0;
+    return ammData?.SatsValueInPool || 0;
   }, [ammData]);
   console.log('ammData', ammData);
   // 获取当前卖出价格（取买一价）
