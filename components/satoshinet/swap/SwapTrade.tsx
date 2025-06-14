@@ -6,6 +6,7 @@ import Buy from './Buy';
 import Sell from './Sell'; // Adjusted path to locate Sell
 import LiquidityProviders from './LiquidityProviders'; // Import the new component
 import { useQuery } from '@tanstack/react-query';
+import SwapMyOrdersPanel from "@/components/satoshinet/swap/SwapMyOrdersPanel";
 
 interface SwapProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
@@ -74,6 +75,14 @@ if (!ammContractUrl) {
       )}
       {/* Add Liquidity Providers List */}
       {/* <LiquidityProviders /> */}
+      {/* 展示我的订单面板 */}
+      {ammContractUrl && (
+        <div className="mt-8">
+          <SwapMyOrdersPanel
+            contractURL={ammContractUrl}
+          />
+        </div>
+      )}
     </div>
   );
 };

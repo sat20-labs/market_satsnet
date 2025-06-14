@@ -31,8 +31,8 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
 
 
   // 获取池子状态（价格）
-  const { data: depthData } = useQuery({
-    queryKey: ["depthData", contractUrl],
+  const { data: swapData } = useQuery({
+    queryKey: ["swapData", contractUrl],
     queryFn: async () => {
       if (!contractUrl) return null;
       const result = await window.sat20.getDeployedContractStatus(contractUrl);
@@ -43,16 +43,16 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
     refetchIntervalInBackground: false,
   });
 
-
+  console.log('swapData', swapData);
   const contractK = useMemo(() => {
-    return depthData?.Contract?.k || 0;
-  }, [depthData]);
+    return swapData?.Contract?.k || 0;
+  }, [swapData]);
   const assetAmt = useMemo(() => {
-    return depthData?.Contract?.assetAmt || 0;
-  }, [depthData]);
+    return swapData?.Contract?.assetAmt || 0;
+  }, [swapData]);
   const satValue = useMemo(() => {
-    return depthData?.Contract?.satValue || 0;
-  }, [depthData]);
+    return swapData?.Contract?.satValue || 0;
+  }, [swapData]);
   const currentPrice = useMemo(() => {
     if (!satValue || !assetAmt) return 0;
     return Number((satValue / assetAmt).toFixed(2));
@@ -89,7 +89,7 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
   const serviceFee = Math.max(10, Math.ceil(amtNum * 0.008));
 
   const handleBuy = async () => {
-    if (satsnetHeight < depthData?.enableBlock) {
+    if (satsnetHeight < swapData?.enableBlock) {
       toast.error('Please wait for the contract to be enabled');
       return;
     }
