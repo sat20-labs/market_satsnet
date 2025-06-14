@@ -198,22 +198,22 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               )}
             <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.bindingSat')}</label>
             <Input
-              placeholder={t('pages.createPool.bindingSat')}
-              type="number"
-              value={formData.n}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                if (value > 0 && value % 10 === 0) {
-                  handleInputChange('n', value.toString());
-                  setErrorMessage(''); // 清除错误信息
-                } else {
-                  setErrorMessage(t('pages.createPool.bindingSatError')); // 设置错误信息
-                }
-              }}
-            />
-            {errorMessage && (
-              <><p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p></>
-            )}
+                placeholder={t('pages.createPool.bindingSat')}
+                type="number"
+                value={formData.n}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value > 0 && Math.log10(value) % 1 === 0) {
+                    handleInputChange('n', value.toString());
+                    setErrorMessage(''); // 清除错误信息
+                  } else {
+                    setErrorMessage(t('pages.createPool.bindingSatError')); // 设置错误信息
+                  }
+                }}
+              />
+              {errorMessage && (
+                <p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p>
+              )}
             {formData.protocol === 'runes' && (
               <>
                 <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.assetSymbol')}</label>
