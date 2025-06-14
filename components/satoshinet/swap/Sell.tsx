@@ -22,7 +22,7 @@ interface SellProps {
 const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: SellProps) => {
   const { t } = useTranslation();
   const [amount, setAmount] = useState<string>(""); // sats
-  const [slippage, setSlippage] = useState<string>("1"); // 滑点百分比，默认1%
+  const [slippage, setSlippage] = useState<string>("0"); // 滑点百分比，默认0%
   const [isSelling, setIsSelling] = useState<boolean>(false);
   const { getBalance, balance } = useWalletStore();
   const { satsnetHeight } = useCommonStore();
@@ -100,13 +100,16 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
     setIsSelling(true);
     try {
       // 构造合约参数
+      const paramObj: any = {
+        orderType: 1, // sell
+        assetName: assetInfo.assetName,
+      };
+      if (Number(slippage) > 0) {
+        paramObj.amt = amount;
+      }
       const params = {
         action: "swap",
-        param: JSON.stringify({
-          orderType: 1, // sell
-          assetName: assetInfo.assetName,
-          amt: amount,
-        }),
+        param: JSON.stringify(paramObj),
       };
       // 发送交易
       const result = await window.sat20.invokeContractV2_SatsNet(
@@ -129,7 +132,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
       if (txId) {
         toast.success(`Swap成功，txid: ${txId}`);
         setAmount("");
-        setSlippage("1");
+        setSlippage("0");
         if (onSellSuccess) onSellSuccess();
       } else {
         toast.error("Swap失败");
