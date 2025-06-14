@@ -103,6 +103,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
       const paramObj: any = {
         orderType: 1, // sell
         assetName: assetInfo.assetName,
+        amt: '0',
       };
       if (Number(slippage) > 0) {
         paramObj.amt = minReceiveSats.toString();
@@ -110,7 +111,6 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
       const params = {
         action: "swap",
         param: JSON.stringify(paramObj),
-        amt: 0,
       };
       // 发送交易
       const result = await window.sat20.invokeContractV2_SatsNet(

@@ -106,7 +106,7 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
       const paramObj: any = {
         orderType: 2, // buy
         assetName: assetInfo.assetName,
-        amt: 0,
+        amt: '0',
       };
       if (Number(slippage) > 0) {
         paramObj.amt = minReceiveAsset.toString(); // 只有滑点>0时才传amt
