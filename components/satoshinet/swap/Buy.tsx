@@ -140,6 +140,7 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
         setAmount("");
         setSlippage("0");
         await sleep(1000);
+        getBalance();
         onSellSuccess?.();
       } else {
         toast.error("Swap失败");

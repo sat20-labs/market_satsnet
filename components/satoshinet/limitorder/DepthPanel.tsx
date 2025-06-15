@@ -133,6 +133,7 @@ const QuickPriceButtons: React.FC<QuickPriceButtonsProps> = ({
 };
 
 interface DepthPanelProps {
+  contractURL: string;
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   tickerInfo: any;
   assetBalance: { availableAmt: number; lockedAmt: number };
@@ -144,7 +145,7 @@ export default function DepthPanel({
   assetInfo,
   tickerInfo,
   assetBalance,
-  balanceLoading,
+  contractURL,
   onOrderSuccess
 }: DepthPanelProps) {
   const { t } = useTranslation();
@@ -167,28 +168,15 @@ export default function DepthPanel({
 
   const displayAvailableAmt = assetBalance.availableAmt;
 
-  // 获取深度数据
-  const { data: swapContractUrl } = useQuery({
-    queryKey: ["swapContractUrl", tickerInfo.displayname],
-    queryFn: async () => {
-      const result = await window.sat20.getDeployedContractsInServer();
-      const { contractURLs = [] } = result;
-      const list = contractURLs.filter(c => c.indexOf(tickerInfo.displayname) > -1);
-      return list[0];
-    },
-    staleTime: 10 * 1000,
-    refetchInterval: 10000,
-  });
-  console.log('swapContractUrl', swapContractUrl);
 
   const { data: depthData } = useQuery({
-    queryKey: ["depthData", swapContractUrl],
+    queryKey: ["depthData", contractURL],
     queryFn: async () => {
-      if (!swapContractUrl) return null;
-      const result = await window.sat20.getDeployedContractStatus(swapContractUrl);
+      if (!contractURL) return null;
+      const result = await window.sat20.getDeployedContractStatus(contractURL);
       return result?.contractStatus ? JSON.parse(result?.contractStatus) : null;
     },
-    enabled: !!swapContractUrl,
+    enabled: !!contractURL,
     refetchInterval: 3000,
     refetchIntervalInBackground: false,
   });
@@ -280,7 +268,7 @@ export default function DepthPanel({
 
     try {
       const result = await window.sat20.invokeContractV2_SatsNet(
-        swapContractUrl, JSON.stringify(params), _asset, amt.toString(), '1', {
+        contractURL, JSON.stringify(params), _asset, amt.toString(), '1', {
         action: 'swap',
         orderType: orderType === 'buy' ? 2 : 1,
         assetName: assetInfo.assetName,

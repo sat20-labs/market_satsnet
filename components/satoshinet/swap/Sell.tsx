@@ -5,7 +5,6 @@ import { useCommonStore, useWalletStore } from "@/store";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { BtcPrice } from "../../BtcPrice";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { sleep } from "radash";
@@ -21,11 +20,11 @@ interface SellProps {
 }
 
 const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: SellProps) => {
+
   const { t } = useTranslation();
   const [amount, setAmount] = useState<string>(""); // sats
   const [slippage, setSlippage] = useState<string>("0"); // 滑点百分比，默认0%
   const [isSelling, setIsSelling] = useState<boolean>(false);
-  const { getBalance, balance } = useWalletStore();
   const { satsnetHeight } = useCommonStore();
   const displayBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
 
@@ -76,12 +75,15 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
     const slip = Number(slippage);
     return Math.floor(receiveSats * (1 - slip / 100));
   }, [receiveSats, slippage]);
-
   const isSellValid = useMemo(() => {
     const numAmount = Number(amount);
     return numAmount > 0 && numAmount <= assetBalance.availableAmt && !balanceLoading;
   }, [amount, assetBalance.availableAmt, balanceLoading]);
-
+  
+  console.log('isSellValid', isSellValid);
+  console.log('isSellValid', amount);
+  console.log('isSellValid', assetBalance);
+  console.log('isSellValid', balanceLoading);
   const handleQuickAmount = (value: string) => {
     setAmount(value);
   };
@@ -94,8 +96,26 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
       toast.error('Please wait for the contract to be enabled');
       return;
     }
-    if (!isSellValid) {
-      toast.error(t("common.swap_enterValidAmount"));
+    // 具体错误提示
+    const numAmount = Number(amount);
+    if (!amount) {
+      toast.error("Please enter an amount");
+      return;
+    }
+    if (isNaN(numAmount)) {
+      toast.error("Amount must be a number");
+      return;
+    }
+    if (numAmount <= 0) {
+      toast.error("Amount must be greater than 0");
+      return;
+    }
+    if (numAmount > assetBalance.availableAmt) {
+      toast.error("Amount exceeds available balance");
+      return;
+    }
+    if (balanceLoading) {
+      toast.error("Balance is loading, please wait");
       return;
     }
     setIsSelling(true);
@@ -220,8 +240,8 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
         <Button
           type="button"
           onClick={handleSell}
-          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${!isSellValid || isLoading ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60" : "btn-gradient"}`}
-          disabled={(!isSellValid || isLoading)}
+          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${isLoading ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60" : "btn-gradient"}`}
+          disabled={isLoading}
           size="lg"
         >
           {isSelling ? t('common.swap_sell_processing') : t('common.swap_sell_sellButton', { ticker: tickerInfo?.displayname })}

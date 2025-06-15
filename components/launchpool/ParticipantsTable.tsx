@@ -36,12 +36,14 @@ const fetchParticipants = async (contractURL: string, bindingSat: number, pageSt
       });
     }
     resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
+    console.log();
+    
     return resultStatusList.map(v => {
       const TotalMint = v.valid?.TotalMint || 0;
       return {
         ...v,
         amount: TotalMint,
-        sats: Math.ceil((TotalMint + bindingSat - 1) / bindingSat),
+        sats: Math.floor((TotalMint + bindingSat - 1) / bindingSat),
       };
     });
   } catch (e) {

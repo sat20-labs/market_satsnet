@@ -32,9 +32,6 @@ export default function OrderBook({
   balanceLoading,
   onSellSuccess
 }: OrderBookProps) {
-  console.log('tickerInfo', tickerInfo);
-  const assetName = `${tickerInfo.name.Protocol}:${tickerInfo.name.Type}:${tickerInfo.name.Ticker}`;
-  const { address } = useReactWalletStore();
   const { t } = useTranslation();
 
   const {
@@ -73,6 +70,7 @@ export default function OrderBook({
 
       <TabsContent value="depth">
         <DepthPanel
+          contractURL={swapContractUrl}
           assetInfo={assetInfo}
           tickerInfo={tickerInfo}
           assetBalance={assetBalance}
