@@ -155,7 +155,7 @@ const LimitOrder = () => {
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2 mr-4">
           <WalletConnectBus asChild>
-            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/swap/create')}>
+            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/limitOrder/create')}>
               Create LimitOrder
             </Button>
           </WalletConnectBus>

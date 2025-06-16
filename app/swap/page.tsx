@@ -212,7 +212,7 @@ const Swap = () => {
                   <div className="flex items-center h-full gap-2">
                     <button
                       className="mt-2 text-zinc-400 hover:text-indigo-500 transition-colors"
-                      onClick={() => router.push(`/order/?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`)}
+                      onClick={() => router.push(`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`)}
                     >
                       <Icon icon="mdi:open-in-new" className="w-5 h-5" />
                     </button>

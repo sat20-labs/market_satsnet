@@ -75,7 +75,7 @@ const getMyAmmOrderHistory = async (
     );
     if (!result?.history) return [];
     const parsedHistory = JSON.parse(result.history) as OrderResponse;
-    return parsedHistory.data;
+    return Array.isArray(parsedHistory.data) ? parsedHistory.data : [];
   } catch (e) {
     return [];
   }
@@ -150,13 +150,13 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
     queryKey: ["swapMyOrders", contractURL, address],
     queryFn: ({ pageParam = 0 }) => getMyAmmOrderHistory(contractURL, address, pageParam * 20, 20),
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === 20 ? allPages.length : undefined;
+      return Array.isArray(lastPage) && lastPage.length === 20 ? allPages.length : undefined;
     },
     initialPageParam: 0,
     refetchInterval: 3000,
     refetchIntervalInBackground: false,
   });
-
+  console.log('data', data);
   const allOrders = data?.pages.flat().map((d) => mapOrderData(d, t)) ?? [];
 
   if (isLoading) {

@@ -161,7 +161,7 @@ function MarketContent() {
 
   const toDetail = (key: ReactKey) => {
     const assetName = String(key);
-    router.push(`/order?asset=${assetName}`);
+    router.push(`/limitOrder/detail?asset=${assetName}`);
   };
 
   const protocolChange = (e: string) => {

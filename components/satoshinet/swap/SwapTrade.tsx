@@ -22,9 +22,6 @@ const getAmmContractUrl = async (assetName: string) => {
 }
 
 const Trade = ({ assetInfo, tickerInfo, onSellSuccess }: SwapProps) => {
-  const [protocol, setProtocol] = useState<'ORDX' | 'Runes' | ''>('');
-  const [asset, setAsset] = useState<string>('');
-  const [mode, setMode] = useState<'buy' | 'sell'>('buy');
 
   const {
     data: ammContractUrl,
@@ -64,8 +61,6 @@ if (!ammContractUrl) {
           <SwapMyOrdersPanel contractURL={ammContractUrl} />
         </div>
       )}
-      {/* Add Liquidity Providers List */}
-      {/* <LiquidityProviders /> */}
     </div>
   );
 };
