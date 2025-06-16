@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from "react";
-import { useCommonStore, useWalletStore } from "@/store";
+import React, { useState, useMemo } from "react";
+import { useCommonStore } from "@/store";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,27 +9,26 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { sleep } from "radash";
 import { toast } from "sonner";
+import { useAssetBalance } from '@/application/useAssetBalanceService';
+import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 
 interface SellProps {
   contractUrl: string;
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   onSellSuccess?: () => void;
   tickerInfo?: any;
-  assetBalance: { availableAmt: number; lockedAmt: number };
-  balanceLoading: boolean;
 }
 
-const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: SellProps) => {
-
+const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SellProps) => {
   const { t } = useTranslation();
   const [amount, setAmount] = useState<string>(""); // sats
   const [slippage, setSlippage] = useState<string>("0"); // 滑点百分比，默认0%
   const [isSelling, setIsSelling] = useState<boolean>(false);
   const { satsnetHeight } = useCommonStore();
-  const displayBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
+  const { address } = useReactWalletStore();
+  const { balance, isLoading: balanceLoading, refetch } = useAssetBalance(address, assetInfo.assetName);
+  const displayBalance = balance.availableAmt + balance.lockedAmt;
 
-
-  console.log('contractUrl', contractUrl);
   const { data: ammData } = useQuery({
     queryKey: ["ammData", contractUrl],
     queryFn: async () => {
@@ -53,8 +52,6 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
   const satValue = useMemo(() => {
     return ammData?.SatsValueInPool || 0;
   }, [ammData]);
-  console.log('ammData', ammData);
-  // 获取当前卖出价格（取买一价）
   const currentPrice = useMemo(() => {
     if (!satValue || !assetAmt) return 0;
     return Number((satValue / assetAmt).toFixed(10));
@@ -77,13 +74,9 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
   }, [receiveSats, slippage]);
   const isSellValid = useMemo(() => {
     const numAmount = Number(amount);
-    return numAmount > 0 && numAmount <= assetBalance.availableAmt && !balanceLoading;
-  }, [amount, assetBalance.availableAmt, balanceLoading]);
-  
-  console.log('isSellValid', isSellValid);
-  console.log('isSellValid', amount);
-  console.log('isSellValid', assetBalance);
-  console.log('isSellValid', balanceLoading);
+    return numAmount > 0 && numAmount <= balance.availableAmt && !balanceLoading;
+  }, [amount, balance.availableAmt, balanceLoading]);
+
   const handleQuickAmount = (value: string) => {
     setAmount(value);
   };
@@ -110,7 +103,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
       toast.error("Amount must be greater than 0");
       return;
     }
-    if (numAmount > assetBalance.availableAmt) {
+    if (numAmount > balance.availableAmt) {
       toast.error("Amount exceeds available balance");
       return;
     }
@@ -156,6 +149,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
         setAmount("");
         setSlippage("0");
         await sleep(1000);
+        refetch();
         onSellSuccess?.();
       } else {
         toast.error("Swap失败");
@@ -197,7 +191,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
       {/* 快捷金额按钮 */}
       <div className="flex gap-2 mb-4">
         {[0.25, 0.5, 0.75, 1].map((percent) => {
-          const value = Math.floor(assetBalance.availableAmt * percent).toString();
+          const value = Math.floor(balance.availableAmt * percent).toString();
           return (
             <button
               key={percent}
@@ -240,8 +234,7 @@ const Sell = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBal
         <Button
           type="button"
           onClick={handleSell}
-          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${isLoading ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60" : "btn-gradient"}`}
-          disabled={isLoading}
+          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 btn-gradient`}
           size="lg"
         >
           {isSelling ? t('common.swap_sell_processing') : t('common.swap_sell_sellButton', { ticker: tickerInfo?.displayname })}

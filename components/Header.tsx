@@ -38,7 +38,7 @@ export const Header = () => {
 
   const isActive = (href: string) => {
     if (href.startsWith('http')) {
-        return false;
+      return false;
     }
     return pathname === href;
   };
@@ -59,10 +59,14 @@ export const Header = () => {
       // 只有白名单地址才显示 Swap
       ...(address && SWAP_WHITELIST.includes(address)
         ? [{
-            label: 'Swap',
-            href: '/swap',
-          }]
+          label: 'LimitOrder',
+          href: '/limitOrder',
+        }]
         : []),
+      {
+        label: 'Swap',
+        href: '/swap',
+      },
       {
         label: t('pages.explorer.title'),
         href: network === 'testnet' ? 'https://testnet.sat20.org/browser/app/' : 'https://mainnet.sat20.org/browser/app/',
@@ -79,7 +83,7 @@ export const Header = () => {
             <Icon icon="mdi:download" className="ml-1 text-sm text-zinc-400" />
           </>
         ),
-        href:  walletUrl,
+        href: walletUrl,
         target: '_blank',
       },
     ];
@@ -130,15 +134,13 @@ export const Header = () => {
                   <NextLink
                     href={item.href}
                     target={item.target}
-                    className={`flex items-center text-base font-medium transition-colors ${
-                      active ? 'text-foreground' : 'text-muted-foreground'
-                    } hover:text-foreground/80`}
+                    className={`flex items-center text-base font-medium transition-colors ${active ? 'text-foreground' : 'text-muted-foreground'
+                      } hover:text-foreground/80`}
                   >
                     {item.label}
                     <span
-                      className={`absolute left-0 bottom-0 h-[1.5px] w-full bg-gradient-to-r from-[#8000cc] to-[#a0076d] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${
-                        active ? 'scale-x-100' : ''
-                      }`}
+                      className={`absolute left-0 bottom-0 h-[1.5px] w-full bg-gradient-to-r from-[#8000cc] to-[#a0076d] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${active ? 'scale-x-100' : ''
+                        }`}
                     ></span>
                   </NextLink>
                 </li>
@@ -150,10 +152,10 @@ export const Header = () => {
 
         <div className="flex flex-1 items-center justify-end space-x-2 sm:space-x-4">
           <div className="hidden sm:flex items-center gap-2">
-             <NetworkSelect />
-             <ChainSelect />
-             <FeerateSelectButton />
-             <LanguageSelect /> {/* Ensure this is correctly rendered */}
+            <NetworkSelect />
+            <ChainSelect />
+            <FeerateSelectButton />
+            <LanguageSelect /> {/* Ensure this is correctly rendered */}
           </div>
 
           <div className="">
@@ -171,34 +173,33 @@ export const Header = () => {
               <SheetContent side="right" className="w-full max-w-xs sm:max-w-sm">
                 <div className="flex flex-col gap-4 pt-8 h-full">
                   <div className="flex flex-col gap-3 px-4">
-                     <p className="text-sm font-medium text-muted-foreground">{t('settings')}</p>
-                     <div className="flex items-center gap-3">
-                       <NetworkSelect />
-                       <ChainSelect />
-                     </div>
-                     <div className="flex items-center gap-3 w-full">
-                        <FeerateSelectButton />
-                        <LanguageSelect />
-                     </div>                     
+                    <p className="text-sm font-medium text-muted-foreground">{t('settings')}</p>
+                    <div className="flex items-center gap-3">
+                      <NetworkSelect />
+                      <ChainSelect />
+                    </div>
+                    <div className="flex items-center gap-3 w-full">
+                      <FeerateSelectButton />
+                      <LanguageSelect />
+                    </div>
                   </div>
-                  <Separator className="my-1"/>
+                  <Separator className="my-1" />
                   <nav className="flex-1 px-4 space-y-1">
                     {navMenus.map((item) => {
-                     const active = isActive(item.href);
-                     return (
-                       <NextLink
+                      const active = isActive(item.href);
+                      return (
+                        <NextLink
                           key={item.href}
                           href={item.href}
                           target={item.target}
-                          className={`flex items-center rounded-md px-3 py-2 mb-4 border-b border-zinc-700/50 text-sm font-medium transition-colors ${
-                            active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                          }`}
+                          className={`flex items-center rounded-md px-3 py-2 mb-4 border-b border-zinc-700/50 text-sm font-medium transition-colors ${active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                            }`}
                           onClick={() => setIsMenuOpen(false)}
-                       >
-                        <Icon icon="mdi:chevron-right-circle-outline" className="text-base text-zinc-500 mr-2" />  {item.label}
-                       </NextLink>
-                     )
-                   })}
+                        >
+                          <Icon icon="mdi:chevron-right-circle-outline" className="text-base text-zinc-500 mr-2" />  {item.label}
+                        </NextLink>
+                      )
+                    })}
                   </nav>
                 </div>
               </SheetContent>

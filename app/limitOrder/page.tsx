@@ -20,8 +20,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@iconify/react';
-import { useRouter } from 'next/navigation';
+import DistributionList from '@/components/launchpool/DistributionList';
+import ActionButtons from '@/components/launchpool/ActionButtons';
 import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
@@ -72,9 +72,8 @@ function adaptPoolData(pool, satsnetHeight) {
   };
 }
 
-const Swap = () => {
+const LimitOrder = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
-  const router = useRouter();
   console.log('Translation for launchpool.asset_name:', t('launchpool.asset_name')); // Debugging: Check translation key
 
   const { satsnetHeight } = useCommonStore();
@@ -92,11 +91,11 @@ const Swap = () => {
     console.log('result', result);
     const { contractURLs = [] } = result;
 
-    const list = contractURLs.filter(c => c.includes('amm.tc'));
+    const list = contractURLs.filter(c => c.includes('swap.tc'));
     console.log('list', list);
     const statusList: any[] = [];
     for (const item of list) {
-
+   
       const result = await window.sat20.getDeployedContractStatus(item);
       const { contractStatus } = result;
       if (contractStatus) {
@@ -107,7 +106,7 @@ const Swap = () => {
       }
     }
     console.log('statusList', statusList);
-
+    
     return statusList;
   };
 
@@ -132,7 +131,7 @@ const Swap = () => {
     { key: 'totalDealSats', label: t('Total Deal Sats') },
     { key: 'totalDealCount', label: t('Total Deal Count') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
-    { key: 'action', label: t('pages.launchpool.action') },
+    // { key: 'action', label: t('pages.launchpool.action') },
   ];
 
   const [protocol, setProtocol] = useState('all');
@@ -149,17 +148,17 @@ const Swap = () => {
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
   console.log('filteredPoolList', filteredPoolList);
-
+  
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2 mr-4">
-          {/* <WalletConnectBus asChild>
+          <WalletConnectBus asChild>
             <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/swap/create')}>
               Create LimitOrder
             </Button>
-          </WalletConnectBus> */}
+          </WalletConnectBus>
         </div>
       </div>
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
@@ -208,18 +207,7 @@ const Swap = () => {
                 <TableCell className="px-4 py-2">
                   {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                 </TableCell>
-                <TableCell className="px-4 py-2 text-center">
-                  <div className="flex items-center h-full gap-2">
-                    <button
-                      className="mt-2 text-zinc-400 hover:text-indigo-500 transition-colors"
-                      onClick={() => router.push(`/order/?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`)}
-                    >
-                      <Icon icon="mdi:open-in-new" className="w-5 h-5" />
-                    </button>
-                  </div>
-                </TableCell>
               </TableRow>
-
             ))}
           </TableBody>
         </Table>
@@ -228,4 +216,4 @@ const Swap = () => {
   );
 };
 
-export default Swap;
+export default LimitOrder;

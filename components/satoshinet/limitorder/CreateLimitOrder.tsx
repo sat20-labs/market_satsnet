@@ -7,14 +7,10 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/u
 import { Modal } from '@/components/ui/modal';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useCommonStore } from '@/store/common';
-import { generateMempoolUrl } from '@/utils/url';
-import { Chain } from '@/types';
-import { hideStr } from '@/utils';
-import { useQuery } from '@tanstack/react-query';
 
-const CreateSwap = ({ closeModal }: { closeModal: () => void }) => {
+
+const CreateLimitOrder =   ({ closeModal }: { closeModal: () => void }) => {
   const { t, i18n } = useTranslation(); // Specify the namespace
   console.log('Current Language:', i18n.language); // Debugging: Check current language
   console.log('Translation for createPool.title:', t('createPool.title')); // Debugging: Check translation key
@@ -163,4 +159,4 @@ const CreateSwap = ({ closeModal }: { closeModal: () => void }) => {
   );
 };
 
-export default CreateSwap;
+export default CreateLimitOrder;

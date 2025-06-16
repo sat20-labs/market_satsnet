@@ -3,16 +3,14 @@
 import { useState } from 'react';
 import BuySellToggle from "@/components/satoshinet/orderbook/BuySellToggle";
 import Buy from './Buy';
-import Sell from './Sell'; // Adjusted path to locate Sell
-import LiquidityProviders from './LiquidityProviders'; // Import the new component
+import Sell from './Sell';
+import LiquidityProviders from './LiquidityProviders';
 import { useQuery } from '@tanstack/react-query';
 import SwapMyOrdersPanel from "@/components/satoshinet/swap/SwapMyOrdersPanel";
 
 interface SwapProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   tickerInfo?: any;
-  assetBalance: { availableAmt: number; lockedAmt: number };
-  balanceLoading: boolean;
   onSellSuccess?: () => void;
 }
 const getAmmContractUrl = async (assetName: string) => {
@@ -22,7 +20,7 @@ const getAmmContractUrl = async (assetName: string) => {
   return list[0];
 }
 
-const Trade = ({ assetInfo, tickerInfo, assetBalance, balanceLoading, onSellSuccess }: SwapProps) => {
+const Trade = ({ assetInfo, tickerInfo, onSellSuccess }: SwapProps) => {
   const [protocol, setProtocol] = useState<'ORDX' | 'Runes' | ''>('');
   const [asset, setAsset] = useState<string>('');
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
@@ -60,8 +58,6 @@ if (!ammContractUrl) {
           contractUrl={ammContractUrl}
           assetInfo={assetInfo}
           tickerInfo={tickerInfo}
-          assetBalance={assetBalance}
-          balanceLoading={balanceLoading}
           onSellSuccess={onSellSuccess}
         />
       ) : (
@@ -69,8 +65,6 @@ if (!ammContractUrl) {
           contractUrl={ammContractUrl}
           assetInfo={assetInfo}
           tickerInfo={tickerInfo}
-          assetBalance={assetBalance}
-          balanceLoading={balanceLoading}
           onSellSuccess={onSellSuccess}
         />
       )}

@@ -1,35 +1,33 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useCommonStore, useWalletStore } from "@/store";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Icon } from '@iconify/react';
-import { BtcPrice } from "../../BtcPrice";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { sleep } from "radash";
 import { toast } from "sonner";
+import { useAssetBalance } from '@/application/useAssetBalanceService';
+import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 
 interface BuyProps {
   contractUrl: string;
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   onSellSuccess?: () => void;
   tickerInfo?: any;
-  assetBalance: { availableAmt: number; lockedAmt: number };
-  balanceLoading: boolean;
 }
 
-const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: BuyProps) => {
+const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: BuyProps) => {
   const { t } = useTranslation();
-  const [amount, setAmount] = useState<string>(""); // sats
+  const [amount, setAmount] = useState<string>("");
   const [slippage, setSlippage] = useState<string>("0"); // 滑点百分比，默认0%
   const [isBuying, setIsBuying] = useState(false);
-  const { getBalance, balance } = useWalletStore();
   const { satsnetHeight } = useCommonStore();
+  const { address } = useReactWalletStore();
+  const { getBalance, balance } = useWalletStore();
   const displayBalance = Number(balance.availableAmt) + Number(balance.lockedAmt);
-
 
   // 获取池子状态（价格）
   const { data: swapData } = useQuery({
@@ -44,7 +42,6 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
     refetchIntervalInBackground: false,
   });
 
-  console.log('swapData', swapData);
   const contractK = useMemo(() => {
     return swapData?.Contract?.k || 0;
   }, [swapData]);
@@ -79,8 +76,8 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
   }, [receiveAsset, slippage]);
 
   const isBuyValid = useMemo(() => {
-    return amount !== "" && Number(amount) > 0 && Number(amount) <= balance.availableAmt && !balanceLoading;
-  }, [amount, balance.availableAmt, balanceLoading]);
+    return amount !== "" && Number(amount) > 0 && Number(amount) <= balance.availableAmt
+  }, [amount, balance.availableAmt]);
 
   const handleQuickAmount = (value: string) => {
     setAmount(value);
@@ -151,7 +148,7 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, assetBala
     setIsBuying(false);
   };
 
-  const isLoading = balanceLoading || isBuying;
+  const isLoading = isBuying;
 
   return (
     <div className="p-4 bg-zinc-900 text-zinc-200 rounded-xl shadow-lg border border-zinc-700">

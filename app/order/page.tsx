@@ -91,7 +91,7 @@ function OrderPageContent() {
       .finally(() => setBalanceLoading(false));
   }, [address, summary.assetName]);
   console.log("assetBalance", assetBalance);
-  
+
   const handleSellSuccess = () => {
     if (!address || !summary.assetName) return;
     setBalanceLoading(true);
@@ -156,16 +156,16 @@ function OrderPageContent() {
               floorPrice: parseFloat(summary.floorPrice),
             }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} />
           ) : activeTab === 'swap' ? (
-            <Trade  assetInfo={{
+            <Trade assetInfo={{
               assetLogo: summary.assetLogo,
               assetName: summary.assetName,
               AssetId: summary.assetId,
               floorPrice: parseFloat(summary.floorPrice),
-            }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} 
+            }} tickerInfo={tickerInfo} onSellSuccess={handleSellSuccess}
             />
           ) : activeTab === 'limitOrder' ? (
-            <LimitOrder 
-              tickerInfo={tickerInfo} 
+            <LimitOrder
+              tickerInfo={tickerInfo}
               assetInfo={{
                 assetLogo: summary.assetLogo,
                 assetName: summary.assetName,
