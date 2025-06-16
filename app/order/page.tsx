@@ -18,15 +18,34 @@ import { useCommonStore } from '@/store';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import Trade from '@/components/satoshinet/swap/SwapTrade';
 import LimitOrder from '@/components/satoshinet/limitorder/LimitOrder';
+import DepthPanel from '@/components/satoshinet/limitorder/DepthPanel';
+import MyOrdersPanel from '@/components/satoshinet/limitorder/MyOrdersPanel';
+import TradeHistoryPanel from '@/components/satoshinet/limitorder/TradeHistoryPanel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
 }
 
 function OrderPageContent() {
+  // 所有 hooks 必须在组件顶层调用
   const params = useSearchParams();
   const asset = params.get('asset');
   const takeOrderRef = useRef<TakeOrderRef>(null);
+  const [activeTab, setActiveTab] = useState<'limitOrder' | 'swap'>('limitOrder');
+  const handleTabChange = (tab: 'limitOrder' | 'swap') => {
+    setActiveTab(tab);
+  };
+  const [settings, setSettings] = useState({ showOngoingTrades: false, maxBidPrice: 0 });
+  const handleSettingsChange = (newSettings: { showOngoingTrades: boolean; maxBidPrice: number }) => {
+    setSettings(newSettings);
+  };
+  const { address } = useReactWalletStore();
+  const [assetBalance, setAssetBalance] = useState({ availableAmt: 0, lockedAmt: 0 });
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [swapContractUrl, setSwapContractUrl] = useState<string>('');
+  const [isContractUrlLoading, setIsContractUrlLoading] = useState(false);
+
   // Fetch asset summary
   const { data, isLoading, error } = useQuery({
     queryKey: ['assetSummary', asset],
@@ -52,6 +71,7 @@ function OrderPageContent() {
     // Provide default values for all required fields
     return {
       assetId: summaryData?.assets_name?.Ticker ?? '',
+      AssetId: summaryData?.assets_name?.Ticker ?? '',
       assetName: summaryData ? `${summaryData.assets_name?.Protocol ?? ''}:${summaryData.assets_name?.Type ?? ''}:${summaryData.assets_name?.Ticker ?? ''}` : '',
       assetType: summaryData?.assets_name?.Type ?? '',
       protocol: summaryData?.assets_name?.Protocol ?? '',
@@ -69,20 +89,6 @@ function OrderPageContent() {
     };
   }, [data]);
 
-  // Wallet and order book state
-  const [activeTab, setActiveTab] = useState<'takeOrder' | 'makeOrder' | 'swap' | 'limitOrder'>('takeOrder');
-  const handleTabChange = (tab: 'takeOrder' | 'makeOrder' | 'swap' | 'limitOrder') => {
-    setActiveTab(tab);
-  };
-  const [settings, setSettings] = useState({ showOngoingTrades: false, maxBidPrice: 0 });
-  const handleSettingsChange = (newSettings: { showOngoingTrades: boolean; maxBidPrice: number }) => {
-    setSettings(newSettings);
-  };
-  console.log(tickerInfo);
-
-  const { address } = useReactWalletStore();
-  const [assetBalance, setAssetBalance] = useState({ availableAmt: 0, lockedAmt: 0 });
-  const [balanceLoading, setBalanceLoading] = useState(false);
   useEffect(() => {
     if (!address || !summary.assetName) return;
     setBalanceLoading(true);
@@ -90,7 +96,23 @@ function OrderPageContent() {
       .then(res => setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) }))
       .finally(() => setBalanceLoading(false));
   }, [address, summary.assetName]);
-  console.log("assetBalance", assetBalance);
+
+  useEffect(() => {
+    async function fetchSwapContractUrl() {
+      setIsContractUrlLoading(true);
+      try {
+        const result = await window.sat20.getDeployedContractsInServer();
+        const { contractURLs = [] } = result;
+        const list = contractURLs.filter((c: string) => c.indexOf(`${tickerInfo.displayname}_swap.tc`) > -1);
+        setSwapContractUrl(list[0] || '');
+      } catch {
+        setSwapContractUrl('');
+      } finally {
+        setIsContractUrlLoading(false);
+      }
+    }
+    if (tickerInfo.displayname) fetchSwapContractUrl();
+  }, [tickerInfo.displayname]);
 
   const handleSellSuccess = () => {
     if (!address || !summary.assetName) return;
@@ -109,85 +131,68 @@ function OrderPageContent() {
   if (error) {
     return <div className="p-4 bg-black text-white w-full">Error loading data: {error.message}</div>;
   }
-  const handleRefresh = async () => {
-    console.log("handleRefresh");
-    if (activeTab === "takeOrder" && takeOrderRef.current) {
-      await takeOrderRef.current.forceRefresh();
-    }
-  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 p-2 sm:p-4 h-full w-ful">
-      {/* Chart and Asset Info Container */}
-      <div className="sm:col-span-2 flex flex-col gap-4 mb-8 sm:mb-0">
-        {/* Tradingview Chart */}
-        <div className="flex items-center justify-center min-h-[300px] sm:min-h-[680px] sm:mb-0">
-          <ChartModule assets_name={asset || ''} tickerInfo={tickerInfo} />
-        </div>
-        <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
-          <AssetInfo assetData={summary} />
-        </div>
-      </div>
-      <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
-        <div className="max-w-full mx-auto p-4 bg-zinc-900 text-zinc-200 rounded-2xl shadow-lg border border-zinc-700/50 w-full h-full">
-          <OrderBookHeader
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            onRefresh={handleRefresh}
-            onSettingsChange={handleSettingsChange}
-          />
-          {activeTab === 'takeOrder' ? (
-            <TakeOrder
-              ref={takeOrderRef}
-              assetInfo={{
-                assetLogo: summary.assetLogo,
-                assetName: summary.assetName,
-                AssetId: summary.assetId,
-                floorPrice: parseFloat(summary.floorPrice),
-              }}
-              tickerInfo={tickerInfo}
-              assetBalance={assetBalance.availableAmt}
-              onSellSuccess={handleSellSuccess}
-            />
-          ) : activeTab === 'makeOrder' ? (
-            <MakeOrder assetInfo={{
-              assetLogo: summary.assetLogo,
-              assetName: summary.assetName,
-              AssetId: summary.assetId,
-              floorPrice: parseFloat(summary.floorPrice),
-            }} tickerInfo={tickerInfo} assetBalance={assetBalance} balanceLoading={balanceLoading} onSellSuccess={handleSellSuccess} />
-          ) : activeTab === 'swap' ? (
-            <Trade assetInfo={{
-              assetLogo: summary.assetLogo,
-              assetName: summary.assetName,
-              AssetId: summary.assetId,
-              floorPrice: parseFloat(summary.floorPrice),
-            }} tickerInfo={tickerInfo} onSellSuccess={handleSellSuccess}
-            />
-          ) : activeTab === 'limitOrder' ? (
-            <LimitOrder
-              tickerInfo={tickerInfo}
-              assetInfo={{
-                assetLogo: summary.assetLogo,
-                assetName: summary.assetName,
-                AssetId: summary.assetId,
-                floorPrice: parseFloat(summary.floorPrice),
-              }}
-              assetBalance={assetBalance}
-              balanceLoading={balanceLoading}
-              onSellSuccess={handleSellSuccess}
-            />
-          ) : null}
-          <div className="mt-4 text-sm text-gray-400">
-            {settings.showOngoingTrades && <p>Show pending transactions...</p>}
-            {settings.maxBidPrice > 0 && <p>Item price limit: {settings.maxBidPrice} sats</p>}
+    <Tabs defaultValue={activeTab} className="w-full">
+      <TabsList className="mb-2">
+        <TabsTrigger value="limitOrder" onClick={() => handleTabChange('limitOrder')}>限价单</TabsTrigger>
+        <TabsTrigger value="swap" onClick={() => handleTabChange('swap')}>Swap</TabsTrigger>
+      </TabsList>
+      <TabsContent value="limitOrder">
+        <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 p-2 sm:p-4 h-full w-ful">
+          {/* Chart and Asset Info Container */}
+          <div className="sm:col-span-2 flex flex-col gap-4 mb-8 sm:mb-0">
+            {/* Tradingview Chart */}
+            <div className="flex items-center justify-center min-h-[300px] sm:min-h-[680px] sm:mb-0">
+              <ChartModule assets_name={asset || ''} tickerInfo={tickerInfo} />
+            </div>
+            <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
+              <AssetInfo assetData={summary} />
+            </div>
+          </div>
+          <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
+            <div className="max-w-full mx-auto p-4 bg-zinc-900 text-zinc-200 rounded-2xl shadow-lg border border-zinc-700/50 w-full h-full">
+              {/* DepthPanel 盘口 */}
+              {isContractUrlLoading ? (
+                <div className="w-full mt-4 text-center text-gray-400">加载中...</div>
+              ) : !swapContractUrl ? (
+                <div className="w-full mt-4">
+                  <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
+                    未找到合约，请联系管理员添加
+                  </div>
+                </div>
+              ) : (
+                <DepthPanel
+                  contractURL={swapContractUrl}
+                  assetInfo={summary}
+                  tickerInfo={tickerInfo}
+                  assetBalance={assetBalance}
+                  balanceLoading={balanceLoading}
+                  onOrderSuccess={handleSellSuccess}
+                />
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      {/* ActivityLog */}
-      <div className="col-span-1 sm:col-span-3 flex items-center justify-center w-full">
-        <ActivityLog assets_name={asset} />
-      </div>
-    </div>
+        {/* 我的订单和所有订单 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="bg-zinc-900 rounded-2xl p-4">
+            <MyOrdersPanel contractURL={swapContractUrl} tickerInfo={tickerInfo} assetInfo={summary} />
+          </div>
+          <div className="bg-zinc-900 rounded-2xl p-4">
+            <TradeHistoryPanel contractURL={swapContractUrl} />
+          </div>
+        </div>
+      </TabsContent>
+      <TabsContent value="swap">
+        <Trade assetInfo={{
+          assetLogo: summary.assetLogo,
+          assetName: summary.assetName,
+          AssetId: summary.assetId,
+          floorPrice: parseFloat(summary.floorPrice),
+        }} tickerInfo={tickerInfo} onSellSuccess={handleSellSuccess} />
+      </TabsContent>
+    </Tabs>
   );
 }
 
