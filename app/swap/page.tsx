@@ -26,6 +26,7 @@ import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useContractStore } from '@/store/contract';
+import Link from 'next/link';
 
 
 function adaptPoolData(pool, satsnetHeight) {
@@ -132,7 +133,6 @@ const Swap = () => {
     { key: 'totalDealSats', label: t('Total Deal Sats') },
     { key: 'totalDealCount', label: t('Total Deal Count') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
-    { key: 'action', label: t('pages.launchpool.action') },
   ];
 
   const [protocol, setProtocol] = useState('all');
@@ -189,11 +189,13 @@ const Swap = () => {
                       {adaptedPool.assetName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span
+                  <Link
+                    href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
                     className="cursor-pointer text-primary hover:underline"
+                    prefetch={true}
                   >
                     {adaptedPool.assetName}
-                  </span>
+                  </Link>
                 </TableCell>
                 <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
                 <TableCell className="px-4 py-2">
@@ -207,16 +209,6 @@ const Swap = () => {
                 <TableCell className="px-4 py-2">{adaptedPool.totalDealCount}</TableCell>
                 <TableCell className="px-4 py-2">
                   {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
-                </TableCell>
-                <TableCell className="px-4 py-2 text-center">
-                  <div className="flex items-center h-full gap-2">
-                    <button
-                      className="mt-2 text-zinc-400 hover:text-indigo-500 transition-colors"
-                      onClick={() => router.push(`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`)}
-                    >
-                      <Icon icon="mdi:open-in-new" className="w-5 h-5" />
-                    </button>
-                  </div>
                 </TableCell>
               </TableRow>
 

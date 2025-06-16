@@ -26,6 +26,7 @@ import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useContractStore } from '@/store/contract';
+import Link from 'next/link';
 
 
 function adaptPoolData(pool, satsnetHeight) {
@@ -74,7 +75,6 @@ function adaptPoolData(pool, satsnetHeight) {
 
 const LimitOrder = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
-  console.log('Translation for launchpool.asset_name:', t('launchpool.asset_name')); // Debugging: Check translation key
 
   const { satsnetHeight } = useCommonStore();
   const sortList = useMemo(
@@ -188,11 +188,13 @@ const LimitOrder = () => {
                       {adaptedPool.assetName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span
+                  <Link
+                    href={`/limitOrder/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
                     className="cursor-pointer text-primary hover:underline"
+                    prefetch={true}
                   >
                     {adaptedPool.assetName}
-                  </span>
+                  </Link>
                 </TableCell>
                 <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
                 <TableCell className="px-4 py-2">
