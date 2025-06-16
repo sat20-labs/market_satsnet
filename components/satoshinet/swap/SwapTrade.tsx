@@ -7,6 +7,7 @@ import Sell from './Sell';
 import LiquidityProviders from './LiquidityProviders';
 import { useQuery } from '@tanstack/react-query';
 import SwapMyOrdersPanel from "@/components/satoshinet/swap/SwapMyOrdersPanel";
+import Swap from './Swap';
 
 interface SwapProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
@@ -51,33 +52,20 @@ if (!ammContractUrl) {
 
   return (
     <div>
-      <BuySellToggle mode={mode} onChange={setMode} />
-      {/* Conditionally render BuyOrder or SellOrder */}
-      {mode === "buy" ? (
-        <Buy
-          contractUrl={ammContractUrl}
-          assetInfo={assetInfo}
-          tickerInfo={tickerInfo}
-          onSellSuccess={onSellSuccess}
-        />
-      ) : (
-        <Sell
-          contractUrl={ammContractUrl}
-          assetInfo={assetInfo}
-          tickerInfo={tickerInfo}
-          onSellSuccess={onSellSuccess}
-        />
+      <Swap
+        contractUrl={ammContractUrl}
+        assetInfo={assetInfo}
+        tickerInfo={tickerInfo}
+        onSellSuccess={onSellSuccess}
+      />
+      {/* 我的订单单独展示 */}
+      {ammContractUrl && (
+        <div className="mt-8">
+          <SwapMyOrdersPanel contractURL={ammContractUrl} />
+        </div>
       )}
       {/* Add Liquidity Providers List */}
       {/* <LiquidityProviders /> */}
-      {/* 展示我的订单面板 */}
-      {ammContractUrl && (
-        <div className="mt-8">
-          <SwapMyOrdersPanel
-            contractURL={ammContractUrl}
-          />
-        </div>
-      )}
     </div>
   );
 };
