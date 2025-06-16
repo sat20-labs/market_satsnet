@@ -226,9 +226,9 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
 
   // UI
   return (
-    <div className="p-4 bg-zinc-900 text-zinc-200 rounded-xl shadow-lg border border-zinc-700 max-w-md mx-auto">
+    <div className="p-4 bg-zinc-900 text-zinc-200 rounded-xl shadow-lg border border-zinc-700 max-w-lg mx-auto">
       {/* 资产信息 */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-4 py-2">
         {/* <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
           <AvatarImage src={swapData.logo} alt="Logo" />
           <AvatarFallback>
@@ -238,8 +238,8 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           </AvatarFallback>
         </Avatar> */}
         <div>
-          <div className="font-bold text-lg flex items-center gap-2">{assetInfo.assetName} <span className="text-green-400 text-base">${tickerInfo?.price || '--'}</span></div>
-          <div className="text-xs text-gray-400">合约地址 {contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</div>
+          <div className="font-bold text-lg flex items-center gap-2 py-2">{assetInfo.assetName} <span className="text-green-400 text-base">${tickerInfo?.price || '--'}</span></div>
+          <div className="text-xs text-gray-400 py-1">合约地址 {contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</div>
           <div className="text-xs text-gray-400">池子资产数量: <span className="text-white">{assetAmt}</span> {tickerInfo?.displayname} / 池子聪数量: <span className="text-white">{satValue}</span> sats</div>
         </div>
       </div>
@@ -263,7 +263,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
       <div className="flex justify-center my-2">
         <button
           onClick={handleSwitch}
-          className="rounded-full bg-zinc-800 hover:bg-zinc-700 p-2 border border-zinc-600"
+          className="rounded-full btn-gradient p-2 border border-zinc-600"
           aria-label="切换兑换方向"
         >
           <ArrowDownUp className="w-5 h-5 text-gray-300" />
@@ -321,7 +321,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
         <Button
           type="button"
           onClick={handleSwap}
-          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 btn-gradient`}
+          className={`w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient`}
           size="lg"
           disabled={isSwapping}
         >
