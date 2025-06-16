@@ -75,10 +75,6 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: BuyProp
     return Math.floor(receiveAsset * (1 - slip / 100));
   }, [receiveAsset, slippage]);
 
-  const isBuyValid = useMemo(() => {
-    return amount !== "" && Number(amount) > 0 && Number(amount) <= balance.availableAmt
-  }, [amount, balance.availableAmt]);
-
   const handleQuickAmount = (value: string) => {
     setAmount(value);
   };
@@ -94,8 +90,16 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: BuyProp
       toast.error('Please wait for the contract to be enabled');
       return;
     }
-    if (!isBuyValid) {
-      toast.error(t("common.swap_enterValidAmount"));
+    if (amount === "") {
+      toast.error("请输入买入数量");
+      return;
+    }
+    if (Number(amount) <= 0) {
+      toast.error("买入数量需大于0");
+      return;
+    }
+    if (Number(amount) > balance.availableAmt) {
+      toast.error("余额不足");
       return;
     }
     setIsBuying(true);
@@ -148,7 +152,6 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: BuyProp
     setIsBuying(false);
   };
 
-  const isLoading = isBuying;
 
   return (
     <div className="p-4 bg-zinc-900 text-zinc-200 rounded-xl shadow-lg border border-zinc-700">
@@ -220,8 +223,8 @@ const Buy = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: BuyProp
         <Button
           type="button"
           onClick={handleBuy}
-          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${!isBuyValid || isLoading ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60" : "btn-gradient"}`}
-          disabled={(!isBuyValid || isLoading)}
+          className={`w-full mt-4 text-sm font-semibold transition-all duration-200 ${isBuying ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60" : "btn-gradient"}`}
+          disabled={isBuying}
           size="lg"
         >
           {isBuying ? t('common.swap_buyingAsset') : t('common.swap_confirmBuy', { ticker: tickerInfo?.displayname })}
