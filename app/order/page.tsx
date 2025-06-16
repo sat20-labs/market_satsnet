@@ -22,6 +22,8 @@ import DepthPanel from '@/components/satoshinet/limitorder/DepthPanel';
 import MyOrdersPanel from '@/components/satoshinet/limitorder/MyOrdersPanel';
 import TradeHistoryPanel from '@/components/satoshinet/limitorder/TradeHistoryPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTranslation } from 'react-i18next';
+
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -29,6 +31,7 @@ function Loading() {
 
 function OrderPageContent() {
   // 所有 hooks 必须在组件顶层调用
+  const { t } = useTranslation();
   const params = useSearchParams();
   const asset = params.get('asset');
   const takeOrderRef = useRef<TakeOrderRef>(null);
@@ -134,9 +137,9 @@ function OrderPageContent() {
 
   return (
     <Tabs defaultValue={activeTab} className="w-full">
-      <TabsList className="mb-2">
-        <TabsTrigger value="limitOrder" onClick={() => handleTabChange('limitOrder')}>限价单</TabsTrigger>
-        <TabsTrigger value="swap" onClick={() => handleTabChange('swap')}>Swap</TabsTrigger>
+      <TabsList className="mt-4">
+        <TabsTrigger value="limitOrder" onClick={() => handleTabChange('limitOrder')}>{t('common.limitorder')}</TabsTrigger>
+        <TabsTrigger value="swap" onClick={() => handleTabChange('swap')}>{t('common.swap')}</TabsTrigger>
       </TabsList>
       <TabsContent value="limitOrder">
         <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 p-2 sm:p-4 h-full w-ful">
@@ -158,7 +161,7 @@ function OrderPageContent() {
               ) : !swapContractUrl ? (
                 <div className="w-full mt-4">
                   <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
-                    未找到合约，请联系管理员添加
+                    {t('common.limitorder_no_contract')}
                   </div>
                 </div>
               ) : (
@@ -175,12 +178,28 @@ function OrderPageContent() {
           </div>
         </div>
         {/* 我的订单和所有订单 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div className="bg-zinc-900 rounded-2xl p-4">
             <MyOrdersPanel contractURL={swapContractUrl} tickerInfo={tickerInfo} assetInfo={summary} />
           </div>
           <div className="bg-zinc-900 rounded-2xl p-4">
             <TradeHistoryPanel contractURL={swapContractUrl} />
+          </div>
+        </div> */}
+        <div className="gap-4 mt-4">
+          <div className="bg-zinc-900 rounded-2xl p-4">
+            <Tabs defaultValue="tradeHistory" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="tradeHistory">{t('common.limitorder_history')}</TabsTrigger>
+                <TabsTrigger value="myOrders">{t('common.limitorder_myorders')}</TabsTrigger>
+              </TabsList>
+              <TabsContent value="tradeHistory">
+                <TradeHistoryPanel contractURL={swapContractUrl} />
+              </TabsContent>
+              <TabsContent value="myOrders">
+                <MyOrdersPanel contractURL={swapContractUrl} tickerInfo={tickerInfo} assetInfo={summary} />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </TabsContent>

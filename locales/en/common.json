@@ -146,6 +146,7 @@
   "takeorder_sell": "Sell",
   "takeorder_buy": "Buy",
   "swap": "Swap",
+  "swap_notice": "Contract not found, please contact the administrator.",
 
   "limitorder": "Limit Order",
   "limitorder_sell": "Limit Sell",

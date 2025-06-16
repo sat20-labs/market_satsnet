@@ -145,6 +145,7 @@
   "takeorder": "订单薄",
   "makeorder": "挂单", 
   "swap": "Swap",
+  "swap_notice": "未找到合约，请联系管理员。",
 
   "limitorder": "限价单",
   "limitorder_sell": "限价卖出",
