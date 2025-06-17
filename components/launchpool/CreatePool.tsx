@@ -13,6 +13,8 @@ import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
 import { hideStr } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Icon } from '@iconify/react';
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const { t, i18n } = useTranslation(); // Specify the namespace
@@ -25,6 +27,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     protocol: 'ordx',
     ticker: '',
     n: '1000',
+    mintAmtPerSat: '',
     limit: '',
     launchRatio: '70',
     maxSupply: '',
@@ -36,6 +39,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const [contractURL, setcontractURL] = useState<string | null>(null);
 
   const [errorMessage, setErrorMessage] = useState('');
+  const [errorLaunchRatio, setErrorLaunchRatio] = useState('');
 
   const { satsnetHeight } = useCommonStore();
   const { supportedContracts, isLoading } = useSupportedContracts();
@@ -71,6 +75,18 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     '200': t('pages.status.closing'),
   };
 
+  const isBindingSatEditable = bol && formData.protocol === 'ordx';
+
+  useEffect(() => {
+    if (!isBindingSatEditable && formData.n !== '1') {
+      setFormData((prev) => ({ ...prev, n: '1' }));
+    }
+    if (isBindingSatEditable && formData.n === '1') {
+      setFormData((prev) => ({ ...prev, n: '1000' }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bol, formData.protocol]);
+
   async function handleConfirm(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
     event.preventDefault();
     if (formData.endBlock !== '0' && Number(formData.endBlock) <= satsnetHeight) {
@@ -97,6 +113,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
         Ticker: formData.ticker,
       },
       bindingSat: Number(formData.n),
+      mintAmtPerSat: Number(formData.mintAmtPerSat),
       limit: Number(formData.limit),
       maxSupply: Number(formData.maxSupply),
       launchRation: Number(formData.launchRatio),
@@ -120,7 +137,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   //   }
   // }, [formData.protocol]);
 
-  const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply);
+  const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply && !errorLaunchRatio);
   const isStep1Complete = !!(formData.protocol && formData.ticker && formData.n);
   const isStep2Complete = !!(formData.limit && formData.launchRatio && formData.maxSupply);
 
@@ -196,24 +213,61 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                   {t('pages.createPool.runesTickerNote')}
                 </p>
               )}
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.bindingSat')}</label>
-            <Input
-                placeholder={t('pages.createPool.bindingSat')}
-                type="number"
-                value={formData.n}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  if (value > 0 && Math.log10(value) % 1 === 0) {
-                    handleInputChange('n', value.toString());
-                    setErrorMessage(''); // 清除错误信息
-                  } else {
-                    setErrorMessage(t('pages.createPool.bindingSatError')); // 设置错误信息
-                  }
-                }}
-              />
-              {errorMessage && (
-                <p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p>
-              )}
+            <div className="flex gap-4 mt-4">
+              <div className="flex-1">
+                <div className="flex items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-0">{t('pages.createPool.bindingSat')}</label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="ml-1 cursor-pointer align-middle inline-flex"><Icon icon="lucide:help-circle" className="w-4 h-4 text-zinc-400" /></span>
+                    </TooltipTrigger>
+                    <TooltipContent sideOffset={4}>
+                      每一聪绑定的资产数量，每一聪携带的该资产数量，用于在一层铸造ordx资产时使用
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  placeholder={t('pages.createPool.bindingSat')}
+                  type="number"
+                  value={formData.n}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    if (isBindingSatEditable) {
+                      if (value > 0 && Math.log10(value) % 1 === 0) {
+                        handleInputChange('n', value.toString());
+                        setErrorMessage('');
+                      } else {
+                        setErrorMessage(t('pages.createPool.bindingSatError'));
+                      }
+                    }
+                  }}
+                  disabled={!isBindingSatEditable}
+                />
+                {errorMessage && isBindingSatEditable && (
+                  <p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.mintAmtPerSat')}</label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="ml-1 cursor-pointer align-middle inline-flex"><Icon icon="lucide:help-circle" className="w-4 h-4 text-zinc-400" /></span>
+                    </TooltipTrigger>
+                    <TooltipContent sideOffset={4}>
+                      在二层分发时，每一聪换多少资产数量，一般MintAmtPerSat比Bindingsat小10-1000倍
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  placeholder={t('pages.createPool.mintAmtPerSat')}
+                  type="number"
+                  value={formData.mintAmtPerSat}
+                  onChange={(e) => handleInputChange('mintAmtPerSat', e.target.value)}
+                />
+                {/* <p className="mt-1 text-xs text-gray-400">{t('pages.createPool.mintAmtPerSatSuggest', { min: Math.floor(Number(formData.n || 1000) / 10), max: Math.floor(Number(formData.n || 1000) / 1000) })}</p> */}
+              </div>
+            </div>
             {formData.protocol === 'runes' && (
               <>
                 <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.assetSymbol')}</label>
@@ -250,8 +304,19 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               placeholder={t('pages.createPool.launchRatio')}
               type="number"
               value={formData.launchRatio}
-              onChange={(e) => handleInputChange('launchRatio', e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                handleInputChange('launchRatio', value);
+                if (Number(value) < 60 || Number(value) > 90) {
+                  setErrorLaunchRatio(t('pages.createPool.launchRatioError'));
+                } else {
+                  setErrorLaunchRatio('');
+                }
+              }}
             />
+            {errorLaunchRatio && (
+              <p className="mt-1 text-xs text-red-400 gap-2">* {errorLaunchRatio}</p>
+            )}
             <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.maxSupply')}</label>
             <Input
               placeholder={t('pages.createPool.maxSupply')}

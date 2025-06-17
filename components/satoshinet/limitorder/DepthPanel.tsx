@@ -230,7 +230,7 @@ export default function DepthPanel({
     const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
     const unitPrice = priceNum.toString();
     const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : Math.ceil(quantityNum);
-    const serviceFee = orderType === 'buy' ? 10 : 0;
+    const serviceFee = orderType === 'buy' ? 10 + Math.ceil(amt * 0.008) : 0;
 
     // 设置确认对话框数据
     setConfirmData({

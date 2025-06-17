@@ -27,6 +27,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useContractStore } from '@/store/contract';
 import Link from 'next/link';
+import { BtcPrice } from '@/components/BtcPrice';
 
 
 function adaptPoolData(pool, satsnetHeight) {
@@ -152,6 +153,9 @@ const Swap = () => {
 
   return (
     <div className="p-4 relative">
+      <div className="mb-2 px-2 flex items-center">
+        <span className="text-base font-semibold mr-4">当前BTC价格：<BtcPrice btc={1} className="text-green-500 font-bold" /> USDT</span>
+      </div>
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2 mr-4">

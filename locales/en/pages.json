@@ -33,7 +33,8 @@
     "view_distribution": "View Distribution",
     "continue": "Continue",
     "force_distribution": "Force Distribution",
-    "auto_refund": "Auto Refund"
+    "auto_refund": "Auto Refund",
+    "launchRatioError": "Launch ratio must be between 60 and 90"
   },
   "tools": {
     "title": "Toolbox",
@@ -264,8 +265,10 @@
     "viewPool": "View Pool",
     "runesTickerNote": "* Input spaces as separators to replace Runes symbols, e.g.,: XXX YYY ZZZ",
     "deployFeeTip": "* Deployment fees can be paid via Mainnet or SatoshiNet.",
-    "bindingSatError": "BindingSat must be greater than 0 and a multiple of 10"
-    
+    "bindingSatError": "BindingSat must be greater than 0 and a multiple of 10",
+    "mintAmtPerSat": "Mint Amount Per Sat",
+    "mintAmtPerSatTip": "The amount of asset distributed per satoshi. Usually 10-1000 times smaller than the binding sat. For example, if binding sat is 1000, mint amount per sat is typically 1-100.",
+    "mintAmtPerSatSuggest": "Suggested: {{min}} ~ {{max}} (based on binding sat)"
   },
   "joinPool": {
     "title": "Join Pool",
