@@ -130,7 +130,8 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
 
   // 服务费（聪换资产时）
   const amtNum = Number(fromAmount);
-  const serviceFee = swapType === 'sats-to-asset' ? Math.max(10, Math.ceil(amtNum * 0.008)) : 0;
+  const serviceFee = swapType === 'sats-to-asset' ? 10 + Math.ceil(amtNum * 0.008)  : 0;
+  //const serviceFee = swapType === 'sats-to-asset' ? Math.max(10, Math.ceil(amtNum * 0.008)) : 0;
   const networkFee = 10; // 网络费，假设为10 sats
 
   // 总支付费用部分
@@ -407,7 +408,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           {isDetailsVisible && (
             <div className="text-sm text-gray-400 border-t border-zinc-700 pt-2 mt-2">
               <div className="flex justify-between mb-1">
-                <span>{t('common.serviceFee')}(0.8%):</span>
+                <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
                 <span className="text-zinc-400">{serviceFee || '--'} sats</span>
               </div>
               <div className="flex justify-between">
