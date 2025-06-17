@@ -33,7 +33,8 @@
     "view_distribution": "查看分发",
     "continue": "继续",
     "force_distribution": "强制分发",
-    "auto_refund": "自动退款"
+    "auto_refund": "自动退款",
+    "launchRatioError": "分发比例必须在60到90之间"
   },
   "tools": {
     "title": "工具箱",
@@ -334,5 +335,8 @@
     "joinPool": {
       "success": ""
     }
-  }
+  },
+  "mintAmtPerSat": "每聪分发数量",
+  "mintAmtPerSatTip": "每一聪分发的资产数量。通常比绑定聪数小10-1000倍。例如绑定聪为1000时，分发数量一般为1-100。",
+  "mintAmtPerSatSuggest": "建议值：{{min}} ~ {{max}}（参考绑定聪）"
 }

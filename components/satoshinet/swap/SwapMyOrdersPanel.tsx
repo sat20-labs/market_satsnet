@@ -100,7 +100,7 @@ const mapOrderData = (orderData: OrderData, t: any) => {
   const remainingValue = orderData.RemainingValue;
   let status: string;
   if (orderData.Valid === false) {
-    status = "异常";
+    status = "Failed";
   } else if (isCancelled) {
     status = "Cancelled";
   } else {
