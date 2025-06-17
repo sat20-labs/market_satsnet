@@ -71,6 +71,18 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     '200': t('pages.status.closing'),
   };
 
+  const isBindingSatEditable = bol && formData.protocol === 'ordx';
+
+  useEffect(() => {
+    if (!isBindingSatEditable && formData.n !== '1') {
+      setFormData((prev) => ({ ...prev, n: '1' }));
+    }
+    if (isBindingSatEditable && formData.n === '1') {
+      setFormData((prev) => ({ ...prev, n: '1000' }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bol, formData.protocol]);
+
   async function handleConfirm(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
     event.preventDefault();
     if (formData.endBlock !== '0' && Number(formData.endBlock) <= satsnetHeight) {
@@ -203,15 +215,18 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                 value={formData.n}
                 onChange={(e) => {
                   const value = Number(e.target.value);
-                  if (value > 0 && Math.log10(value) % 1 === 0) {
-                    handleInputChange('n', value.toString());
-                    setErrorMessage(''); // 清除错误信息
-                  } else {
-                    setErrorMessage(t('pages.createPool.bindingSatError')); // 设置错误信息
+                  if (isBindingSatEditable) {
+                    if (value > 0 && Math.log10(value) % 1 === 0) {
+                      handleInputChange('n', value.toString());
+                      setErrorMessage('');
+                    } else {
+                      setErrorMessage(t('pages.createPool.bindingSatError'));
+                    }
                   }
                 }}
+                disabled={!isBindingSatEditable}
               />
-              {errorMessage && (
+              {errorMessage && isBindingSatEditable && (
                 <p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p>
               )}
             {formData.protocol === 'runes' && (

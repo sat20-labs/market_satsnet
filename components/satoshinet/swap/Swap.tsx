@@ -125,7 +125,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
   // 服务费（聪换资产时）
   const amtNum = Number(fromAmount);
   // const serviceFee = swapType === 'sats-to-asset' ? Math.max(10, Math.ceil(amtNum * 0.008)) : 0;
-  const serviceFee = swapType === 'sats-to-asset' ? 1 : 0;
+  const serviceFee = swapType === 'sats-to-asset' ? 10 + Math.ceil(amtNum * 0.008)  : 0;
 
   // 切换上下币种
   const handleSwitch = () => {
