@@ -169,7 +169,7 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
 
   return (
     <div className="max-w-full">
-      <div className="mb-2 font-bold text-sm">{t("swap.my_orders", 'My Orders')}</div>
+      <div className="mb-2 px-2 font-bold text-sm">{t("swap.my_orders", 'My Orders')}</div>
       <div className="w-full max-h-80 rounded-md border overflow-y-auto">
         <Table className="overflow-x-auto">
           <TableHeader>

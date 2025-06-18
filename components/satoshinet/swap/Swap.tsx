@@ -130,7 +130,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
 
   // 服务费（聪换资产时）
   const amtNum = Number(fromAmount);
-  const serviceFee = swapType === 'sats-to-asset' ? 10 + Math.ceil(amtNum * 0.008)  : 0;
+  const serviceFee = swapType === 'sats-to-asset' ? 10 + Math.ceil(amtNum * 0.008) : 0;
   //const serviceFee = swapType === 'sats-to-asset' ? Math.max(10, Math.ceil(amtNum * 0.008)) : 0;
   const networkFee = 10; // 网络费，假设为10 sats
 
@@ -257,22 +257,22 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           </AvatarFallback>
         </Avatar> */}
         <div>
-          <div className="font-bold text-lg flex items-center gap-1 py-1">{formatName(assetInfo.assetName)} <span className="text-green-400 text-base">~ {currentPrice || '--'}</span> <span className="text-zinc-400">sats</span></div>
-          <div className="text-xs text-gray-400 py-1">{t('common.contractAddress')}: {contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</div>
-          <div className="text-xs text-gray-400">{t('common.poolAssetAmount')}: <span className="text-white">{assetAmt}</span> {tickerInfo?.displayname} /  <span className="text-white">{satValue}</span> sats</div>
+          <div className="font-bold text-lg flex items-center gap-1 py-1">{formatName(assetInfo.assetName)} <span className="text-green-400 text-base">~ {currentPrice.toFixed(4) || '--'}</span> <span className="text-zinc-400">sats</span></div>
+          <div className="text-xs text-zinc-500 py-1">{t('common.contractAddress')}: {contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</div>
+          <div className="text-xs text-zinc-500">{t('common.poolAssetAmount')}: <span className="text-zinc-400 font-bold">{assetAmt}</span> {tickerInfo?.displayname} /  <span className="text-zinc-400 font-bold">{satValue}</span> sats</div>
         </div>
       </div>
-      <div className="mb-2 bg-zinc-900 p-2 rounded-xl shadow-lg border border-zinc-800 ">
+      <div className="mb-4 bg-zinc-900 sm:p-2 rounded-xl shadow-lg border border-zinc-800 ">
         {/* 上方输入框 */}
         <div className="mb-2 mx-4 bg-zinc-900 py-2 rounded-lg relative"
           onMouseEnter={() => setIsHoveringInput(true)}
           onMouseLeave={() => setIsHoveringInput(false)}
-          >
-          <div className="flex justify-between items-center text-xs text-gray-400 mb-1">
-            <span className="py-3">{t('common.youPay')}</span>                        
+        >
+          <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
+            <span className="py-2 uppercase">{t('common.youPay')}</span>
             {/* 快捷输入标签 */}
-             {isHoveringInput && (
-              <span className="flex items-center gap-2 bg-transparent p-2 rounded-lg">
+            {isHoveringInput && (
+              <span className="flex items-center gap-2 bg-transparent px-2 py-1 rounded-lg">
                 {/* <span className="text-sm text-gray-400">{t('common.quickInput')}</span> */}
                 {swapType === 'asset-to-sats' ? (
                   // 卖出资产快捷输入
@@ -284,11 +284,10 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
                         const calculatedAmount = (assetBalance.availableAmt * percentage).toFixed(assetAmtRaw.Precision);
                         handleFromAmountChange(calculatedAmount);
                       }}
-                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-blue-500 hover:text-white ${
-                        fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(assetAmtRaw.Precision)
-                          ? 'bg-blue-500 text-white'
+                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(assetAmtRaw.Precision)
+                          ? 'bg-purple-500 text-white'
                           : 'text-gray-400'
-                      }`}
+                        }`}
                     >
                       {value}
                     </button>
@@ -299,33 +298,38 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
                     <button
                       key={value}
                       onClick={() => handleFromAmountChange(value)}
-                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-blue-500 hover:text-white ${
-                        fromAmount === value ? 'bg-blue-500 text-white' : 'text-gray-400'
-                      }`}
+                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === value ? 'bg-purple-500 text-white' : 'text-gray-400'
+                        }`}
                     >
-                      {value} 
+                      {value}
                     </button>
                   ))
                 )}
               </span>
             )}
           </div>
-          <input
-            type="number"
-            value={fromAmount}
-            onChange={e => handleFromAmountChange(e.target.value)}
-            className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-4 py-2 text-3xl font-bold text-white"
-            placeholder={swapType === 'sats-to-asset' ? t('common.enterSatsAmount') : t('common.enterAssetAmount')}
-            min={1}
-          />
-          <p className="flex justify-between text-gray-500 text-xs mt-1 mb-3 ml-1"> {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname}
-          <span>{t('common.balance')}: <span className="font-bold">{swapType === 'sats-to-asset' ? displaySatsBalance : displayAssetBalance} </span> {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname} 
-          {swapType === 'sats-to-asset' && (
-            <span className="text-xs text-gray-500 ml-2">
-              / $ <BtcPrice btc={displayAssetBalance / 100000000} />
+          <div className="relative w-full">
+            <input
+              type="number"
+              value={fromAmount}
+              onChange={(e) => handleFromAmountChange(e.target.value)}
+              className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16" // 添加右内边距
+              placeholder={swapType === 'sats-to-asset' ? t('common.enterSatsAmount') : t('common.enterAssetAmount')}
+              min={1}
+            />
+            <span className="absolute top-1/2 right-4 sm:mr-6 transform -translate-y-1/2 text-zinc-600 text-sm">
+              {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname}
             </span>
-          )}
-          </span>
+          </div>
+          {/* 显示余额 */}
+          <p className="flex justify-between text-zinc-600 text-xs mt-2 mb-8 px-2">
+            <span>{t('common.balance')}: <span className="font-bold">{swapType === 'sats-to-asset' ? displaySatsBalance : displayAssetBalance} </span> {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname}
+              {swapType === 'sats-to-asset' && (
+                <span className="text-xs text-zinc-600 ml-2">
+                  ($<BtcPrice btc={displayAssetBalance / 100000000} />)
+                </span>
+              )}
+            </span>
           </p>
         </div>
 
@@ -333,37 +337,48 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
         <div className="relative z-50">
           <button
             onClick={handleSwitch}
-            className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-zinc-800 rounded-xl p-2 border-2 border-zinc-900"
+            className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-zinc-900 hover:bg-purple-500/60 rounded-full p-4 border-2 border-zinc-800"
             aria-label={t('common.switchDirection')}
           >
-            <ArrowDownUp className="w-8 h-8 font-bold text-gray-300" />
+            <ArrowDownUp className="w-10 h-10 font-bold text-zinc-300" />
           </button>
         </div>
 
         {/* 下方输入框 */}
         <div className="mb-2 mx-4 bg-zinc-900 py-2 border-t border-zinc-800 relative">
-          <div className="flex justify-between items-center text-xs text-gray-400 mt-6 mb-1 py-3">
-            <span>{t('common.youReceive')}</span>
-            <span>{t('common.balance')}:<span className="font-bold"> {swapType === 'sats-to-asset' ? displayAssetBalance : displaySatsBalance}</span> <span className="font-light">{swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}</span></span>
+          <div className="flex justify-between items-center text-xs text-zinc-500 mt-6 mb-1 mx-2 py-2">
+            <span className="uppercase">{t('common.youReceive')}</span>
+           </div>
+          <div className="relative w-full">
+            <input
+              type="number"
+              value={toAmount}
+              onChange={e => handleToAmountChange(e.target.value)}
+              className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-1 py-2 text-xl sm:text-3xl font-bold text-white"
+              placeholder={swapType === 'sats-to-asset' ? t('common.estimatedAssetAmount') : t('common.estimatedSatsAmount')}
+              min={1}
+            />
+            <span className="absolute top-1/2 right-4 sm:mr-6 transform -translate-y-1/2 text-zinc-600 text-sm">
+              {swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}
+            </span>
           </div>
-          <input
-            type="number"
-            value={toAmount}
-            onChange={e => handleToAmountChange(e.target.value)}
-            className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-4 py-2 text-3xl font-bold text-white"
-            placeholder={swapType === 'sats-to-asset' ? t('common.estimatedAssetAmount') : t('common.estimatedSatsAmount')}
-            min={1}
-          />
-          <p className="text-xs text-gray-500 mt-1 ml-1">  {swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}</p>
+          {/* 显示余额 */}
+          <p className="text-xs text-zinc-600 mt-1 px-2">
+              <span>
+                {t('common.balance')}:
+                  <span className="font-bold"> {swapType === 'sats-to-asset' ? displayAssetBalance : displaySatsBalance}</span> 
+                  <span className="font-light">{swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}</span>
+              </span>
+          </p>
         </div>
         {/* 滑点输入 */}
         <div className="flex items-center gap-2 mx-4 mb-4">
-          <span className="text-sm text-gray-400">{t('common.slippageProtection')}</span>
+          <span className="text-sm text-zinc-500">{t('common.slippageProtection')}</span>
           <Input
             type="number"
             value={slippage}
             onChange={(e) => setSlippage(e.target.value)}
-            className="w-20 bg-transparent border border-zinc-600 rounded-lg px-2 py-1 text-sm text-white"
+            className="w-12 sm:w-16 h-8 bg-transparent border border-zinc-800 rounded-lg px-2 py-1 text-sm text-white"
             min={0.1}
             step={0.1}
           />
@@ -372,7 +387,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
             <button
               key={value}
               onClick={() => setSlippage(value)}
-              className={`px-2 py-1 rounded bg-zinc-800 text-xs ${slippage === value ? 'bg-blue-500 text-white' : 'text-gray-400'}`}
+              className={`px-3 py-2 rounded-lg bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${slippage === value ? 'bg-purple-500 text-white' : 'text-zinc-400'}`}
             >
               {value}%
             </button>
@@ -386,27 +401,27 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
       </div> */}
       {/* 服务费（聪换资产时） */}
       {swapType === 'sats-to-asset' && (
-        <div className="px-4 py-2 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-lg mx-auto">
+        <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-lg mx-auto">
 
           {/* 总支付费用部分 */}
           <div className="flex justify-between items-center text-sm text-gray-400">
             <span>{t('common.totalPay')}: <span className="text-white ml-1">{totalFee || '--'}</span> sats</span>
             <span className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">
-              $ <BtcPrice btc={totalFee/100000000} />
-            </span>
-            <button
-              onClick={() => setIsDetailsVisible(!isDetailsVisible)}
-              className="flex items-center text-gray-400 hover:text-white"
-            >
-              {isDetailsVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+              <span className="text-sm text-zinc-500">
+                $<BtcPrice btc={totalFee / 100000000} />
+              </span>
+              <button
+                onClick={() => setIsDetailsVisible(!isDetailsVisible)}
+                className="flex items-center text-gray-400 hover:text-white"
+              >
+                {isDetailsVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
             </span>
           </div>
 
           {/* 支付明细部分 */}
           {isDetailsVisible && (
-            <div className="text-sm text-gray-400 border-t border-zinc-700 pt-2 mt-2">
+            <div className="text-sm text-gray-400 border-t border-zinc-800 pt-2 mt-2">
               <div className="flex justify-between mb-1">
                 <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
                 <span className="text-zinc-400">{serviceFee || '--'} sats</span>
