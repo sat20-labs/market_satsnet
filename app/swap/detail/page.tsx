@@ -13,6 +13,7 @@ import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useWalletStore } from '@/store';
 import Swap from '@/components/satoshinet/swap/Swap';
 import SwapMyOrdersPanel from '@/components/satoshinet/swap/SwapMyOrdersPanel';
+import { getDeployedContractInfo } from '@/api/market';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -55,9 +56,9 @@ function OrderPageContent() {
 
   // 获取AMM合约URL
   const getAmmContractUrl = async (assetName: string) => {
-    const result = await window.sat20.getDeployedContractsInServer();
-    const { contractURLs = [] } = result;
-    const list = contractURLs.filter(c => c.indexOf(`${assetName}_amm.tc`) > -1);
+    const deployed = await getDeployedContractInfo();
+    const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
+    const list = contractURLs.filter((c: string) => c.indexOf(`${assetName}_amm.tc`) > -1);
     return list[0];
   };
   const {

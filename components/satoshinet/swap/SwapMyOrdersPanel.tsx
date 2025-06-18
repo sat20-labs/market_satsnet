@@ -16,6 +16,7 @@ import {
   TableHead,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getUserHistoryInContract } from "@/api/market";
 
 interface OrderData {
   Version: number;
@@ -67,15 +68,11 @@ const getMyAmmOrderHistory = async (
   pageLimit: number = 20
 ): Promise<OrderData[]> => {
   try {
-    const result = await window.sat20.getContractInvokeHistoryByAddressInServer(
-      contractURL,
-      address,
-      pageStart,
-      pageLimit
-    );
-    if (!result?.history) return [];
-    const parsedHistory = JSON.parse(result.history) as OrderResponse;
-    return Array.isArray(parsedHistory.data) ? parsedHistory.data : [];
+    const { status } = await getUserHistoryInContract(contractURL, address, pageStart, pageLimit);
+    if (!status) return [];
+    const parsedHistory = JSON.parse(status) as OrderResponse;
+    const allData = Array.isArray(parsedHistory.data) ? parsedHistory.data : [];
+    return allData.slice(pageStart, pageStart + pageLimit);
   } catch (e) {
     return [];
   }

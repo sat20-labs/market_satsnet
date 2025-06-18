@@ -11,33 +11,36 @@ import { useCommonStore } from '@/store';
 import { ContentLoading } from '@/components/ContentLoading';
 
 interface OrderAnalyzeProps {
-  assets_name: string;
+  contractURL: string;
 }
 export const OrderAnalyze = ({
-  assets_name,
+  contractURL,
 }: OrderAnalyzeProps) => {
   const [type, setType] = useState('24h');
   const { network } = useReactWalletStore();
   const { chain } = useCommonStore();
 
   const queryKey = useMemo(
-    () => ['getAssetsAnalytics', assets_name, chain, network],
-    [assets_name, chain, network],
+    () => ['getContractAnalytics', contractURL, chain, network],
+    [contractURL, chain, network],
   );
 
   const { data: queryResult, isLoading } = useQuery({
     queryKey: queryKey,
     queryFn: () =>
-      marketApi.getAssetsAnalytics({
-        assets_name,
-      }),
+      marketApi.getContractAnalytics(
+        contractURL,
+      ),
+    enabled: !!contractURL,
   });
 
-  const data = queryResult;
+  const data = JSON.parse(queryResult?.status || '{}');
+
+  console.log('OrderAnalyze', data);
 
   const dataSource = useMemo(() => {
-    const items_24hours = data?.data?.items_24hours?.filter(Boolean) || [];
-    const items_30days = data?.data?.items_30days?.filter(Boolean) || [];
+    const items_24hours = data?.items_24hours?.filter(Boolean) || [];
+    const items_30days = data?.items_30days?.filter(Boolean) || [];
 
     if (type === '24h') {
       return items_24hours;
@@ -55,8 +58,10 @@ export const OrderAnalyze = ({
     for (let i = 0; i < dataSource.length; i++) {
       const item = dataSource[i];
       const label =
-        type === '24h' ? item.time : item.date?.replace(/^\d{4}-/, '').replace('-', '/');
-      let value = Math.floor(item.avg_price);
+        type === '24h' ? item.time : item.date?.replace(/^[0-9]{4}-/, '').replace('-', '/');
+      let value = item.avg_price
+        ? Number(item.avg_price.Value) / Math.pow(10, Number(item.avg_price.Precision))
+        : 0;
       const volume = item.volume;
       let realValue = value;
       if (i > 0 && (value === undefined || value <= 0)) {
@@ -65,53 +70,53 @@ export const OrderAnalyze = ({
       const count = item.order_count;
       // Add a formatted value with the "sats" suffix
       const valueFormatted = value ? `${value} sats` : '-';
-      lineArr.push({ 
-        label, 
-        value, 
+      lineArr.push({
+        label,
+        value,
         valueFormatted, // Add the formatted value with "sats"
-        count, 
-        realValue, 
-        volume 
+        count,
+        realValue,
+        volume
       });
     }
     return lineArr;
   }, [dataSource, type]);
 
-  const marketData = useMemo(() => {
-    let sat20_count = 0;
-    let me_count = 0;
-    let okx_count = 0;
-    let sat20_volume = 0;
-    let me_volume = 0;
-    let okx_volume = 0;
-    if (!dataSource) return [];
-    for (const item of dataSource) {
-      if (item.date) {
-        sat20_count += item.sat20.order_count;
-        sat20_volume += item.sat20.volume;
-      }
-    }
-    return [
-      {
-        id: 'sat20',
-        label: 'SAT20Market',
-        count: sat20_count,
-        volume: sat20_volume,
-      },
-      {
-        id: 'me',
-        label: 'Magiceden',
-        count: me_count,
-        volume: me_volume,
-      },
-      {
-        id: 'okx',
-        label: 'OKX',
-        count: okx_count,
-        volume: okx_volume,
-      },
-    ];
-  }, [dataSource]);
+  // const marketData = useMemo(() => {
+  //   let sat20_count = 0;
+  //   let me_count = 0;
+  //   let okx_count = 0;
+  //   let sat20_volume = 0;
+  //   let me_volume = 0;
+  //   let okx_volume = 0;
+  //   if (!dataSource) return [];
+  //   for (const item of dataSource) {
+  //     if (item.date) {
+  //       sat20_count += item.sat20.order_count;
+  //       sat20_volume += item.sat20.volume;
+  //     }
+  //   }
+  //   return [
+  //     {
+  //       id: 'sat20',
+  //       label: 'SAT20Market',
+  //       count: sat20_count,
+  //       volume: sat20_volume,
+  //     },
+  //     {
+  //       id: 'me',
+  //       label: 'Magiceden',
+  //       count: me_count,
+  //       volume: me_volume,
+  //     },
+  //     {
+  //       id: 'okx',
+  //       label: 'OKX',
+  //       count: okx_count,
+  //       volume: okx_volume,
+  //     },
+  //   ];
+  // }, [dataSource]);
 
   const types = [
     {
@@ -144,7 +149,7 @@ export const OrderAnalyze = ({
               </Button>
             ))}
           </div>
-        </div>        
+        </div>
         <div className="flex flex-col md:flex-row justify-between items-center gap-2  bg-no-repeat bg-center bg-[url('/bg_satswap.png')]">
           <OrderLineChart data={lineChartData || []} />
           {/* <OrderPieChart data={marketData || []} /> */}

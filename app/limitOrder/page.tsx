@@ -1,10 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import JoinPool from '@/components/launchpool/JoinPool';
-import LaunchPoolDetails from '@/components/launchpool/PoolDetail';
-import LaunchPoolTemplate from '@/components/launchpool/[templateId]/TemplateDetailsClient';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Badge } from '@/components/ui/badge';
@@ -18,14 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
+import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { useTranslation } from 'react-i18next';
-import DistributionList from '@/components/launchpool/DistributionList';
-import ActionButtons from '@/components/launchpool/ActionButtons';
 import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
-import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
-import { useContractStore } from '@/store/contract';
 import Link from 'next/link';
 
 
@@ -87,27 +80,23 @@ const LimitOrder = () => {
   );
 
   const getSwapList = async () => {
-    const result = await window.sat20.getDeployedContractsInServer();
-    console.log('result', result);
-    const { contractURLs = [] } = result;
+    const deployed = await getDeployedContractInfo();
+    const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
+    const list = contractURLs.filter((c: string) => c.indexOf('swap.tc') > -1);
+    const statusList = await Promise.all(
+      list.map(async (item: string) => {
+        const { status } = await getContractStatus(item);
 
-    const list = contractURLs.filter(c => c.includes('swap.tc'));
-    console.log('list', list);
-    const statusList: any[] = [];
-    for (const item of list) {
-   
-      const result = await window.sat20.getDeployedContractStatus(item);
-      const { contractStatus } = result;
-      if (contractStatus) {
-        statusList.push({
-          ...JSON.parse(contractStatus),
-          contractURL: item,
-        });
-      }
-    }
-    console.log('statusList', statusList);
-    
-    return statusList;
+        if (status) {
+          return {
+            ...JSON.parse(status),
+            contractURL: item,
+          };
+        }
+        return null;
+      })
+    );
+    return statusList.filter(Boolean);
   };
 
   const { data: poolList = [] } = useQuery({
@@ -148,7 +137,7 @@ const LimitOrder = () => {
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
   console.log('filteredPoolList', filteredPoolList);
-  
+
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">

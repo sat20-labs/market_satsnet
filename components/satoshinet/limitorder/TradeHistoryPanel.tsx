@@ -15,6 +15,7 @@ import {
 import { ExternalLink } from 'lucide-react';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from "@/types";
+import { getContractInvokeHistory } from "@/api/market";
 
 interface TradeHistoryPanelProps {
   contractURL: string;
@@ -34,15 +35,15 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
   const fetchTradeHistory = async (contractURL: string, pageStart: number = 0, pageLimit: number = 20) => {
     if (!contractURL) return { data: [], total: 0 };
     try {
-      const result = await window.sat20.getContractInvokeHistoryInServer(contractURL, pageStart, pageLimit);
+      const { status } = await getContractInvokeHistory(contractURL, pageStart, pageLimit);
       let tradeList: any[] = [];
       let total = 0;
-      if (result && result.history) {
+      if (status) {
         try {
-          const historyObj = JSON.parse(result.history);
+          const historyObj = JSON.parse(status);
           const data = Array.isArray(historyObj.data) ? historyObj.data.filter(Boolean) : [];
           total = historyObj.total || data.length;
-          tradeList = data.map((item: any) => {
+          tradeList = data.slice(pageStart, pageStart + pageLimit).map((item: any) => {
             const isBuy = item.OrderType === 2;
             const isCancelled = item.OrderType === 3;
             const side = isCancelled ? "Cancel" : (isBuy ? "Buy" : "Sell");
@@ -56,13 +57,10 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
             const expectedAmt = item.ExpectedAmt && typeof item.ExpectedAmt.Value === 'number' && typeof item.ExpectedAmt.Precision === 'number'
               ? item.ExpectedAmt.Value / Math.pow(10, item.ExpectedAmt.Precision)
               : 0;
-            // 成交数量
             const outAmt = item.OutAmt && typeof item.OutAmt.Value === 'number' && typeof item.OutAmt.Precision === 'number'
               ? item.OutAmt.Value / Math.pow(10, item.OutAmt.Precision)
               : 0;
-            // 剩余退款
             const outValue = typeof item.OutValue === 'number' ? item.OutValue : 0;
-            // 完成状态
             let status: string;
             if (isCancelled) {
               status = "Cancelled";
@@ -93,7 +91,6 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
               rawData: item,
             };
           });
-          // 按时间倒序排序
           tradeList.sort((a, b) => (b.OrderTime || 0) - (a.OrderTime || 0));
         } catch (e) {
           console.error('history parse error', e);

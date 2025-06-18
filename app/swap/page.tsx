@@ -1,12 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import JoinPool from '@/components/launchpool/JoinPool';
-import LaunchPoolDetails from '@/components/launchpool/PoolDetail';
-import LaunchPoolTemplate from '@/components/launchpool/[templateId]/TemplateDetailsClient';
+import { useMemo, useState } from 'react';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
-import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
 import {
@@ -18,17 +13,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@iconify/react';
 import { useRouter } from 'next/navigation';
 import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
-import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
-import { useContractStore } from '@/store/contract';
 import Link from 'next/link';
 import { BtcPrice } from '@/components/BtcPrice';
-
+import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 
 function adaptPoolData(pool, satsnetHeight) {
   // 适配 contractStatus 结构
@@ -90,27 +81,23 @@ const Swap = () => {
   );
 
   const getSwapList = async () => {
-    const result = await window.sat20.getDeployedContractsInServer();
-    console.log('result', result);
-    const { contractURLs = [] } = result;
+    const deployed = await getDeployedContractInfo();
+    const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
+    const list = contractURLs.filter((c: string) => c.indexOf('amm.tc') > -1);
+    const statusList = await Promise.all(
+      list.map(async (item: string) => {
+        const { status } = await getContractStatus(item);
 
-    const list = contractURLs.filter(c => c.includes('amm.tc'));
-    console.log('list', list);
-    const statusList: any[] = [];
-    for (const item of list) {
-
-      const result = await window.sat20.getDeployedContractStatus(item);
-      const { contractStatus } = result;
-      if (contractStatus) {
-        statusList.push({
-          ...JSON.parse(contractStatus),
-          contractURL: item,
-        });
-      }
-    }
-    console.log('statusList', statusList);
-
-    return statusList;
+        if (status) {
+          return {
+            ...JSON.parse(status),
+            contractURL: item,
+          };
+        }
+        return null;
+      })
+    );
+    return statusList.filter(Boolean);
   };
 
   const { data: poolList = [] } = useQuery({

@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 import { ExternalLink } from 'lucide-react';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
+import { getUserHistoryInContract } from "@/api/market";
 
 interface Order {
   side: string;
@@ -76,13 +77,11 @@ interface OrderResponse {
 
 const getMyContractHistory = async (contractURL: string, address: string, pageStart: number = 0, pageLimit: number = 20): Promise<OrderData[]> => {
   try {
-    const result = await window.sat20.getContractInvokeHistoryByAddressInServer(contractURL, address, pageStart, pageLimit);
-
-    if (!result?.history) return [];
-
-    const parsedHistory = JSON.parse(result.history) as OrderResponse;
-    console.log('parsedHistory', parsedHistory);
-    return parsedHistory.data;
+    const { status } = await getUserHistoryInContract(contractURL, address, pageStart, pageLimit);
+    if (!status) return [];
+    const parsedHistory = JSON.parse(status) as OrderResponse;
+    const allData = Array.isArray(parsedHistory.data) ? parsedHistory.data : [];
+    return allData;
   } catch (e) {
     console.error('Error fetching orders:', e);
     return [];

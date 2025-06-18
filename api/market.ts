@@ -78,13 +78,13 @@ export const request = async (
     }
   } else if (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
     if (formData) {
-        fetchOptions.body = formData;
-        headers.delete('Content-Type');
+      fetchOptions.body = formData;
+      headers.delete('Content-Type');
     } else if (data) {
-        fetchOptions.body = JSON.stringify(data);
-        if (!headers.has('Content-Type')) {
-          headers.set('Content-Type', 'application/json');
-        }
+      fetchOptions.body = JSON.stringify(data);
+      if (!headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
     }
   }
   if (ctxConnected && ctxSignature && ctxPublicKey) {
@@ -112,12 +112,12 @@ export const request = async (
         try {
           const textError = await response.text();
           errorMessage += `\nResponse body: ${textError}`;
-        } catch (textErrorErr) {}
+        } catch (textErrorErr) { }
       }
       throw new Error(errorMessage);
     }
     if (response.status === 204) {
-       return null;
+      return null;
     }
     const responseData = await response.json();
     console.log('fetch response data:', responseData);
@@ -535,4 +535,44 @@ export const getTwitterActivity = async ({ address, activity_id }) => {
     data: { address, activity_id },
   });
   return res;
+};
+
+// 获取支持的合约列表
+export const getSupportedContracts = async () => {
+  return request('/ordx/info/contracts/support', {});
+};
+
+// 获取已部署合约信息
+export const getDeployedContractInfo = async () => {
+  return request('/ordx/info/contracts/deployed', {});
+};
+
+// 获取单个合约状态
+export const getContractStatus = async (uri: string) => {
+  return request(`/ordx/info/contract/${uri}`, {});
+};
+
+// 获取合约调用历史
+export const getContractInvokeHistory = async (url: string, pageStart: number = 0, pageLimit: number = 20) => {
+  return request(`/ordx/info/contract/history/${url}?start=${pageStart}&limit=${pageLimit}`, {});
+};
+
+// 获取合约所有用户地址
+export const getContractAllAddresses = async (uri: string, pageStart: number = 0, pageLimit: number = 20) => {
+  return request(`/ordx/info/contract/alluser/${uri}?start=${pageStart}&limit=${pageLimit}`, {});
+};
+
+// 获取合约分析数据
+export const getContractAnalytics = async (url: string) => {
+  return request(`/ordx/info/contract/analytics/${url}`, {});
+};
+
+// 获取某用户在某合约的状态
+export const getContractStatusByAddress = async (url: string, address: string) => {
+  return request(`/ordx/info/contract/user/${url}/${address}`, {});
+};
+
+// 获取某用户在某合约的历史
+export const getUserHistoryInContract = async (url: string, address: string, pageStart: number = 0, pageLimit: number = 20) => {
+  return request(`/ordx/info/contract/userhistory/${url}/${address}?start=${pageStart}&limit=${pageLimit}`, {});
 };

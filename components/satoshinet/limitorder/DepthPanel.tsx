@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCommonStore } from "@/store/common";
 import { toast } from "sonner";
+import { getContractStatus } from '@/api/market';
 
 
 // 直接内联 DepthList 组件
@@ -173,8 +174,8 @@ export default function DepthPanel({
     queryKey: ["depthData", contractURL],
     queryFn: async () => {
       if (!contractURL) return null;
-      const result = await window.sat20.getDeployedContractStatus(contractURL);
-      return result?.contractStatus ? JSON.parse(result?.contractStatus) : null;
+      const { status } = await getContractStatus(contractURL);
+      return status ? JSON.parse(status) : null;
     },
     enabled: !!contractURL,
     refetchInterval: 3000,
