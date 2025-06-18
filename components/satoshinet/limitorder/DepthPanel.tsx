@@ -297,7 +297,9 @@ export default function DepthPanel({
     setPrice("");
     setQuantity("");
   };
-
+  console.log('sellDepth', sellDepth);
+  console.log('buyDepth', buyDepth);
+  
   return (
     <>
 
@@ -311,8 +313,8 @@ export default function DepthPanel({
                 {(() => {
                   const bestBid = buyDepth.length > 0 ? buyDepth[0].price : 0;
                   const bestAsk = sellDepth.length > 0 ? sellDepth[sellDepth.length - 1].price : 0;
-                  const spread = bestAsk && bestBid ? (bestAsk - bestBid).toFixed(3) : "--";
-                  const spreadPercent = bestAsk && bestBid ? (((bestAsk - bestBid) / bestAsk) * 100).toFixed(2) : "--";
+                  const spread = bestAsk && bestBid ? (bestAsk - bestBid).toFixed(10) : "--";
+                  const spreadPercent = bestAsk && bestBid ? (((bestAsk - bestBid) / bestBid) * 100).toFixed(2) : "--";
                   return (
                     <span className="flex items-center gap-1">
                       Spread&nbsp;
