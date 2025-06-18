@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
+import { marketApi } from '@/api';
 
 interface ParticipantsTableProps {
   contractURL: string;
@@ -25,19 +26,21 @@ interface ParticipantsTableProps {
 const fetchParticipants = async (contractURL: string, bindingSat: number, pageStart: number = 0, pageLimit: number = 0) => {
   if (!contractURL) return [];
   try {
-    const result = await window.sat20.getAllAddressInContract(contractURL, pageStart, pageLimit);
-    const list = JSON.parse(result.addresses)?.data || [];
+    // 获取所有地址
+    const { status } = await marketApi.getContractAllAddresses(contractURL, pageStart, pageLimit);
+    console.log('status', status);
+
+    const list = JSON.parse(status)?.data || [];
     const resultStatusList: any[] = [];
     for (const item of list) {
-      const { status } = await window.sat20.getAddressStatusInContract(contractURL, item.address);
+      // 获取每个地址的状态
+      const { status: statusRes } = await marketApi.getContractStatusByAddress(contractURL, item.address);
       resultStatusList.push({
         ...item,
-        ...JSON.parse(status)
+        ...JSON.parse(statusRes)
       });
     }
     resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
-    console.log();
-    
     return resultStatusList.map(v => {
       const TotalMint = v.valid?.TotalMint || 0;
       return {
@@ -70,7 +73,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
     const TotalMint = participant.valid?.TotalMint || 0;
     return {
       ...participant,
-      amount: TotalMint ,
+      amount: TotalMint,
       sats: Math.ceil((TotalMint + bindingSat - 1) / bindingSat)
     };
   });
@@ -156,7 +159,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                             {participant.invalid.MintHistory.map((item: any, i: number) => {
                               const txid = item.Utxo?.split(':')[0];
                               const amt = item.RefundValue
-                              ;
+                                ;
                               return (
                                 <li key={i} className="flex items-center space-x-2">
                                   <a href={generateMempoolUrl({

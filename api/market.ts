@@ -78,13 +78,13 @@ export const request = async (
     }
   } else if (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
     if (formData) {
-        fetchOptions.body = formData;
-        headers.delete('Content-Type');
+      fetchOptions.body = formData;
+      headers.delete('Content-Type');
     } else if (data) {
-        fetchOptions.body = JSON.stringify(data);
-        if (!headers.has('Content-Type')) {
-          headers.set('Content-Type', 'application/json');
-        }
+      fetchOptions.body = JSON.stringify(data);
+      if (!headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
     }
   }
   if (ctxConnected && ctxSignature && ctxPublicKey) {
@@ -112,12 +112,12 @@ export const request = async (
         try {
           const textError = await response.text();
           errorMessage += `\nResponse body: ${textError}`;
-        } catch (textErrorErr) {}
+        } catch (textErrorErr) { }
       }
       throw new Error(errorMessage);
     }
     if (response.status === 204) {
-       return null;
+      return null;
     }
     const responseData = await response.json();
     console.log('fetch response data:', responseData);
@@ -553,13 +553,13 @@ export const getContractStatus = async (uri: string) => {
 };
 
 // 获取合约调用历史
-export const getContractInvokeHistory = async (url: string) => {
-  return request(`/ordx/info/contract/history/${url}`, {});
+export const getContractInvokeHistory = async (url: string, pageStart: number = 0, pageLimit: number = 20) => {
+  return request(`/ordx/info/contract/history/${url}?start=${pageStart}&limit=${pageLimit}`, {});
 };
 
 // 获取合约所有用户地址
-export const getContractAllAddresses = async (uri: string) => {
-  return request(`/ordx/info/contract/alluser/${uri}`, {});
+export const getContractAllAddresses = async (uri: string, pageStart: number = 0, pageLimit: number = 20) => {
+  return request(`/ordx/info/contract/alluser/${uri}?start=${pageStart}&limit=${pageLimit}`, {});
 };
 
 // 获取合约分析数据
@@ -573,6 +573,6 @@ export const getContractStatusByAddress = async (url: string, address: string) =
 };
 
 // 获取某用户在某合约的历史
-export const getUserHistoryInContract = async (url: string, address: string) => {
-  return request(`/ordx/info/contract/userhistory/${url}/${address}`, {});
+export const getUserHistoryInContract = async (url: string, address: string, pageStart: number = 0, pageLimit: number = 20) => {
+  return request(`/ordx/info/contract/userhistory/${url}/${address}?start=${pageStart}&limit=${pageLimit}`, {});
 };

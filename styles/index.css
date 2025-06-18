@@ -81,3 +81,32 @@ body {
   height: 20px; /* 设置固定高度 */
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.1); /* 添加轻微阴影，减少锯齿感 */
 }
+
+/* 深色输入框样式 */
+.input-swap {
+  background-color: transparent; /* 深色背景 */
+  color: #e1e1e1; /* 浅色文字 */
+  /* border: 1px solid #505050; 边框颜色 */
+  border-radius: 8px; /* 圆角 */
+  padding: 8px 12px; /* 内边距 */
+  /*font-size: 16px;  字体大小 */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* 添加过渡效果 */
+}
+
+.input-swap:hover {
+  background-color: #1e1e1e; /* 深色背景 */
+  border-color: transparent; /* 聚焦时边框颜色 */
+  /* box-shadow: 0 0 4px rgba(115, 66, 219, 0.5); 聚焦时阴影效果 */
+  outline: none; /* 移除默认聚焦样式 */
+}
+
+.input-swap:focus {
+  border-color: transparent; /* 聚焦时边框颜色 */
+  /* box-shadow: 0 0 4px rgba(115, 66, 219, 0.5); 聚焦时阴影效果 */
+  outline: none; /* 移除默认聚焦样式 */
+}
+
+.input-swap::placeholder {
+  color: #a1a1a1; /* 占位符颜色 */
+  opacity: 0.8; /* 占位符透明度 */
+}

@@ -13,6 +13,7 @@ import TradeHistoryPanel from '@/components/satoshinet/limitorder/TradeHistoryPa
 import { useCommonStore } from '@/store';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { getDeployedContractInfo } from '@/api/market';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -80,8 +81,8 @@ function OrderPageContent() {
     async function fetchContractUrl() {
       setIsContractUrlLoading(true);
       try {
-        const result = await window.sat20.getDeployedContractsInServer();
-        const { contractURLs = [] } = result;
+        const deployed = await getDeployedContractInfo();
+        const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
         const list = contractURLs.filter((c: string) => c.indexOf(`${tickerInfo.displayname}_swap.tc`) > -1);
         setContractUrl(list[0] || '');
       } catch {
@@ -92,6 +93,7 @@ function OrderPageContent() {
     }
     if (tickerInfo.displayname) fetchContractUrl();
   }, [tickerInfo.displayname]);
+  console.log('contractUrl', contractUrl);
 
   const handleOrderSuccess = () => {
     if (!address || !summary.assetName) return;
@@ -118,7 +120,7 @@ function OrderPageContent() {
         <div className="sm:col-span-2 flex flex-col gap-4 mb-8 sm:mb-0">
           {/* Tradingview Chart */}
           <div className="flex items-center justify-center min-h-[300px] sm:min-h-[680px] sm:mb-0">
-            <ChartModule assets_name={asset || ''} tickerInfo={tickerInfo} />
+            <ChartModule contractURL={contractUrl} tickerInfo={tickerInfo} />
           </div>
           <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
             <AssetInfo assetData={summary} />
