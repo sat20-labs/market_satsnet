@@ -28,6 +28,7 @@ import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useContractStore } from '@/store/contract';
 import { Icon } from '@iconify/react';
 import { useRouter } from 'next/navigation';
+import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 
 
 function adaptPoolData(pool, satsnetHeight) {
@@ -96,29 +97,30 @@ const LaunchPool = () => {
   );
 
   const getPoolList = async () => {
-    const result = await window.sat20.getDeployedContractsInServer();
-    const { contractURLs = [] } = result;
-    const list = contractURLs.filter(c => c.indexOf('launchpool.tc') > -1);
-
-    const statusList: any[] = [];
-    for (const item of list) {
-      const result = await window.sat20.getDeployedContractStatus(item);
-      const { contractStatus } = result;
-      if (contractStatus) {
-        statusList.push({
-          ...JSON.parse(contractStatus),
-          contractURL: item,
-        });
-      }
-    }
-    return statusList;
+    const deployed = await getDeployedContractInfo();
+    const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
+    const list = contractURLs.filter((c: string) => c.indexOf('launchpool.tc') > -1);
+    const statusList = await Promise.all(
+      list.map(async (item: string) => {
+        const { status } = await getContractStatus(item);
+        
+        if (status) {
+          return {
+            ...JSON.parse(status),
+            contractURL: item,
+          };
+        }
+        return null;
+      })
+    );
+    return statusList.filter(Boolean);
   };
 
   const { data: poolList = [] } = useQuery({
     queryKey: ['poolList'],
     queryFn: getPoolList,
     gcTime: 0,
-    // refetchInterval: 60000,
+    refetchInterval: 60000,
   });
 
   const adaptedPoolList = useMemo(() => {
@@ -144,8 +146,6 @@ const LaunchPool = () => {
   const [selectedPool, setSelectedPool] = useState<any | null>(null);
 
   const openModal = async (type: string, pool: any | null = null) => {
-    const result = await window.sat20.getParamForInvokeContract('amm.tc');
-    console.log('result', result);
     setModalType(type);
     if (type === 'template' && pool) {
       setSelectedTemplateId(pool.template);

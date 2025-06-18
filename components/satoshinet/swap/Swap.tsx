@@ -11,6 +11,7 @@ import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { ArrowDownUp } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getContractStatus } from '@/api/market';
 
 interface SwapProps {
   contractUrl: string;
@@ -41,8 +42,8 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
     queryKey: ["swapData", contractUrl],
     queryFn: async () => {
       if (!contractUrl) return null;
-      const result = await window.sat20.getDeployedContractStatus(contractUrl);
-      return result?.contractStatus ? JSON.parse(result?.contractStatus) : null;
+      const { status } = await getContractStatus(contractUrl);
+      return status ? JSON.parse(status) : null;
     },
     enabled: !!contractUrl,
     refetchInterval: 3000,

@@ -536,3 +536,43 @@ export const getTwitterActivity = async ({ address, activity_id }) => {
   });
   return res;
 };
+
+// 获取支持的合约列表
+export const getSupportedContracts = async () => {
+  return request('/ordx/info/contracts/support', {});
+};
+
+// 获取已部署合约信息
+export const getDeployedContractInfo = async () => {
+  return request('/ordx/info/contracts/deployed', {});
+};
+
+// 获取单个合约状态
+export const getContractStatus = async (uri: string) => {
+  return request(`/ordx/info/contract/${uri}`, {});
+};
+
+// 获取合约调用历史
+export const getContractInvokeHistory = async (url: string) => {
+  return request(`/ordx/info/contract/history/${url}`, {});
+};
+
+// 获取合约所有用户地址
+export const getContractAllAddresses = async (uri: string) => {
+  return request(`/ordx/info/contract/alluser/${uri}`, {});
+};
+
+// 获取合约分析数据
+export const getContractAnalytics = async (url: string) => {
+  return request(`/ordx/info/contract/analytics/${url}`, {});
+};
+
+// 获取某用户在某合约的状态
+export const getContractStatusByAddress = async (url: string, address: string) => {
+  return request(`/ordx/info/contract/user/${url}/${address}`, {});
+};
+
+// 获取某用户在某合约的历史
+export const getUserHistoryInContract = async (url: string, address: string) => {
+  return request(`/ordx/info/contract/userhistory/${url}/${address}`, {});
+};
