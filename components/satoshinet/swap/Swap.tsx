@@ -59,6 +59,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
   const assetAmtRaw = useMemo(() => swapData?.AssetAmtInPool || { Precision: 0, Value: 0 }, [swapData]);
   const assetAmt = useMemo(() => assetAmtRaw.Value / Math.pow(10, assetAmtRaw.Precision), [assetAmtRaw]);
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData]);
+  const protocol = useMemo(() => swapData?.Contract?.assetName?.Protocol || '', [swapData]);
   const currentPrice = useMemo(() => {
     if (!satValue || !assetAmt) return 0;
     return Number((satValue / assetAmt).toFixed(10));
@@ -130,10 +131,19 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
   }, [toAmount, slippage]);
 
   // 服务费（聪换资产时）
-  const amtNum = Number(fromAmount);
-  const serviceFee = swapType === 'sats-to-asset' ? 10 + Math.ceil(amtNum * 0.008) : 0;
-  //const serviceFee = swapType === 'sats-to-asset' ? Math.max(10, Math.ceil(amtNum * 0.008)) : 0;
-  const networkFee = 10; // 网络费，假设为10 sats
+  const serviceFee = useMemo(() => {
+    if (swapType === 'sats-to-asset' && Number(fromAmount) > 0) {
+      return 10 + Math.ceil(Number(fromAmount) * 0.008); // 服务费计算逻辑
+    }
+    return 0; // 如果 fromAmount 为 0，服务费为 0
+  }, [swapType, fromAmount]);
+  
+  const networkFee = useMemo(() => {
+    if (Number(fromAmount) > 0) {
+      return 10; // 假设网络费固定为 10 sats
+    }
+    return 0; // 如果 fromAmount 为 0，网络费为 0
+  }, [fromAmount]);
 
   // 总支付费用部分
   const totalFee = useMemo(() => {
@@ -161,15 +171,15 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
       return;
     }
     if (!fromAmount || Number(fromAmount) <= 0) {
-      toast.error("请输入兑换数量");
+      toast.error("Please enter a valid amount");
       return;
     }
     if (swapType === 'sats-to-asset' && Number(fromAmount) > displaySatsBalance) {
-      toast.error("聪余额不足");
+      toast.error("Insufficient sats balance");
       return;
     }
     if (swapType === 'asset-to-sats' && Number(fromAmount) > assetBalance.availableAmt) {
-      toast.error("资产余额不足");
+      toast.error("Insufficient asset balance");
       return;
     }
     setIsSwapping(true);
@@ -227,7 +237,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
       }
       const { txId } = result;
       if (txId) {
-        toast.success(`Swap成功，txid: ${txId}`);
+        toast.success(`Swap successful, txid: ${txId}`);
         setFromAmount("");
         setToAmount("");
         setSlippage("0");
@@ -236,19 +246,19 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
         refetchAssetBalance();
         onSellSuccess?.();
       } else {
-        toast.error("Swap失败");
+        toast.error("Swap failed");
       }
     } catch (error) {
-      toast.error("Swap失败");
+      toast.error("Swap failed");
     }
     setIsSwapping(false);
   };
 
   // UI
-  return (
-    <div className="py-4 bg-transparent text-zinc-200 max-w-lg mx-auto">
+  return (   
+    <div className="py-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
       {/* 资产信息 */}
-      <div className="flex items-center gap-3 mb-4 py-2">
+      <div className="flex items-center gap-3 mb-4 pb-2">
         {/* <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
           <AvatarImage src={swapData.logo} alt="Logo" />
           <AvatarFallback>
@@ -256,14 +266,50 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
               ? String.fromCodePoint(swapData.assetInfo.assetName)
               : ''}
           </AvatarFallback>
-        </Avatar> */}
-        <div>
-          <div className="font-bold text-lg flex items-center gap-1 py-1">{formatName(assetInfo.assetName)} <span className="text-green-400 text-base">~ {currentPrice.toFixed(4) || '--'}</span> <span className="text-zinc-400">sats</span></div>
-          <div className="text-xs text-zinc-500 py-1">{t('common.contractAddress')}: {contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</div>
-          <div className="text-xs text-zinc-500">{t('common.poolAssetAmount')}: <span className="text-zinc-400 font-bold">{assetAmt}</span> {tickerInfo?.displayname} /  <span className="text-zinc-400 font-bold">{satValue}</span> sats</div>
+        </Avatar> */} 
+
+       {/* 左侧：资产信息 */}       
+       <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-800 shadow-lg">
+          <div className="flex items-center mb-2 gap-4">
+            {/* Logo 或首字母 */}
+            <div className="w-12 h-12 rounded-full bg-purple-700 flex items-center justify-center text-zinc-300 text-xl font-bold">
+              {formatName(assetInfo.assetName).charAt(0).toUpperCase()}
+            </div>
+
+            {/* 名称与合约 */}
+            <div>
+              <p className="text-zinc-400 font-semibold text-lg">{formatName(assetInfo.assetName)}</p>
+              <p className="text-zinc-500 text-xs gap-2">
+                {t('common.contractAddress')}：<span className="text-blue-400 mr-2">{contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</span>
+                {t('common.protocol')}：{protocol}
+              </p>
+            </div>
+          </div>
+
+          {/* 价格与池状态 */}
+          <div className="text-sm pt-2 text-zinc-500 border-t border-zinc-800 space-y-2">    
+            {/* 资产池信息 */}
+            <div className="flex justify-start items-start">
+              <span className="text-zinc-500">{t('common.poolAssetInfo')}：</span>
+              <div className="text-left text-zinc-500 space-y-1">
+                <p><span className="font-bold mr-2">{assetAmt}</span> {tickerInfo?.displayname}</p>
+                <p><span className="font-bold mr-2">{satValue}</span> sats</p>
+              </div>
+            </div>
+
+             {/* 当前价格 */}
+             <div className="flex justify-start items-center gap-1">
+              <span className="text-zinc-500">{t('common.currentPrice')}：</span>
+              <span className="text-green-600 font-bold">
+                ~ {currentPrice || '--'}
+                {/* <span className="text-white ml-1">($<BtcPrice btc={(currentPrice / 100000000).toFixed(8)} />)</span> */}
+              </span>
+              sats
+            </div>
+          </div>
         </div>
       </div>
-      <div className="mb-4 bg-zinc-900 sm:p-2 rounded-xl shadow-lg border border-zinc-800 ">
+      <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
         {/* 上方输入框 */}
         <div className="mb-2 mx-4 bg-zinc-900 py-2 rounded-lg relative"
           onMouseEnter={() => setIsHoveringInput(true)}
@@ -318,7 +364,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
               placeholder={swapType === 'sats-to-asset' ? t('common.enterSatsAmount') : t('common.enterAssetAmount')}
               min={1}
             />
-            <span className="absolute top-1/2 right-4 sm:mr-6 transform -translate-y-1/2 text-zinc-600 text-sm">
+            <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname}
             </span>
           </div>
@@ -338,15 +384,15 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
         <div className="relative z-50">
           <button
             onClick={handleSwitch}
-            className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-zinc-900 hover:bg-purple-500/60 rounded-full p-4 border-2 border-zinc-800"
+            className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-zinc-900 hover:bg-purple-700 rounded-full p-4 border-2 border-zinc-700"
             aria-label={t('common.switchDirection')}
           >
-            <ArrowDownUp className="w-10 h-10 font-bold text-zinc-300" />
+            <ArrowDownUp className="w-10 h-10 font-bold text-purple-500 hover:text-zinc-300" />
           </button>
         </div>
 
         {/* 下方输入框 */}
-        <div className="mb-2 mx-4 bg-zinc-900 py-2 border-t border-zinc-800 relative">
+        <div className="mb-2 mx-4 bg-zinc-900 py-2 border-t-2 border-zinc-700 relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mt-6 mb-1 mx-2 py-2">
             <span className="uppercase">{t('common.youReceive')}</span>
            </div>
@@ -359,7 +405,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
               placeholder={swapType === 'sats-to-asset' ? t('common.estimatedAssetAmount') : t('common.estimatedSatsAmount')}
               min={1}
             />
-            <span className="absolute top-1/2 right-4 sm:mr-6 transform -translate-y-1/2 text-zinc-600 text-sm">
+            <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               {swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}
             </span>
           </div>
@@ -402,7 +448,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
       </div> */}
       {/* 服务费（聪换资产时） */}
       {swapType === 'sats-to-asset' && (
-        <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-lg mx-auto">
+        <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-2xl mx-auto">
 
           {/* 总支付费用部分 */}
           <div className="flex justify-between items-center text-sm text-gray-400">
@@ -428,7 +474,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
                 <span className="text-zinc-400">{serviceFee || '--'} sats</span>
               </div>
               <div className="flex justify-between">
-                <span>{t('common.networkFee')}:</span>
+                <span>{t('common.networkFee')}(10 sats / Tx):</span>
                 <span className="text-zinc-400">{networkFee || '--'} sats</span>
               </div>
             </div>
@@ -447,7 +493,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           {isSwapping ? t('common.swap_buyingAsset') : 'SWAP'}
         </Button>
       </WalletConnectBus>
-    </div>
+    </div>   
   );
 };
 

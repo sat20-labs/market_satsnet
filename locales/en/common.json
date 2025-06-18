@@ -147,7 +147,7 @@
   "takeorder_buy": "Buy",
   "swap": "Swap",
   "contractAddress": "Contract Address",
-  "poolAssetAmount": "Pool Info.",
+  "poolAssetInfo": "Pool Info.",
   "poolSatsAmount": "Pool Sats",
   "youPay": "You Pay",
   "youReceive": "You Receive",
@@ -165,6 +165,8 @@
   "totalPay": "Total Pay",
   "networkFee": "Network Fee",
   "quickInput": "Quick Input",
+  "currentPrice": "Current Price",
+  "protocol": "Protocol",
 
   "limitorder": "Limit Order",
   "limitorder_sell": "Limit Sell",
