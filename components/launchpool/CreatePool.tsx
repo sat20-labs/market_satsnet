@@ -100,12 +100,12 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
         Type: 'f',
         Ticker: formData.ticker,
       },
-      bindingSat: Number(formData.n),
       mintAmtPerSat: Number(formData.mintAmtPerSat),
       limit: Number(formData.limit),
       maxSupply: Number(formData.maxSupply),
       launchRation: Number(formData.launchRatio),
       ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol.charCodeAt(0) } : {}),
+      ...(formData.protocol === 'ordx' ? { bindingSat: Number(formData.n) } : {}),
     };
     const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1, bol);
     console.log('result:', result);
@@ -197,34 +197,38 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               )}
             <div className="flex gap-4 mt-4">
               <div className="flex-1">
-                <div className="flex items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-300 mb-0">{t('pages.createPool.bindingSat')}</label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="ml-1 cursor-pointer align-middle inline-flex"><Icon icon="lucide:help-circle" className="w-4 h-4 text-zinc-400" /></span>
-                    </TooltipTrigger>
-                    <TooltipContent sideOffset={4}>
-                      每一聪绑定的资产数量，每一聪携带的该资产数量，用于在一层铸造ordx资产时使用
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Input
-                  placeholder={t('pages.createPool.bindingSat')}
-                  type="number"
-                  value={formData.n}
-                  onChange={(e) => {
-                    const value = Number(e.target.value);
-                    if (value > 0 && Math.log10(value) % 1 === 0) {
-                      handleInputChange('n', value.toString());
-                      setErrorMessage('');
-                    } else {
-                      setErrorMessage(t('pages.createPool.bindingSatError'));
-                    }
-                  }}
-                  disabled={false}
-                />
-                {errorMessage && (
-                  <p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p>
+                {formData.protocol === 'ordx' && (
+                  <>
+                    <div className="flex items-center mb-1">
+                      <label className="block text-sm font-medium text-gray-300 mb-0">{t('pages.createPool.bindingSat')}</label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="ml-1 cursor-pointer align-middle inline-flex"><Icon icon="lucide:help-circle" className="w-4 h-4 text-zinc-400" /></span>
+                        </TooltipTrigger>
+                        <TooltipContent sideOffset={4}>
+                          每一聪绑定的资产数量，每一聪携带的该资产数量，用于在一层铸造ordx资产时使用
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      placeholder={t('pages.createPool.bindingSat')}
+                      type="number"
+                      value={formData.n}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        if (value > 0 && Math.log10(value) % 1 === 0) {
+                          handleInputChange('n', value.toString());
+                          setErrorMessage('');
+                        } else {
+                          setErrorMessage(t('pages.createPool.bindingSatError'));
+                        }
+                      }}
+                      disabled={false}
+                    />
+                    {errorMessage && (
+                      <p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p>
+                    )}
+                  </>
                 )}
               </div>
               <div className="flex-1">
