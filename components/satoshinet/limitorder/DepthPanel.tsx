@@ -78,9 +78,9 @@ const QuickPriceButtons: React.FC<QuickPriceButtonsProps> = ({
         ? (lowestAsk + topBid) / 2
         : undefined;
     return {
-      lowestAsk,
-      topBid,
-      mid,
+      lowestAsk: lowestAsk !== undefined ? Number(lowestAsk.toFixed(10)) : undefined,
+      topBid: topBid !== undefined ? Number(topBid.toFixed(10)) : undefined,
+      mid: mid !== undefined ? Number(mid.toFixed(10)) : undefined,
     };
   }, [sellDepth, buyDepth]);
 
