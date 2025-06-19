@@ -292,8 +292,8 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
             <div className="flex justify-start items-start">
               <span className="text-zinc-500">{t('common.poolAssetInfo')}：</span>
               <div className="text-left text-zinc-500 space-y-1">
-                <p><span className="font-bold mr-2">{assetAmt}</span> {tickerInfo?.displayname}</p>
-                <p><span className="font-bold mr-2">{satValue}</span> sats</p>
+                <p><span className="font-bold mr-2">{assetAmt.toLocaleString()}</span> {tickerInfo?.displayname}</p>
+                <p><span className="font-bold mr-2">{satValue.toLocaleString()}</span> sats</p>
               </div>
             </div>
 
@@ -370,7 +370,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           </div>
           {/* 显示余额 */}
           <p className="flex justify-between text-zinc-600 text-xs mt-2 mb-8 px-2">
-            <span>{t('common.balance')}: <span className="font-bold">{swapType === 'sats-to-asset' ? displaySatsBalance : displayAssetBalance} </span> {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname}
+            <span>{t('common.balance')}: <span className="font-bold">{swapType === 'sats-to-asset' ? displaySatsBalance.toLocaleString() : displayAssetBalance.toLocaleString()} </span> {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname}
               {swapType === 'sats-to-asset' && (
                 <span className="text-xs text-zinc-600 ml-2">
                   ($<BtcPrice btc={displayAssetBalance / 100000000} />)
@@ -413,7 +413,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           <p className="text-xs text-zinc-600 mt-1 px-2">
               <span>
                 {t('common.balance')}:
-                  <span className="font-bold"> {swapType === 'sats-to-asset' ? displayAssetBalance : displaySatsBalance}</span> 
+                  <span className="font-bold mr-1"> {swapType === 'sats-to-asset' ? displayAssetBalance.toLocaleString() : displaySatsBalance.toLocaleString()}</span> 
                   <span className="font-light">{swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}</span>
               </span>
           </p>
