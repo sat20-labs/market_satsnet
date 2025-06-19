@@ -53,6 +53,7 @@ interface OrderData {
   OutValue: number;
   Valid: boolean;
   Done: number;
+  Reason?: string;
 }
 
 interface OrderResponse {
@@ -126,12 +127,24 @@ const mapOrderData = (orderData: OrderData, t: any) => {
     inAmt,
     remainingAmt,
     remainingValue,
+    reason: orderData.Reason || '',
   };
 };
 
 interface SwapMyOrdersPanelProps {
   contractURL: string;
 }
+
+const ORDER_TYPE_LABELS: Record<number, string> = {
+  1: "卖出",
+  2: "买入",
+  3: "退款",
+  4: "资金",
+  5: "收益",
+  6: "充值",
+  7: "提现",
+  8: "未使用",
+};
 
 const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) => {
   const { address } = useReactWalletStore();
@@ -173,12 +186,14 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
           <TableHeader>
             <TableRow className="bg-zinc-800 text-gray-500 text-xs">
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
+              <TableHead className="text-center whitespace-nowrap">类型</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_quantity")}</TableHead>
               <TableHead className="text-center  whitespace-nowrap">{t("common.limitorder_history_order_amount_sats")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_quantity")}</TableHead>
               <TableHead className="text-center  whitespace-nowrap">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_status")}</TableHead>
+              <TableHead className="text-center whitespace-nowrap">Reason</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.tx")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">UTXO</TableHead>
             </TableRow>
@@ -190,6 +205,9 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
               .map((order, i) => (
                 <TableRow className="text-xs" key={`${order.rawData.Id || i}-${i}`}>
                   <TableCell className={`text-center font-bold ${order.side === "Cancelled" ? "text-gray-600" : order.side === "Buy" ? "text-green-600" : order.side === "Sell" ? "text-red-500" : "text-red-500"}`}>{order.side}</TableCell>
+                  <TableCell className="text-center">
+                    {ORDER_TYPE_LABELS[order.rawData.OrderType] || order.rawData.OrderType}
+                  </TableCell>
                   <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.rawData.OrderTime)}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell>
@@ -208,6 +226,7 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
                       {order.status}
                     </span>
                   </TableCell>
+                  <TableCell className="text-center">{order.reason}</TableCell>
                   <TableCell className="text-center">
                     {order.status === t("common.limitorder_status_completed") && order.rawData.OutTxId ? (
                       <a

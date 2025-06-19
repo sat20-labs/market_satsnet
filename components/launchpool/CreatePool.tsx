@@ -27,7 +27,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     protocol: 'ordx',
     ticker: '',
     n: '1000',
-    mintAmtPerSat: '',
+    mintAmtPerSat: '1',
     limit: '',
     launchRatio: '70',
     maxSupply: '',
@@ -75,18 +75,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     '200': t('pages.status.closing'),
   };
 
-  const isBindingSatEditable = bol && formData.protocol === 'ordx';
-
-  useEffect(() => {
-    if (!isBindingSatEditable && formData.n !== '1') {
-      setFormData((prev) => ({ ...prev, n: '1' }));
-    }
-    if (isBindingSatEditable && formData.n === '1') {
-      setFormData((prev) => ({ ...prev, n: '1000' }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bol, formData.protocol]);
-
   async function handleConfirm(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
     event.preventDefault();
     if (formData.endBlock !== '0' && Number(formData.endBlock) <= satsnetHeight) {
@@ -130,12 +118,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       toast.error('Contract deployment failed');
     }
   }
-
-  // useEffect(() => {
-  //   if (formData.protocol === 'runes' && formData.n !== '1000') {
-  //     setFormData((prev) => ({ ...prev, n: '1000' }));
-  //   }
-  // }, [formData.protocol]);
 
   const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply && !errorLaunchRatio);
   const isStep1Complete = !!(formData.protocol && formData.ticker && formData.n);
@@ -232,18 +214,16 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                   value={formData.n}
                   onChange={(e) => {
                     const value = Number(e.target.value);
-                    if (isBindingSatEditable) {
-                      if (value > 0 && Math.log10(value) % 1 === 0) {
-                        handleInputChange('n', value.toString());
-                        setErrorMessage('');
-                      } else {
-                        setErrorMessage(t('pages.createPool.bindingSatError'));
-                      }
+                    if (value > 0 && Math.log10(value) % 1 === 0) {
+                      handleInputChange('n', value.toString());
+                      setErrorMessage('');
+                    } else {
+                      setErrorMessage(t('pages.createPool.bindingSatError'));
                     }
                   }}
-                  disabled={!isBindingSatEditable}
+                  disabled={false}
                 />
-                {errorMessage && isBindingSatEditable && (
+                {errorMessage && (
                   <p className="mt-1 text-xs text-red-400 gap-2">* {errorMessage}</p>
                 )}
               </div>

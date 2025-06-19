@@ -9,14 +9,54 @@ import { useQueryKey } from '@/lib/hooks/useQueryKey';
 import { useCommonStore } from '@/store';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { useTranslation } from 'react-i18next';
-import { useAssetBalance } from '@/application/useAssetBalanceService';
+import { ChartModule } from '@/components/satoshinet/ChartModule';
 import { useWalletStore } from '@/store';
 import Swap from '@/components/satoshinet/swap/Swap';
 import SwapMyOrdersPanel from '@/components/satoshinet/swap/SwapMyOrdersPanel';
 import { getDeployedContractInfo } from '@/api/market';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import WithDraw from '@/components/satoshinet/swap/WithDraw';
+import Deposit from '@/components/satoshinet/swap/Deposit';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
+}
+
+function AssetInfoCard({ assetInfo, contractUrl, tickerInfo, protocol, assetAmt, satValue, currentPrice, t }) {
+  return (
+    <div className="flex items-center gap-3 mb-4 pb-2">
+      <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-800 shadow-lg">
+        <div className="flex items-center mb-2 gap-4">
+          <div className="w-12 h-12 rounded-full bg-purple-700 flex items-center justify-center text-zinc-300 text-xl font-bold">
+            {assetInfo.assetName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="text-zinc-400 font-semibold text-lg">{assetInfo.assetName}</p>
+            <p className="text-zinc-500 text-xs gap-2">
+              {t('common.contractAddress')}：<span className="text-blue-400 mr-2">{contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</span>
+              {t('common.protocol')}：{protocol}
+            </p>
+          </div>
+        </div>
+        <div className="text-sm pt-2 text-zinc-500 border-t border-zinc-800 space-y-2">
+          <div className="flex justify-start items-start">
+            <span className="text-zinc-500">{t('common.poolAssetInfo')}：</span>
+            <div className="text-left text-zinc-500 space-y-1">
+              <p><span className="font-bold mr-2">{assetAmt?.toLocaleString()}</span> {tickerInfo?.displayname}</p>
+              <p><span className="font-bold mr-2">{satValue?.toLocaleString()}</span> sats</p>
+            </div>
+          </div>
+          <div className="flex justify-start items-center gap-1">
+            <span className="text-zinc-500">{t('common.currentPrice')}：</span>
+            <span className="text-green-600 font-bold">
+              ~ {currentPrice || '--'}
+            </span>
+            sats
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function OrderPageContent() {
@@ -93,17 +133,61 @@ function OrderPageContent() {
 
   return (
     <div className="p-4 relative">
-      <Swap
-        contractUrl={ammContractUrl}
-        assetInfo={{
+      <ChartModule contractURL={ammContractUrl} tickerInfo={tickerInfo} />
+      <div className="max-w-2xl mx-auto">
+        <AssetInfoCard assetInfo={{
           assetLogo: summary.assetLogo,
           assetName: summary.assetName,
           AssetId: summary.assetId,
           floorPrice: parseFloat(summary.floorPrice),
-        }}
-        tickerInfo={tickerInfo}
-        onSellSuccess={() => {}}
-      />
+        }} contractUrl={ammContractUrl} tickerInfo={tickerInfo} protocol={summary.assetName.split(':')[0]} assetAmt={summary.assetName.split(':')[1]} satValue={summary.assetName.split(':')[2]} currentPrice={summary.floorPrice} t={t} />
+        <div className="rounded-xl shadow-lg">
+          <Tabs defaultValue="swap" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="swap">兑换</TabsTrigger>
+              <TabsTrigger value="deposit">充值</TabsTrigger>
+              <TabsTrigger value="withdraw">提取</TabsTrigger>
+            </TabsList>
+            <TabsContent value="swap">
+              <Swap
+                contractUrl={ammContractUrl}
+                assetInfo={{
+                  assetLogo: summary.assetLogo,
+                  assetName: summary.assetName,
+                  AssetId: summary.assetId,
+                  floorPrice: parseFloat(summary.floorPrice),
+                }}
+                tickerInfo={tickerInfo}
+                onSellSuccess={() => {}}
+              />
+            </TabsContent>
+            <TabsContent value="deposit">
+              <Deposit
+                contractUrl={ammContractUrl}
+                assetInfo={{
+                  assetLogo: summary.assetLogo,
+                  assetName: summary.assetName,
+                  AssetId: summary.assetId,
+                  floorPrice: parseFloat(summary.floorPrice),
+                }}
+                tickerInfo={tickerInfo}
+              />
+            </TabsContent>
+            <TabsContent value="withdraw">
+              <WithDraw
+                contractUrl={ammContractUrl}
+                assetInfo={{
+                  assetLogo: summary.assetLogo,
+                  assetName: summary.assetName,
+                  AssetId: summary.assetId,
+                  floorPrice: parseFloat(summary.floorPrice),
+                }}
+                tickerInfo={tickerInfo}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
       <div className="mt-8">
         <SwapMyOrdersPanel contractURL={ammContractUrl} />
       </div>

@@ -257,58 +257,6 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
   // UI
   return (
     <div className="py-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
-      {/* 资产信息 */}
-      <div className="flex items-center gap-3 mb-4 pb-2">
-        {/* <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-          <AvatarImage src={swapData.logo} alt="Logo" />
-          <AvatarFallback>
-            {assetInfo.assetName
-              ? String.fromCodePoint(swapData.assetInfo.assetName)
-              : ''}
-          </AvatarFallback>
-        </Avatar> */}
-
-        {/* 左侧：资产信息 */}
-        <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-800 shadow-lg">
-          <div className="flex items-center mb-2 gap-4">
-            {/* Logo 或首字母 */}
-            <div className="w-12 h-12 rounded-full bg-purple-700 flex items-center justify-center text-zinc-300 text-xl font-bold">
-              {formatName(assetInfo.assetName).charAt(0).toUpperCase()}
-            </div>
-
-            {/* 名称与合约 */}
-            <div>
-              <p className="text-zinc-400 font-semibold text-lg">{formatName(assetInfo.assetName)}</p>
-              <p className="text-zinc-500 text-xs gap-2">
-                {t('common.contractAddress')}：<span className="text-blue-400 mr-2">{contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</span>
-                {t('common.protocol')}：{protocol}
-              </p>
-            </div>
-          </div>
-
-          {/* 价格与池状态 */}
-          <div className="text-sm pt-2 text-zinc-500 border-t border-zinc-800 space-y-2">
-            {/* 资产池信息 */}
-            <div className="flex justify-start items-start">
-              <span className="text-zinc-500">{t('common.poolAssetInfo')}：</span>
-              <div className="text-left text-zinc-500 space-y-1">
-                <p><span className="font-bold mr-2">{assetAmt.toLocaleString()}</span> {tickerInfo?.displayname}</p>
-                <p><span className="font-bold mr-2">{satValue.toLocaleString()}</span> sats</p>
-              </div>
-            </div>
-
-            {/* 当前价格 */}
-            <div className="flex justify-start items-center gap-1">
-              <span className="text-zinc-500">{t('common.currentPrice')}：</span>
-              <span className="text-green-600 font-bold">
-                ~ {currentPrice || '--'}
-                {/* <span className="text-white ml-1">($<BtcPrice btc={(currentPrice / 100000000).toFixed(8)} />)</span> */}
-              </span>
-              sats
-            </div>
-          </div>
-        </div>
-      </div>
       <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
         {/* 上方输入框 */}
         <div className="mb-2 mx-4 bg-zinc-900 py-2 rounded-lg relative"
@@ -411,11 +359,11 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           </div>
           {/* 显示余额 */}
           <p className="text-xs text-zinc-600 mt-1 px-2">
-              <span>
-                {t('common.balance')}:
-                  <span className="font-bold mr-1"> {swapType === 'sats-to-asset' ? displayAssetBalance.toLocaleString() : displaySatsBalance.toLocaleString()}</span> 
-                  <span className="font-light">{swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}</span>
-              </span>
+            <span>
+              {t('common.balance')}:
+              <span className="font-bold mr-1"> {swapType === 'sats-to-asset' ? displayAssetBalance.toLocaleString() : displaySatsBalance.toLocaleString()}</span>
+              <span className="font-light">{swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}</span>
+            </span>
           </p>
         </div>
         {/* 滑点输入 */}
