@@ -43,12 +43,26 @@ export const OrderAnalyze = ({
     const items_24hours = data?.items_24hours?.filter(Boolean) || [];
     const items_30days = data?.items_30days?.filter(Boolean) || [];
 
+    // 排序函数：先按 date 升序，再按 time 升序
+    const sortAsc = (a: any, b: any) => {
+      if (a.date && b.date) {
+        if (a.date < b.date) return -1;
+        if (a.date > b.date) return 1;
+        // date 相同，比较 time
+        if (a.time && b.time) {
+          if (a.time < b.time) return -1;
+          if (a.time > b.time) return 1;
+        }
+      }
+      return 0;
+    };
+
     if (type === '24h') {
-      return items_24hours;
+      return [...items_24hours].sort(sortAsc);
     } else if (type === '7d') {
-      return items_30days?.slice(-7);
+      return [...items_30days].sort(sortAsc).slice(-7);
     } else if (type === '30d') {
-      return items_30days;
+      return [...items_30days].sort(sortAsc);
     }
     return [];
   }, [data, type]);
