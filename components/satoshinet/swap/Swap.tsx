@@ -50,10 +50,9 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
       return status ? JSON.parse(status) : null;
     },
     enabled: !!contractUrl,
-    refetchInterval: 3000,
+    // refetchInterval: 3000,
     refetchIntervalInBackground: false,
   });
-  console.log('swapData', swapData);
 
   const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData]);
   const assetAmtRaw = useMemo(() => swapData?.AssetAmtInPool || { Precision: 0, Value: 0 }, [swapData]);
@@ -240,8 +239,9 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
       }
     } catch (error) {
       toast.error("Swap失败");
+    } finally {
+      setIsSwapping(false);
     }
-    setIsSwapping(false);
   };
 
   // UI
@@ -444,7 +444,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           size="lg"
           disabled={isSwapping}
         >
-          {isSwapping ? t('common.swap_buyingAsset') : 'SWAP'}
+          {isSwapping ? 'Swapping...': 'SWAP'}
         </Button>
       </WalletConnectBus>
     </div>

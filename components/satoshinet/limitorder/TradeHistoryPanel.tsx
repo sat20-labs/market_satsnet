@@ -43,7 +43,7 @@ export default function TradeHistoryPanel({ contractURL }: TradeHistoryPanelProp
           const historyObj = JSON.parse(status);
           const data = Array.isArray(historyObj.data) ? historyObj.data.filter(Boolean) : [];
           total = historyObj.total || data.length;
-          tradeList = data.slice(pageStart, pageStart + pageLimit).map((item: any) => {
+          tradeList = data.map((item: any) => {
             const isBuy = item.OrderType === 2;
             const isCancelled = item.OrderType === 3;
             const side = isCancelled ? "Cancel" : (isBuy ? "Buy" : "Sell");

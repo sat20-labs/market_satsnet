@@ -67,8 +67,8 @@ function OrderPageContent() {
   } = useQuery({
     queryKey: ["ammContractUrl", tickerInfo.displayname],
     queryFn: () => getAmmContractUrl(tickerInfo.displayname),
-    staleTime: 10 * 1000,
-    refetchInterval: 10000,
+    // staleTime: 10 * 1000,
+    // refetchInterval: 10000,
     enabled: !!tickerInfo.displayname,
   });
 

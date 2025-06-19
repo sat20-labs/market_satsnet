@@ -72,7 +72,7 @@ const getMyAmmOrderHistory = async (
     if (!status) return [];
     const parsedHistory = JSON.parse(status) as OrderResponse;
     const allData = Array.isArray(parsedHistory.data) ? parsedHistory.data : [];
-    return allData.slice(pageStart, pageStart + pageLimit);
+    return allData;
   } catch (e) {
     return [];
   }
@@ -149,6 +149,7 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
     getNextPageParam: (lastPage, allPages) => {
       return Array.isArray(lastPage) && lastPage.length === 20 ? allPages.length : undefined;
     },
+    enabled: !!contractURL && !!address,
     initialPageParam: 0,
     refetchInterval: 3000,
     refetchIntervalInBackground: false,

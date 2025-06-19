@@ -17,7 +17,7 @@ export function useAssetBalance(address: string, assetName: string) {
     queryKey: ['assetBalance', address, assetName],
     queryFn: () => getAssetAmount_SatsNet(address, assetName),
     enabled: !!address && !!assetName,
-    refetchInterval: 3000,
+    // refetchInterval: 3000,
     refetchIntervalInBackground: false,
   });
 

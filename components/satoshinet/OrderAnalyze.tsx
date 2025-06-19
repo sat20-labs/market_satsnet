@@ -31,6 +31,7 @@ export const OrderAnalyze = ({
       marketApi.getContractAnalytics(
         contractURL,
       ),
+    refetchInterval: 60000,
     enabled: !!contractURL,
   });
 
