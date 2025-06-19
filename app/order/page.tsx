@@ -147,7 +147,6 @@ function OrderPageContent() {
           <div className="sm:col-span-2 flex flex-col gap-4 mb-8 sm:mb-0">
             {/* Tradingview Chart */}
             <div className="flex items-center justify-center min-h-[300px] sm:min-h-[680px] sm:mb-0">
-              <ChartModule assets_name={asset || ''} tickerInfo={tickerInfo} />
             </div>
             <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
               <AssetInfo assetData={summary} />
