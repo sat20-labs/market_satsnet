@@ -257,7 +257,7 @@
   "submitting": "Submitting...",
   "submit": "Submit",
   "spread": "Spread",
-  "order_placed_successfully": "Order placed successfully, txid: {txId}",
+  "order_placed_successfully": "Order placed successfully, txid: {{txId}}",
   "order_placement_failed": "Order placement failed",
   "wait_for_contract_enable": "Please wait for the contract to be enabled",
   "price_must_be_positive": "Price must be greater than 0.",
