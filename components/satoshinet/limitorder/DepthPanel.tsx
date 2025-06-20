@@ -213,18 +213,18 @@ export default function DepthPanel({
 
     if (satsnetHeight < depthData?.enableBlock) {
       console.log('satsnetHeight < depthData?.enableBlock');
-      toast.error('Please wait for the contract to be enabled');
+      toast.error(t('common.wait_for_contract_enable'));
       return;
     }
     const priceNum = parseFloat(price);
     const quantityNum = parseFloat(quantity);
 
     if (!price || isNaN(priceNum) || priceNum <= 0) {
-      toast.error('价格必须大于0');
+      toast.error(t('common.price_must_be_positive'));
       return;
     }
     if (!quantity || isNaN(quantityNum) || quantityNum <= 0) {
-      toast.error('数量必须大于0');
+      toast.error(t('common.quantity_must_be_positive'));
       return;
     }
 
@@ -294,17 +294,18 @@ export default function DepthPanel({
       });
       const { txId } = result;
       if (txId) {
-        toast.success(`Order placed successfully, txid: ${txId}`);
+        toast.success(t('common.order_placed_successfully', { txId }));
         setIsPlacingOrder(false);
         setPrice("");
         setQuantity("");
         if (onOrderSuccess) onOrderSuccess();
         return;
       } else {
-        toast.error('Order placement failed');
+        toast.error(t('common.order_placement_failed'));
       }
     } catch (error) {
-      toast.error('Order placement failed');
+      console.log('error', error);
+      toast.error(t('common.order_placement_failed'));
     }
     setIsPlacingOrder(false);
     setPrice("");
@@ -330,7 +331,7 @@ export default function DepthPanel({
                   const spreadPercent = bestAsk && bestBid ? (((bestAsk - bestBid) / bestBid) * 100).toFixed(2) : "--";
                   return (
                     <span className="flex items-center gap-1">
-                      Spread&nbsp;
+                      {t('common.spread')}&nbsp;
                       <span className="text-white">{spread}</span>
                       &nbsp;<span role="img" aria-label="sats">🐶</span>
                       &nbsp;<span className="text-gray-400">({spreadPercent}%)</span>
@@ -356,23 +357,23 @@ export default function DepthPanel({
         </Select>
 
         <div className="mt-2 flex flex-col gap-4 flex-wrap">
-          <Label className="text-sm text-gray-500">Price (sats)</Label>
+          <Label className="text-sm text-gray-500">{t('common.limitorder_price')}</Label>
           <QuickPriceButtons price={price} setPrice={setPrice} sellDepth={sellDepth} buyDepth={buyDepth} />
           <span className="flex justify-start items-center text-sm text-gray-500 gap-2">
             <Input
               type="number"
-              placeholder="Price"
+              placeholder={t('common.limitorder_placeholder_price')}
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               className="h-10 text-zinc-200"
               min={1}
               required
-            /> sats
+            /> {t('common.sats')}
           </span>
-          <Label className="text-sm text-gray-500">Quantity</Label>
+          <Label className="text-sm text-gray-500">{t('common.quantity')}</Label>
           <Input
             type="number"
-            placeholder="Quantity"
+            placeholder={t('common.limitorder_placeholder_quantity')}
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
             className="h-10"
@@ -456,7 +457,7 @@ export default function DepthPanel({
           </div>
           <WalletConnectBus asChild>
             <Button onClick={handleSubmitClick} disabled={isPlacingOrder} className="min-w-[80px] btn-gradient h-11">
-              {isPlacingOrder ? "Submitting..." : "Submit"}
+              {isPlacingOrder ? t('common.submitting') : t('common.submit')}
             </Button>
           </WalletConnectBus>
 
@@ -497,7 +498,7 @@ export default function DepthPanel({
           <div className="flex justify-between"><span>{t('common.limitorder_price')}</span><span>{confirmData.bidPrice} {t('common.sats')}</span></div>
           <div className="flex justify-between"><span>{t('common.walletBalance')}</span><span>{balance.availableAmt.toLocaleString()} {t('common.sats')}</span></div>
           <DialogFooter>
-            <Button onClick={handleConfirm}>{t('buttons.confirmSubmit')}</Button>
+            <Button onClick={handleConfirm}>{t('buttons.submit')}</Button>
             <Button variant="outline" onClick={() => setShowConfirm(false)}>{t('buttons.cancel')}</Button>
           </DialogFooter>
         </DialogContent>

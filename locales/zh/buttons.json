@@ -17,5 +17,6 @@
   "pay_wallet": "使用钱包支付",
   "submit_payment": "提交并支付发票",
   "remove_all": "移除所有",
-  "to_history": "交易历史"
+  "to_history": "交易历史",
+  "submit": "提交"
 }

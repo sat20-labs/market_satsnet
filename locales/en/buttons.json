@@ -16,6 +16,7 @@
   "pay_wallet": "Pay with Wallet",
   "submit_payment": "Submit & Pay invoice",
   "back": "Back",
+  "submit": "Submit",
   "remove_all": "Remove All",
   "to_history": "Tx History"
 }

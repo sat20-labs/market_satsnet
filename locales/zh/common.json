@@ -252,5 +252,18 @@
   "swap_sell_processing": "处理中...",
   "swap_sell_sellButton": "卖出",
   "swap_sell_success": "成功卖出",
-  "swap_sell_failed": "卖出失败。请重试。"
+  "swap_sell_failed": "卖出失败。请重试。",
+  "orderSummary": "订单总览",
+  "value": "金额",
+  "walletBalance": "钱包余额",
+  "limitorder_placeholder_price": "价格",
+  "limitorder_placeholder_quantity": "数量",
+  "submitting": "提交中...",
+  "submit": "提交",
+  "spread": "价差",
+  "order_placed_successfully": "下单成功, txid: {txId}",
+  "order_placement_failed": "下单失败",
+  "wait_for_contract_enable": "请等待合约启用",
+  "price_must_be_positive": "价格必须大于0。",
+  "quantity_must_be_positive": "数量必须大于0。"
 }
