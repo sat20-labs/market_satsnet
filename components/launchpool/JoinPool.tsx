@@ -17,6 +17,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   const { t } = useTranslation(); // Specify the namespace
   const limit = Number(poolData?.limit) || 1;
   const [amount, setAmount] = useState('');
+  const [satsCost, setSatsCost] = useState(0);
   const { address } = useReactWalletStore();
   const [minted, setMinted] = useState(0);
   const [maxJoin, setMaxJoin] = useState(limit);
@@ -25,6 +26,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   const infoList = [
     { label: t('pages.joinPool.asset_name'), value: poolData?.assetName.Ticker },
     { label: t('pages.joinPool.asset_protocol'), value: poolData?.assetName.Protocol },
+    { label: t('pages.joinPool.binding_sat'), value: poolData?.bindingSat },
     { label: t('pages.joinPool.contract_type'), value: poolData?.contractType },
     { label: t('pages.joinPool.contract_url'), value: poolData?.contractURL },
     { label: t('pages.joinPool.enable_block'), value: poolData?.enableBlock },
@@ -61,6 +63,19 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     fetchMinted();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, poolData?.contractURL, limit]);
+
+  useEffect(() => {
+    const bindingSat = Number(poolData?.bindingSat);
+    if (bindingSat > 0) {
+      const numAmount = Number(amount);
+      if (numAmount > 0) {
+        const cost = Math.floor((numAmount + bindingSat - 1) / bindingSat);
+        setSatsCost(cost);
+      } else {
+        setSatsCost(0);
+      }
+    }
+  }, [amount, poolData?.bindingSat]);
 
   const handleConfirm = async () => {
     if (Number(amount) > maxJoin) {
@@ -138,6 +153,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
             </Button>
           </div>
           <div className="text-zinc-400 text-sm">{t('pages.joinPool.current_amount')}: <span className="text-zinc-100 font-bold">{amount || 0}</span></div>
+          <div className="text-zinc-400 text-sm">{t('pages.joinPool.sats_cost')}: <span className="text-zinc-100 font-bold">{satsCost}</span></div>
         </div>
 
         <div className="flex justify-start mb-2 gap-4">

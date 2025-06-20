@@ -286,10 +286,12 @@
     "loading": "Loading...",
     "amount_placeholder": "Enter amount",
     "current_amount": "Current amount",
+    "sats_cost": "Sats Cost",
+    "binding_sat": "Binding Sat",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "amount_error": "Amount must be less than or equal to your max join ({maxJoin})",
-    "success": "You have successfully joined the pool with amount: {amount}, TxId: {txId}",
+    "amount_error": "Amount must be less than or equal to your max join ({{maxJoin}})",
+    "success": "You have successfully joined the pool with amount: {{amount}}, TxId: {{txId}}",
     "failure": "Join pool failed"
   },
   "poolDetail": {

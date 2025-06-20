@@ -268,10 +268,12 @@
     "loading": "加载中...",
     "amount_placeholder": "输入数量",
     "current_amount": "当前数量",
+    "sats_cost": "需要支付的Sats",
+    "binding_sat": "绑定聪",
     "confirm": "确认",
     "cancel": "取消",
-    "amount_error": "数量必须小于或等于您的最大加入量 ({maxJoin})",
-    "success": "您已成功加入池子，数量: {amount}, 交易ID: {txId}",
+    "amount_error": "数量必须小于或等于您的最大加入量 ({{maxJoin}})",
+    "success": "您已成功加入池子，数量: {{amount}}, 交易ID: {{txId}}",
     "failure": "加入池子失败"
   },
   "poolDetail": {
