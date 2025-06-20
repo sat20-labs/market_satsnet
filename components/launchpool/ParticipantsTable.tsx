@@ -67,14 +67,14 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
     queryFn: () => fetchParticipants(contractURL, bindingSat, 0, 0),
     enabled: !!contractURL,
   });
-
+  console.log('participantsList', participantsList);
   // 适配 amount 字段
   const adaptedList = participantsList.map((participant: any) => {
     const TotalMint = participant.valid?.TotalMint || 0;
     return {
       ...participant,
       amount: TotalMint,
-      sats: Math.ceil((TotalMint + bindingSat - 1) / bindingSat)
+      sats: Math.floor((TotalMint + bindingSat - 1) / bindingSat)
     };
   });
 
