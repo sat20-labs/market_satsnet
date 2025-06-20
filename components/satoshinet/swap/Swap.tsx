@@ -132,7 +132,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
   // 服务费（聪换资产时）
   const serviceFee = useMemo(() => {
     if (swapType === 'sats-to-asset' && Number(fromAmount) > 0) {
-      return 10 + Math.ceil(Number(fromAmount) * 0.008); // 服务费计算逻辑
+      return 10 + Math.floor(Number(fromAmount) * 0.008); // 服务费计算逻辑
     }
     return 0; // 如果 fromAmount 为 0，服务费为 0
   }, [swapType, fromAmount]);

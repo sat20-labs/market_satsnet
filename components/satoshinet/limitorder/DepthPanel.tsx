@@ -163,7 +163,8 @@ export default function DepthPanel({
     bidPrice: '',
     feeSats: '',
     netFeeSats: '',
-    walletSats: ''
+    walletSats: '',
+    value: '',
   });
 
 
@@ -228,19 +229,31 @@ export default function DepthPanel({
     }
 
     // 计算订单金额和费用
-    const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
     const unitPrice = priceNum.toString();
-    const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : Math.ceil(quantityNum);
-    const serviceFee = orderType === 'buy' ? 10 + Math.ceil(amt * 0.008) : 0;
-
-    // 设置确认对话框数据
-    setConfirmData({
-      paySats: amt.toString(),
-      bidPrice: unitPrice,
-      feeSats: serviceFee.toString(),
-      netFeeSats: (amt + serviceFee).toString(),
-      walletSats: balance.availableAmt.toString()
-    });
+    if (orderType === 'buy') {
+      const value = Math.ceil(priceNum * quantityNum);
+      const serviceFee = Math.max(10, Math.ceil(value * 0.008));
+      const networkFee = 10;
+      setConfirmData({
+        value: value.toString(),
+        bidPrice: unitPrice,
+        feeSats: serviceFee.toString(),
+        netFeeSats: networkFee.toString(),
+        paySats: (value + serviceFee + networkFee).toString(),
+        walletSats: balance.availableAmt.toString()
+      });
+    } else { // sell
+      const value = Math.ceil(priceNum * quantityNum);
+      const networkFee = 10;
+      setConfirmData({
+        value: value.toString(),
+        bidPrice: unitPrice,
+        feeSats: "0",
+        netFeeSats: networkFee.toString(),
+        paySats: "",
+        walletSats: displayAvailableAmt.toString()
+      });
+    }
 
     // 显示确认对话框
     setShowConfirm(true);
@@ -255,7 +268,7 @@ export default function DepthPanel({
     const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
     const unitPrice = priceNum.toString();
     const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : quantityNum;
-    const serviceFee = orderType === 'buy' ? Math.max(10, Math.ceil(amt * 0.008)) : 0;
+    const serviceFee = orderType === 'buy' ? Math.max(10, Math.floor(amt * 0.008)) : 0;
 
     const params = {
       action: 'swap',
@@ -378,25 +391,68 @@ export default function DepthPanel({
               </span>
             </p>
 
-            {orderType === 'buy' && quantity !== "" && price !== "" && (
-              <div className="mt-4 pt-4 border-t border-zinc-800">
-                <p className="flex justify-between font-medium text-gray-400">
-                  {t('common.estPay')} <span className="font-semibold text-zinc-200 gap-2">
-                    {Math.ceil(Number(quantity) * Number(price)).toLocaleString()} {t('common.sats')}
-                  </span>
-                </p>
-              </div>
-            )}
+            {orderType === 'buy' && quantity !== "" && price !== "" && (() => {
+              const priceNum = Number(price);
+              const quantityNum = Number(quantity);
+              if (isNaN(priceNum) || isNaN(quantityNum) || priceNum <= 0 || quantityNum <= 0) {
+                return null;
+              }
+              const totalVal = Math.ceil(quantityNum * priceNum);
+              const serviceFee = Math.max(10, Math.ceil(totalVal * 0.008));
+              const networkFee = 10;
+              const totalPay = totalVal + serviceFee + networkFee;
 
-            {orderType === 'sell' && quantity !== "" && (
-              <div className="mt-4 pt-4 border-t border-zinc-800">
-                <p className="flex justify-between font-medium text-gray-400">
-                  {t('common.estReceive')} <span className="font-semibold text-zinc-200 gap-2">
-                    {Math.ceil(Number(quantity) * Number(price)).toLocaleString()} {t('common.sats')}
-                  </span>
-                </p>
-              </div>
-            )}
+              return (
+                <div className="mt-4 pt-4 border-t border-zinc-800">
+                  <p className="flex justify-between font-medium text-gray-400">
+                    {t('common.value')} <span className="font-semibold text-zinc-200 gap-2">
+                      {totalVal.toLocaleString()} {t('common.sats')}
+                    </span>
+                  </p>
+                  <p className="flex justify-between font-medium text-gray-400">
+                    {t('common.serviceFee')} <span className="font-semibold text-zinc-200 gap-2">
+                      {serviceFee.toLocaleString()} {t('common.sats')}
+                    </span>
+                  </p>
+                  <p className="flex justify-between font-medium text-gray-400">
+                    {t('common.networkFee')} <span className="font-semibold text-zinc-200 gap-2">
+                      {networkFee.toLocaleString()} {t('common.sats')}
+                    </span>
+                  </p>
+                  <p className="flex justify-between font-medium text-gray-400">
+                    {t('common.estPay')} <span className="font-semibold text-zinc-200 gap-2">
+                      {totalPay.toLocaleString()} {t('common.sats')}
+                    </span>
+                  </p>
+                </div>
+              );
+            })()}
+
+            {orderType === 'sell' && quantity !== "" && price !== "" && (() => {
+              const priceNum = Number(price);
+              const quantityNum = Number(quantity);
+              if (isNaN(priceNum) || isNaN(quantityNum) || priceNum <= 0 || quantityNum <= 0) {
+                return null;
+              }
+              const totalVal = Math.ceil(quantityNum * priceNum);
+              const networkFee = 10;
+              const netReceive = totalVal > networkFee ? totalVal - networkFee : 0;
+
+              return (
+                <div className="mt-4 pt-4 border-t border-zinc-800">
+                  <p className="flex justify-between font-medium text-gray-400">
+                    {t('common.estReceive')} <span className="font-semibold text-zinc-200 gap-2">
+                      {totalVal.toLocaleString()} {t('common.sats')}
+                    </span>
+                  </p>
+                  <p className="flex justify-between font-medium text-gray-400">
+                    {t('common.networkFee')} <span className="font-semibold text-zinc-200 gap-2">
+                     {networkFee.toLocaleString()} {t('common.sats')}
+                    </span>
+                  </p>
+                </div>
+              );
+            })()}
           </div>
           <WalletConnectBus asChild>
             <Button onClick={handleSubmitClick} disabled={isPlacingOrder} className="min-w-[80px] btn-gradient h-11">
@@ -409,19 +465,40 @@ export default function DepthPanel({
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
-          <div className="font-bold text-lg mb-2 flex justify-between">
-            <span>You Pay</span>
-            <span>{confirmData.paySats} sats</span>
-          </div>
-          <div className="flex justify-between"><span>Bid Price</span><span>{confirmData.bidPrice} sats</span></div>
-          {
-            confirmData.feeSats && (<div className="flex justify-between"><span>Marketplace Fee </span><span>{confirmData.feeSats} sats</span></div>)
-          }
+          {orderType === 'buy' ? (
+            <>
+              <div className="font-bold text-lg mb-2">
+                <span>{t('common.orderSummary')}</span>
+              </div>
+              <div className="flex justify-between"><span>{t('common.value')}</span><span>{confirmData.value} {t('common.sats')}</span></div>
+              <div className="flex justify-between"><span>{t('common.serviceFee')}</span><span>{confirmData.feeSats} {t('common.sats')}</span></div>
+              <div className="flex justify-between"><span>{t('common.networkFee')}</span><span>{confirmData.netFeeSats} {t('common.sats')}</span></div>
+              <div className="font-bold text-lg my-2 flex justify-between">
+                <span>{t('common.estPay')}</span>
+                <span>{confirmData.paySats} {t('common.sats')}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="font-bold text-lg mb-2">
+                <span>{t('common.orderSummary')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{t('common.estReceive')}</span>
+                <span>{confirmData.value} {t('common.sats')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{t('common.networkFee')}</span>
+                <span>{confirmData.netFeeSats} {t('common.sats')}</span>
+              </div>
+            </>
+          )}
 
-          <div className="flex justify-between"><span>Wallet Balance</span><span>{balance.availableAmt.toLocaleString()} sats</span></div>
+          <div className="flex justify-between"><span>{t('common.limitorder_price')}</span><span>{confirmData.bidPrice} {t('common.sats')}</span></div>
+          <div className="flex justify-between"><span>{t('common.walletBalance')}</span><span>{balance.availableAmt.toLocaleString()} {t('common.sats')}</span></div>
           <DialogFooter>
-            <Button onClick={handleConfirm}>确认提交</Button>
-            <Button variant="outline" onClick={() => setShowConfirm(false)}>取消</Button>
+            <Button onClick={handleConfirm}>{t('buttons.confirmSubmit')}</Button>
+            <Button variant="outline" onClick={() => setShowConfirm(false)}>{t('buttons.cancel')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
