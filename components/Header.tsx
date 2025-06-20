@@ -101,7 +101,7 @@ export const Header = () => {
   }, [setEnv]);
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-40 overflow-x-scroll w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 items-center space-x-2 px-2 sm:px-4 sm:justify-between sm:space-x-0">
         <div className="flex gap-2 sm:gap-4 items-center">
           <div className="flex items-center gap-[2px] sm:gap-2 mr-4">
@@ -151,7 +151,7 @@ export const Header = () => {
         </div>
 
         <div className="flex flex-1 items-center justify-end space-x-2 sm:space-x-4">
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden xl:flex items-center gap-2">
             <NetworkSelect />
             <ChainSelect />
             <FeerateSelectButton />

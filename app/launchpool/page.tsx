@@ -103,7 +103,7 @@ const LaunchPool = () => {
     const statusList = await Promise.all(
       list.map(async (item: string) => {
         const { status } = await getContractStatus(item);
-        
+
         if (status) {
           return {
             ...JSON.parse(status),
@@ -173,9 +173,9 @@ const LaunchPool = () => {
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
   console.log('filteredPoolList', filteredPoolList);
-  
+
   const router = useRouter();
-  
+
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
@@ -249,12 +249,16 @@ const LaunchPool = () => {
                 <TableCell className="px-4 py-2 text-center">
                   <div className="flex items-center h-full gap-2">
                     <ActionButtons pool={adaptedPool} openModal={openModal} />
-                    <button
-                      className="mt-2 text-zinc-400 hover:text-indigo-500 transition-colors"
-                      onClick={() => router.push(`/order/?asset=${adaptedPool.assetName.Protocol}:f:${adaptedPool.assetName.Ticker}`)}
-                    >
-                      <Icon icon="mdi:open-in-new" className="w-5 h-5" />
-                    </button>
+                    {
+                      adaptedPool.progress >= 100 && (
+                        <button
+                          className="mt-2 text-zinc-400 hover:text-indigo-500 transition-colors"
+                          onClick={() => router.push(`/swap/detail?asset=${adaptedPool.assetName.Protocol}:f:${adaptedPool.assetName.Ticker}`)}
+                        >
+                          <Icon icon="mdi:open-in-new" className="w-5 h-5" />
+                        </button>
+                      )}
+
                   </div>
                 </TableCell>
               </TableRow>
