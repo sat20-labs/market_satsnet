@@ -85,6 +85,9 @@ function OrderPageContent() {
       displayname: tickerRes?.data?.name?.Ticker || tickerRes?.data?.Ticker || tickerRes?.data?.assets_name
     };
   }, [tickerRes]);
+  console.log('AssetInfo data', data);
+  console.log('AssetInfo tickerInfo', tickerInfo);
+  
   const summary = useMemo(() => {
     const summaryData = data?.data?.summary;
     return {
@@ -176,7 +179,7 @@ function OrderPageContent() {
             <ChartModule contractURL={ammContractUrl} tickerInfo={tickerInfo} />
           </div>
           <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
-            <AssetInfo depthData={swapData} assetData={summary} />
+            <AssetInfo depthData={swapData} tickerInfo={tickerInfo} />
           </div>
         </div>
         <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
