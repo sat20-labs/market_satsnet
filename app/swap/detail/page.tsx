@@ -17,6 +17,7 @@ import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import WithDraw from '@/components/satoshinet/swap/WithDraw';
 import Deposit from '@/components/satoshinet/swap/Deposit';
+import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -88,9 +89,21 @@ function OrderPageContent() {
     const summaryData = data?.data?.summary;
     return {
       assetId: summaryData?.assets_name?.Ticker ?? '',
+      AssetId: summaryData?.assets_name?.Ticker ?? '',
       assetName: summaryData ? `${summaryData.assets_name?.Protocol ?? ''}:${summaryData.assets_name?.Type ?? ''}:${summaryData.assets_name?.Ticker ?? ''}` : '',
+      assetType: summaryData?.assets_name?.Type ?? '',
+      protocol: summaryData?.assets_name?.Protocol ?? '',
       assetLogo: summaryData?.logo ?? '',
       floorPrice: summaryData?.lowest_price?.toString() ?? '0',
+      price: summaryData?.lowest_price ?? 0,
+      volume: summaryData?.tx_total_volume?.toString() ?? '0',
+      marketCap: summaryData?.market_cap?.toString() ?? '0',
+      holders: summaryData?.holder_count ?? 0,
+      transactions: summaryData?.tx_order_count ?? 0,
+      mintProgress: '100%',
+      nickname: summaryData?.nickname || '',
+      assetSymbol: summaryData?.assets_name?.Ticker ?? '',
+      assetDescription: summaryData?.description ?? '',
     };
   }, [data]);
 
@@ -154,69 +167,80 @@ function OrderPageContent() {
   }
 
   return (
-    <div className="p-4 relative">
-      <ChartModule contractURL={ammContractUrl} tickerInfo={tickerInfo} />
-      <div className="max-w-2xl mx-auto">
-        <AssetInfoCard assetInfo={{
-          assetLogo: summary.assetLogo,
-          assetName: summary.assetName,
-          AssetId: summary.assetId,
-          floorPrice: parseFloat(summary.floorPrice),
-        }} contractUrl={ammContractUrl} tickerInfo={tickerInfo} protocol={protocol} assetAmt={assetAmt} satValue={satValue} currentPrice={currentPrice} t={t} />
-        <div className="rounded-xl shadow-lg">
-          <Tabs defaultValue="swap" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="swap">兑换</TabsTrigger>
-              <TabsTrigger value="deposit">充值</TabsTrigger>
-              <TabsTrigger value="withdraw">提取</TabsTrigger>
-            </TabsList>
-            <TabsContent value="swap">
-              <Swap
-                contractUrl={ammContractUrl}
-                assetInfo={{
-                  assetLogo: summary.assetLogo,
-                  assetName: summary.assetName,
-                  AssetId: summary.assetId,
-                  floorPrice: parseFloat(summary.floorPrice),
-                }}
-                tickerInfo={tickerInfo}
-                onSellSuccess={() => {}}
-                swapData={swapData}
-                contractK={contractK}
-                assetAmtRaw={assetAmtRaw}
-                assetAmt={assetAmt}
-                satValue={satValue}
-                currentPrice={currentPrice}
-              />
-            </TabsContent>
-            <TabsContent value="deposit">
-              <Deposit
-                contractUrl={ammContractUrl}
-                assetInfo={{
-                  assetLogo: summary.assetLogo,
-                  assetName: summary.assetName,
-                  AssetId: summary.assetId,
-                  floorPrice: parseFloat(summary.floorPrice),
-                }}
-                tickerInfo={tickerInfo}
-              />
-            </TabsContent>
-            <TabsContent value="withdraw">
-              <WithDraw
-                contractUrl={ammContractUrl}
-                assetInfo={{
-                  assetLogo: summary.assetLogo,
-                  assetName: summary.assetName,
-                  AssetId: summary.assetId,
-                  floorPrice: parseFloat(summary.floorPrice),
-                }}
-                tickerInfo={tickerInfo}
-              />
-            </TabsContent>
-          </Tabs>
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-6 p-2 sm:p-4 h-full w-ful">
+        {/* Chart and Asset Info Container */}
+        <div className="sm:col-span-1 flex flex-col gap-4 mb-8 sm:mb-0">
+          {/* Tradingview Chart */}
+          <div className="flex items-center justify-center min-h-[300px] sm:min-h-[680px] sm:mb-0">
+            <ChartModule contractURL={ammContractUrl} tickerInfo={tickerInfo} />
+          </div>
+          <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
+            <AssetInfo depthData={swapData} assetData={summary} />
+          </div>
+        </div>
+        <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
+          <div className="max-w-full mx-auto p-4 bg-zinc-900 text-zinc-200 rounded-2xl shadow-lg border border-zinc-700/50 w-full h-full">
+            <AssetInfoCard assetInfo={{
+              assetLogo: summary.assetLogo,
+              assetName: summary.assetName,
+              AssetId: summary.assetId,
+              floorPrice: parseFloat(summary.floorPrice),
+            }} contractUrl={ammContractUrl} tickerInfo={tickerInfo} protocol={protocol} assetAmt={assetAmt} satValue={satValue} currentPrice={currentPrice} t={t} />
+            <Tabs defaultValue="swap" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="swap">兑换</TabsTrigger>
+                <TabsTrigger value="deposit">充值</TabsTrigger>
+                <TabsTrigger value="withdraw">提取</TabsTrigger>
+              </TabsList>
+              <TabsContent value="swap">
+                <Swap
+                  contractUrl={ammContractUrl}
+                  assetInfo={{
+                    assetLogo: summary.assetLogo,
+                    assetName: summary.assetName,
+                    AssetId: summary.assetId,
+                    floorPrice: parseFloat(summary.floorPrice),
+                  }}
+                  tickerInfo={tickerInfo}
+                  onSellSuccess={() => {}}
+                  swapData={swapData}
+                  contractK={contractK}
+                  assetAmtRaw={assetAmtRaw}
+                  assetAmt={assetAmt}
+                  satValue={satValue}
+                  currentPrice={currentPrice}
+                />
+              </TabsContent>
+              <TabsContent value="deposit">
+                <Deposit
+                  contractUrl={ammContractUrl}
+                  assetInfo={{
+                    assetLogo: summary.assetLogo,
+                    assetName: summary.assetName,
+                    AssetId: summary.assetId,
+                    floorPrice: parseFloat(summary.floorPrice),
+                  }}
+                  tickerInfo={tickerInfo}
+                />
+              </TabsContent>
+              <TabsContent value="withdraw">
+                <WithDraw
+                  contractUrl={ammContractUrl}
+                  assetInfo={{
+                    assetLogo: summary.assetLogo,
+                    assetName: summary.assetName,
+                    AssetId: summary.assetId,
+                    floorPrice: parseFloat(summary.floorPrice),
+                  }}
+                  tickerInfo={tickerInfo}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
-      <div className="mt-8">
+      <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
         <SwapMyOrdersPanel contractURL={ammContractUrl} />
       </div>
     </div>
