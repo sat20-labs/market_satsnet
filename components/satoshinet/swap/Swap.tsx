@@ -45,37 +45,8 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
   const displaySatsBalance = Number(balance.availableAmt) + Number(balance.lockedAmt);
 
   const [isDetailsVisible, setIsDetailsVisible] = useState(false); // 控制明细显示状态
-  const [isHoveringInput, setIsHoveringInput] = useState(false); // 控制悬停状态
+  const [isHoveringInput, setIsHoveringInput] = useState(false); // 控制悬停状
 
-  // 获取池子状态（价格） - 此部分已移至父组件
-  // const { data: swapData } = useQuery({
-  //   queryKey: ["swapData", contractUrl],
-  //   queryFn: async () => {
-  //     if (!contractUrl) return null;
-  //     const { status } = await getContractStatus(contractUrl);
-  //     return status ? JSON.parse(status) : null;
-  //   },
-  //   enabled: !!contractUrl,
-  //   // refetchInterval: 3000,
-  //   refetchIntervalInBackground: false,
-  // });
-  console.log('swapData', swapData);
-  
-  // 以下计算已移至父组件，作为 props 传入
-  // const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData]);
-  // const assetAmtRaw = useMemo(() => swapData?.AssetAmtInPool || { Precision: 0, Value: 0 }, [swapData]);
-  // const assetAmt = useMemo(() => assetAmtRaw.Value / Math.pow(10, assetAmtRaw.Precision), [assetAmtRaw]);
-  // const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData]);
-  const protocol = useMemo(() => swapData?.Contract?.assetName?.Protocol || '', [swapData]);
-  // const currentPrice = useMemo(() => {
-  //   if (!satValue || !assetAmt) return 0;
-  //   return Number((satValue / assetAmt).toFixed(10));
-  // }, [satValue, assetAmt]);
-
-
-  // 计算兑换结果
-  // asset-to-sats: 输入资产，输出聪（原sell）
-  // sats-to-asset: 输入聪，输出资产（原buy）
   const calcToAmount = (input: string) => {
     const amtNum = Number(input);
     if (!satValue || !assetAmt || !amtNum || !contractK) return "";
