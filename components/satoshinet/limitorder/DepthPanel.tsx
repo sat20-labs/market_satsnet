@@ -8,10 +8,9 @@ import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { useWalletStore } from "@/store";
 import { useTranslation } from 'react-i18next';
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCommonStore } from "@/store/common";
 import { toast } from "sonner";
-import { getContractStatus } from '@/api/market';
 
 
 // 直接内联 DepthList 组件
@@ -140,6 +139,7 @@ interface DepthPanelProps {
   assetBalance: { availableAmt: number; lockedAmt: number };
   balanceLoading: boolean;
   onOrderSuccess?: () => void;
+  depthData: any;
 }
 
 export default function DepthPanel({
@@ -147,7 +147,8 @@ export default function DepthPanel({
   tickerInfo,
   assetBalance,
   contractURL,
-  onOrderSuccess
+  onOrderSuccess,
+  depthData
 }: DepthPanelProps) {
   const { t } = useTranslation();
   const { satsnetHeight } = useCommonStore();
@@ -171,18 +172,6 @@ export default function DepthPanel({
   const displayAvailableAmt = assetBalance.availableAmt;
 
 
-  const { data: depthData } = useQuery({
-    queryKey: ["depthData", contractURL],
-    queryFn: async () => {
-      if (!contractURL) return null;
-      const { status } = await getContractStatus(contractURL);
-      return status ? JSON.parse(status) : null;
-    },
-    enabled: !!contractURL,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: false,
-  });
-  console.log('depthData', depthData);
   // 处理深度数据
   const { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen } = useMemo(() => {
     if (!depthData) return { sellDepth: [], buyDepth: [], maxSellQtyLen: 1, maxBuyQtyLen: 1 };

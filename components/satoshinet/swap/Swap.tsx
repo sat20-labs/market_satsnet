@@ -11,7 +11,7 @@ import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getContractStatus } from '@/api/market';
+// import { getContractStatus } from '@/api/market'; // 移除此行，因为数据已从父组件传入
 import { BtcPrice } from "@/components/BtcPrice";
 
 interface SwapProps {
@@ -19,11 +19,17 @@ interface SwapProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
   onSellSuccess?: () => void;
   tickerInfo?: any;
+  swapData: any; // 新增
+  contractK: number; // 新增
+  assetAmtRaw: { Precision: number; Value: number }; // 新增
+  assetAmt: number; // 新增
+  satValue: number; // 新增
+  currentPrice: number; // 新增
 }
 
 type SwapType = 'asset-to-sats' | 'sats-to-asset';
 
-const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapProps) => {
+const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData, contractK, assetAmtRaw, assetAmt, satValue, currentPrice }: SwapProps) => {
   const { t } = useTranslation();
   const [swapType, setSwapType] = useState<SwapType>('sats-to-asset'); // 默认聪换资产
   const [fromAmount, setFromAmount] = useState<string>("");
@@ -41,29 +47,30 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
   const [isDetailsVisible, setIsDetailsVisible] = useState(false); // 控制明细显示状态
   const [isHoveringInput, setIsHoveringInput] = useState(false); // 控制悬停状态
 
-  // 获取池子状态（价格）
-  const { data: swapData } = useQuery({
-    queryKey: ["swapData", contractUrl],
-    queryFn: async () => {
-      if (!contractUrl) return null;
-      const { status } = await getContractStatus(contractUrl);
-      return status ? JSON.parse(status) : null;
-    },
-    enabled: !!contractUrl,
-    // refetchInterval: 3000,
-    refetchIntervalInBackground: false,
-  });
-
-  const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData]);
-  const assetAmtRaw = useMemo(() => swapData?.AssetAmtInPool || { Precision: 0, Value: 0 }, [swapData]);
-  const assetAmt = useMemo(() => assetAmtRaw.Value / Math.pow(10, assetAmtRaw.Precision), [assetAmtRaw]);
-  const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData]);
+  // 获取池子状态（价格） - 此部分已移至父组件
+  // const { data: swapData } = useQuery({
+  //   queryKey: ["swapData", contractUrl],
+  //   queryFn: async () => {
+  //     if (!contractUrl) return null;
+  //     const { status } = await getContractStatus(contractUrl);
+  //     return status ? JSON.parse(status) : null;
+  //   },
+  //   enabled: !!contractUrl,
+  //   // refetchInterval: 3000,
+  //   refetchIntervalInBackground: false,
+  // });
+  console.log('swapData', swapData);
+  
+  // 以下计算已移至父组件，作为 props 传入
+  // const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData]);
+  // const assetAmtRaw = useMemo(() => swapData?.AssetAmtInPool || { Precision: 0, Value: 0 }, [swapData]);
+  // const assetAmt = useMemo(() => assetAmtRaw.Value / Math.pow(10, assetAmtRaw.Precision), [assetAmtRaw]);
+  // const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData]);
   const protocol = useMemo(() => swapData?.Contract?.assetName?.Protocol || '', [swapData]);
-  const currentPrice = useMemo(() => {
-    if (!satValue || !assetAmt) return 0;
-    return Number((satValue / assetAmt).toFixed(10));
-  }, [satValue, assetAmt]);
-
+  // const currentPrice = useMemo(() => {
+  //   if (!satValue || !assetAmt) return 0;
+  //   return Number((satValue / assetAmt).toFixed(10));
+  // }, [satValue, assetAmt]);
 
 
   // 计算兑换结果
@@ -415,18 +422,16 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
           </div>
 
           {/* 支付明细部分 */}
-          {isDetailsVisible && (
-            <div className="text-sm text-gray-400 border-t border-zinc-800 pt-2 mt-2">
-              <div className="flex justify-between mb-1">
-                <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
-                <span className="text-zinc-400">{serviceFee || '--'} sats</span>
-              </div>
-              <div className="flex justify-between">
-                <span>{t('common.networkFee')}(10 sats / Tx):</span>
-                <span className="text-zinc-400">{networkFee || '--'} sats</span>
-              </div>
+          <div className="text-sm text-gray-400 border-t border-zinc-800 pt-2 mt-2">
+            <div className="flex justify-between mb-1">
+              <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
+              <span className="text-zinc-400">{serviceFee || '--'} sats</span>
             </div>
-          )}
+            <div className="flex justify-between">
+              <span>{t('common.networkFee')}(10 sats / Tx):</span>
+              <span className="text-zinc-400">{networkFee || '--'} sats</span>
+            </div>
+          </div>
 
         </div>
       )}
@@ -445,4 +450,4 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {} }: SwapPr
   );
 };
 
-export default Swap; 
+export default Swap;

@@ -13,7 +13,7 @@ import { ChartModule } from '@/components/satoshinet/ChartModule';
 import { useWalletStore } from '@/store';
 import Swap from '@/components/satoshinet/swap/Swap';
 import SwapMyOrdersPanel from '@/components/satoshinet/swap/SwapMyOrdersPanel';
-import { getDeployedContractInfo } from '@/api/market';
+import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import WithDraw from '@/components/satoshinet/swap/WithDraw';
 import Deposit from '@/components/satoshinet/swap/Deposit';
@@ -107,10 +107,32 @@ function OrderPageContent() {
   } = useQuery({
     queryKey: ["ammContractUrl", tickerInfo.displayname],
     queryFn: () => getAmmContractUrl(tickerInfo.displayname),
-    // staleTime: 10 * 1000,
-    // refetchInterval: 10000,
     enabled: !!tickerInfo.displayname,
   });
+
+  // 获取池子状态（价格）
+  const { data: swapData } = useQuery({
+    queryKey: ["swapData", ammContractUrl],
+    queryFn: async () => {
+      if (!ammContractUrl) return null;
+      const { status } = await getContractStatus(ammContractUrl);
+      return status ? JSON.parse(status) : null;
+    },
+    enabled: !!ammContractUrl,
+    refetchIntervalInBackground: false,
+  });
+
+  const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData]);
+  const assetAmtRaw = useMemo(() => swapData?.AssetAmtInPool || { Precision: 0, Value: 0 }, [swapData]);
+  const assetAmt = useMemo(() => assetAmtRaw.Value / Math.pow(10, assetAmtRaw.Precision), [assetAmtRaw]);
+  const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData]);
+  const protocol = useMemo(() => swapData?.Contract?.assetName?.Protocol || '', [swapData]);
+  const currentPrice = useMemo(() => {
+    if (!swapData?.LastDealPrice?.Value || !swapData?.LastDealPrice?.Precision) return 0;
+    return Number((swapData.LastDealPrice.Value / Math.pow(10, swapData.LastDealPrice.Precision)).toFixed(10));
+  }, [swapData]);
+
+
 
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
@@ -140,7 +162,7 @@ function OrderPageContent() {
           assetName: summary.assetName,
           AssetId: summary.assetId,
           floorPrice: parseFloat(summary.floorPrice),
-        }} contractUrl={ammContractUrl} tickerInfo={tickerInfo} protocol={summary.assetName.split(':')[0]} assetAmt={summary.assetName.split(':')[1]} satValue={summary.assetName.split(':')[2]} currentPrice={summary.floorPrice} t={t} />
+        }} contractUrl={ammContractUrl} tickerInfo={tickerInfo} protocol={protocol} assetAmt={assetAmt} satValue={satValue} currentPrice={currentPrice} t={t} />
         <div className="rounded-xl shadow-lg">
           <Tabs defaultValue="swap" className="w-full">
             <TabsList className="mb-4">
@@ -159,6 +181,12 @@ function OrderPageContent() {
                 }}
                 tickerInfo={tickerInfo}
                 onSellSuccess={() => {}}
+                swapData={swapData}
+                contractK={contractK}
+                assetAmtRaw={assetAmtRaw}
+                assetAmt={assetAmt}
+                satValue={satValue}
+                currentPrice={currentPrice}
               />
             </TabsContent>
             <TabsContent value="deposit">

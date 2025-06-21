@@ -14,6 +14,7 @@ import { useCommonStore } from '@/store';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getDeployedContractInfo } from '@/api/market';
+import { getContractStatus } from '@/api/market';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -95,6 +96,20 @@ function OrderPageContent() {
   }, [tickerInfo.displayname]);
   console.log('contractUrl', contractUrl);
 
+  // Add depthData fetch logic
+  const { data: depthData } = useQuery({
+    queryKey: ["depthData", contractUrl],
+    queryFn: async () => {
+      if (!contractUrl) return null;
+      const { status } = await getContractStatus(contractUrl);
+      return status ? JSON.parse(status) : null;
+    },
+    enabled: !!contractUrl,
+    refetchInterval: 3000,
+    refetchIntervalInBackground: false,
+  });
+  console.log('depthData in page', depthData);
+
   const handleOrderSuccess = () => {
     if (!address || !summary.assetName) return;
     setBalanceLoading(true);
@@ -123,7 +138,7 @@ function OrderPageContent() {
             <ChartModule contractURL={contractUrl} tickerInfo={tickerInfo} />
           </div>
           <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
-            <AssetInfo assetData={summary} />
+            <AssetInfo depthData={depthData} assetData={summary} />
           </div>
         </div>
         <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
@@ -145,6 +160,7 @@ function OrderPageContent() {
                 assetBalance={assetBalance}
                 balanceLoading={balanceLoading}
                 onOrderSuccess={handleOrderSuccess}
+                depthData={depthData}
               />
             )}
           </div>
