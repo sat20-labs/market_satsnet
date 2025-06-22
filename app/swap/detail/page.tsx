@@ -27,7 +27,7 @@ function Loading() {
 function AssetInfoCard({ assetInfo, contractUrl, tickerInfo, protocol, assetAmt, satValue, currentPrice, t }) {
   return (
     <div className="flex items-center gap-3 mb-4 pb-2">
-      <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-800 shadow-lg">
+      <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-700 shadow-lg">
         <div className="flex items-center mb-2 gap-4">
           <div className="w-12 h-12 rounded-full bg-purple-700 flex items-center justify-center text-zinc-300 text-xl font-bold">
             {assetInfo.assetName.charAt(0).toUpperCase()}
@@ -176,7 +176,7 @@ function OrderPageContent() {
         {/* Chart and Asset Info Container */}
         <div className="sm:col-span-2 flex flex-col gap-4 mb-8 sm:mb-0">
           {/* Tradingview Chart */}
-          <div className="flex items-center justify-center min-h-[300px] sm:min-h-[680px] sm:mb-0">
+          <div className="flex items-center justify-center min-h-[320px] sm:min-h-[640px] sm:mb-0">
             <ChartModule contractURL={ammContractUrl} tickerInfo={tickerInfo} />
           </div>
           <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
@@ -184,7 +184,7 @@ function OrderPageContent() {
           </div>
         </div>
         <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
-          <div className="max-w-full mx-auto p-4 bg-zinc-900 text-zinc-200 rounded-2xl shadow-lg border border-zinc-700/50 w-full h-full">
+          <div className="max-w-full mx-auto pb-4 sm:px-4 bg-transparent text-zinc-200 rounded-2xl shadow-lg w-full h-full">
             <AssetInfoCard assetInfo={{
               assetLogo: summary.assetLogo,
               assetName: summary.assetName,

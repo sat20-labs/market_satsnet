@@ -232,6 +232,22 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
     }
   };
 
+  const buyQuickInputValues = useMemo(() => {
+    if (!assetAmt) return [];
+    const maxBuyAmount = assetAmt * 0.5; // 最大买入数量为池子剩余数量的 50%
+   // 根据池子资产数量动态调整 percentages
+  const percentages = assetAmt > 100000 
+  ? [0.0001, 0.0002, 0.0005, 0.001] // 大于 100000 时的比例
+  : [0.02, 0.05, 0.1, 0.2];    // 小于或等于 100000 时的比例
+
+    const values = percentages.map((percentage) => {
+      const calculatedValue = maxBuyAmount * percentage;
+      const magnitude = Math.pow(10, Math.floor(Math.log10(calculatedValue))); // 计算数量级
+      return Math.round(calculatedValue / magnitude) * magnitude; // 调整为数量级别
+    });
+    return values;
+  }, [assetAmt]);
+
   // UI
   return (
     <div className="pb-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
@@ -267,11 +283,11 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
                   ))
                 ) : (
                   // 买入资产快捷输入
-                  ["1000", "5000", "10000", "30000"].map((value) => (
+                  buyQuickInputValues.map((value) => (
                     <button
                       key={value}
-                      onClick={() => handleFromAmountChange(value)}
-                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === value ? 'bg-purple-500 text-white' : 'text-gray-400'
+                      onClick={() => handleFromAmountChange(value.toString())}
+                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === value.toString() ? 'bg-purple-500 text-white' : 'text-gray-400'
                         }`}
                     >
                       {value}

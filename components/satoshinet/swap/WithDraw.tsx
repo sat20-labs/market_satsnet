@@ -44,7 +44,7 @@ const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, assetInfo, tickerInfo 
 
   return (
     <div className="w-full">
-      <div className="mb-6">
+      <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
             <span className="py-2 uppercase">{t('common.withdraw')}</span> {/* Use translation for '提取金额' */}
@@ -68,9 +68,9 @@ const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, assetInfo, tickerInfo 
               min={1}
             />
           </div>
-        </div>
-        <Button type="button" className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient" onClick={withdrawHandler}>{t('common.withdraw')}</Button> {/* Use translation for '提取' */}
+        </div>       
       </div>
+      <Button type="button" size="lg" className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient" onClick={withdrawHandler}>{t('common.withdraw')}</Button> {/* Use translation for '提取' */}
     </div>
   );
 };

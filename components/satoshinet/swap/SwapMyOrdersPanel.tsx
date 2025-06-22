@@ -135,20 +135,21 @@ interface SwapMyOrdersPanelProps {
   contractURL: string;
 }
 
-const ORDER_TYPE_LABELS: Record<number, string> = {
-  1: "卖出",
-  2: "买入",
-  3: "退款",
-  4: "资金",
-  5: "收益",
-  6: "充值",
-  7: "提现",
-  8: "未使用",
-};
 
 const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) => {
   const { address } = useReactWalletStore();
   const { t } = useTranslation();
+
+  const ORDER_TYPE_LABELS: Record<number, string> = {
+    1: t("common.sell"),
+    2: t("common.buy"),
+    3: t("common.refund"),
+    4: t("common.funds"),
+    5: t("common.profit"),
+    6: t("common.recharge"),
+    7: t("common.withdraw"),
+    8: t("common.unused"),
+  };
 
   const {
     data,
