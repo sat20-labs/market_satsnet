@@ -234,7 +234,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
 
   // UI
   return (
-    <div className="py-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
+    <div className="pb-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
       <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
         {/* 上方输入框 */}
         <div className="mb-2 mx-4 bg-zinc-900 py-2 rounded-lg relative"

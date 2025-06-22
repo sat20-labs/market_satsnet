@@ -19,6 +19,7 @@ import WithDraw from '@/components/satoshinet/swap/WithDraw';
 import Deposit from '@/components/satoshinet/swap/Deposit';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 
+
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
 }
@@ -163,7 +164,7 @@ function OrderPageContent() {
     return (
       <div className="w-full mt-4">
         <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
-          未找到合约，请联系管理员添加
+          {t('common.swap_notice')}
         </div>
       </div>
     );
@@ -171,9 +172,9 @@ function OrderPageContent() {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-6 p-2 sm:p-4 h-full w-ful">
+      <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 p-2 sm:p-4 h-full w-ful">
         {/* Chart and Asset Info Container */}
-        <div className="sm:col-span-1 flex flex-col gap-4 mb-8 sm:mb-0">
+        <div className="sm:col-span-2 flex flex-col gap-4 mb-8 sm:mb-0">
           {/* Tradingview Chart */}
           <div className="flex items-center justify-center min-h-[300px] sm:min-h-[680px] sm:mb-0">
             <ChartModule contractURL={ammContractUrl} tickerInfo={tickerInfo} />
@@ -192,9 +193,9 @@ function OrderPageContent() {
             }} contractUrl={ammContractUrl} tickerInfo={tickerInfo} protocol={protocol} assetAmt={assetAmt} satValue={satValue} currentPrice={currentPrice} t={t} />
             <Tabs defaultValue="swap" className="w-full">
               <TabsList className="mb-4">
-                <TabsTrigger value="swap">兑换</TabsTrigger>
-                <TabsTrigger value="deposit">充值</TabsTrigger>
-                <TabsTrigger value="withdraw">提取</TabsTrigger>
+                <TabsTrigger value="swap">{t('common.swap')}</TabsTrigger>
+                <TabsTrigger value="deposit">{t('common.deposit')}</TabsTrigger>
+                <TabsTrigger value="withdraw">{t('common.withdraw')}</TabsTrigger>
               </TabsList>
               <TabsContent value="swap">
                 <Swap

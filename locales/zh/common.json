@@ -145,6 +145,8 @@
   "takeorder": "订单薄",
   "makeorder": "挂单", 
   "swap": "Swap",
+  "deposit": "存款",
+  "withdraw": "提取",
   "contractAddress": "合约地址",
   "poolAssetInfo": "池子信息",
   "poolSatsAmount": "池子sats",
