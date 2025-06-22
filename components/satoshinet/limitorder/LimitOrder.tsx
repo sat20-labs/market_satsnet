@@ -23,6 +23,7 @@ interface OrderBookProps {
   assetBalance: { availableAmt: number; lockedAmt: number };
   balanceLoading: boolean;
   onSellSuccess?: () => void;
+  depthData: any;
 }
 
 export default function OrderBook({
@@ -30,7 +31,8 @@ export default function OrderBook({
   assetInfo,
   assetBalance,
   balanceLoading,
-  onSellSuccess
+  onSellSuccess,
+  depthData
 }: OrderBookProps) {
   const { t } = useTranslation();
 
@@ -70,6 +72,7 @@ export default function OrderBook({
 
       <TabsContent value="depth">
         <DepthPanel
+          depthData={depthData}
           contractURL={swapContractUrl}
           assetInfo={assetInfo}
           tickerInfo={tickerInfo}
