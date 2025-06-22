@@ -138,7 +138,7 @@ function OrderPageContent() {
             <ChartModule contractURL={contractUrl} tickerInfo={tickerInfo} />
           </div>
           <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
-            <AssetInfo depthData={depthData} assetData={summary} />
+            <AssetInfo depthData={depthData} tickerInfo={tickerInfo} />
           </div>
         </div>
         <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
