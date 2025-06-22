@@ -393,17 +393,18 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
           </div>
 
           {/* 支付明细部分 */}
-          <div className="text-sm text-gray-400 border-t border-zinc-800 pt-2 mt-2">
+          {isDetailsVisible && (
+          <div className="text-sm text-gray-500 border-t border-zinc-800 pt-2 mt-2">
             <div className="flex justify-between mb-1">
               <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
-              <span className="text-zinc-400">{serviceFee || '--'} sats</span>
+              <span className="text-zinc-500">{serviceFee || '--'} sats</span>
             </div>
             <div className="flex justify-between">
               <span>{t('common.networkFee')}(10 sats / Tx):</span>
-              <span className="text-zinc-400">{networkFee || '--'} sats</span>
+              <span className="text-zinc-500">{networkFee || '--'} sats</span>
             </div>
           </div>
-
+          )}
         </div>
       )}
       <WalletConnectBus asChild>
