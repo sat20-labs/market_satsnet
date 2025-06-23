@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
@@ -16,8 +16,32 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
   const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const { address } = useReactWalletStore();
-  const { balance: assetBalance } = useAssetBalance(address, assetInfo.assetName);
+  // const { balance: assetBalance } = useAssetBalance(address, assetInfo.assetName);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [assetBalance, setAssetBalance] = useState({ availableAmt: 0, lockedAmt: 0 });
   const displayAssetBalance = assetBalance.availableAmt;
+  const assetName= useMemo(() => {
+    const { Protocol, Ticker, Type } = tickerInfo.name;
+    return `${Protocol}:${Type}:${Ticker}`;
+  }, [tickerInfo, assetInfo]);
+
+  const fetchAssetBalance = useCallback(async () => {
+    if (!address || !assetName) return;
+    setBalanceLoading(true);
+    try {
+      const res = await window.sat20.getAssetAmount(address, assetName);
+      setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) });
+    } catch (error) {
+      console.error("Failed to fetch asset amount:", error);
+      toast.error(t('notification.fetchAssetBalanceFailed'));
+    } finally {
+      setBalanceLoading(false);
+    }
+  }, [address, assetName, t]);
+
+  useEffect(() => {
+    fetchAssetBalance();
+  }, [fetchAssetBalance]);
 
   const depositHandler = async () => {
     console.log(amount);
@@ -40,6 +64,7 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
     if (txId) {
       toast.success(`Deposit successful, txid: ${txId}`);
       setAmount("");
+      fetchAssetBalance();
     } else {
       toast.error("Deposit failed");
     }
