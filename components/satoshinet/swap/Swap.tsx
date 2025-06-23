@@ -232,9 +232,25 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
     }
   };
 
+  const buyQuickInputValues = useMemo(() => {
+    if (!assetAmt) return [];
+    const maxBuyAmount = assetAmt * 0.5; // 最大买入数量为池子剩余数量的 50%
+   // 根据池子资产数量动态调整 percentages
+  const percentages = assetAmt > 100000 
+  ? [0.0001, 0.0002, 0.0005, 0.001] // 大于 100000 时的比例
+  : [0.02, 0.05, 0.1, 0.2];    // 小于或等于 100000 时的比例
+
+    const values = percentages.map((percentage) => {
+      const calculatedValue = maxBuyAmount * percentage;
+      const magnitude = Math.pow(10, Math.floor(Math.log10(calculatedValue))); // 计算数量级
+      return Math.round(calculatedValue / magnitude) * magnitude; // 调整为数量级别
+    });
+    return values;
+  }, [assetAmt]);
+
   // UI
   return (
-    <div className="py-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
+    <div className="pb-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
       <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
         {/* 上方输入框 */}
         <div className="mb-2 mx-4 bg-zinc-900 py-2 rounded-lg relative"
@@ -267,11 +283,11 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
                   ))
                 ) : (
                   // 买入资产快捷输入
-                  ["1000", "5000", "10000", "30000"].map((value) => (
+                  buyQuickInputValues.map((value) => (
                     <button
                       key={value}
-                      onClick={() => handleFromAmountChange(value)}
-                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === value ? 'bg-purple-500 text-white' : 'text-gray-400'
+                      onClick={() => handleFromAmountChange(value.toString())}
+                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === value.toString() ? 'bg-purple-500 text-white' : 'text-gray-400'
                         }`}
                     >
                       {value}
@@ -393,17 +409,18 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
           </div>
 
           {/* 支付明细部分 */}
-          <div className="text-sm text-gray-400 border-t border-zinc-800 pt-2 mt-2">
+          {isDetailsVisible && (
+          <div className="text-sm text-gray-500 border-t border-zinc-800 pt-2 mt-2">
             <div className="flex justify-between mb-1">
               <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
-              <span className="text-zinc-400">{serviceFee || '--'} sats</span>
+              <span className="text-zinc-500">{serviceFee || '--'} sats</span>
             </div>
             <div className="flex justify-between">
               <span>{t('common.networkFee')}(10 sats / Tx):</span>
-              <span className="text-zinc-400">{networkFee || '--'} sats</span>
+              <span className="text-zinc-500">{networkFee || '--'} sats</span>
             </div>
           </div>
-
+          )}
         </div>
       )}
       <WalletConnectBus asChild>
