@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
+import { toast } from 'sonner';
+import { sleep } from 'radash';
 
 interface WithDrawProps {
   contractUrl: string;
@@ -30,6 +32,14 @@ const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, assetInfo, tickerInfo 
       amount,
       serviceFee.toString(),
     );
+    const { txId } = result;
+    if (txId) {
+      toast.success(`Withdraw successful, txid: ${txId}`);
+      await sleep(1000);
+      // getBalance();
+    } else {
+      toast.error("Withdraw failed");
+    }
   }
 
   const handleMaxClick = () => {

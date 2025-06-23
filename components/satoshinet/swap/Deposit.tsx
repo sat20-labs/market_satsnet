@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
+import { toast } from 'sonner';
 
 interface DepositProps {
   contractUrl: string;
@@ -33,7 +34,13 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
         amt: amount,
       }
     );
-    console.log('result', result);
+    const { txId } = result;
+    if (txId) {
+      toast.success(`Deposit successful, txid: ${txId}`);
+      setAmount("");
+    } else {
+      toast.error("Deposit failed");
+    }
   }
 
   const handleMaxClick = () => {
