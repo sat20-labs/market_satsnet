@@ -33,7 +33,7 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
       setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) });
     } catch (error) {
       console.error("Failed to fetch asset amount:", error);
-      toast.error(t('notification.fetchAssetBalanceFailed'));
+      // toast.error(t('notification.fetchAssetBalanceFailed'));
     } finally {
       setBalanceLoading(false);
     }
@@ -46,18 +46,19 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
   const depositHandler = async () => {
     console.log(amount);
     const params = {action: "deposit", param: JSON.stringify({orderType: 6, assetName: assetInfo.assetName, amt: amount})};
-    const serviceFee = 10;
+    const btcFeeRate = 1
     const result = await window.sat20.invokeContractV2(
       contractUrl,
       JSON.stringify(params),
       assetInfo.assetName,
       amount,
-      serviceFee.toString(),
+      btcFeeRate.toString(),
       {
         action: "deposit",
         orderType: 6,
         assetName: assetInfo.assetName,
         amt: amount,
+        quantity: amount,
       }
     );
     const { txId } = result;

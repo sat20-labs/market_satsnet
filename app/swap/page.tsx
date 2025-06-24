@@ -177,7 +177,9 @@ const Swap = () => {
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                     <AvatarImage src={adaptedPool.logo} alt="Logo" />
                     <AvatarFallback>
-                      {adaptedPool.assetName?.charAt(0).toUpperCase()}
+                      {adaptedPool?.assetSymbol
+                        ? String.fromCodePoint(adaptedPool.assetSymbol)
+                        : adaptedPool.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
                     </AvatarFallback>
                   </Avatar>
                   <Link
