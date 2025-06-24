@@ -33,7 +33,7 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
       setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) });
     } catch (error) {
       console.error("Failed to fetch asset amount:", error);
-      toast.error(t('notification.fetchAssetBalanceFailed'));
+      // toast.error(t('notification.fetchAssetBalanceFailed'));
     } finally {
       setBalanceLoading(false);
     }

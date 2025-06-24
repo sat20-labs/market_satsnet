@@ -214,7 +214,7 @@ const LaunchPool = () => {
                     <AvatarFallback>
                       {adaptedPool?.assetSymbol
                         ? String.fromCodePoint(adaptedPool.assetSymbol)
-                        : ''}
+                        : adaptedPool.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
                     </AvatarFallback>
                   </Avatar>
                   <span
