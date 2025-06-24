@@ -32,7 +32,14 @@ const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, assetInfo, tickerInfo 
       JSON.stringify(params),
       assetInfo.assetName,
       amount,
-      serviceFee.toString(),
+      '1',
+      {
+        action: "withdraw",
+        orderType: 7,
+        quantity: amount,
+        serviceFee: serviceFee.toString(),
+        assetName: assetInfo.assetName,
+      }
     );
     const { txId } = result;
     if (txId) {
