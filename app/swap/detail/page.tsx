@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMemo, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -33,7 +34,7 @@ function AssetInfoCard({ assetInfo, contractUrl, tickerInfo, protocol, assetAmt,
             {assetInfo.assetName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-zinc-400 font-semibold text-lg">{assetInfo?.displayname}</p>
+            <p className="text-zinc-400 font-semibold text-lg">{tickerInfo?.displayname}</p>
             <p className="text-zinc-500 text-xs gap-2">
               {t('common.contractAddress')}：<span className="text-blue-400 mr-2">{contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</span>
               {t('common.protocol')}：{protocol}

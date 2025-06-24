@@ -86,7 +86,7 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
             <span className="py-2 uppercase">{t('common.deposit')}</span> {/* Use translation for '充值' */}
             <span className="text-xs text-zinc-500">
-              {t('common.balance')}: {displayAssetBalance.toLocaleString()} {formatName(assetInfo.assetName)}
+              
               <button
                 onClick={handleMaxClick}
                 className="ml-2 px-2 py-1 rounded-md bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white"
@@ -100,10 +100,11 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
               type="number"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16"
+              className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4"
               placeholder={t('common.enterAssetAmount')} 
               min={1}
             />
+            <p className='text-xs font-medium text-zinc-500 mb-2'><span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>L 1</span>{t('common.balance')}: {displayAssetBalance.toLocaleString()} {formatName(assetInfo.assetName)}</p>
           </div>
         </div>        
       </div>
