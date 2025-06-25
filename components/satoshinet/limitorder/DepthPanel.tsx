@@ -134,7 +134,8 @@ const QuickPriceButtons: React.FC<QuickPriceButtonsProps> = ({
 
 interface DepthPanelProps {
   contractURL: string;
-  assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
+  asset: string;
+  ticker: string;
   tickerInfo: any;
   assetBalance: { availableAmt: number; lockedAmt: number };
   balanceLoading: boolean;
@@ -143,7 +144,8 @@ interface DepthPanelProps {
 }
 
 export default function DepthPanel({
-  assetInfo,
+  asset,
+  ticker,
   tickerInfo,
   assetBalance,
   contractURL,
@@ -254,7 +256,7 @@ export default function DepthPanel({
 
     const priceNum = parseFloat(price);
     const quantityNum = parseFloat(quantity);
-    const _asset = orderType === 'buy' ? '::' : assetInfo.assetName;
+    const _asset = orderType === 'buy' ? '::' : asset;
     const unitPrice = priceNum.toString();
     const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : quantityNum;
     const serviceFee = orderType === 'buy' ? Math.max(10, Math.floor(amt * 0.008)) : 0;
@@ -263,7 +265,7 @@ export default function DepthPanel({
       action: 'swap',
       param: JSON.stringify({
         orderType: orderType === 'buy' ? 2 : 1,
-        assetName: assetInfo.assetName,
+        assetName: asset,
         amt: quantityNum.toString(),
         unitPrice: unitPrice
       })
@@ -274,7 +276,7 @@ export default function DepthPanel({
         contractURL, JSON.stringify(params), _asset, amt.toString(), '1', {
         action: 'swap',
         orderType: orderType === 'buy' ? 2 : 1,
-        assetName: assetInfo.assetName,
+        assetName: asset,
         amt: quantityNum.toString(),
         unitPrice: unitPrice,
         quantity: quantityNum,

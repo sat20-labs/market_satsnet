@@ -103,13 +103,13 @@ export const removeObjectEmptyValue = (obj: any) => {
 };
 export const getLabelForAssets = (asset: any) => {
   console.log('asset', asset);
-  
+
   // 如果 asset 是一个对象，并且有 assets_name 属性
   if (asset && typeof asset === 'object') {
     const name = asset.assets_name || asset;
     return `${name.Protocol || ''}:${name.Type || ''}:${name.Ticker || ''}`;
   }
-  
+
   return '';
 };
 
@@ -123,4 +123,31 @@ export const formatLargeNumber = (num: number): string => {
     return `${(num / 1_000).toFixed(2)}K`; // 转换为千单位
   }
   return num.toString(); // 小于 1000 的数字直接返回
+};
+
+interface PrecisionValue {
+  Value: number;
+  Precision: number;
+}
+
+export const getValueFromPrecision = (input: PrecisionValue | null | undefined): { value: number; formatted: string } => {
+  if (!input || typeof input.Value !== 'number' || isNaN(input.Value)) {
+    return { value: 0, formatted: '0' };
+  }
+  
+  const calculatedValue = input.Value / Math.pow(10, input.Precision);
+  
+  // Convert to string and remove trailing zeros
+  let formattedString = calculatedValue.toString();
+  
+  // If it contains decimal point, remove trailing zeros and potentially the decimal point
+  if (formattedString.includes('.')) {
+    formattedString = formattedString.replace(/0+$/, ''); // Remove trailing zeros
+    formattedString = formattedString.replace(/\.$/, ''); 
+  }
+  
+  return {
+    value: calculatedValue,
+    formatted: formattedString
+  };
 };

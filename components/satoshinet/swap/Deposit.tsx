@@ -1,78 +1,99 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
-import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQueryKey } from '@/lib/hooks/useQueryKey';
 
 interface DepositProps {
+  asset: string;
+  ticker: string;
   contractUrl: string;
-  assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
-  tickerInfo?: any;
-  hideAssetInfo?: boolean;
 }
 
-const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo }) => {
+interface DepositParams {
+  amount: string;
+  asset: string;
+  contractUrl: string;
+}
+
+const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker }) => {
   const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const { address } = useReactWalletStore();
-  // const { balance: assetBalance } = useAssetBalance(address, assetInfo.assetName);
-  const [balanceLoading, setBalanceLoading] = useState(false);
-  const [assetBalance, setAssetBalance] = useState({ availableAmt: 0, lockedAmt: 0 });
-  const displayAssetBalance = assetBalance.availableAmt;
-  const assetName= useMemo(() => {
-    const { Protocol, Ticker, Type } = tickerInfo.name;
-    return `${Protocol}:${Type}:${Ticker}`;
-  }, [tickerInfo, assetInfo]);
+  const queryClient = useQueryClient();
+  
+  const queryKey = useQueryKey(['assetBalance', address, asset]);
 
-  const fetchAssetBalance = useCallback(async () => {
-    if (!address || !assetName) return;
-    setBalanceLoading(true);
-    try {
-      const res = await window.sat20.getAssetAmount(address, assetName);
-      setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) });
-    } catch (error) {
-      console.error("Failed to fetch asset amount:", error);
-      // toast.error(t('notification.fetchAssetBalanceFailed'));
-    } finally {
-      setBalanceLoading(false);
-    }
-  }, [address, assetName, t]);
+  const { data: assetBalance } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!address || !asset) return { availableAmt: 0, lockedAmt: 0 };
+      const res = await window.sat20.getAssetAmount(address, asset);
+      return { 
+        availableAmt: Number(res.availableAmt), 
+        lockedAmt: Number(res.lockedAmt) 
+      };
+    },
+    enabled: !!address && !!asset,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+  });
 
-  useEffect(() => {
-    fetchAssetBalance();
-  }, [fetchAssetBalance]);
-
-  const depositHandler = async () => {
-    console.log(amount);
-    const params = {action: "deposit", param: JSON.stringify({orderType: 6, assetName: assetInfo.assetName, amt: amount})};
-    const btcFeeRate = 1
-    const result = await window.sat20.invokeContractV2(
-      contractUrl,
-      JSON.stringify(params),
-      assetInfo.assetName,
-      amount,
-      btcFeeRate.toString(),
-      {
+  const depositMutation = useMutation({
+    mutationFn: async ({ amount, asset, contractUrl }: DepositParams) => {
+      const params = {
         action: "deposit",
-        orderType: 6,
-        assetName: assetInfo.assetName,
-        amt: amount,
-        quantity: amount,
-      }
-    );
-    const { txId } = result;
-    if (txId) {
-      toast.success(`Deposit successful, txid: ${txId}`);
-      setAmount("");
-      fetchAssetBalance();
-    } else {
-      toast.error("Deposit failed");
-    }
-  }
+        param: JSON.stringify({
+          orderType: 6,
+          assetName: asset,
+          amt: amount
+        })
+      };
+      const btcFeeRate = 1;
+      
+      const result = await window.sat20.invokeContractV2(
+        contractUrl,
+        JSON.stringify(params),
+        asset,
+        amount,
+        btcFeeRate.toString(),
+        {
+          action: "deposit",
+          orderType: 6,
+          assetName: asset,
+          amt: amount,
+          quantity: amount,
+        }
+      );
 
-  const formatName = (name: string) => {
-    return name.split('f:')[1] || name; // 如果没有 'f:'，返回原始名称
+      if (!result.txId) {
+        throw new Error("Deposit failed: No transaction ID received");
+      }
+
+      return result;
+    },
+    onSuccess: async (data) => {
+      toast.success(`Deposit successful, txid: ${data.txId}`);
+      setAmount("");
+      await queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Deposit failed");
+    }
+  });
+
+  const displayAssetBalance = assetBalance?.availableAmt ?? 0;
+
+  const handleDeposit = () => {
+    if (!amount || !asset || !contractUrl) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    
+    depositMutation.mutate({ amount, asset, contractUrl });
   };
 
   const handleMaxClick = () => {
@@ -84,14 +105,14 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
       <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
-            <span className="py-2 uppercase">{t('common.deposit')}</span> {/* Use translation for '充值' */}
+            <span className="py-2 uppercase">{t('common.deposit')}</span>
             <span className="text-xs text-zinc-500">
-              {t('common.balance')}: {displayAssetBalance.toLocaleString()} {formatName(assetInfo.assetName)}
+              {t('common.balance')}: {displayAssetBalance.toLocaleString()} {ticker}
               <button
                 onClick={handleMaxClick}
                 className="ml-2 px-2 py-1 rounded-md bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white"
               >
-                {t('common.max')} {/* Use translation for '最大' */}
+                {t('common.max')}
               </button>
             </span>
           </div>
@@ -103,11 +124,20 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, assetInfo, tickerInfo })
               className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16"
               placeholder={t('common.enterAssetAmount')} 
               min={1}
+              disabled={depositMutation.isPending}
             />
           </div>
         </div>        
       </div>
-      <Button type="button" size="lg" className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient" onClick={depositHandler}>{t('common.deposit')}</Button> 
+      <Button 
+        type="button" 
+        size="lg" 
+        className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient" 
+        onClick={handleDeposit}
+        disabled={depositMutation.isPending}
+      >
+        {depositMutation.isPending ? t('common.depositing') : t('common.deposit')}
+      </Button> 
     </div>
   );
 };

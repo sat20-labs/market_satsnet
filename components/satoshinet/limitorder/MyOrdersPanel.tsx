@@ -98,8 +98,8 @@ const getMyContractHistory = async (contractURL: string, address: string, pageSt
 
 interface MyOrdersPanelProps {
   contractURL: string;
-  tickerInfo: any;
-  assetInfo: any;
+  ticker: string;
+  asset: string;
 }
 
 // 时间格式化函数
@@ -111,8 +111,8 @@ function formatTimeToMonthDayHourMinute(orderTime: number) {
 
 export default function MyOrdersPanel({
   contractURL,
-  tickerInfo,
-  assetInfo,
+  asset,
+  ticker,
 }: MyOrdersPanelProps) {
 
   const { address } = useReactWalletStore();
@@ -192,10 +192,10 @@ export default function MyOrdersPanel({
     };
 
     const result = await window.sat20.invokeContractV2_SatsNet(
-      contractURL, JSON.stringify(params), assetInfo.assetName, '1',
+      contractURL, JSON.stringify(params), asset, '1',
       '1', {
       action: 'refund',
-      assetName: assetInfo.assetName,
+      assetName: asset,
       netFeeSats: 10,
     });
     if (result.txId) {

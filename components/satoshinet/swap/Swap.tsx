@@ -4,76 +4,89 @@ import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { sleep } from "radash";
 import { toast } from "sonner";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { getContractStatus } from '@/api/market'; // 移除此行，因为数据已从父组件传入
 import { BtcPrice } from "@/components/BtcPrice";
+import { getValueFromPrecision } from '@/utils';
 
 interface SwapProps {
+  asset: string;
+  ticker: string;
   contractUrl: string;
-  assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
-  onSellSuccess?: () => void;
   tickerInfo?: any;
-  swapData: any; // 新增
-  contractK: number; // 新增
-  assetAmtRaw: { Precision: number; Value: number }; // 新增
-  assetAmt: number; // 新增
-  satValue: number; // 新增
-  currentPrice: number; // 新增
+  onSwapSuccess?: () => void;
+  swapData: any;
+  satsBalance: {
+    availableAmt: number;
+    lockedAmt: number;
+  };
+  assetBalance: {
+    availableAmt: number;
+    lockedAmt: number;
+  };
 }
 
 type SwapType = 'asset-to-sats' | 'sats-to-asset';
 
-const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData, contractK, assetAmtRaw, assetAmt, satValue, currentPrice }: SwapProps) => {
+const Swap = ({
+  asset,
+  ticker,
+  contractUrl,
+  tickerInfo = {},
+  onSwapSuccess,
+  swapData,
+  satsBalance,
+  assetBalance
+}: SwapProps) => {
   const { t } = useTranslation();
-  const [swapType, setSwapType] = useState<SwapType>('sats-to-asset'); // 默认聪换资产
+  const [swapType, setSwapType] = useState<SwapType>('sats-to-asset');
   const [fromAmount, setFromAmount] = useState<string>("");
   const [toAmount, setToAmount] = useState<string>("");
   const [activeInput, setActiveInput] = useState<'from' | 'to'>('from');
   const [slippage, setSlippage] = useState<string>("0");
   const [isSwapping, setIsSwapping] = useState(false);
   const { satsnetHeight } = useCommonStore();
-  const { address } = useReactWalletStore();
-  const { getBalance, balance } = useWalletStore();
-  const { balance: assetBalance, isLoading: assetBalanceLoading, refetch: refetchAssetBalance } = useAssetBalance(address, assetInfo.assetName);
-  const displayAssetBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
-  const displaySatsBalance = Number(balance.availableAmt) + Number(balance.lockedAmt);
+  const assetAmtInPool = useMemo(() => getValueFromPrecision(swapData?.AssetAmtInPool), [swapData?.AssetAmtInPool]);
 
-  const [isDetailsVisible, setIsDetailsVisible] = useState(false); // 控制明细显示状态
-  const [isHoveringInput, setIsHoveringInput] = useState(false); // 控制悬停状
+  const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
+
+  const lastDealPrice = useMemo(() => getValueFromPrecision(swapData?.LastDealPrice), [swapData?.LastDealPrice]);
+  const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData?.Contract]);
+  const displayAssetBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
+  const displaySatsBalance = Number(satsBalance.availableAmt) + Number(satsBalance.lockedAmt);
+
+  const [isDetailsVisible, setIsDetailsVisible] = useState(false);
+  const [isHoveringInput, setIsHoveringInput] = useState(false);
 
   const calcToAmount = (input: string) => {
     const amtNum = Number(input);
-    if (!satValue || !assetAmt || !amtNum || !contractK) return "";
+    if (!satValue || !assetAmtInPool.value || !amtNum || !contractK) return "";
     if (swapType === 'sats-to-asset') {
       // 用聪买资产
       const newSatValue = satValue + amtNum;
       const newAssetAmt = contractK / newSatValue;
-      const assetOut = assetAmt - newAssetAmt;
-      return assetOut > 0 ? assetOut.toFixed(assetAmtRaw.Precision) : "0";
+      const assetOut = assetAmtInPool.value - newAssetAmt;
+      return assetOut > 0 ? assetOut.toFixed(swapData?.AssetAmtInPool?.Precision || 8) : "0";
     } else {
       // 用资产换聪
-      const newAssetAmt = assetAmt + amtNum;
+      const newAssetAmt = assetAmtInPool.value + amtNum;
       const newSatValue = contractK / newAssetAmt;
       const satsOut = satValue - newSatValue;
       return satsOut > 0 ? satsOut.toFixed(0) : "0";
     }
   };
+
   const calcFromAmount = (input: string) => {
-    // 反推输入
     const amtNum = Number(input);
-    if (!satValue || !assetAmt || !amtNum || !contractK) return "";
+    if (!satValue || !assetAmtInPool.value || !amtNum || !contractK) return "";
     if (swapType === 'sats-to-asset') {
-      // 已知资产，反推聪
-      // assetOut = assetAmt - contractK / (satValue + x)
-      // 解x
       const assetOut = amtNum;
-      const newAssetAmt = assetAmt - assetOut;
+      const newAssetAmt = assetAmtInPool.value - assetOut;
       if (newAssetAmt <= 0) return "";
       const newSatValue = contractK / newAssetAmt;
       const satsIn = newSatValue - satValue;
@@ -83,8 +96,8 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
       const newSatValue = satValue - satsOut;
       if (newSatValue <= 0) return "";
       const newAssetAmt = contractK / newSatValue;
-      const assetIn = newAssetAmt - assetAmt;
-      return assetIn > 0 ? assetIn.toFixed(assetAmtRaw.Precision) : "0";
+      const assetIn = newAssetAmt - assetAmtInPool.value;
+      return assetIn > 0 ? assetIn.toFixed(swapData?.AssetAmtInPool?.Precision || 8) : "0";
     }
   };
 
@@ -141,29 +154,24 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
     return name.split('f:')[1] || name; // 如果没有 'f:'，返回原始名称
   };
 
-  // 兑换处理
-  const handleSwap = async () => {
-    if (satsnetHeight < swapData?.enableBlock) {
-      toast.error('Please wait for the contract to be enabled');
-      return;
-    }
-    if (!fromAmount || Number(fromAmount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-    if (swapType === 'sats-to-asset' && Number(fromAmount) > displaySatsBalance) {
-      toast.error("Insufficient sats balance");
-      return;
-    }
-    if (swapType === 'asset-to-sats' && Number(fromAmount) > assetBalance.availableAmt) {
-      toast.error("Insufficient asset balance");
-      return;
-    }
-    setIsSwapping(true);
-    try {
+  const swapMutation = useMutation({
+    mutationFn: async () => {
+      if (satsnetHeight < swapData?.enableBlock) {
+        throw new Error('Please wait for the contract to be enabled');
+      }
+      if (!fromAmount || Number(fromAmount) <= 0) {
+        throw new Error("Please enter a valid amount");
+      }
+      if (swapType === 'sats-to-asset' && Number(fromAmount) > displaySatsBalance) {
+        throw new Error("Insufficient sats balance");
+      }
+      if (swapType === 'asset-to-sats' && Number(fromAmount) > assetBalance.availableAmt) {
+        throw new Error("Insufficient asset balance");
+      }
+
       const paramObj: any = {
         orderType: swapType === 'sats-to-asset' ? 2 : 1,
-        assetName: assetInfo.assetName,
+        assetName: asset,
         amt: '0',
       };
       if (Number(slippage) > 0) {
@@ -173,10 +181,10 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
         action: "swap",
         param: JSON.stringify(paramObj),
       };
-      let result;
+
       if (swapType === 'sats-to-asset') {
         // 用聪买资产
-        result = await window.sat20.invokeContractV2_SatsNet(
+        return await window.sat20.invokeContractV2_SatsNet(
           contractUrl,
           JSON.stringify(params),
           "::",
@@ -185,9 +193,9 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
           {
             action: "swap",
             orderType: 2,
-            assetName: assetInfo.assetName,
+            assetName: ticker,
             amt: minReceiveValue.toString(),
-            unitPrice: currentPrice.toString(),
+            unitPrice: lastDealPrice.value.toString(),
             quantity: fromAmount,
             slippage: slippage,
             serviceFee: serviceFee,
@@ -195,58 +203,60 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
         );
       } else {
         // 用资产换聪
-        result = await window.sat20.invokeContractV2_SatsNet(
+        return await window.sat20.invokeContractV2_SatsNet(
           contractUrl,
           JSON.stringify(params),
-          assetInfo.assetName,
+          asset,
           fromAmount.toString(),
           "1",
           {
             action: "swap",
             orderType: 1,
-            assetName: assetInfo.assetName,
+            assetName: asset,
             amt: minReceiveValue.toString(),
-            unitPrice: currentPrice.toString(),
+            unitPrice: lastDealPrice.value.toString(),
             quantity: fromAmount,
             slippage: slippage,
           }
         );
       }
+    },
+    onSuccess: async (result) => {
       const { txId } = result;
       if (txId) {
         toast.success(`Swap successful, txid: ${txId}`);
         setFromAmount("");
         setToAmount("");
         setSlippage("0");
-        await sleep(1000);
-        getBalance();
-        refetchAssetBalance();
-        onSellSuccess?.();
+        onSwapSuccess?.();
       } else {
         toast.error("Swap failed");
       }
-    } catch (error) {
-      toast.error("Swap failed");
-    } finally {
-      setIsSwapping(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Swap failed");
     }
+  });
+
+  // Replace handleSwap with new mutation-based function
+  const handleSwap = () => {
+    swapMutation.mutate();
   };
 
   const buyQuickInputValues = useMemo(() => {
-    if (!assetAmt) return [];
-    const maxBuyAmount = assetAmt * 0.5; // 最大买入数量为池子剩余数量的 50%
-   // 根据池子资产数量动态调整 percentages
-  const percentages = assetAmt > 100000 
-  ? [0.0001, 0.0002, 0.0005, 0.001] // 大于 100000 时的比例
-  : [0.02, 0.05, 0.1, 0.2];    // 小于或等于 100000 时的比例
+    if (!assetAmtInPool.value) return [];
+    const maxBuyAmount = assetAmtInPool.value * 0.5;
+    const percentages = assetAmtInPool.value > 100000
+      ? [0.0001, 0.0002, 0.0005, 0.001]
+      : [0.02, 0.05, 0.1, 0.2];
 
     const values = percentages.map((percentage) => {
       const calculatedValue = maxBuyAmount * percentage;
-      const magnitude = Math.pow(10, Math.floor(Math.log10(calculatedValue))); // 计算数量级
-      return Math.round(calculatedValue / magnitude) * magnitude; // 调整为数量级别
+      const magnitude = Math.pow(10, Math.floor(Math.log10(calculatedValue)));
+      return Math.round(calculatedValue / magnitude) * magnitude;
     });
     return values;
-  }, [assetAmt]);
+  }, [assetAmtInPool.value]);
 
   // UI
   return (
@@ -270,10 +280,10 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
                       key={value}
                       onClick={() => {
                         const percentage = Number(value.replace('%', '')) / 100;
-                        const calculatedAmount = (assetBalance.availableAmt * percentage).toFixed(assetAmtRaw.Precision);
+                        const calculatedAmount = (assetBalance.availableAmt * percentage).toFixed(swapData?.AssetAmtInPool?.Precision || 8);
                         handleFromAmountChange(calculatedAmount);
                       }}
-                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(assetAmtRaw.Precision)
+                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(swapData?.AssetAmtInPool?.Precision || 8)
                         ? 'bg-purple-500 text-white'
                         : 'text-gray-400'
                         }`}
@@ -307,12 +317,12 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
               min={1}
             />
             <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
-              {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname}
+              {swapType === 'sats-to-asset' ? 'sats' : ticker}
             </span>
           </div>
           {/* 显示余额 */}
           <p className="flex justify-between text-zinc-600 text-xs mt-2 mb-8 px-2">
-            <span>{t('common.balance')}: <span className="font-bold">{swapType === 'sats-to-asset' ? displaySatsBalance.toLocaleString() : displayAssetBalance.toLocaleString()} </span> {swapType === 'sats-to-asset' ? 'sats' : tickerInfo?.displayname}
+            <span>{t('common.balance')}: <span className="font-bold">{swapType === 'sats-to-asset' ? displaySatsBalance.toLocaleString() : displayAssetBalance.toLocaleString()} </span> {swapType === 'sats-to-asset' ? 'sats' : ticker}
               {swapType === 'sats-to-asset' && (
                 <span className="text-xs text-zinc-600 ml-2">
                   ($<BtcPrice btc={displayAssetBalance / 100000000} />)
@@ -348,7 +358,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
               min={1}
             />
             <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
-              {swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}
+              {swapType === 'sats-to-asset' ? ticker : 'sats'}
             </span>
           </div>
           {/* 显示余额 */}
@@ -356,7 +366,7 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
             <span>
               {t('common.balance')}:
               <span className="font-bold mr-1"> {swapType === 'sats-to-asset' ? displayAssetBalance.toLocaleString() : displaySatsBalance.toLocaleString()}</span>
-              <span className="font-light">{swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}</span>
+              <span className="font-light">{swapType === 'sats-to-asset' ? ticker : 'sats'}</span>
             </span>
           </p>
         </div>
@@ -384,10 +394,10 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
         </div>
       </div>
       {/* 预估最小可接受成交量 */}
-      {/* <div className="flex justify-between mb-2 text-sm text-gray-400">
-        <span>当前价格: <span className="text-white">{currentPrice || '--'}</span> sats/{tickerInfo?.displayname}</span>
-        <span>最少获得: <span className="text-white">{minReceiveValue || '--'}</span> {swapType === 'sats-to-asset' ? tickerInfo?.displayname : 'sats'}</span>
-      </div> */}
+      <div className="flex justify-between mb-2 text-sm text-gray-400">
+        <span>当前价格: <span className="text-white">{lastDealPrice?.formatted || '--'}</span> sats/{ticker}</span>
+        <span>最少获得: <span className="text-white">{minReceiveValue || '--'}</span> {swapType === 'sats-to-asset' ? ticker : 'sats'}</span>
+      </div>
       {/* 服务费（聪换资产时） */}
       {swapType === 'sats-to-asset' && (
         <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-2xl mx-auto">
@@ -410,16 +420,16 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
 
           {/* 支付明细部分 */}
           {isDetailsVisible && (
-          <div className="text-sm text-gray-500 border-t border-zinc-800 pt-2 mt-2">
-            <div className="flex justify-between mb-1">
-              <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
-              <span className="text-zinc-500">{serviceFee || '--'} sats</span>
+            <div className="text-sm text-gray-500 border-t border-zinc-800 pt-2 mt-2">
+              <div className="flex justify-between mb-1">
+                <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
+                <span className="text-zinc-500">{serviceFee || '--'} sats</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{t('common.networkFee')}(10 sats / Tx):</span>
+                <span className="text-zinc-500">{networkFee || '--'} sats</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>{t('common.networkFee')}(10 sats / Tx):</span>
-              <span className="text-zinc-500">{networkFee || '--'} sats</span>
-            </div>
-          </div>
           )}
         </div>
       )}
@@ -429,9 +439,9 @@ const Swap = ({ contractUrl, assetInfo, onSellSuccess, tickerInfo = {}, swapData
           onClick={handleSwap}
           className={`w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient`}
           size="lg"
-          disabled={isSwapping}
+          disabled={swapMutation.isPending}
         >
-          {isSwapping ? 'Swapping...' : 'SWAP'}
+          {swapMutation.isPending ? 'Swapping...' : 'SWAP'}
         </Button>
       </WalletConnectBus>
     </div>

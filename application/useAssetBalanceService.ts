@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAssetBalanceStore, AssetBalance } from '@/stores/assetBalanceStore';
 import { useEffect } from 'react';
 
@@ -12,16 +12,14 @@ async function getAssetAmount_SatsNet(address: string, assetName: string): Promi
 export function useAssetBalance(address: string, assetName: string) {
   const setBalance = useAssetBalanceStore((s) => s.setBalance);
   const balance = useAssetBalanceStore((s) => s.getBalance(assetName));
-
+  const queryClient = useQueryClient();
   const query = useQuery<AssetBalance, Error>({
     queryKey: ['assetBalance', address, assetName],
     queryFn: () => getAssetAmount_SatsNet(address, assetName),
     enabled: !!address && !!assetName,
-    // refetchInterval: 3000,
+    refetchInterval: 3000,
     refetchIntervalInBackground: false,
   });
-
-  // 只在 query.data 变化时同步到 zustand，避免死循环
   useEffect(() => {
     if (query.data) {
       setBalance(assetName, {
@@ -30,6 +28,5 @@ export function useAssetBalance(address: string, assetName: string) {
       });
     }
   }, [query.data, assetName, setBalance]);
-
   return { balance, isLoading: query.isLoading || query.isFetching, refetch: query.refetch };
 } 

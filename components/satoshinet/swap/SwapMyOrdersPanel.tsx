@@ -146,7 +146,7 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
     3: t("common.refund"),
     4: t("common.funds"),
     5: t("common.profit"),
-    6: t("common.recharge"),
+    6: t("common.deposit"),
     7: t("common.withdraw"),
     8: t("common.unused"),
   };
@@ -165,7 +165,7 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
     },
     enabled: !!contractURL && !!address,
     initialPageParam: 0,
-    refetchInterval: 3000,
+    // refetchInterval: 3000,
     refetchIntervalInBackground: false,
   });
   console.log('data', data);
@@ -187,7 +187,6 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
           <TableHeader>
             <TableRow className="bg-zinc-800 text-gray-500 text-xs">
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
-              <TableHead className="text-center whitespace-nowrap">类型</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_quantity")}</TableHead>
               <TableHead className="text-center  whitespace-nowrap">{t("common.limitorder_history_order_amount_sats")}</TableHead>
@@ -205,8 +204,7 @@ const SwapMyOrdersPanel: React.FC<SwapMyOrdersPanelProps> = ({ contractURL }) =>
               .sort((a, b) => b.rawData.OrderTime - a.rawData.OrderTime)
               .map((order, i) => (
                 <TableRow className="text-xs" key={`${order.rawData.Id || i}-${i}`}>
-                  <TableCell className={`text-center font-bold ${order.side === "Cancelled" ? "text-gray-600" : order.side === "Buy" ? "text-green-600" : order.side === "Sell" ? "text-red-500" : "text-red-500"}`}>{order.side}</TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className={`text-center font-bold ${order.rawData.OrderType === 2 ? "text-green-600" : order.rawData.OrderType === 1 ? "text-red-500" : "text-gray-600"}`}>
                     {ORDER_TYPE_LABELS[order.rawData.OrderType] || order.rawData.OrderType}
                   </TableCell>
                   <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.rawData.OrderTime)}</TableCell>
