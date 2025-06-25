@@ -4,19 +4,17 @@ import React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { Suspense } from 'react';
-import { useCommonStore } from '@/store';
-import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { useTranslation } from 'react-i18next';
 import { ChartModule } from '@/components/satoshinet/ChartModule';
 import Swap from '@/components/satoshinet/swap/Swap';
-import SwapMyOrdersPanel from '@/components/satoshinet/swap/SwapMyOrdersPanel';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import WithDraw from '@/components/satoshinet/swap/WithDraw';
 import Deposit from '@/components/satoshinet/swap/Deposit';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import { AssetInfoCard } from '@/components/AssetInfoCard';
 import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
-import SwapHistoryPanel from '@/components/satoshinet/swap/SwapHistoryPanel';
+import MyOrders from '@/components/satoshinet/common/MyOrders';
+import HistoryOrders from '@/components/satoshinet/common/HistoryOrders';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -121,10 +119,10 @@ function OrderPageContent() {
             <TabsTrigger value="history">所有订单</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
-            <SwapMyOrdersPanel contractURL={contractUrl} />
+            <MyOrders contractURL={contractUrl} type="swap" />
           </TabsContent>
           <TabsContent value="history">
-            <SwapHistoryPanel contractURL={contractUrl} />
+            <HistoryOrders contractURL={contractUrl} type="swap" />
           </TabsContent>
         </Tabs>
       </div>

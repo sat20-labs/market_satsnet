@@ -18,8 +18,13 @@ export default class ContractService {
   }
 
   async getContractInvokeHistory(url: string, pageStart: number = 0, pageLimit: number = 20) {
-    const res = await this.client.getContractInvokeHistory(url, pageStart, pageLimit);
-    return res;
+    const { status } = await this.client.getContractInvokeHistory(url, pageStart, pageLimit);
+    const data = status ? JSON.parse(status) : null;
+    if (!data) return { data: [], total: 0 };
+    return {
+      data: data.data.filter(Boolean),
+      total: data.total,
+    };
   }
 
   async getContractAllAddresses(uri: string, pageStart: number = 0, pageLimit: number = 20) {
@@ -38,8 +43,13 @@ export default class ContractService {
   }
 
   async getUserHistoryInContract(url: string, address: string, pageStart: number = 0, pageLimit: number = 20) {
-    const res = await this.client.getUserHistoryInContract(url, address, pageStart, pageLimit);
-    return res;
+    const { status } = await this.client.getUserHistoryInContract(url, address, pageStart, pageLimit);
+    const data = status ? JSON.parse(status) : null;
+    if (!data) return { data: [], total: 0 };
+    return {
+      data: data.data.filter(Boolean),
+      total: data.total,
+    };
   }
 }
 

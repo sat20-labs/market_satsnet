@@ -273,5 +273,7 @@
   "order_placement_failed": "下单失败",
   "wait_for_contract_enable": "请等待合约启用",
   "price_must_be_positive": "价格必须大于0。",
-  "quantity_must_be_positive": "数量必须大于0。"
+  "quantity_must_be_positive": "数量必须大于0。",
+  "loading": "加载中...",
+  "load_more": "加载更多"
 }

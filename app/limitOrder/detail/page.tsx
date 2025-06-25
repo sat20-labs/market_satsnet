@@ -1,17 +1,17 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { marketApi } from '@/api';
 import { Suspense } from 'react';
 import { ChartModule } from '@/components/satoshinet/ChartModule';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import DepthPanel from '@/components/satoshinet/limitorder/DepthPanel';
-import MyOrdersPanel from '@/components/satoshinet/limitorder/MyOrdersPanel';
-import TradeHistoryPanel from '@/components/satoshinet/limitorder/TradeHistoryPanel';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLimitOrderDetailData } from '@/hooks/pages/useLimitOrderDetailData';
+import MyOrders from '@/components/satoshinet/common/MyOrders';
+import HistoryOrders from '@/components/satoshinet/common/HistoryOrders';
+
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
 }
@@ -96,10 +96,10 @@ function OrderPageContent() {
             <TabsTrigger value="history">所有订单</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
-            <MyOrdersPanel contractURL={contractUrl} ticker={ticker} asset={asset} />
+            <MyOrders contractURL={contractUrl} type="trade" />
           </TabsContent>
           <TabsContent value="history">
-            <TradeHistoryPanel contractURL={contractUrl} />
+            <HistoryOrders contractURL={contractUrl} type="trade" />
           </TabsContent>
         </Tabs>
       </div>
