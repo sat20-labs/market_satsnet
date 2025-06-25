@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { getValueFromPrecision } from '@/utils';
 import { useTranslation } from 'react-i18next';
+import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 
 interface AssetInfoCardProps {
   asset: string;
@@ -9,6 +10,8 @@ interface AssetInfoCardProps {
   tickerInfo: any;
   protocol: string;
   swapData: any;
+  refresh: () => void;
+  isRefreshing: boolean;
 }
 
 export function AssetInfoCard({ 
@@ -18,6 +21,8 @@ export function AssetInfoCard({
   tickerInfo, 
   protocol,
   swapData,
+  refresh,
+  isRefreshing
 }: AssetInfoCardProps) {
   const { t } = useTranslation();
   const assetAmt = useMemo(() => getValueFromPrecision(swapData?.AssetAmtInPool)?.value, [swapData?.AssetAmtInPool]);
@@ -26,7 +31,14 @@ export function AssetInfoCard({
 
   return (
     <div className="flex items-center gap-3 mb-4 pb-2">
-      <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-700 shadow-lg">
+      <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-700 shadow-lg relative">
+        <div className="absolute top-2 right-2 z-10">
+          <ButtonRefresh
+            onRefresh={refresh}
+            loading={isRefreshing}
+            className="bg-zinc-800/50"
+          />
+        </div>
         <div className="flex items-center mb-2 gap-4">
           <div className="w-12 h-12 rounded-full bg-purple-700 flex items-center justify-center text-zinc-300 text-xl font-bold">
             {ticker.charAt(0).toUpperCase()}

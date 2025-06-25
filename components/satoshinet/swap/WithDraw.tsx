@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { sleep } from 'radash';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 
 interface WithDrawProps {
   contractUrl: string;
@@ -13,6 +14,8 @@ interface WithDrawProps {
   ticker: string;
   assetBalance: any;
   onWithdrawSuccess: () => void;
+  refresh: () => void;
+  isRefreshing: boolean;
 }
 
 interface WithdrawParams {
@@ -21,7 +24,15 @@ interface WithdrawParams {
   contractUrl: string;
 }
 
-const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, asset, ticker, assetBalance, onWithdrawSuccess }) => {
+const WithDraw: React.FC<WithDrawProps> = ({
+  contractUrl,
+  asset,
+  ticker,
+  assetBalance,
+  onWithdrawSuccess,
+  refresh,
+  isRefreshing
+}) => {
   const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const { address } = useReactWalletStore();
@@ -92,7 +103,14 @@ const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, asset, ticker, assetBa
 
   return (
     <div className="w-full">
-      <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
+      <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 relative">
+        <div className="absolute top-2 right-2 z-10">
+          <ButtonRefresh
+            onRefresh={refresh}
+            loading={isRefreshing}
+            className="bg-zinc-800/50"
+          />
+        </div>
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
             <span className="py-2 uppercase">{t('common.withdraw')}</span>

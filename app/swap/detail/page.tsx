@@ -25,14 +25,31 @@ function OrderPageContent() {
   const asset = params.get('asset');
   const { t } = useTranslation();
 
-  const { tickerInfo, swapData: swapStatusData, isLoading, contractUrl, satsBalance, assetBalance, ticker, analyticsData, isAnalyticsLoading, refresh } = useSwapDetailData(asset ?? '');
+  const {
+    tickerInfo,
+    swapData: swapStatusData,
+    isLoading,
+    contractUrl,
+    satsBalance,
+    assetBalance,
+    ticker,
+    analyticsData,
+    isAnalyticsLoading,
+    isSwapStatusLoading,
+    isTickerLoading,
+    refreshSwapStatus,
+    refreshAnalytics,
+    refreshBalances,
+    refreshAll
+  } = useSwapDetailData(asset ?? '');
   const protocol = useMemo(() => swapStatusData?.Contract?.assetName?.Protocol || '', [swapStatusData]);
 
   const refreshHandler = () => {
     setTimeout(() => {
-      refresh();
+      refreshAll();
     }, 2000);
   }
+
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
   }
@@ -57,6 +74,8 @@ function OrderPageContent() {
               ticker={ticker}
               isLoading={isAnalyticsLoading}
               analyticsData={analyticsData}
+              refresh={refreshAnalytics}
+              isRefreshing={isAnalyticsLoading}
             />
           </div>
           <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
@@ -72,6 +91,8 @@ function OrderPageContent() {
               tickerInfo={tickerInfo}
               protocol={protocol}
               swapData={swapStatusData}
+              refresh={refreshSwapStatus}
+              isRefreshing={isSwapStatusLoading}
             />
             <Tabs defaultValue="swap" className="w-full">
               <TabsList className="mb-4">
@@ -89,6 +110,8 @@ function OrderPageContent() {
                   swapData={swapStatusData}
                   satsBalance={satsBalance}
                   assetBalance={assetBalance}
+                  refresh={refreshAll}
+                  isRefreshing={isSwapStatusLoading || isAnalyticsLoading || isTickerLoading}
                 />
               </TabsContent>
               <TabsContent value="deposit">
@@ -96,6 +119,8 @@ function OrderPageContent() {
                   asset={asset}
                   ticker={ticker}
                   contractUrl={contractUrl}
+                  refresh={refreshBalances}
+                  isRefreshing={isSwapStatusLoading}
                 />
               </TabsContent>
               <TabsContent value="withdraw">
@@ -105,6 +130,8 @@ function OrderPageContent() {
                   ticker={ticker}
                   assetBalance={assetBalance}
                   onWithdrawSuccess={() => { refreshHandler() }}
+                  refresh={refreshBalances}
+                  isRefreshing={isSwapStatusLoading}
                 />
               </TabsContent>
             </Tabs>

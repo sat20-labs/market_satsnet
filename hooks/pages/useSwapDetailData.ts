@@ -69,11 +69,27 @@ export const useSwapDetailData = (asset: string) => {
   const { balance: satsBalance, getBalance } = useWalletStore();
   const { balance: assetBalance, refetch: refreshAssetBalance } = useAssetBalance(address, asset);
 
-  const refresh = async () => {
+  // 分别导出不同的刷新函数
+  const refreshSwapStatus = () => {
     refetchStatus();
+  };
+
+  const refreshAnalytics = () => {
+    refetchAnalytics();
+  };
+
+  const refreshBalances = () => {
     getBalance();
     refreshAssetBalance();
-  }
+  };
+
+  // 刷新所有数据
+  const refreshAll = () => {
+    refreshSwapStatus();
+    // refreshAnalytics();
+    refreshBalances();
+  };
+
   return {
     ticker,
     isTickerLoading: tickerQuery.isLoading,
@@ -86,6 +102,10 @@ export const useSwapDetailData = (asset: string) => {
     satsBalance,
     assetBalance,
     analyticsData: analytics,
-    refresh
+    // 导出各种刷新函数
+    refreshSwapStatus,
+    refreshAnalytics,
+    refreshBalances,
+    refreshAll
   }
 };

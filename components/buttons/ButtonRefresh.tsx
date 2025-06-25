@@ -13,7 +13,7 @@ interface ButtonRefreshProps {
 export function ButtonRefresh({ loading, onRefresh, className }: ButtonRefreshProps) {
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="icon"
       onClick={onRefresh}
       disabled={loading}

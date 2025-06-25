@@ -4,14 +4,23 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { OrderLineChart } from '@/components/chart/OrderLineChart';
 import { ContentLoading } from '@/components/ContentLoading';
+import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 
 interface ChartModuleProps {
   ticker: string;
   analyticsData?: any;
   isLoading?: boolean;
+  refresh?: () => void;
+  isRefreshing?: boolean;
 }
 
-export const ChartModule = ({ ticker, analyticsData, isLoading = false }: ChartModuleProps) => {
+export const ChartModule = ({ 
+  ticker, 
+  analyticsData, 
+  isLoading = false,
+  refresh,
+  isRefreshing = false 
+}: ChartModuleProps) => {
   const [type, setType] = useState('24h');
 
   const dataSource = useMemo(() => {
@@ -90,7 +99,16 @@ export const ChartModule = ({ ticker, analyticsData, isLoading = false }: ChartM
 
   return (
     <div className="w-full h-full bg-zinc-900/50 border-1 border-zinc-700/50 rounded-lg">
-      <h2 className="text-lg font-bold text-zinc-400 ml-4 py-4">Chart for {ticker}</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-bold text-zinc-400 ml-4 py-4">Chart for {ticker}</h2>
+        <div className="mr-4">
+          <ButtonRefresh
+            onRefresh={refresh}
+            loading={isRefreshing}
+            className="bg-zinc-800/50"
+          />
+        </div>
+      </div>
       <div className="p-2 max-w-[100rem]">
         <ContentLoading loading={isLoading}>
           <div className="flex justify-end items-center mb-4">

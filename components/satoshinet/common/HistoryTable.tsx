@@ -253,7 +253,7 @@ export default function HistoryTable({
           </TableBody>
         </Table>
         {hasNextPage && (
-          <div ref={loadMoreRef} className="text-center py-2 sticky bottom-0 bg-background/80 backdrop-blur-sm">
+          <div ref={loadMoreRef} className="text-center py-2 bg-background/80 backdrop-blur-sm">
             {isFetchingNextPage && (
               <div className="text-gray-500">{t("common.loading")}</div>
             )}

@@ -13,6 +13,7 @@ import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BtcPrice } from "@/components/BtcPrice";
 import { getValueFromPrecision } from '@/utils';
+import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 
 interface SwapProps {
   asset: string;
@@ -29,6 +30,8 @@ interface SwapProps {
     availableAmt: number;
     lockedAmt: number;
   };
+  refresh: () => void;
+  isRefreshing: boolean;
 }
 
 type SwapType = 'asset-to-sats' | 'sats-to-asset';
@@ -41,7 +44,9 @@ const Swap = ({
   onSwapSuccess,
   swapData,
   satsBalance,
-  assetBalance
+  assetBalance,
+  refresh,
+  isRefreshing
 }: SwapProps) => {
   const { t } = useTranslation();
   const [swapType, setSwapType] = useState<SwapType>('sats-to-asset');
@@ -150,9 +155,6 @@ const Swap = ({
     setIsDetailsVisible(false);
   };
 
-  const formatName = (name: string) => {
-    return name.split('f:')[1] || name; // 如果没有 'f:'，返回原始名称
-  };
 
   const swapMutation = useMutation({
     mutationFn: async () => {
@@ -261,7 +263,15 @@ const Swap = ({
   // UI
   return (
     <div className="pb-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
-      <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
+      <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 relative">
+        {/* Add refresh button */}
+        <div className="absolute top-2 right-2 z-10">
+          <ButtonRefresh
+            onRefresh={refresh}
+            loading={isRefreshing}
+            className="bg-zinc-800/50"
+          />
+        </div>
         {/* 上方输入框 */}
         <div className="mb-2 mx-4 bg-zinc-900 py-2 rounded-lg relative"
           onMouseEnter={() => setIsHoveringInput(true)}
