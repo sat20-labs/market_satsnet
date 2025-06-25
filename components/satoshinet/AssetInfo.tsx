@@ -10,7 +10,7 @@ interface AssetInfoProps {
 
 export const AssetInfo = ({ depthData, tickerInfo }: AssetInfoProps) => {
   const { t } = useTranslation();
-  console.log('AssetInfo', tickerInfo);
+  console.log('AssetInfo', depthData);
   const mintProgress = `${Math.floor(tickerInfo.totalMinted / tickerInfo.maxSupply * 100)}%`;
   const volumeBtc = depthData && depthData['24hour']?.volume ? Number(depthData['24hour'].volume) : 0;
   const lastPrice = depthData && depthData.LastDealPrice ? Number(depthData.LastDealPrice.Value) / (10 ** depthData.LastDealPrice.Precision) : 0;

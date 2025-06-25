@@ -176,7 +176,7 @@ const LimitOrder = () => {
                     <AvatarFallback>
                       {adaptedPool?.assetSymbol
                         ? String.fromCodePoint(adaptedPool.assetSymbol)
-                        : adaptedPool.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
+                        : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
                     </AvatarFallback>
                   </Avatar>
                   <Link
