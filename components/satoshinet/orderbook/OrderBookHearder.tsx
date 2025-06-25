@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from 'react-i18next';
 // 新增导入
-import LimitOrder from '../limitorder/LimitOrder';
 
 interface OrderBookHeaderProps {
   activeTab: "takeOrder" | "makeOrder" | "swap" | "limitOrder";
