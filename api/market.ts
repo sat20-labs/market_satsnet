@@ -576,3 +576,4 @@ export const getContractStatusByAddress = async (url: string, address: string) =
 export const getUserHistoryInContract = async (url: string, address: string, pageStart: number = 0, pageLimit: number = 20) => {
   return request(`/ordx/info/contract/userhistory/${url}/${address}?start=${pageStart}&limit=${pageLimit}`, {});
 };
+

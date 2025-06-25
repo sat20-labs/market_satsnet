@@ -5,54 +5,85 @@ import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { toast } from 'sonner';
 import { sleep } from 'radash';
 import { useTranslation } from 'react-i18next';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 interface WithDrawProps {
   contractUrl: string;
-  assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
-  tickerInfo?: any;
-  hideAssetInfo?: boolean;
+  asset: string;
+  ticker: string;
+  assetBalance: any;
+  onWithdrawSuccess: () => void;
 }
 
-const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, assetInfo, tickerInfo }) => {
+interface WithdrawParams {
+  amount: string;
+  assetName: string;
+  contractUrl: string;
+}
+
+const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, asset, ticker, assetBalance, onWithdrawSuccess }) => {
   const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const { address } = useReactWalletStore();
-  const { balance: assetBalance } = useAssetBalance(address, assetInfo.assetName);
+
   const displayAssetBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
 
-  // TODO: 实现提取池子资金的逻辑
-  const withdrawHandler = async () => {
-    console.log(amount);
-    const paramsResult = await window.sat20.getParamForInvokeContract('amm.tc', 'withdraw');
-    console.log('paramsResult',paramsResult);
-    const params = {action: "withdraw", param: JSON.stringify({orderType: 7, assetName: assetInfo.assetName, amt: amount})};
-    const serviceFee = 10;
-    const result = await window.sat20.invokeContractV2_SatsNet(
-      contractUrl,
-      JSON.stringify(params),
-      assetInfo.assetName,
-      amount,
-      '1',
-      {
-        action: "withdraw",
-        orderType: 7,
-        quantity: amount,
-        serviceFee: serviceFee.toString(),
-        assetName: assetInfo.assetName,
-      }
-    );
-    const { txId } = result;
-    if (txId) {
-      toast.success(`Withdraw successful, txid: ${txId}`);
-      await sleep(1000);
-      // getBalance();
-    } else {
-      toast.error("Withdraw failed");
-    }
-  }
+  const withdrawMutation = useMutation({
+    mutationFn: async ({ amount, assetName, contractUrl }: WithdrawParams) => {
+      // 获取合约参数
+      const paramsResult = await window.sat20.getParamForInvokeContract('amm.tc', 'withdraw');
+      console.log('paramsResult', paramsResult);
 
-  const formatName = (name: string) => {
-    return name.split('f:')[1] || name; // 如果没有 'f:'，返回原始名称
+      const params = {
+        action: "withdraw",
+        param: JSON.stringify({
+          orderType: 7,
+          assetName: assetName,
+          amt: amount
+        })
+      };
+
+      const result = await window.sat20.invokeContractV2_SatsNet(
+        contractUrl,
+        JSON.stringify(params),
+        assetName,
+        amount,
+        '1',
+        {
+          action: "withdraw",
+          orderType: 7,
+          quantity: amount,
+          assetName: assetName,
+        }
+      );
+
+      if (!result.txId) {
+        throw new Error("Withdraw failed: No transaction ID received");
+      }
+
+      return result;
+    },
+    onSuccess: async (data) => {
+      toast.success(`Withdraw successful, txid: ${data.txId}`);
+      setAmount("");
+      onWithdrawSuccess();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Withdraw failed");
+    }
+  });
+
+  const handleWithdraw = () => {
+    if (!amount || !asset || !contractUrl) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    withdrawMutation.mutate({
+      amount,
+      assetName: asset,
+      contractUrl
+    });
   };
 
   const handleMaxClick = () => {
@@ -64,14 +95,15 @@ const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, assetInfo, tickerInfo 
       <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 ">
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
-            <span className="py-2 uppercase">{t('common.withdraw')}</span> {/* Use translation for '提取金额' */}
+            <span className="py-2 uppercase">{t('common.withdraw')}</span>
             <span className="text-xs text-zinc-500">
-             
+              {t('common.balance')}: {displayAssetBalance.toLocaleString()} {ticker}
               <button
                 onClick={handleMaxClick}
                 className="ml-2 px-2 py-1 rounded-md bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white"
+                disabled={withdrawMutation.isPending}
               >
-                {t('common.max')} {/* Use translation for '最大' */}
+                {t('common.max')}
               </button>
             </span>
           </div>
@@ -80,15 +112,24 @@ const WithDraw: React.FC<WithDrawProps> = ({ contractUrl, assetInfo, tickerInfo 
               type="number"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4"
-              placeholder={t('common.enterAssetAmount')} 
+              className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16"
+              placeholder={t('common.enterAssetAmount')}
               min={1}
+              disabled={withdrawMutation.isPending}
             />
-            <p className='text-xs font-medium text-zinc-500 mb-2'><span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>L 2</span> {t('common.balance')}: {displayAssetBalance.toLocaleString()} {formatName(assetInfo.assetName)}</p>
+            <p className='text-xs font-medium text-zinc-500 mb-2'><span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>L 2</span> {t('common.balance')}: {displayAssetBalance.toLocaleString()} {ticker}</p>
           </div>
-        </div>       
+        </div>
       </div>
-      <Button type="button" size="lg" className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient" onClick={withdrawHandler}>{t('common.withdraw')}</Button> {/* Use translation for '提取' */}
+      <Button
+        type="button"
+        size="lg"
+        className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient"
+        onClick={handleWithdraw}
+        disabled={withdrawMutation.isPending}
+      >
+        {withdrawMutation.isPending ? t('common.withdrawing') : t('common.withdraw')}
+      </Button>
     </div>
   );
 };

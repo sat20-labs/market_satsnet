@@ -71,10 +71,14 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   // 适配 amount 字段
   const adaptedList = participantsList.map((participant: any) => {
     const TotalMint = participant.valid?.TotalMint || 0;
+    const sats = Math.floor((TotalMint + bindingSat - 1) / bindingSat);
+    console.log('sats', sats);
+    console.log('TotalMint', TotalMint);
+    console.log('bindingSat', bindingSat);
     return {
       ...participant,
       amount: TotalMint,
-      sats: Math.floor((TotalMint + bindingSat - 1) / bindingSat)
+      sats: sats
     };
   });
 
