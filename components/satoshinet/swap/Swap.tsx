@@ -265,7 +265,7 @@ const Swap = ({
     <div className="pb-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
       <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 relative">
         {/* Add refresh button */}
-        <div className="absolute top-2 right-2 z-10">
+        <div className="absolute top-5 right-4 z-10">
           <ButtonRefresh
             onRefresh={refresh}
             loading={isRefreshing}

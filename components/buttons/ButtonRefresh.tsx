@@ -18,7 +18,7 @@ export function ButtonRefresh({ loading, onRefresh, className }: ButtonRefreshPr
       onClick={onRefresh}
       disabled={loading}
       className={cn(
-        "bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white",
+        "bg-zinc-800 h-5 w-5 hover:bg-purple-500 text-zinc-500 hover:text-white items-center",
         loading && "animate-spin",
         className
       )}

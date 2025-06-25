@@ -50,7 +50,7 @@ export default function HistoryOrders({ contractURL, type }: HistoryOrdersProps)
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="absolute top-2 right-[-40px] ">
         <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
       </div>
       <HistoryTable

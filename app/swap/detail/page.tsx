@@ -138,12 +138,11 @@ function OrderPageContent() {
           </div>
         </div>
       </div>
-      <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
-
+      <div className="bg-zinc-900 rounded-2xl p-4 mt-4">        
         <Tabs defaultValue="myOrders">
           <TabsList className="mb-2">
-            <TabsTrigger value="myOrders">我的订单</TabsTrigger>
-            <TabsTrigger value="history">所有订单</TabsTrigger>
+            <TabsTrigger value="myOrders">My Activities</TabsTrigger>
+            <TabsTrigger value="history">Activities</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
             <MyOrders contractURL={contractUrl} type="swap" />
