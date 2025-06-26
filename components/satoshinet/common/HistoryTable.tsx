@@ -203,7 +203,7 @@ export default function HistoryTable({
                     {orderTypeLabels[order.rawData.OrderType] || order.rawData.OrderType}
                   </TableCell>
                   <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
-                  <TableCell className="text-center">{order.price}</TableCell>
+                  <TableCell className="text-center">{order.price}</TableCell> 
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.side === "Buy" ? order.outAmt : order.expectedAmt}</TableCell>
