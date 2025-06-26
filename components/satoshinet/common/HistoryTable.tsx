@@ -44,7 +44,7 @@ interface RawOrderData {
 
 export interface HistoryTableOrder {
   OrderTime: number;
-  side: string;
+  orderType: number;
   price: number;
   quantity: number;
   status: string;
@@ -94,6 +94,7 @@ export default function HistoryTable({
   chain,
 }: HistoryTableProps) {
   const { t } = useTranslation();
+  console.log('rawOrders', rawOrders);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -124,9 +125,6 @@ export default function HistoryTable({
   // Process raw orders into formatted orders
   const orders = React.useMemo(() => {
     return rawOrders.map((item): HistoryTableOrder => {
-      const isBuy = item.OrderType === 2;
-      const isCancelled = item.OrderType === 3;
-      const side = isCancelled ? "Cancelled" : (isBuy ? "Buy" : "Sell");
       const { value: price } = getValueFromPrecision(item.UnitPrice);
       const { value: inAmt } = getValueFromPrecision(item.InAmt);
       const { value: expectedAmt } = getValueFromPrecision(item.ExpectedAmt);
@@ -147,11 +145,11 @@ export default function HistoryTable({
       }
 
       return {
-        side,
+        orderType: item.OrderType,
         price,
         quantity: inAmt,
         status,
-        done: isCancelled ? 2 : item.Done,
+        done: item.Done,
         outAmt,
         expectedAmt,
         outValue,
@@ -182,6 +180,7 @@ export default function HistoryTable({
             <TableRow className="bg-zinc-800 text-gray-500 text-xs">
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
+              <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_unit_price")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_quantity")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_amount_sats")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_quantity")}</TableHead>
@@ -202,10 +201,11 @@ export default function HistoryTable({
                     {orderTypeLabels[order.rawData.OrderType] || order.rawData.OrderType}
                   </TableCell>
                   <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
-                  <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
-                  <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell>
-                  <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.side === "Buy" ? order.outAmt : order.expectedAmt}</TableCell>
-                  <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : order.outValue}</TableCell>
+                  <TableCell className="text-center">{order.price}</TableCell>
+                  <TableCell className="text-center">{order.rawData.OrderType === 1 ? order.inAmt : order.expectedAmt}</TableCell>
+                  <TableCell className="text-center">{order.inValue}</TableCell>
+                  <TableCell className="text-center">{order.outAmt}</TableCell>
+                  <TableCell className="text-center">{(order.rawData.OrderType === 2 && order.done !== 0) ? order.inValue - order.outValue : order.outValue}</TableCell>
                   <TableCell className="text-center">
                     <span
                       className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${Number(order.done) === 1
