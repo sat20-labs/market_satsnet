@@ -50,7 +50,7 @@ export default function HistoryOrders({ contractURL, type }: HistoryOrdersProps)
 
   return (
     <div className="space-y-4">
-      <div className="absolute top-2 right-[-40px] ">
+      <div className="flex justify-end">
         <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
       </div>
       <HistoryTable
@@ -60,7 +60,7 @@ export default function HistoryOrders({ contractURL, type }: HistoryOrdersProps)
         noDataMessage={type === 'swap' 
           ? t("common.swap_history_no_records")
           : t("common.limitorder_history_no_trade_records")
-        }
+        }       
         onLoadMore={fetchNextPage}
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}

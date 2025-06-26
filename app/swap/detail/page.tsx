@@ -13,8 +13,8 @@ import Deposit from '@/components/satoshinet/swap/Deposit';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import { AssetInfoCard } from '@/components/AssetInfoCard';
 import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
-import MyOrders from '@/components/satoshinet/common/MyOrders';
-import HistoryOrders from '@/components/satoshinet/common/HistoryOrders';
+import MySwapOrders from '@/components/satoshinet/common/MySwapOrders';
+import HistorySwapOrders from '@/components/satoshinet/common/HistorySwapOrders';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -145,10 +145,10 @@ function OrderPageContent() {
             <TabsTrigger value="history">Activities</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
-            <MyOrders contractURL={contractUrl} type="swap" />
+            <MySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
           <TabsContent value="history">
-            <HistoryOrders contractURL={contractUrl} type="swap" />
+            <HistorySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
         </Tabs>
       </div>
