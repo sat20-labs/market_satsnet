@@ -70,7 +70,6 @@ interface HistoryTableProps {
   onLoadMore: () => void;
   showReason?: boolean;
   chain?: Chain;
-  ticker: string; // 添加 ticker 属性
 }
 
 function formatTimeToMonthDayHourMinute(orderTime: number) {
@@ -93,7 +92,6 @@ export default function HistoryTable({
   onLoadMore,
   showReason = false,
   chain,
-  ticker,
 }: HistoryTableProps) {
   const { t } = useTranslation();
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -175,7 +173,6 @@ export default function HistoryTable({
   if (!orders.length) {
     return <div className="text-center py-2 text-gray-500">{noDataMessage}</div>;
   }
-  
 
   return (
     <div className="max-w-full">
@@ -185,13 +182,13 @@ export default function HistoryTable({
             <TableRow className="bg-zinc-800 text-gray-500 text-xs">
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
-              <TableHead className="text-center whitespace-nowrap">{t("common.swap")}</TableHead>
+              <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_unit_price")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_quantity")}</TableHead>
-              {/* <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_amount_sats")}</TableHead> */}
+              <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_amount_sats")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_quantity")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_status")}</TableHead>
-              {/* <TableHead className="text-center whitespace-nowrap">Reason</TableHead> */}
+              <TableHead className="text-center whitespace-nowrap">Reason</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.tx")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">UTXO</TableHead>
             </TableRow>
@@ -202,13 +199,13 @@ export default function HistoryTable({
               .sort((a, b) => b.OrderTime - a.OrderTime)
               .map((order, i) => (
                 <TableRow className="text-xs" key={`${order.rawData.Id || i}-${i}`}>
-                  <TableCell className={`text-center font-bold ${order.rawData.OrderType === 2 ? "text-green-500" : order.rawData.OrderType === 1 ? "text-red-500" : "text-gray-600"}`}>
+                  <TableCell className={`text-center font-bold ${order.rawData.OrderType === 2 ? "text-green-600" : order.rawData.OrderType === 1 ? "text-red-500" : "text-gray-600"}`}>
                     {orderTypeLabels[order.rawData.OrderType] || order.rawData.OrderType}
                   </TableCell>
                   <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
-                  <TableCell className="text-center">{order.rawData.OrderType === 2 ? "$" + ticker.toUpperCase() + " → BTC" : order.rawData.OrderType === 1 ? "BTC → $" + ticker.toUpperCase() : "-"}</TableCell>
+                  <TableCell className="text-center">{order.price}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
-                  {/* <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell> */}
+                  <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.side === "Buy" ? order.outAmt : order.expectedAmt}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : order.outValue}</TableCell>
                   <TableCell className="text-center">
@@ -224,7 +221,7 @@ export default function HistoryTable({
                       {order.status}
                     </span>
                   </TableCell>
-                  {/* <TableCell className="text-center">{order.reason}</TableCell> */}
+                  <TableCell className="text-center">{order.reason}</TableCell>
                   <TableCell className="text-center">
                     {order.status === t("common.limitorder_status_completed") && order.rawData.OutTxId ? (
                       <a

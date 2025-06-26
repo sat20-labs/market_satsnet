@@ -9,10 +9,9 @@ import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
 interface HistoryOrdersProps {
   contractURL: string;
   type: 'swap' | 'trade';
-  ticker: string; // 添加 ticker 属性
 }
 
-export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrdersProps) {
+export default function HistoryOrders({ contractURL, type }: HistoryOrdersProps) {
   const pageSize = 20;
   const { t } = useTranslation();
 
@@ -61,8 +60,7 @@ export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrde
         noDataMessage={type === 'swap' 
           ? t("common.swap_history_no_records")
           : t("common.limitorder_history_no_trade_records")
-        }
-        ticker={ticker}
+        }       
         onLoadMore={fetchNextPage}
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}
