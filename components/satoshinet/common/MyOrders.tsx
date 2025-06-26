@@ -10,9 +10,10 @@ import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
 interface MyOrdersProps {
   contractURL: string;
   type: 'swap' | 'trade';
+  ticker: string; // 添加 ticker 属性
 }
 
-export default function MyOrders({ contractURL, type }: MyOrdersProps) {
+export default function MyOrders({ contractURL, type, ticker }: MyOrdersProps) {
   const pageSize = 20;
   const { t } = useTranslation();
   const { address } = useReactWalletStore();
@@ -63,6 +64,7 @@ export default function MyOrders({ contractURL, type }: MyOrdersProps) {
           ? t("common.swap_my_orders_no_records")
           : t("common.limitorder_my_orders_no_records")
         }
+        ticker={ticker} // 传递 ticker 到子组件
         onLoadMore={fetchNextPage}
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}

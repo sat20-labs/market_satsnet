@@ -145,10 +145,10 @@ function OrderPageContent() {
             <TabsTrigger value="history">Activities</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
-            <MyOrders contractURL={contractUrl} type="swap" />
+            <MyOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
           <TabsContent value="history">
-            <HistoryOrders contractURL={contractUrl} type="swap" />
+            <HistoryOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
         </Tabs>
       </div>

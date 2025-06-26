@@ -201,7 +201,7 @@
   "limitorder_history_unit_price": "Unit Price",
   "limitorder_history_order_quantity": "Quantity",
   "limitorder_history_order_amount_sats": "Amount (sats)",
-  "limitorder_history_trade_quantity": "Trade Quantity",
+  "limitorder_history_trade_quantity": "Trade Qty",
   "limitorder_history_trade_amount_sats": "Trade Amount (sats)",
   "limitorder_history_status": "Status",
   "limitorder_history_cancel": "Cancel",
