@@ -197,8 +197,9 @@ const Swap = ({
             orderType: 2,
             assetName: ticker,
             amt: minReceiveValue.toString(),
+            sats: fromAmount,
             unitPrice: lastDealPrice.value.toString(),
-            quantity: fromAmount,
+            quantity: toAmount,
             slippage: slippage,
             serviceFee: serviceFee,
           }

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { Icon } from "@iconify/react";
 import { useTranslation } from 'react-i18next';
-
+import { contractService } from '@/domain/services/contract';
 interface JoinPoolProps {
   closeModal: () => void;
   poolData: any;
@@ -35,17 +35,14 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     { label: t('pages.joinPool.max_supply'), value: poolData?.maxSupply },
     { label: t('pages.joinPool.limit'), value: poolData?.limit },
   ];
-  console.log('parsed', address, poolData?.contractURL, limit);
 
   useEffect(() => {
     const fetchMinted = async () => {
       if (!address || !poolData?.contractURL) return;
       setLoading(true);
       try {
-        const { status } = await window.sat20.getAddressStatusInContract(poolData.contractURL, address);
-        const parsed = JSON.parse(status);
-        console.log('parsed', parsed);
-        const mintedAmt = Number(parsed?.valid?.MintHistory?.[0]?.Amt || 0);
+        const data = await contractService.getContractStatusByAddress(poolData.contractURL, address);
+        const mintedAmt = Number(data?.valid?.MintHistory?.[0]?.Amt || 0);
         setMinted(mintedAmt);
         setMaxJoin(Math.max(limit - mintedAmt, 0));
         setAmount(prev => {
@@ -89,9 +86,6 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     const result = await window.sat20.invokeContract_SatsNet(
       poolData.contractURL, JSON.stringify(params), '1');
     if (result.txId) {
-      console.log('result', result);
-      console.log('result.txId', result.txId);
-
       toast.success(t('pages.joinPool.success', { amount, txId: result.txId }));
       closeModal();
     } else {

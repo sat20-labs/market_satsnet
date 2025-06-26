@@ -32,7 +32,6 @@ import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 
 
 function adaptPoolData(pool, satsnetHeight) {
-  console.log('pool', pool);
   const totalMinted = pool.TotalMinted / pool.maxSupply * 100
   const progress = Math.floor(Math.min(totalMinted / pool.launchRation, 1) * 100);
   let poolStatus = PoolStatus.NOT_STARTED;
@@ -83,8 +82,6 @@ function adaptPoolData(pool, satsnetHeight) {
 
 const LaunchPool = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
-  console.log('Translation for launchpool.asset_name:', t('launchpool.asset_name')); // Debugging: Check translation key
-
   useSupportedContracts();
   const { satsnetHeight } = useCommonStore();
   const sortList = useMemo(
@@ -126,8 +123,6 @@ const LaunchPool = () => {
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-  console.log('adaptedPoolList', satsnetHeight);
-  console.log('adaptedPoolList', poolList);
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
@@ -172,7 +167,6 @@ const LaunchPool = () => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-  console.log('filteredPoolList', filteredPoolList);
 
   const router = useRouter();
 
