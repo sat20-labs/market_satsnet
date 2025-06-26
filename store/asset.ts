@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { clientApi } from '@/api'
 import { parallel, tryit } from 'radash'
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react'
-
 /**
  * 资产项目接口定义
  */
@@ -205,22 +204,6 @@ export const useAssetStore = create<AssetState>((set, get) => {
             if (!state.rawAssetList.find((v) => v?.key === key)) {
               let label = item.Name.Ticker;
               console.log('key', key);
-              if (key !== '::') {
-                try {
-                  const infoRes = await window.sat20.getTickerInfo(key)
-                  console.log('infoRes', infoRes);
-                  
-                  if (infoRes?.ticker) {
-                    const { ticker } = infoRes
-                    const result = JSON.parse(ticker)
-                    console.log('ticker result', result)
-                    label = result?.name.Ticker || label
-                  }
-                } catch (error) {
-                  console.error('error', error)
-                }
-              }
-              console.log('label', label);
               
               newAssetList.push({
                 id: key,

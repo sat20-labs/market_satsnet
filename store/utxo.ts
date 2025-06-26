@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { Decimal } from 'decimal.js';
-import { last, sort } from 'radash';
+import { sort } from 'radash';
 
 export interface UtxoItem {
   status: 'unspend' | 'spended';

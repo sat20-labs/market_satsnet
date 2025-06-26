@@ -197,7 +197,7 @@ interface AssetBalance {
   lockedAmt: number
 }
 
-const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, balanceLoading }: BuyOrderProps) => {
+const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, balanceLoading }: BuyOrderProps) => {
   const { t } = useTranslation();
   const { address, btcWallet } = useReactWalletStore();
   const { network } = useCommonStore();
@@ -379,7 +379,7 @@ const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, bal
       {/* Price Input */}
       <div className="mb-6 space-y-1.5">
         <label htmlFor="buy-price" className="block text-sm text-gray-400 mb-1">
-          {t('common.unitPrice', { ticker: tickerInfo?.displayname })}:
+          {t('common.unitPrice', { ticker: ticker })}:
         </label>
         <div className="flex items-center gap-2">
           <Input
@@ -388,7 +388,7 @@ const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, bal
             inputMode="decimal"
             value={price}
             onChange={handlePriceChange}
-            placeholder={`${t('common.unitPrice', { ticker: tickerInfo?.displayname })}`}
+            placeholder={`${t('common.unitPrice', { ticker: ticker })}`}
             className="h-10"
             min="0"
             disabled={isLoading}

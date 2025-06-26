@@ -15,7 +15,7 @@ export const AssetInfo = ({ depthData, tickerInfo }: AssetInfoProps) => {
   const volumeBtc = depthData && depthData['24hour']?.volume ? Number(depthData['24hour'].volume) : 0;
   const lastPrice = depthData && depthData.LastDealPrice ? Number(depthData.LastDealPrice.Value) / (10 ** depthData.LastDealPrice.Precision) : 0;
   const marketCapBtc = Math.floor(tickerInfo.maxSupply * lastPrice);
-  const transactions = depthData && depthData.TotalDealCount ? Number(depthData.TotalDealCount) : 0;
+  const transactions = depthData?.TotalDealCount ?? 0;
 
   const volumeUsd = volumeBtc ? <BtcPrice btc={volumeBtc / 1e8} /> : 0;
   const marketCapUsd = marketCapBtc ? <BtcPrice btc={marketCapBtc / 1e8} /> : 0;
@@ -46,7 +46,7 @@ export const AssetInfo = ({ depthData, tickerInfo }: AssetInfoProps) => {
         {/* Holders */}
         <div>
           <span className="text-gray-400 text-sm">{t('common.holder_count')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{tickerInfo.holdersCount.toLocaleString()}</p>
+          <p className="text-zinc-200 text-lg font-bold">{tickerInfo.holdersCount}</p>
         </div>
       </div>
 
