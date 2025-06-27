@@ -5,6 +5,7 @@ import { Label } from "@radix-ui/react-dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { useWalletStore } from "@/store";
 import { useTranslation } from 'react-i18next';
@@ -38,6 +39,14 @@ export default function DepthPanel({
   const { satsnetHeight } = useCommonStore();
   const { balance } = useWalletStore();
   const divisibility = tickerInfo?.divisibility || 0;
+
+  const [price, setPrice] = React.useState('');
+  const [quantity, setQuantity] = React.useState('');
+
+  const handleRowClick = (selectedPrice: number, selectedQuantity: number) => {
+    updateState({ price: selectedPrice.toString(), quantity: selectedQuantity.toString() });
+    console.log(`xxxxxxx Selected Price: ${selectedPrice}, Quantity: ${selectedQuantity}`);
+  };
 
   const { state, serviceFee, updateState, handleQuantityChange, handleSubmitClick, handleConfirm } = useOrderForm({
     asset,
@@ -77,11 +86,22 @@ export default function DepthPanel({
 
   return (
     <>
-      <div className="flex flex-col md:flex-row gap-4">
+     <Tabs value={state.orderType} onValueChange={(value) => updateState({ orderType: value })} className="w-full">
+          <TabsList className="flex gap-4">
+            <TabsTrigger value="buy" className={`w-full px-4 py-2 rounded ${state.orderType === 'buy' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
+              {t('common.limitorder_buy')}
+            </TabsTrigger>
+            <TabsTrigger value="sell" className={`w-full px-4 py-2 rounded ${state.orderType === 'sell' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
+              {t('common.limitorder_sell')}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+      <div className="flex flex-col md:flex-row pt-4 gap-4">
         <Card className="w-full">
           <CardContent className="p-2">
             <div className="flex flex-col gap-2">
-              <DepthList depth={sellDepth} type="sell" maxQtyLen={maxSellQtyLen} />
+              <DepthList depth={sellDepth} type="sell" maxQtyLen={maxSellQtyLen} onRowClick={handleRowClick} />
               {/* Spread 显示 */}
               <div className="w-full flex justify-center items-center py-1 bg-zinc-700 text-xs font-semibold text-gray-300 rounded">
                 {(() => {
@@ -93,20 +113,20 @@ export default function DepthPanel({
                     <span className="flex items-center gap-1">
                       {t('common.spread')}&nbsp;
                       <span className="text-white">{spread}</span>
-                      &nbsp;<span role="img" aria-label="sats">🐶</span>
+                      &nbsp;<span role="img" aria-label="sats">/</span>
                       &nbsp;<span className="text-gray-400">({spreadPercent}%)</span>
                     </span>
                   );
                 })()}
               </div>
-              <DepthList depth={buyDepth} type="buy" maxQtyLen={maxBuyQtyLen} />
+              <DepthList depth={buyDepth} type="buy" maxQtyLen={maxBuyQtyLen} onRowClick={handleRowClick}/>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="mt-4 flex flex-col gap-2 flex-wrap">
-        <Select value={state.orderType} onValueChange={(value) => updateState({ orderType: value })}>
+        {/* <Select value={state.orderType} onValueChange={(value) => updateState({ orderType: value })}>
           <SelectTrigger className="w-36 h-14 bg-white text-zinc-300 border px-2 py-2 rounded">
             <SelectValue />
           </SelectTrigger>
@@ -114,8 +134,8 @@ export default function DepthPanel({
             <SelectItem value="buy">{t('common.limitorder_buy')}</SelectItem>
             <SelectItem value="sell">{t('common.limitorder_sell')}</SelectItem>
           </SelectContent>
-        </Select>
-
+        </Select> */}
+        
         <div className="mt-2 flex flex-col gap-4 flex-wrap">
           <Label className="text-sm text-gray-500">{t('common.limitorder_price')}</Label>
           <QuickPriceButtons 
@@ -127,9 +147,9 @@ export default function DepthPanel({
           <span className="flex justify-start items-center text-sm text-gray-500 gap-2">
             <Input
               type="number"
-              placeholder={t('common.limitorder_placeholder_price')}
+              placeholder={t('common.limitorder_placeholder_price')}              
               value={state.price}
-              onChange={(e) => updateState({ price: e.target.value })}
+              onChange={(e) => updateState({ price: e.target.value })} // 更新 state.price
               className="h-10 text-zinc-200"
               min={1}
               required
@@ -140,7 +160,7 @@ export default function DepthPanel({
             type="number"
             placeholder={t('common.limitorder_placeholder_quantity')}
             value={state.quantity}
-            onChange={handleQuantityChange}
+            onChange={(e) => updateState({ quantity: e.target.value })} // 更新 state.quantity
             className="h-10"
             min={1}
             step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`}
