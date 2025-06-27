@@ -82,7 +82,9 @@ const Swap = ({
     const parts = value.split('.');
     if (parts.length === 1) return parts[0];
     if (parts.length === 2) {
-      return `${parts[0]}.${parts[1].slice(0, divisibility)}`;
+      const decimalPart = parts[1].slice(0, divisibility);
+      // 如果小数部分为空，直接返回整数部分
+      return decimalPart ? `${parts[0]}.${decimalPart}` : parts[0];
     }
     return parts[0];
   };
@@ -162,6 +164,8 @@ const Swap = ({
 
   // 当输入金额变化时重新获取服务费
   const handleFromAmountChange = (val: string) => {
+    console.log('handleFromAmountChange', val);
+    
     setActiveInput('from');
     const formattedValue = formatAmount(val, swapType === 'asset-to-sats');
     if (formattedValue === fromAmount) return;
@@ -203,8 +207,9 @@ const Swap = ({
   // 切换上下币种
   const handleSwitch = () => {
     setSwapType(swapType === 'sats-to-asset' ? 'asset-to-sats' : 'sats-to-asset');
-    setFromAmount(toAmount);
-    setToAmount(fromAmount);
+    // 清空输入值，避免错误的金额显示
+    setFromAmount("");
+    setToAmount("");
     setActiveInput('from');
     setIsDetailsVisible(false);
   };
@@ -318,7 +323,8 @@ const Swap = ({
     });
     return values;
   }, [assetAmtInPool.value]);
-
+  console.log('fromAmount', fromAmount);
+  console.log('toAmount', toAmount);
   // UI
   return (
     <div className="pb-4 bg-transparent text-zinc-200 max-w-2xl mx-auto">
@@ -349,13 +355,18 @@ const Swap = ({
                       key={value}
                       onClick={() => {
                         const percentage = Number(value.replace('%', '')) / 100;
+                        console.log(percentage);
+                        
                         const calculatedAmount = (assetBalance.availableAmt * percentage).toFixed(swapData?.AssetAmtInPool?.Precision || 8);
+                        console.log(calculatedAmount);
+                        
                         handleFromAmountChange(calculatedAmount);
                       }}
-                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(swapData?.AssetAmtInPool?.Precision || 8)
-                        ? 'bg-purple-500 text-white'
-                        : 'text-gray-400'
-                        }`}
+                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${
+                        fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(swapData?.AssetAmtInPool?.Precision || 8)
+                          ? 'bg-purple-500 text-white'
+                          : 'text-gray-400'
+                      }`}
                     >
                       {value}
                     </button>
@@ -365,9 +376,10 @@ const Swap = ({
                   buyQuickInputValues.map((value) => (
                     <button
                       key={value}
-                      onClick={() => handleFromAmountChange(value.toString())}
-                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === value.toString() ? 'bg-purple-500 text-white' : 'text-gray-400'
-                        }`}
+                      onClick={() => handleToAmountChange(value.toString())}
+                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${
+                        toAmount === value.toString() ? 'bg-purple-500 text-white' : 'text-gray-400'
+                      }`}
                     >
                       {value}
                     </button>
