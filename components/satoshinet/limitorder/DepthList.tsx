@@ -1,0 +1,76 @@
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+export interface DepthItem {
+  price: number;
+  quantity: number;
+  totalValue: number;
+}
+
+interface DepthListProps {
+  depth: DepthItem[];
+  type: 'buy' | 'sell';
+  maxQtyLen: number;
+}
+
+const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen }) => {
+  const isSell = type === 'sell';
+  const { t } = useTranslation();
+
+  const depthWithCumulative = useMemo(() => {
+    return depth.map((order, i, arr) => {
+      const cumQty = isSell
+        ? arr.slice(i).reduce((sum, o) => sum + o.quantity, 0)
+        : arr.slice(0, i + 1).reduce((sum, o) => sum + o.quantity, 0);
+      const maxCumQty = arr.reduce((sum, o) => sum + o.quantity, 0);
+      const widthPercent = maxCumQty ? (cumQty / maxCumQty) * 100 : 0;
+      return { ...order, cumQty, widthPercent };
+    });
+  }, [depth, isSell]);
+
+  return (
+    <div className="w-full">
+      <div className="flex justify-between text-xs text-gray-400 font-semibold px-1 pb-1">
+        <span>{t('common.limitorder_price')}</span>
+        <span>{t('common.limitorder_quantity')}</span>
+        <span>{t('common.limitorder_total')}</span>
+      </div>
+      <div className="h-48 overflow-y-auto">
+        {depthWithCumulative.map((order, i) => (
+          <div 
+            key={`${order.price}-${i}`}
+            className={`relative flex justify-between text-${isSell ? 'red' : 'green'}-500 text-sm px-1 py-0.5`}
+            role="row"
+            aria-label={`${type} order at price ${order.price}`}
+          >
+            <div
+              className="absolute left-0 top-0 h-full z-0"
+              style={{
+                width: `${order.widthPercent}%`,
+                background: isSell ? "rgba(188,2,215,0.1)" : "rgba(1,185,22,0.1)",
+              }}
+              aria-hidden="true"
+            />
+            <span className="relative z-10">{order.price}</span>
+            <span 
+              className="relative z-10" 
+              style={{ minWidth: maxQtyLen + "ch", textAlign: "right" }}
+            >
+              {order.quantity}
+            </span>
+            <span 
+              className="relative z-10" 
+              style={{ minWidth: "8ch", textAlign: "right" }}
+            >
+              {(order.totalValue / 100_000_000).toFixed(8)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+DepthList.displayName = 'DepthList';
+
+export default DepthList; 
