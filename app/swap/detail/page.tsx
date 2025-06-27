@@ -13,8 +13,8 @@ import Deposit from '@/components/satoshinet/swap/Deposit';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import { AssetInfoCard } from '@/components/AssetInfoCard';
 import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
-import MySwapOrders from '@/components/satoshinet/common/MySwapOrders';
-import HistorySwapOrders from '@/components/satoshinet/common/HistorySwapOrders';
+// import MySwapOrders from '@/components/satoshinet/common/MySwapOrders';
+// import HistorySwapOrders from '@/components/satoshinet/common/HistorySwapOrders';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -43,7 +43,8 @@ function OrderPageContent() {
     refreshAll
   } = useSwapDetailData(asset ?? '');
   const protocol = useMemo(() => swapStatusData?.Contract?.assetName?.Protocol || '', [swapStatusData]);
-
+  
+  
   const refreshHandler = () => {
     setTimeout(() => {
       refreshAll();
@@ -145,10 +146,10 @@ function OrderPageContent() {
             <TabsTrigger value="history">Activities</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
-            <MySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
+            {/* <MySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" /> */}
           </TabsContent>
           <TabsContent value="history">
-            <HistorySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
+            {/* <HistorySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" /> */}
           </TabsContent>
         </Tabs>
       </div>

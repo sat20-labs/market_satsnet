@@ -19,7 +19,7 @@ function Loading() {
 function OrderPageContent() {
   const params = useSearchParams();
   const asset = params.get('asset');
-
+  
   // Fetch asset summary
   const { data, isLoading, error } = useQuery({
     queryKey: ['assetSummary', asset],
@@ -27,7 +27,7 @@ function OrderPageContent() {
     enabled: !!asset,
   });
   const { ticker, assetBalance, contractData, tickerInfo, isAnalyticsLoading, analyticsData, contractUrl, isContractStatusLoading, refresh } = useLimitOrderDetailData(asset ?? '');
-
+  console.log('tickerInfo', tickerInfo);
 
   const refreshHandler = () => {
     setTimeout(() => {
