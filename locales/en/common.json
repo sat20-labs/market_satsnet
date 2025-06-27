@@ -221,6 +221,8 @@
   "swap_chooseAsset": "Choose Asset",
   "swap_enterAmount": "Enter Amount",
   "swap_inputAmount": "Input Amount",
+  "swap_order_quantity": "Order Qty",
+  "swap_trade_quantity": "Trade Qty",
   "swap_youPay": "You Pay",
   "swap_youReceive": "You Receive",
   "swap_assetBalance": "Asset Balance",

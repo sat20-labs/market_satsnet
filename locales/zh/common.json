@@ -225,6 +225,8 @@
   "swap_chooseAsset": "选择资产",
   "swap_enterAmount": "输入数量",
   "swap_inputAmount": "输入数量",
+  "swap_order_quantity": "下单数量",
+  "swap_trade_quantity": "交易数量",
   "swap_youPay": "您将支付",
   "swap_youReceive": "您将收到",
   "swap_assetBalance": "资产余额",

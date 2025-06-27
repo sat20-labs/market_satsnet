@@ -201,7 +201,7 @@ export default function HistoryTable({
                     {orderTypeLabels[order.rawData.OrderType] || order.rawData.OrderType}
                   </TableCell>
                   <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
-                  <TableCell className="text-center">{order.price}</TableCell>
+                  <TableCell className="text-center">{order.price.toFixed(8)}</TableCell>
                   <TableCell className="text-center">{order.rawData.OrderType === 1 ? order.inAmt : order.expectedAmt}</TableCell>
                   <TableCell className="text-center">{order.inValue}</TableCell>
                   <TableCell className="text-center">{order.outAmt}</TableCell>
