@@ -54,9 +54,9 @@ const Swap = ({
   const [toAmount, setToAmount] = useState<string>("");
   const [activeInput, setActiveInput] = useState<'from' | 'to'>('from');
   const [slippage, setSlippage] = useState<string>("0");
-  const [isSwapping, setIsSwapping] = useState(false);
   const { satsnetHeight } = useCommonStore();
   const assetAmtInPool = useMemo(() => getValueFromPrecision(swapData?.AssetAmtInPool), [swapData?.AssetAmtInPool]);
+  const divisibility = tickerInfo?.divisibility || 0;
 
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
 
@@ -67,6 +67,25 @@ const Swap = ({
 
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
   const [isHoveringInput, setIsHoveringInput] = useState(false);
+
+  // 处理输入值的小数位数
+  const formatAmount = (value: string, isAssetAmount: boolean): string => {
+    if (!value) return '';
+    
+    // 如果是 sats，不允许小数
+    if (!isAssetAmount) {
+      const intValue = parseInt(value);
+      return intValue ? intValue.toString() : '';
+    }
+
+    // 如果是资产，根据 divisibility 处理小数位
+    const parts = value.split('.');
+    if (parts.length === 1) return parts[0];
+    if (parts.length === 2) {
+      return `${parts[0]}.${parts[1].slice(0, divisibility)}`;
+    }
+    return parts[0];
+  };
 
   const calcToAmount = (input: string) => {
     const amtNum = Number(input);
@@ -109,13 +128,17 @@ const Swap = ({
   // 联动输入
   const handleFromAmountChange = (val: string) => {
     setActiveInput('from');
-    setFromAmount(val);
-    setToAmount(calcToAmount(val));
+    const formattedValue = formatAmount(val, swapType === 'asset-to-sats');
+    if (formattedValue === fromAmount) return;
+    setFromAmount(formattedValue);
+    setToAmount(calcToAmount(formattedValue));
   };
   const handleToAmountChange = (val: string) => {
     setActiveInput('to');
-    setToAmount(val);
-    setFromAmount(calcFromAmount(val));
+    const formattedValue = formatAmount(val, swapType === 'sats-to-asset');
+    if (formattedValue === toAmount) return;
+    setToAmount(formattedValue);
+    setFromAmount(calcFromAmount(formattedValue));
   };
 
   // 滑点保护下的最小可接受数量
@@ -175,6 +198,7 @@ const Swap = ({
         orderType: swapType === 'sats-to-asset' ? 2 : 1,
         assetName: asset,
         amt: '0',
+        unitPrice: fromAmount.toString(),
       };
       if (Number(slippage) > 0) {
         paramObj.amt = minReceiveValue.toString();
@@ -185,7 +209,6 @@ const Swap = ({
       };
 
       if (swapType === 'sats-to-asset') {
-        // 用聪买资产
         return await window.sat20.invokeContractV2_SatsNet(
           contractUrl,
           JSON.stringify(params),
@@ -323,9 +346,16 @@ const Swap = ({
               type="number"
               value={fromAmount}
               onChange={(e) => handleFromAmountChange(e.target.value)}
-              className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16" // 添加右内边距
+              className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16"
               placeholder={swapType === 'sats-to-asset' ? t('common.enterSatsAmount') : t('common.enterAssetAmount')}
               min={1}
+              step={swapType === 'sats-to-asset' ? "1" : divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`}
+              onKeyDown={(e) => {
+                // 当输入sats或divisibility为0时，阻止输入小数点
+                if ((swapType === 'sats-to-asset' || (swapType === 'asset-to-sats' && divisibility === 0)) && e.key === '.') {
+                  e.preventDefault();
+                }
+              }}
             />
             <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               {swapType === 'sats-to-asset' ? 'sats' : ticker}
@@ -367,6 +397,13 @@ const Swap = ({
               className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-1 py-2 text-xl sm:text-3xl font-bold text-white"
               placeholder={swapType === 'sats-to-asset' ? t('common.estimatedAssetAmount') : t('common.estimatedSatsAmount')}
               min={1}
+              step={swapType === 'sats-to-asset' ? (divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`) : "1"}
+              onKeyDown={(e) => {
+                // 当输入sats或divisibility为0时，阻止输入小数点
+                if ((swapType === 'asset-to-sats' || (swapType === 'sats-to-asset' && divisibility === 0)) && e.key === '.') {
+                  e.preventDefault();
+                }
+              }}
             />
             <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               {swapType === 'sats-to-asset' ? ticker : 'sats'}

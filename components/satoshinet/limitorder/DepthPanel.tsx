@@ -148,13 +148,13 @@ export default function DepthPanel({
   ticker,
   assetBalance,
   contractURL,
+  tickerInfo,
   onOrderSuccess,
   depthData
 }: DepthPanelProps) {
   const { t } = useTranslation();
   const { satsnetHeight } = useCommonStore();
   const { balance } = useWalletStore();
-  const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
   const [orderType, setOrderType] = useState("buy");
   const [price, setPrice] = useState("");
@@ -168,10 +168,37 @@ export default function DepthPanel({
     walletSats: '',
     value: '',
   });
-
+  // 资产数量小数位
+  const divisibility = tickerInfo?.divisibility || 0;
 
   const displayAvailableAmt = assetBalance.availableAmt;
 
+  // 处理数量输入，限制小数位数
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // 如果 divisibility 为 0，不允许输入小数点
+    if (divisibility === 0) {
+      const intValue = parseInt(value) || '';
+      setQuantity(intValue.toString());
+      return;
+    }
+
+    // 检查小数位数
+    const parts = value.split('.');
+    if (parts.length === 2 && parts[1].length > divisibility) {
+      return;
+    }
+
+    setQuantity(value);
+  };
+
+  // 格式化数量，去除多余小数位
+  const formatQuantity = (value: string): number => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return 0;
+    return Number(num.toFixed(divisibility));
+  };
 
   // 处理深度数据
   const { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen } = useMemo(() => {
@@ -207,7 +234,7 @@ export default function DepthPanel({
       return;
     }
     const priceNum = parseFloat(price);
-    const quantityNum = parseFloat(quantity);
+    const quantityNum = formatQuantity(quantity);
 
     if (!price || isNaN(priceNum) || priceNum <= 0) {
       toast.error(t('common.price_must_be_positive'));
@@ -254,7 +281,7 @@ export default function DepthPanel({
     setIsPlacingOrder(true);
 
     const priceNum = parseFloat(price);
-    const quantityNum = parseFloat(quantity);
+    const quantityNum = formatQuantity(quantity);
     const _asset = orderType === 'buy' ? '::' : asset;
     const unitPrice = priceNum.toString();
     const amt = orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : quantityNum;
@@ -365,9 +392,16 @@ export default function DepthPanel({
             type="number"
             placeholder={t('common.limitorder_placeholder_quantity')}
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
+            onChange={handleQuantityChange}
             className="h-10"
             min={1}
+            step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`}
+            onKeyDown={(e) => {
+              // 当 divisibility 为 0 时，阻止输入小数点
+              if (divisibility === 0 && e.key === '.') {
+                e.preventDefault();
+              }
+            }}
             required
           />
 
