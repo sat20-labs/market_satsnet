@@ -32,7 +32,6 @@ export const AssetsList = ({ assets }: AssetListProps) => {
     { key: 'name', label: t('common.assets_name') },
     { key: 'balance', label: t('common.balance') },
     { key: 'price', label: t('common.price') },
-    { key: 'action', label: t('common.action') },
   ];
 
 
@@ -88,9 +87,9 @@ export const AssetsList = ({ assets }: AssetListProps) => {
                 <span className="text-zinc-300">{asset.amount}</span>
               </TableCell>
               <TableCell className="text-right">
-                <span className="text-sm text-gray-400">-{ }</span>
+                <span className="text-sm text-gray-400">-</span>
               </TableCell>
-              <TableCell className="text-right">
+              {/* <TableCell className="text-right">
                 <Button
                   size="sm"
                   color="secondary"
@@ -101,20 +100,20 @@ export const AssetsList = ({ assets }: AssetListProps) => {
                 >
                   {t('common.list')}
                 </Button>
-              </TableCell>
+              </TableCell> */}
             </TableRow>
           )}
         </TableBody>
       </Table>
       {/* 挂单弹窗 */}
-      {isModalOpen && selectedAsset && (
+      {/* {isModalOpen && selectedAsset && (
         <SellOrderModal
           assetInfo={selectedAsset}
           open={isModalOpen}
           tickerInfo={tickerInfo}
           onOpenChange={setIsModalOpen}
         />
-      )}
+      )} */}
     </div>
   );
 };

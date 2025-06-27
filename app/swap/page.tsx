@@ -22,16 +22,12 @@ import { BtcPrice } from '@/components/BtcPrice';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 
 function adaptPoolData(pool, satsnetHeight) {
-  // 适配 contractStatus 结构
-  console.log('pool', pool);
   const assetNameObj = pool.Contract.assetName || {};
   const ticker = assetNameObj.Ticker || '-';
   const protocol = assetNameObj.Protocol || '-';
-  // 状态适配
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
   const enableBlock = Number(pool.enableBlock);
-  const endBlock = Number(pool.endBlock);
   if (status === 100) {
     if (!isNaN(enableBlock) && typeof satsnetHeight === 'number') {
       if (satsnetHeight < enableBlock) {
@@ -61,24 +57,13 @@ function adaptPoolData(pool, satsnetHeight) {
     satsValueInPool: pool.SatsValueInPool ?? '-',
     totalDealSats: pool.TotalDealSats ?? '-',
     totalDealCount: pool.TotalDealCount ?? '-',
-    // 其它字段可按需补充
   };
 }
 
 const Swap = () => {
-  const { t, ready } = useTranslation(); // Specify the namespace 
-  const router = useRouter();
-  console.log('Translation for launchpool.asset_name:', t('launchpool.asset_name')); // Debugging: Check translation key
+  const { t } = useTranslation(); // Specify the namespace 
 
   const { satsnetHeight } = useCommonStore();
-  const sortList = useMemo(
-    () => [
-      { label: t('common.time_1D'), value: 1 },
-      { label: t('common.time_7D'), value: 7 },
-      { label: t('common.time_30D'), value: 30 },
-    ],
-    [t],
-  );
 
   const getSwapList = async () => {
     const deployed = await getDeployedContractInfo();
@@ -104,14 +89,11 @@ const Swap = () => {
     queryKey: ['swapList'],
     queryFn: getSwapList,
     gcTime: 0,
-    // refetchInterval: 60000,
   });
 
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-  console.log('adaptedPoolList', satsnetHeight);
-  console.log('adaptedPoolList', poolList);
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
@@ -136,7 +118,6 @@ const Swap = () => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-  console.log('filteredPoolList', filteredPoolList);
 
   return (
     <div className="p-4 relative">

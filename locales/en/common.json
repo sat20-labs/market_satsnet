@@ -270,6 +270,7 @@
   "wait_for_contract_enable": "Please wait for the contract to be enabled",
   "price_must_be_positive": "Price must be greater than 0.",
   "quantity_must_be_positive": "Quantity must be greater than 0.",
+  "nodata": "No data",
   "loading": "Loading...",
   "load_more": "Load More"
 }

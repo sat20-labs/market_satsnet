@@ -59,10 +59,7 @@ export default function MyOrders({ contractURL, type }: MyOrdersProps) {
         rawOrders={allOrders}
         orderTypeLabels={ORDER_TYPE_LABELS}
         isLoading={isLoading}
-        noDataMessage={type === 'swap' 
-          ? t("common.swap_my_orders_no_records")
-          : t("common.limitorder_my_orders_no_records")        }
-       
+        noDataMessage={t("common.nodata")}
         onLoadMore={fetchNextPage}
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}

@@ -146,7 +146,6 @@ interface DepthPanelProps {
 export default function DepthPanel({
   asset,
   ticker,
-  tickerInfo,
   assetBalance,
   contractURL,
   onOrderSuccess,
@@ -377,8 +376,8 @@ export default function DepthPanel({
               <span>{t('common.availableBalance')} </span>
               <span className="gap-1">
                 {orderType === 'buy'
-                  ? `${balance.availableAmt.toLocaleString()} ${t('common.sats')}`
-                  : `${displayAvailableAmt.toLocaleString()} ${tickerInfo?.displayname}`
+                  ? `${balance.availableAmt} ${t('common.sats')}`
+                  : `${displayAvailableAmt} ${ticker}`
                 }
               </span>
             </p>
