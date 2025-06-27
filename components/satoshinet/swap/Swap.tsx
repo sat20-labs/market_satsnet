@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useCommonStore, useWalletStore } from "@/store";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {contractService} from "@/domain/services/contract";
 import { BtcPrice } from "@/components/BtcPrice";
 import { getValueFromPrecision } from '@/utils';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
@@ -125,7 +125,42 @@ const Swap = ({
     }
   };
 
-  // 联动输入
+  // 获取服务费
+  const getFee = useCallback(async (amount: string) => {
+    if (!amount || Number(amount) <= 0) return 0;
+    
+    const paramObj: any = {
+      orderType: swapType === 'sats-to-asset' ? 2 : 1,
+      assetName: asset,
+      amt: '0',
+      unitPrice: amount,
+    };
+    
+    const params = {
+      action: "swap",
+      param: JSON.stringify(paramObj),
+    };
+
+    try {
+      const fee = await contractService.getFeeForInvokeContract(
+        contractUrl,
+        JSON.stringify(params)
+      );
+      return Number(fee) || 0;
+    } catch (error) {
+      console.error('Failed to get fee:', error);
+      return 0;
+    }
+  }, [asset, swapType, contractUrl]);
+
+  // 使用 React Query 获取服务费
+  const { data: serviceFee = 0 } = useQuery({
+    queryKey: ['serviceFee', fromAmount, swapType],
+    queryFn: () => getFee(fromAmount),
+    enabled: Boolean(fromAmount) && Number(fromAmount) > 0,
+  });
+
+  // 当输入金额变化时重新获取服务费
   const handleFromAmountChange = (val: string) => {
     setActiveInput('from');
     const formattedValue = formatAmount(val, swapType === 'asset-to-sats');
@@ -148,14 +183,6 @@ const Swap = ({
     return Math.floor(amt * (1 - slip / 100));
   }, [toAmount, slippage]);
 
-  // 服务费（聪换资产时）
-  const serviceFee = useMemo(() => {
-    if (swapType === 'sats-to-asset' && Number(fromAmount) > 0) {
-      return 10 + Math.floor(Number(fromAmount) * 0.008); // 服务费计算逻辑
-    }
-    return 0; // 如果 fromAmount 为 0，服务费为 0
-  }, [swapType, fromAmount]);
-
   const networkFee = useMemo(() => {
     if (Number(fromAmount) > 0) {
       return 10; // 假设网络费固定为 10 sats
@@ -165,9 +192,13 @@ const Swap = ({
 
   // 总支付费用部分
   const totalFee = useMemo(() => {
-    const inputAmount = Number(fromAmount) || 0; // 用户输入的金额
-    return inputAmount + serviceFee + networkFee; // 总支出 = 用户输入金额 + 服务费 + 网络费
-  }, [fromAmount, serviceFee, networkFee]);
+    const inputAmount = Number(fromAmount) || 0;
+    // 买入资产时，总费用 = 输入金额 + 服务费 + 网络费
+    // 卖出资产时，总费用 = 服务费 + 网络费
+    return swapType === 'sats-to-asset' 
+      ? inputAmount + serviceFee + networkFee 
+      : serviceFee + networkFee;
+  }, [fromAmount, serviceFee, networkFee, swapType]);
 
   // 切换上下币种
   const handleSwitch = () => {
@@ -224,6 +255,7 @@ const Swap = ({
             unitPrice: lastDealPrice.value.toString(),
             quantity: toAmount,
             slippage: slippage,
+            networkFee: networkFee,
             serviceFee: serviceFee,
           }
         );
@@ -243,6 +275,8 @@ const Swap = ({
             unitPrice: lastDealPrice.value.toString(),
             quantity: fromAmount,
             slippage: slippage,
+            networkFee: networkFee,
+            serviceFee: serviceFee,
           }
         );
       }
@@ -446,41 +480,40 @@ const Swap = ({
         <span>当前价格: <span className="text-white">{lastDealPrice?.formatted || '--'}</span> sats/{ticker}</span>
         <span>最少获得: <span className="text-white">{minReceiveValue || '--'}</span> {swapType === 'sats-to-asset' ? ticker : 'sats'}</span>
       </div>
-      {/* 服务费（聪换资产时） */}
-      {swapType === 'sats-to-asset' && (
-        <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-2xl mx-auto">
-
-          {/* 总支付费用部分 */}
-          <div className="flex justify-between items-center text-sm text-gray-400">
-            <span>{t('common.totalPay')}: <span className="text-white ml-1">{totalFee || '--'}</span> sats</span>
-            <span className="flex items-center gap-2">
+      {/* 服务费展示 */}
+      <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-2xl mx-auto">
+        {/* 总支付费用部分 */}
+        <div className="flex justify-between items-center text-sm text-gray-400">
+          <span>{t('common.totalPay')}: <span className="text-white ml-1">{totalFee || '--'}</span> {swapType === 'sats-to-asset' ? 'sats' : ticker}</span>
+          <span className="flex items-center gap-2">
+            {swapType === 'sats-to-asset' && (
               <span className="text-sm text-zinc-500">
                 $<BtcPrice btc={totalFee / 100000000} />
               </span>
-              <button
-                onClick={() => setIsDetailsVisible(!isDetailsVisible)}
-                className="flex items-center text-gray-400 hover:text-white"
-              >
-                {isDetailsVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-            </span>
-          </div>
-
-          {/* 支付明细部分 */}
-          {isDetailsVisible && (
-            <div className="text-sm text-gray-500 border-t border-zinc-800 pt-2 mt-2">
-              <div className="flex justify-between mb-1">
-                <span>{t('common.serviceFee')}(10 sats + 0.8%):</span>
-                <span className="text-zinc-500">{serviceFee || '--'} sats</span>
-              </div>
-              <div className="flex justify-between">
-                <span>{t('common.networkFee')}(10 sats / Tx):</span>
-                <span className="text-zinc-500">{networkFee || '--'} sats</span>
-              </div>
-            </div>
-          )}
+            )}
+            <button
+              onClick={() => setIsDetailsVisible(!isDetailsVisible)}
+              className="flex items-center text-gray-400 hover:text-white"
+            >
+              {isDetailsVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </span>
         </div>
-      )}
+
+        {/* 支付明细部分 */}
+        {isDetailsVisible && (
+          <div className="text-sm text-gray-500 border-t border-zinc-800 pt-2 mt-2">
+            <div className="flex justify-between mb-1">
+              <span>{t('common.serviceFee')}:</span>
+              <span className="text-zinc-500">{serviceFee || '--'} {swapType === 'sats-to-asset' ? 'sats' : ticker}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>{t('common.networkFee')}(10 sats / Tx):</span>
+              <span className="text-zinc-500">{networkFee || '--'} sats</span>
+            </div>
+          </div>
+        )}
+      </div>
       <WalletConnectBus asChild>
         <Button
           type="button"

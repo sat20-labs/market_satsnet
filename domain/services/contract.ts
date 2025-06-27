@@ -51,6 +51,10 @@ export default class ContractService {
       total: data.total,
     };
   }
+  async getFeeForInvokeContract(url: string, invoke: string) {
+    const res = await window.sat20.getFeeForInvokeContract(url, invoke);
+    return res?.fee ?? 0;
+  }
 }
 
 export const contractService = new ContractService(marketApi);
