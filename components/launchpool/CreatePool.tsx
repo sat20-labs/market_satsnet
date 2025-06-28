@@ -7,7 +7,6 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/u
 import { Modal } from '@/components/ui/modal';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useCommonStore } from '@/store/common';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
@@ -42,8 +41,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const [errorLaunchRatio, setErrorLaunchRatio] = useState('');
 
   const { satsnetHeight } = useCommonStore();
-  const { supportedContracts, isLoading } = useSupportedContracts();
-  const hasLaunchpool = supportedContracts.includes('launchpool.tc');
   const contractType = 'launchpool.tc';
 
   const handleNextStep = () => setStep((prev) => prev + 1);
@@ -389,7 +386,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               className="w-36 sm:w-48 btn-gradient"
               variant="outline"
               onClick={handleConfirm}
-              disabled={!isFormComplete || !hasLaunchpool}
+              disabled={!isFormComplete}
             >
               {t('pages.createPool.submitTemplate')}
             </Button>
@@ -400,7 +397,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                 className="w-36 sm:w-48"
                 variant="outline"
                 onClick={closeModal}
-                disabled={!isFormComplete || !hasLaunchpool}
+                disabled={!isFormComplete}
               >
                 {t('pages.createPool.close')}
               </Button>
@@ -409,7 +406,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                 className="w-36 sm:w-48 btn-gradient"
                 variant="outline"
                 onClick={closeModal}
-                disabled={!isFormComplete || !hasLaunchpool}
+                disabled={!isFormComplete}
               >
                 {t('pages.createPool.viewPool')}
               </Button>            
