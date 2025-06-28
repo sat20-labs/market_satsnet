@@ -142,8 +142,8 @@ function OrderPageContent() {
       <div className="bg-zinc-900 rounded-2xl p-4 mt-4">        
         <Tabs defaultValue="myOrders">
           <TabsList className="mb-2">
-            <TabsTrigger value="myOrders">My Activities</TabsTrigger>
-            <TabsTrigger value="history">Activities</TabsTrigger>
+            <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
+            <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
             <MySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />

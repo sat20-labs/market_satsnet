@@ -59,8 +59,8 @@ export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrde
         orderTypeLabels={ORDER_TYPE_LABELS}
         isLoading={isLoading}
         noDataMessage={type === 'swap' 
-          ? t("common.swap_history_no_records")
-          : t("common.limitorder_history_no_trade_records")
+          ? t("common.history_no_records")
+          : t("common.history_no_records")
         }
         ticker={ticker}
         onLoadMore={fetchNextPage}

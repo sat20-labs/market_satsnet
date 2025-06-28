@@ -103,6 +103,7 @@
   "select_option": "Select Option",
   "activity": "Activity",
   "my_activities": "My Activities",
+  "activities": "Activities",
   "items_per_page": "PageSize",
   "unit_price_sats": "Unit Price",
   "total_value_sats": "Total Value",
@@ -181,8 +182,8 @@
   "limitorder_lowest": "Lowest Ask",
   "limitorder_mid": "Mid",
   "limitorder_topbid": "Top Bid",
-  "limitorder_myorders": "My Orders",
-  "limitorder_history": "History",
+  "limitorder_myorders": "My Activities",
+  "limitorder_history": "Activities",
   "limitorder_cancel": "Cancel",
 
   "limitorder_table_type": "Type",
@@ -194,8 +195,8 @@
   "limitorder_table_tradeprice": "Trade Price",  
   "limitorder_table_status": "Status",  
 
-  "limitorder_history_loading": "Loading...",
-  "limitorder_history_no_trade_records": "No trade records yet",
+  
+  
   "limitorder_history_type": "Type",
   "limitorder_history_order_time": "Time",
   "limitorder_history_unit_price": "Unit Price(sats)",
@@ -207,11 +208,16 @@
   "limitorder_history_cancel": "Cancel",
   "limitorder_history_buy": "Buy",
   "limitorder_history_sell": "Sell",
-  "limitorder_history_scroll_to_load_more": "Scroll down to load more",
-  "limitorder_history_no_more_data": "No more data available",
+  
+
   "limitorder_status_completed": "Completed",
   "limitorder_status_cancelled": "Cancelled",  
   "limitorder_status_pending": "Pending",
+
+  "history_loading": "Loading...",
+  "history_no_records": "No records yet",
+  "history_no_more_data": "No more data available",
+  "history_scroll_to_load_more": "Scroll down to load more",
   
   "estReceive": "Est. Receive:",
   "sellSuccess": "Sell order submitted successfully!",

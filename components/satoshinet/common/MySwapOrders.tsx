@@ -61,8 +61,8 @@ export default function MyOrders({ contractURL, type, ticker }: MyOrdersProps) {
         orderTypeLabels={ORDER_TYPE_LABELS}
         isLoading={isLoading}
         noDataMessage={type === 'swap' 
-          ? t("common.swap_my_orders_no_records")
-          : t("common.limitorder_my_orders_no_records")
+          ? t("common.history_no_records")
+          : t("common.history_no_records")
         }
         ticker={ticker} // 传递 ticker 到子组件
         onLoadMore={fetchNextPage}

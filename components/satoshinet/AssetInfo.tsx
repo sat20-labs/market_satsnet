@@ -12,7 +12,12 @@ export const AssetInfo = ({ depthData, tickerInfo }: AssetInfoProps) => {
   const { t } = useTranslation();
   console.log('AssetInfo', depthData);
   console.log('AssetInfo', tickerInfo);
-  const mintProgress = `${Math.floor(tickerInfo.totalMinted / tickerInfo.maxSupply * 100)}%`;
+  let mintProgress = tickerInfo?.totalMinted > 0 && tickerInfo?.maxSupply > 0
+    ? `${Math.floor((tickerInfo.totalMinted / tickerInfo.maxSupply) * 100)}%`
+    : '100%';
+  if (mintProgress === '0%' || isNaN(Number(mintProgress))) {
+    mintProgress = '100%';
+  }
   const volumeBtc = depthData && depthData['24hour']?.volume ? Number(depthData['24hour'].volume) : 0;
   const lastPrice = depthData && depthData.LastDealPrice ? Number(depthData.LastDealPrice.Value) / (10 ** depthData.LastDealPrice.Precision) : 0;
   const marketCapBtc = Math.floor(tickerInfo.maxSupply * lastPrice);
