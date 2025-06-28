@@ -534,7 +534,7 @@ const Swap = ({
           <div className="text-sm text-gray-500 border-t border-zinc-800 pt-2 mt-2">
             <div className="flex justify-between mb-1">
               <span>{t('common.serviceFee')}:</span>
-              <span className="text-zinc-500">{serviceFee || '--'} {swapType === 'sats-to-asset' ? 'sats' : ticker}</span>
+              <span className="text-zinc-500">{serviceFee || '--'} sats</span>
             </div>
             <div className="flex justify-between">
               <span>{t('common.networkFee')}(10 sats / Tx):</span>
