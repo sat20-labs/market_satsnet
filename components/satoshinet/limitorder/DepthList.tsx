@@ -11,14 +11,15 @@ interface DepthListProps {
   depth: DepthItem[];
   type: 'buy' | 'sell';
   maxQtyLen: number;
+  onRowClick: (price: number, quantity: number) => void; // 添加回调函数
 }
 
-const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen }) => {
+const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen, onRowClick }) => {
   const isSell = type === 'sell';
   const { t } = useTranslation();
 
   const depthWithCumulative = useMemo(() => {
-    return depth.map((order, i, arr) => {
+    const processedDepth = depth.map((order, i, arr) => {
       const cumQty = isSell
         ? arr.slice(i).reduce((sum, o) => sum + o.quantity, 0)
         : arr.slice(0, i + 1).reduce((sum, o) => sum + o.quantity, 0);
@@ -26,6 +27,7 @@ const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen
       const widthPercent = maxCumQty ? (cumQty / maxCumQty) * 100 : 0;
       return { ...order, cumQty, widthPercent };
     });
+    return isSell ? processedDepth.reverse() : processedDepth; // 如果是 sell 类型，反转数据
   }, [depth, isSell]);
 
   return (
@@ -35,13 +37,14 @@ const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen
         <span>{t('common.limitorder_quantity')}</span>
         <span>{t('common.limitorder_total')}</span>
       </div>
-      <div className="h-48 overflow-y-auto">
+      <div className={`h-48 overflow-y-auto ${isSell ? 'flex flex-col-reverse' : ''}`}>
         {depthWithCumulative.map((order, i) => (
           <div 
             key={`${order.price}-${i}`}
-            className={`relative flex justify-between text-${isSell ? 'red' : 'green'}-500 text-sm px-1 py-0.5`}
+            className={`relative flex justify-between text-${isSell ? 'red' : 'green'}-500 text-sm px-1 py-0.5 cursor-pointer hover:bg-zinc-800`} // 添加 hover 样式
             role="row"
             aria-label={`${type} order at price ${order.price}`}
+            onClick={() => onRowClick(order.price, order.quantity)} // 绑定点击事件
           >
             <div
               className="absolute left-0 top-0 h-full z-0"

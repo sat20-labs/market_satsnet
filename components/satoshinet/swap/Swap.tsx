@@ -124,17 +124,20 @@ const Swap = ({
   const calcFromAmount = (input: string) => {
     const amtNum = Number(input);
     if (!satValue || !assetAmtInPool.value || !amtNum || !contractK) return "";
+    
     if (swapType === 'sats-to-asset') {
       const assetOut = amtNum;
+      if (assetOut > assetAmtInPool.value) return ""; // 防止 assetOut 超过池内资产
       const newAssetAmt = assetAmtInPool.value - assetOut;
-      if (newAssetAmt <= 0) return "";
+      if (newAssetAmt <= 0) return ""; // 确保 newAssetAmt 有效
       const newSatValue = contractK / newAssetAmt;
-      const satsIn = newSatValue - satValue;
+      const satsIn = newSatValue - satValue;      
       return satsIn > 0 ? satsIn.toFixed(0) : "0";
     } else {
       const satsOut = amtNum;
+      if (satsOut > satValue) return ""; // 防止 satsOut 超过池内聪
       const newSatValue = satValue - satsOut;
-      if (newSatValue <= 0) return "";
+      if (newSatValue <= 0) return ""; // 确保 newSatValue 有效
       const newAssetAmt = contractK / newSatValue;
       const assetIn = newAssetAmt - assetAmtInPool.value;
       return assetIn > 0 ? assetIn.toFixed(swapData?.AssetAmtInPool?.Precision || 8) : "0";
@@ -362,8 +365,7 @@ const Swap = ({
             {isHoveringInput && (
               <span className="flex items-center gap-2 bg-transparent px-2 py-1 rounded-lg">
                 {/* <span className="text-sm text-gray-400">{t('common.quickInput')}</span> */}
-                {swapType === 'asset-to-sats' ? (
-                  // 卖出资产快捷输入
+                {swapType === 'asset-to-sats' ? (                 
                   ["25%", "50%", "75%", "100%"].map((value) => (
                     <button
                       key={value}
@@ -386,11 +388,11 @@ const Swap = ({
                     </button>
                   ))
                 ) : (
-                  // 买入资产快捷输入
+                  
                   buyQuickInputValues.map((value) => (
                     <button
                       key={value}
-                      onClick={() => handleToAmountChange(value.toString())}
+                      onClick={() => handleFromAmountChange(value.toString())}
                       className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${
                         toAmount === value.toString() ? 'bg-purple-500 text-white' : 'text-gray-400'
                       }`}
