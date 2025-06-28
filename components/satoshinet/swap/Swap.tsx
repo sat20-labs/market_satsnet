@@ -60,7 +60,22 @@ const Swap = ({
 
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
 
-  const lastDealPrice = useMemo(() => getValueFromPrecision(swapData?.LastDealPrice), [swapData?.LastDealPrice]);
+  const lastDealPrice = useMemo(() => {
+    const lastPrice = getValueFromPrecision(swapData?.LastDealPrice);
+    if (lastPrice?.value && lastPrice.value > 0) {
+      return lastPrice;
+    }
+    // 如果没有最新成交价或为0，则用池子中的资产和sats计算
+    if (satValue && assetAmtInPool.value) {
+      const calculatedPrice = satValue / assetAmtInPool.value;
+      return {
+        value: calculatedPrice,
+        formatted: calculatedPrice.toFixed(10)
+      };
+    }
+    return { value: 0, formatted: '0' };
+  }, [swapData?.LastDealPrice, satValue, assetAmtInPool.value]);
+
   const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData?.Contract]);
   const displayAssetBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
   const displaySatsBalance = Number(satsBalance.availableAmt) + Number(satsBalance.lockedAmt);
@@ -72,18 +87,14 @@ const Swap = ({
   const formatAmount = (value: string, isAssetAmount: boolean): string => {
     if (!value) return '';
     
-    // 如果是 sats，不允许小数
     if (!isAssetAmount) {
       const intValue = parseInt(value);
       return intValue ? intValue.toString() : '';
     }
-
-    // 如果是资产，根据 divisibility 处理小数位
     const parts = value.split('.');
     if (parts.length === 1) return parts[0];
     if (parts.length === 2) {
       const decimalPart = parts[1].slice(0, divisibility);
-      // 如果小数部分为空，直接返回整数部分
       return decimalPart ? `${parts[0]}.${decimalPart}` : parts[0];
     }
     return parts[0];
@@ -97,13 +108,16 @@ const Swap = ({
       const newSatValue = satValue + amtNum;
       const newAssetAmt = contractK / newSatValue;
       const assetOut = assetAmtInPool.value - newAssetAmt;
-      return assetOut > 0 ? assetOut.toFixed(swapData?.AssetAmtInPool?.Precision || 8) : "0";
+      if (divisibility === 0) {
+        return assetOut > 0 ? Math.floor(assetOut).toString() : "0";
+      }
+      return assetOut > 0 ? assetOut.toFixed(divisibility) : "0";
     } else {
       // 用资产换聪
       const newAssetAmt = assetAmtInPool.value + amtNum;
       const newSatValue = contractK / newAssetAmt;
       const satsOut = satValue - newSatValue;
-      return satsOut > 0 ? satsOut.toFixed(0) : "0";
+      return Math.max(satsOut, 0).toFixed(0);
     }
   };
 
@@ -491,7 +505,7 @@ const Swap = ({
       {/* 预估最小可接受成交量 */}
       <div className="flex justify-between mb-2 text-sm text-gray-400">
         <span>当前价格: <span className="text-white">{lastDealPrice?.formatted || '--'}</span> sats/{ticker}</span>
-        <span>最少获得: <span className="text-white">{minReceiveValue || '--'}</span> {swapType === 'sats-to-asset' ? ticker : 'sats'}</span>
+        <span>大概获得: <span className="text-white">{minReceiveValue || '--'}</span> {swapType === 'sats-to-asset' ? ticker : 'sats'}</span>
       </div>
       {/* 服务费展示 */}
       <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-2xl mx-auto">

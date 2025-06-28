@@ -54,7 +54,7 @@ export default function DepthPanel({
   // 处理深度数据
   const { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen } = useMemo(() => {
     if (!depthData) return { sellDepth: [], buyDepth: [], maxSellQtyLen: 1, maxBuyQtyLen: 1 };
-
+    console.log('depthData', depthData);
     const processDepth = (depth: any[]) => {
       return depth
         .map((item: any) => ({
@@ -74,7 +74,9 @@ export default function DepthPanel({
 
     return { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen };
   }, [depthData]);
-
+  console.log('sellDepth', sellDepth);
+  console.log('buyDepth', buyDepth);
+  
   return (
     <>
       <div className="flex flex-col md:flex-row gap-4">
