@@ -513,7 +513,7 @@ const Swap = ({
       <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-2xl mx-auto">
         {/* 总支付费用部分 */}
         <div className="flex justify-between items-center text-sm text-gray-400">
-          <span>{t('common.totalPay')}: <span className="text-white ml-1">{totalFee || '--'}</span> {swapType === 'sats-to-asset' ? 'sats' : ticker}</span>
+          <span>{t('common.totalPay')}: <span className="text-white ml-1">{totalFee || '--'}</span> sats</span>
           <span className="flex items-center gap-2">
             {swapType === 'sats-to-asset' && (
               <span className="text-sm text-zinc-500">
