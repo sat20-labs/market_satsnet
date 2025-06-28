@@ -137,6 +137,10 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       }</td>
                     </tr>
                     <tr className="border-b border-zinc-700">
+                      <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.mint_amt_per_sat')}</td>
+                      <td className="p-2 whitespace-nowrap">{poolDetails.mintAmtPerSat ?? '--'}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-700">
                       <td className="p-3 font-bold text-zinc-400 whitespace-nowrap">{t('pages.poolDetail.onchain_status')}</td>
                       <td className="p-2 whitespace-nowrap">{onchainStatusTextMap[String(poolDetails.status)] ?? poolDetails.status ?? '-'}({poolDetails.status})</td>
                     </tr>
@@ -282,7 +286,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                   <div className="overflow-x-auto">
                     <ParticipantsTable
                       contractURL={poolDetails.contractURL}
-                      bindingSat={poolDetails.bindingSat}
+                      bindingSat={poolDetails.mintAmtPerSat || poolDetails.bindingSat}
                       showMintHistory={true}
                       showIndex={false}
                       tableHeaders={[t('pages.poolDetail.address'), '资产数量/聪']}

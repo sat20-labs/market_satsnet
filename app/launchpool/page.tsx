@@ -270,7 +270,7 @@ const LaunchPool = () => {
               <LaunchPoolTemplate templateId={selectedTemplateId || ''} closeModal={closeModal} />
             )}
             {modalType === 'distribution' && (
-              <DistributionList contractURL={selectedPool.contractURL} closeModal={closeModal} bindingSat={selectedPool.bindingSat} />
+              <DistributionList contractURL={selectedPool.contractURL} closeModal={closeModal} bindingSat={selectedPool.mintAmtPerSat || selectedPool.bindingSat} />
             )}
             {modalType === 'autoDistribute' && (
               <div className="bg-zinc-900 p-6 rounded-lg shadow-md max-w-[600px]">

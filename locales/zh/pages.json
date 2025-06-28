@@ -295,6 +295,7 @@
     "creator": "创建者",
     "limit": "限制",
     "binding_sat": "绑定聪",
+    "mint_amt_per_sat": "每聪分发数量",
     "onchain_status": "链上状态",
     "deploy_ticker_txid": "Deploy Ticker TxId",
     "mint_txid": "Mint TxId",

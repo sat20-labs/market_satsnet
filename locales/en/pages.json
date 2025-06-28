@@ -313,6 +313,7 @@
     "creator": "Creator",
     "limit": "Limit",
     "binding_sat": "Binding Sat",
+    "mint_amt_per_sat": "Mint Amount Per Sat",
     "onchain_status": "On-chain Status",
     "deploy_ticker_txid": "Deploy Ticker TxId",
     "mint_txid": "Mint TxId",
