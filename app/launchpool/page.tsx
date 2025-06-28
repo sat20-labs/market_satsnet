@@ -24,7 +24,6 @@ import DistributionList from '@/components/launchpool/DistributionList';
 import ActionButtons from '@/components/launchpool/ActionButtons';
 import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
-import { useSupportedContracts } from '@/lib/hooks/useSupportedContracts';
 import { useContractStore } from '@/store/contract';
 import { Icon } from '@iconify/react';
 import { useRouter } from 'next/navigation';
@@ -82,7 +81,6 @@ function adaptPoolData(pool, satsnetHeight) {
 
 const LaunchPool = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
-  useSupportedContracts();
   const { satsnetHeight } = useCommonStore();
   const sortList = useMemo(
     () => [
