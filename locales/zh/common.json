@@ -107,6 +107,7 @@
   "select_option": "选择选项",
   "activity": "交易历史",
   "my_activities": "我的交易",
+  "activities": "交易记录",
   "items_per_page": "每页",
   "unit_price_sats": "单价(sats)",
   "total_value_sats": "总价(sats)",
@@ -180,8 +181,8 @@
   "limitorder_lowest": "最低卖价",
   "limitorder_mid": "中间价",
   "limitorder_topbid": "最高买价",
-  "limitorder_myorders": "我的订单",
-  "limitorder_history": "历史",
+  "limitorder_myorders": "我的交易",
+  "limitorder_history": "交易历史",
   "limitorder_cancel": "取消",
   
   "limitorder_table_type": "类型",
@@ -193,8 +194,7 @@
   "limitorder_table_tradeprice": "成交价格",  
   "limitorder_table_status": "状态",  
 
-  "limitorder_history_loading": "加载中...",
-  "limitorder_history_no_trade_records": "暂无成交记录",
+
   "limitorder_history_type": "类型",
   "limitorder_history_order_time": "时间",
   "limitorder_history_unit_price": "单价(sats)",
@@ -206,12 +206,17 @@
   "limitorder_history_cancel": "撤销",
   "limitorder_history_buy": "买",
   "limitorder_history_sell": "卖",
-  "limitorder_history_scroll_to_load_more": "向下滚动加载更多",
-  "limitorder_history_no_more_data": "没有更多数据了",
+
+
 
   "limitorder_status_completed": "已完成",
   "limitorder_status_cancelled": "已取消",  
   "limitorder_status_pending": "处理中",
+
+  "history_no_more_data": "没有更多数据了",
+  "history_loading": "加载中...",
+  "history_no_records": "暂无交易记录",
+  "history_scroll_to_load_more": "向下滚动以加载更多",
 
   "makeorder_sell": "挂卖单",
   "makeorder_buy": "挂买单",

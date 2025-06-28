@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLimitOrderDetailData } from '@/hooks/pages/useLimitOrderDetailData';
 import MyOrders from '@/components/satoshinet/common/MyOrders';
 import HistoryOrders from '@/components/satoshinet/common/HistoryOrders';
+import { useTranslation } from 'react-i18next';
 
 function Loading() {
   return <div className="p-4 bg-black text-white w-full">Loading...</div>;
@@ -19,6 +20,7 @@ function Loading() {
 function OrderPageContent() {
   const params = useSearchParams();
   const asset = params.get('asset');
+  const { t } = useTranslation();
   
   // Fetch asset summary
   const { data, isLoading, error } = useQuery({
@@ -70,7 +72,7 @@ function OrderPageContent() {
             ) : !contractUrl ? (
               <div className="w-full mt-4">
                 <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
-                  未找到合约，请联系管理员添加
+                  {t('common.swap_notice')}
                 </div>
               </div>
             ) : (
@@ -92,8 +94,8 @@ function OrderPageContent() {
       <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
         <Tabs defaultValue="myOrders">
           <TabsList className="mb-2">
-            <TabsTrigger value="myOrders">我的订单</TabsTrigger>
-            <TabsTrigger value="history">所有订单</TabsTrigger>
+            <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
+            <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
             <MyOrders contractURL={contractUrl} type="trade" />
