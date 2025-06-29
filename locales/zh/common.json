@@ -165,6 +165,7 @@
   "swapButton": "Swap",
   "swap_notice": "未找到合约，请联系管理员。",
   "totalPay": "总支付",
+  "totalReceive": "总接收",
   "networkFee": "网络费",
   "quickInput": "快捷输入",
   "currentPrice": "当前价格",

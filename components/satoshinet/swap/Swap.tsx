@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
-import {contractService} from "@/domain/services/contract";
+import { contractService } from "@/domain/services/contract";
 import { BtcPrice } from "@/components/BtcPrice";
 import { getValueFromPrecision } from '@/utils';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
@@ -86,7 +86,7 @@ const Swap = ({
   // 处理输入值的小数位数
   const formatAmount = (value: string, isAssetAmount: boolean): string => {
     if (!value) return '';
-    
+
     if (!isAssetAmount) {
       const intValue = parseInt(value);
       return intValue ? intValue.toString() : '';
@@ -124,14 +124,14 @@ const Swap = ({
   const calcFromAmount = (input: string) => {
     const amtNum = Number(input);
     if (!satValue || !assetAmtInPool.value || !amtNum || !contractK) return "";
-    
+
     if (swapType === 'sats-to-asset') {
       const assetOut = amtNum;
       if (assetOut > assetAmtInPool.value) return ""; // 防止 assetOut 超过池内资产
       const newAssetAmt = assetAmtInPool.value - assetOut;
       if (newAssetAmt <= 0) return ""; // 确保 newAssetAmt 有效
       const newSatValue = contractK / newAssetAmt;
-      const satsIn = newSatValue - satValue;      
+      const satsIn = newSatValue - satValue;
       return satsIn > 0 ? satsIn.toFixed(0) : "0";
     } else {
       const satsOut = amtNum;
@@ -147,14 +147,14 @@ const Swap = ({
   // 获取服务费
   const getFee = useCallback(async (amount: string) => {
     if (!amount || Number(amount) <= 0) return 0;
-    
+
     const paramObj: any = {
       orderType: swapType === 'sats-to-asset' ? 2 : 1,
       assetName: asset,
       amt: '0',
       unitPrice: amount,
     };
-    
+
     const params = {
       action: "swap",
       param: JSON.stringify(paramObj),
@@ -182,7 +182,7 @@ const Swap = ({
   // 当输入金额变化时重新获取服务费
   const handleFromAmountChange = (val: string) => {
     console.log('handleFromAmountChange', val);
-    
+
     setActiveInput('from');
     const formattedValue = formatAmount(val, swapType === 'asset-to-sats');
     if (formattedValue === fromAmount) return;
@@ -216,8 +216,8 @@ const Swap = ({
     const inputAmount = Number(fromAmount) || 0;
     // 买入资产时，总费用 = 输入金额 + 服务费 + 网络费
     // 卖出资产时，总费用 = 服务费 + 网络费
-    return swapType === 'sats-to-asset' 
-      ? inputAmount + serviceFee + networkFee 
+    return swapType === 'sats-to-asset'
+      ? inputAmount + serviceFee + networkFee
       : serviceFee + networkFee;
   }, [fromAmount, serviceFee, networkFee, swapType]);
 
@@ -365,37 +365,35 @@ const Swap = ({
             {isHoveringInput && (
               <span className="flex items-center gap-2 bg-transparent px-2 py-1 rounded-lg">
                 {/* <span className="text-sm text-gray-400">{t('common.quickInput')}</span> */}
-                {swapType === 'asset-to-sats' ? (                 
+                {swapType === 'asset-to-sats' ? (
                   ["25%", "50%", "75%", "100%"].map((value) => (
                     <button
                       key={value}
                       onClick={() => {
                         const percentage = Number(value.replace('%', '')) / 100;
                         console.log(percentage);
-                        
+
                         const calculatedAmount = (assetBalance.availableAmt * percentage).toFixed(swapData?.AssetAmtInPool?.Precision || 8);
                         console.log(calculatedAmount);
-                        
+
                         handleFromAmountChange(calculatedAmount);
                       }}
-                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${
-                        fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(swapData?.AssetAmtInPool?.Precision || 8)
+                      className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(swapData?.AssetAmtInPool?.Precision || 8)
                           ? 'bg-purple-500 text-white'
                           : 'text-gray-400'
-                      }`}
+                        }`}
                     >
                       {value}
                     </button>
                   ))
                 ) : (
-                  
+
                   buyQuickInputValues.map((value) => (
                     <button
                       key={value}
                       onClick={() => handleFromAmountChange(value.toString())}
-                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${
-                        toAmount === value.toString() ? 'bg-purple-500 text-white' : 'text-gray-400'
-                      }`}
+                      className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${toAmount === value.toString() ? 'bg-purple-500 text-white' : 'text-gray-400'
+                        }`}
                     >
                       {value}
                     </button>
@@ -412,7 +410,7 @@ const Swap = ({
               className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16"
               placeholder={swapType === 'sats-to-asset' ? t('common.enterSatsAmount') : t('common.enterAssetAmount')}
               min={1}
-              step={swapType === 'sats-to-asset' ? "1" : divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`}
+              step={swapType === 'sats-to-asset' ? "1" : divisibility === 0 ? "1" : `0.${"0".repeat(divisibility - 1)}1`}
               onKeyDown={(e) => {
                 // 当输入sats或divisibility为0时，阻止输入小数点
                 if ((swapType === 'sats-to-asset' || (swapType === 'asset-to-sats' && divisibility === 0)) && e.key === '.') {
@@ -460,7 +458,7 @@ const Swap = ({
               className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-1 py-2 text-xl sm:text-3xl font-bold text-white"
               placeholder={swapType === 'sats-to-asset' ? t('common.estimatedAssetAmount') : t('common.estimatedSatsAmount')}
               min={1}
-              step={swapType === 'sats-to-asset' ? (divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`) : "1"}
+              step={swapType === 'sats-to-asset' ? (divisibility === 0 ? "1" : `0.${"0".repeat(divisibility - 1)}1`) : "1"}
               onKeyDown={(e) => {
                 // 当输入sats或divisibility为0时，阻止输入小数点
                 if ((swapType === 'asset-to-sats' || (swapType === 'sats-to-asset' && divisibility === 0)) && e.key === '.') {
@@ -505,19 +503,29 @@ const Swap = ({
         </div>
       </div>
       {/* 预估最小可接受成交量 */}
-      <div className="flex justify-between mb-2 text-sm text-gray-400">
-        <span>当前价格: <span className="text-white">{lastDealPrice?.formatted || '--'}</span> sats/{ticker}</span>
-        <span>大概获得: <span className="text-white">{minReceiveValue || '--'}</span> {swapType === 'sats-to-asset' ? ticker : 'sats'}</span>
-      </div>
+      {/* <div className="flex justify-between mb-2 text-sm text-gray-400">
+        <span>{t('common.currentPrice')}: <span className="text-white">{lastDealPrice?.formatted || '--'}</span> sats/{ticker}</span>
+        <span>{t('common.estReceive')}: <span className="text-white">{minReceiveValue || '--'}</span> {swapType === 'sats-to-asset' ? ticker : 'sats'}</span>
+      </div> */}
       {/* 服务费展示 */}
       <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-2xl mx-auto">
         {/* 总支付费用部分 */}
         <div className="flex justify-between items-center text-sm text-gray-400">
-          <span>{t('common.totalPay')}: <span className="text-white ml-1">{totalFee || '--'}</span> sats</span>
+          {swapType === 'sats-to-asset' && (
+            <span>{t('common.totalPay')}: <span className="text-white ml-1">~ {totalFee || ''}</span> sats</span>
+          )}
+          {swapType === 'asset-to-sats' && (
+            <span>{t('common.totalReceive')}: <span className="text-white ml-1">~ {(minReceiveValue - serviceFee - networkFee) || ''}</span> sats</span>
+          )}
           <span className="flex items-center gap-2">
             {swapType === 'sats-to-asset' && (
               <span className="text-sm text-zinc-500">
-                $<BtcPrice btc={totalFee / 100000000} />
+              ~ $<BtcPrice btc={totalFee / 100000000} />
+              </span>
+            )}             
+             {swapType === 'asset-to-sats' && (
+              <span className="text-sm text-zinc-500">
+               ~ $<BtcPrice btc={(minReceiveValue - serviceFee - networkFee) / 100000000} />
               </span>
             )}
             <button

@@ -166,6 +166,7 @@
   "swapButton": "Swap",
   "swap_notice": "Contract not found, please contact the administrator.",
   "totalPay": "Total Pay",
+  "totalReceive": "Total Receive",
   "networkFee": "Network Fee",
   "quickInput": "Quick Input",
   "currentPrice": "Current Price",
