@@ -221,7 +221,7 @@ export default function HistoryTable({
                   </TableCell>
                   <TableCell className="text-center">{order.reason}</TableCell>
                   <TableCell className="text-center">
-                    {order.status === t("common.limitorder_status_completed") && order.rawData.OutTxId ? (
+                    {order.rawData.OutTxId ? (
                       <a
                         href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: chain || Chain.SATNET, env: 'dev' })}
                         target="_blank"
