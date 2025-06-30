@@ -2,6 +2,7 @@
 
 import { BtcPrice } from "../BtcPrice";
 import { useTranslation } from 'react-i18next';
+import { formatLargeNumber } from "@/utils";
 
 interface AssetInfoProps {
   depthData: any;
@@ -24,7 +25,7 @@ export const AssetInfo = ({ depthData, tickerInfo }: AssetInfoProps) => {
   const transactions = depthData?.TotalDealCount ?? 0;
 
   const volumeUsd = volumeBtc ? <BtcPrice btc={volumeBtc / 1e8} /> : 0;
-  const marketCapUsd = marketCapBtc ? <BtcPrice btc={marketCapBtc / 1e8} /> : 0;
+  const marketCapUsd = marketCapBtc ? formatLargeNumber(marketCapBtc / 1e8) : 0;
 
   return (
     <div className="bg-zinc-900 p-5 rounded-lg w-full h-64 sm:h-52">
@@ -39,8 +40,8 @@ export const AssetInfo = ({ depthData, tickerInfo }: AssetInfoProps) => {
         {/* Market Cap */}
         <div className="sm:border-r-1 border-b-1 sm:border-b-0 sm:border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.marketCap')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{marketCapBtc.toLocaleString()} <span className="text-zinc-400 text-sm">{t('common.sats')}</span></p>
-          <p className="text-gray-400 text-xs">${marketCapUsd}</p>
+          <p className="text-zinc-200 text-lg font-bold">{formatLargeNumber(marketCapBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
+          <p className="text-gray-400 text-xs">${marketCapUsd.toLocaleString()}</p>
         </div>
 
         {/* Transactions */}

@@ -33,9 +33,9 @@ const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen
   return (
     <div className="w-full">
       <div className="flex justify-between text-xs text-gray-400 font-semibold px-1 pb-1">
-        <span>{t('common.limitorder_price')}</span>
-        <span>{t('common.limitorder_quantity')}</span>
-        <span>{t('common.limitorder_total')}</span>
+        <span className="w-1/3">{t('common.limitorder_price')}</span>
+        <span className='mr-4'>{t('common.limitorder_quantity')}</span>
+        <span>{t('common.limitorder_total')}</span> 
       </div>
       <div className={`h-48 overflow-y-auto ${isSell ? 'flex flex-col-reverse' : ''}`}>
         {depthWithCumulative.map((order, i) => (
@@ -54,7 +54,7 @@ const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen
               }}
               aria-hidden="true"
             />
-            <span className="relative z-10">{order.price}</span>
+            <span className="relative z-10 w-1/3">{order.price}</span>
             <span 
               className="relative z-10" 
               style={{ minWidth: maxQtyLen + "ch", textAlign: "right" }}
