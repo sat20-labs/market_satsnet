@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface OrderSummaryProps {
   orderType: string;
@@ -21,6 +22,7 @@ interface BuySummaryData {
 
 interface SellSummaryData {
   totalVal: number;
+  totalReceive: number;
   serviceFee: number;
   networkFee: number;
   type: 'sell';
@@ -38,6 +40,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   ticker,
 }) => {
   const { t } = useTranslation();
+  const [isDetailsVisible, setIsDetailsVisible] = useState(false); // 控制详细信息显示状态
 
   const summaryData = useMemo<SummaryData | null>(() => {
     const priceNum = Number(price);
@@ -59,8 +62,10 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         type: 'buy' as const,
       };
     } else {
-      return {
+      const totalReceive = totalVal - serviceFee - networkFee;
+      return {        
         totalVal,
+        totalReceive,
         serviceFee,
         networkFee,
         type: 'sell' as const,
@@ -71,45 +76,69 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   if (!summaryData) return null;
 
   return (
-    <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 min-h-[100px] text-sm">
-      <p className="flex justify-between gap-1 text-gray-400">
-        <span>{t('common.availableBalance')} </span>
-        <span className="gap-1">
-          {orderType === 'buy'
-            ? `${balance.availableAmt} ${t('common.sats')}`
-            : `${displayAvailableAmt} ${ticker}`
-          }
+    <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 text-sm">
+      {/* 默认显示预估收入或预估支付 */}
+      <p className="flex justify-between font-medium text-gray-400">
+        {summaryData.type === 'buy' && (
+          <>
+            {t('common.estPay')}
+
+          </>
+        )}
+        {summaryData.type === 'sell' && (
+          <>
+            {t('common.estReceive')}
+          </>
+        )}
+        <span className="flex items-center gap-2">
+          {summaryData.type === 'buy' && (
+            <>
+              <span className="font-semibold text-zinc-200 gap-2">
+                {summaryData.totalPay.toLocaleString()} {t('common.sats')}
+              </span>
+            </>
+          )}
+          {summaryData.type === 'sell' && (
+            <>
+              <span className="font-semibold text-zinc-300 gap-2">
+                {summaryData.totalReceive.toLocaleString()} <span className="text-zinc-500">{t('common.sats')}</span>
+              </span>
+            </>
+          )}
+
+          {/* 向下箭头按钮 */}
+          <button
+            className="ml-2 text-gray-400 hover:text-white"
+            onClick={() => setIsDetailsVisible((prev) => !prev)}
+          >
+            {isDetailsVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
         </span>
       </p>
 
-      <div className="mt-4 pt-4 border-t border-zinc-800">
-        <p className="flex justify-between font-medium text-gray-400">
-          {t('common.value')}
-          <span className="font-semibold text-zinc-200 gap-2">
-            {summaryData.totalVal.toLocaleString()} {t('common.sats')}
-          </span>
-        </p>
-        <p className="flex justify-between font-medium text-gray-400">
-          {t('common.serviceFee')} 
-          <span className="font-semibold text-zinc-200 gap-2">
-            {summaryData.serviceFee.toLocaleString()} {t('common.sats')}
-          </span>
-        </p>
-        <p className="flex justify-between font-medium text-gray-400">
-          {t('common.networkFee')} 
-          <span className="font-semibold text-zinc-200 gap-2">
-            {summaryData.networkFee.toLocaleString()} {t('common.sats')}
-          </span>
-        </p>
-        {summaryData.type === 'buy' && (
-          <p className="flex justify-between font-medium text-gray-400">
-            {t('common.estPay')}
-            <span className="font-semibold text-zinc-200 gap-2">
-              {summaryData.totalPay.toLocaleString()} {t('common.sats')}
+      {/* 详细信息 */}
+      {isDetailsVisible && (
+        <div className="mt-4 pt-4 border-t border-zinc-800">
+          <p className="flex justify-between font-medium text-zinc-500">
+            {t('common.value')}
+            <span className="font-semibold text-zinc-400 gap-2">
+              {summaryData.totalVal.toLocaleString()} <span className="text-zinc-500">{t('common.sats')}</span>
             </span>
           </p>
-        )}
-      </div>
+          <p className="flex justify-between font-medium text-zinc-500">
+            {t('common.serviceFee')}
+            <span className="font-semibold text-zinc-400 gap-2">
+              {summaryData.serviceFee.toLocaleString()} <span className="text-zinc-500">{t('common.sats')}</span>
+            </span>
+          </p>
+          <p className="flex justify-between font-medium text-zinc-500">
+            {t('common.networkFee')}
+            <span className="font-semibold text-zinc-400 gap-2">
+              {summaryData.networkFee.toLocaleString()} <span className="text-zinc-500">{t('common.sats')}</span>
+            </span>
+          </p>
+        </div>
+      )}
     </div>
   );
 };

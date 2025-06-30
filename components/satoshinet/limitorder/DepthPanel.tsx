@@ -146,7 +146,8 @@ export default function DepthPanel({
             sellDepth={sellDepth} 
             buyDepth={buyDepth} 
           />
-          <span className="flex justify-start items-center text-sm text-gray-500 gap-2">
+          <div className="relative w-full">
+          {/* <span className="flex justify-start items-center text-sm text-gray-500 gap-2"> */}
             <Input
               type="number"
               placeholder={t('common.limitorder_placeholder_price')}              
@@ -155,9 +156,14 @@ export default function DepthPanel({
               className="h-10 text-zinc-200"
               min={1}
               required
-            /> {t('common.sats')}
+            /> 
+            
+            <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
+            {t('common.sats')}
           </span>
+          </div>
           <Label className="text-sm text-gray-500">{t('common.quantity')}</Label>
+          <div className="relative w-full">
           <Input
             type="number"
             placeholder={t('common.limitorder_placeholder_quantity')}
@@ -174,7 +180,21 @@ export default function DepthPanel({
             }}
             required
           />
-
+            <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
+              {ticker}
+            </span>
+          </div>
+        
+          <p className="text-xs sm:text-sm gap-1 text-zinc-500">
+              <span>{t('common.availableBalance')} </span>
+              <span className="gap-1">
+                {state.orderType === 'buy' 
+                  ? `${balance.availableAmt} ${t('common.sats')}`
+                  : `${assetBalance.availableAmt} ${ticker}`
+                }
+              </span>
+            </p> 
+         
           <OrderSummary
             orderType={state.orderType}
             price={state.price}

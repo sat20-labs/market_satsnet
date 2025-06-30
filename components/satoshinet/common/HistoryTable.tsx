@@ -203,7 +203,7 @@ export default function HistoryTable({
                   <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
                   <TableCell className="text-center">{order.price.toFixed(8)}</TableCell>
                   <TableCell className="text-center">{order.rawData.OrderType === 1 ? order.inAmt : order.expectedAmt}</TableCell>
-                  <TableCell className="text-center">{order.inValue}</TableCell>
+                  <TableCell className="text-center">{Math.ceil(order.expectedAmt * order.price)}</TableCell>
                   <TableCell className="text-center">{order.outAmt}</TableCell>
                   <TableCell className="text-center">{(order.rawData.OrderType === 2 && order.done !== 0) ? order.inValue - order.outValue : order.outValue}</TableCell>
                   <TableCell className="text-center">
