@@ -44,7 +44,7 @@ export default function MyOrders({ contractURL, type, ticker }: MyOrdersProps) {
       return allPages.length;
     },
     initialPageParam: 0,
-    // refetchInterval: 3000,
+    refetchInterval: 3000,
     refetchIntervalInBackground: false,
     enabled: !!contractURL && !!address,
   });
