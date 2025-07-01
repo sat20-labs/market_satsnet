@@ -41,8 +41,7 @@ const WalletConnectButton = () => {
   const { refreshAssets } = useAssetStore();
   const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
-  
-  const queryClient = useQueryClient();
+
   useHeight();
   useEffect(() => {
     console.log('address', address);
@@ -53,8 +52,9 @@ const WalletConnectButton = () => {
   }, [address, connected]);
   const initCheck = async () => {
     console.log('initCheck');
-    
-    await check();
+    setTimeout(() => {
+      check();
+    }, 500);
   };
 
   useEffect(() => {
@@ -91,14 +91,12 @@ const WalletConnectButton = () => {
     console.log('disconnect success');
     setSignature('');
     await disconnect();
-    queryClient.invalidateQueries({ queryKey: ['utxos'] });
-    queryClient.removeQueries({ queryKey: ['utxos'] });
   };
   const accountAndNetworkChange = async () => {
     console.log('accountAndNetworkChange');
     console.log('connected', connected);
     console.log('btcWallet', btcWallet);
-    queryClient.invalidateQueries({ queryKey: ['utxos'] });
+
 
     const windowState =
       document.visibilityState === 'visible' || !document.hidden;
@@ -189,7 +187,7 @@ const WalletConnectButton = () => {
 
   return (
     <WalletConnectReact
-  
+
       config={{
         network: 'mainnet' as any,
       }}
@@ -225,12 +223,12 @@ const WalletConnectButton = () => {
               <PopoverContent className="w-auto p-2 bg-background border-border z-[100]">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted">
-                     <span className="text-base font-thin text-muted-foreground">
-                        {hideStr(address, 4)}
-                      </span>
-                     <Button variant="ghost" size="icon" onClick={copyAddress} className="h-6 w-6">
-                       <Copy className="h-4 w-4" />
-                     </Button>
+                    <span className="text-base font-thin text-muted-foreground">
+                      {hideStr(address, 4)}
+                    </span>
+                    <Button variant="ghost" size="icon" onClick={copyAddress} className="h-6 w-6">
+                      <Copy className="h-4 w-4" />
+                    </Button>
                   </div>
                   <Button variant="outline" className="w-full" onClick={toHistory}>
                     {t('buttons.to_history')}

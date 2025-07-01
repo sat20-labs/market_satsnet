@@ -59,7 +59,7 @@ const Swap = ({
   const divisibility = tickerInfo?.divisibility || 0;
 
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
-
+  console.log('swapData', swapData);
   const lastDealPrice = useMemo(() => {
     const lastPrice = getValueFromPrecision(swapData?.LastDealPrice);
     if (lastPrice?.value && lastPrice.value > 0) {
@@ -108,6 +108,14 @@ const Swap = ({
       const newSatValue = satValue + amtNum;
       const newAssetAmt = contractK / newSatValue;
       const assetOut = assetAmtInPool.value - newAssetAmt;
+      console.log('calcToAmount divisibility', divisibility);
+      console.log('calcToAmount satValue', satValue);
+      console.log('calcToAmount assetAmtInPool', assetAmtInPool.value);
+      console.log('calcToAmount contractK', contractK);
+      console.log('calcToAmount amtNum', amtNum);
+      console.log('calcToAmount newSatValue', newSatValue);
+      console.log('calcToAmount newAssetAmt', newAssetAmt);
+      console.log('calcToAmount assetOut', assetOut);
       if (divisibility === 0) {
         return assetOut > 0 ? Math.floor(assetOut).toString() : "0";
       }
@@ -122,6 +130,7 @@ const Swap = ({
   };
 
   const calcFromAmount = (input: string) => {
+    console.log('calcFromAmount', input);
     const amtNum = Number(input);
     if (!satValue || !assetAmtInPool.value || !amtNum || !contractK) return "";
 
@@ -132,6 +141,7 @@ const Swap = ({
       if (newAssetAmt <= 0) return ""; // 确保 newAssetAmt 有效
       const newSatValue = contractK / newAssetAmt;
       const satsIn = newSatValue - satValue;
+      console.log('satsIn', satsIn);
       return satsIn > 0 ? satsIn.toFixed(0) : "0";
     } else {
       const satsOut = amtNum;
@@ -379,8 +389,8 @@ const Swap = ({
                         handleFromAmountChange(calculatedAmount);
                       }}
                       className={`px-2 py-1 rounded bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${fromAmount === (assetBalance.availableAmt * Number(value.replace('%', '')) / 100).toFixed(swapData?.AssetAmtInPool?.Precision || 8)
-                          ? 'bg-purple-500 text-white'
-                          : 'text-gray-400'
+                        ? 'bg-purple-500 text-white'
+                        : 'text-gray-400'
                         }`}
                     >
                       {value}
@@ -520,12 +530,12 @@ const Swap = ({
           <span className="flex items-center gap-2">
             {swapType === 'sats-to-asset' && (
               <span className="text-sm text-zinc-500">
-              ~ $<BtcPrice btc={totalFee / 100000000} />
+                ~ $<BtcPrice btc={totalFee / 100000000} />
               </span>
-            )}             
-             {swapType === 'asset-to-sats' && (
+            )}
+            {swapType === 'asset-to-sats' && (
               <span className="text-sm text-zinc-500">
-               ~ $<BtcPrice btc={(minReceiveValue - serviceFee - networkFee) / 100000000} />
+                ~ $<BtcPrice btc={(minReceiveValue - serviceFee - networkFee) / 100000000} />
               </span>
             )}
             <button

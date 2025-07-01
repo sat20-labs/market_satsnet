@@ -48,7 +48,7 @@ export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrde
   });
 
   const allOrders = data?.pages.flatMap(page => page.data) ?? [];
-
+  console.log('allOrders', allOrders);
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
