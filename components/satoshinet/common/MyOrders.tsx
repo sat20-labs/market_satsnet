@@ -6,13 +6,16 @@ import { contractService } from "@/domain/services/contract";
 import { Chain } from "@/types";
 import HistoryTable from "./HistoryTable";
 import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface MyOrdersProps {
   contractURL: string;
+  asset: string;
   type: 'swap' | 'trade';
 }
 
-export default function MyOrders({ contractURL, type }: MyOrdersProps) {
+export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
   const pageSize = 20;
   const { t } = useTranslation();
   const { address } = useReactWalletStore();
@@ -47,12 +50,41 @@ export default function MyOrders({ contractURL, type }: MyOrdersProps) {
     refetchIntervalInBackground: false,
     enabled: !!contractURL && !!address,
   });
+  const cancelOrder = async () => {
+    const params = {
+      action: 'refund',
+    };
 
+    const result = await window.sat20.invokeContractV2_SatsNet(
+      contractURL, JSON.stringify(params), asset, '1',
+      '1', {
+      action: 'refund',
+      assetName: asset,
+      networkFee: 10,
+    });
+    if (result.txId) {
+      setTimeout(() => {
+        refetch();
+      }, 1000);
+      toast.success(`Order cancelled successfully, txid: ${result.txId}`);
+      return;
+    } else {
+      toast.error('Order cancellation failed');
+    }
+  };
   const allOrders = data?.pages.flatMap(page => page.data) ?? [];
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-2">
+        <Button
+          variant="outline"
+          className="px-4"
+          size="sm"
+          onClick={cancelOrder}
+        >
+          Cancel
+        </Button>
         <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
       </div>
       <HistoryTable

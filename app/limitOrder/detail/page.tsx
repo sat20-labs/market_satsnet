@@ -98,7 +98,7 @@ function OrderPageContent() {
             <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
           </TabsList>
           <TabsContent value="myOrders">
-            <MyOrders contractURL={contractUrl} type="trade" />
+            <MyOrders contractURL={contractUrl} type="trade" asset={asset} />
           </TabsContent>
           <TabsContent value="history">
             <HistoryOrders contractURL={contractUrl} type="trade" />
