@@ -75,8 +75,8 @@ export default function DepthPanel({
         .sort((a: any, b: any) => b.price - a.price);
     };
 
-    const sellDepth = processDepth(depthData.sellDepth || []);
-    const buyDepth = processDepth(depthData.buyDepth || []);
+    const sellDepth = processDepth(depthData.sellDepth?.filter(Boolean) || []);
+    const buyDepth = processDepth(depthData.buyDepth?.filter(Boolean) || []);
 
     const maxSellQtyLen = Math.max(...sellDepth.map(o => o.quantity.toString().length), 1);
     const maxBuyQtyLen = Math.max(...buyDepth.map(o => o.quantity.toString().length), 1);
