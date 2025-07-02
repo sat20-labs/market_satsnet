@@ -56,13 +56,10 @@ export const Header = () => {
         label: t('pages.launchpool.title'), // 新增 LaunchPool 菜单
         href: '/launchpool',
       },
-      // 只有白名单地址才显示 Swap
-      ...(address && SWAP_WHITELIST.includes(address)
-        ? [{
-          label: 'LimitOrder',
-          href: '/limitOrder',
-        }]
-        : []),
+      // {
+      //   label: 'LimitOrder',
+      //   href: '/limitOrder',
+      // },
       {
         label: 'Swap',
         href: '/swap',

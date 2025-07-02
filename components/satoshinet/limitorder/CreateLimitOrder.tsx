@@ -15,7 +15,7 @@ const CreateLimitOrder =   ({ closeModal }: { closeModal: () => void }) => {
   console.log('Current Language:', i18n.language); // Debugging: Check current language
   console.log('Translation for createPool.title:', t('createPool.title')); // Debugging: Check translation key
 
-  const [bol, setBol] = useState(true);
+  const [bol, setBol] = useState(false);
   const [formData, setFormData] = useState({
     protocol: 'ordx',
     ticker: '',
@@ -85,25 +85,6 @@ const CreateLimitOrder =   ({ closeModal }: { closeModal: () => void }) => {
       <hr className="mb-6 h-1" />
       <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-800 rounded-lg shadow-lg">
         <form className="flex flex-col gap-4" onSubmit={handleConfirm}>
-          <div className="flex items-center gap-4">
-            <label className="block text-sm font-medium text-gray-300">
-              {t('pages.createPool.network.title')}
-            </label>
-            <Select value={bol ? 'btc' : 'satsnet'} onValueChange={(value) => setBol(value === 'btc')}>
-              <SelectTrigger className="w-56 py-4 h-12">
-                {bol ? t('pages.createPool.network.btc') : t('pages.createPool.network.satsnet')}
-              </SelectTrigger>
-              <SelectContent className="max-h-60 overflow-y-auto">
-                <SelectItem value="btc" className="h-9 py-2">
-                  {t('pages.createPool.network.btc')}
-                </SelectItem>
-                <SelectItem value="satsnet" className="h-9 py-2">
-                  {t('pages.createPool.network.satsnet')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <p className="text-gray-400 text-xs">{t('pages.createPool.deployFeeTip')}</p>
           <div className="flex items-center gap-4">
             <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.protocol.title')}</label>
             <Select onValueChange={(value) => handleInputChange('protocol', value)} value={formData.protocol}>

@@ -7,7 +7,7 @@ const CreateLimitOrderPage = () => {
   const router = useRouter();
 
   const handleClose = () => {
-    router.push('/swap');
+    router.push('/');
   };
 
   return <CreateLimitOrder closeModal={handleClose} />;
