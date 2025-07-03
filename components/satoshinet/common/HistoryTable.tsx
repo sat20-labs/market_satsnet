@@ -40,6 +40,7 @@ interface RawOrderData {
     Precision: number;
   };
   OutValue?: number;
+  ServiceFee?: number;
   RemainingValue?: number;
   Done: number;
   OutTxId?: string;
@@ -133,6 +134,7 @@ export default function HistoryTable({
       displayOrderQuantity: number;
       displayTradeQuantity: number;
       displayTradeAmountSats: number;
+      serviceFee: number;
       displayOrderTypeLabel: string | number;
       displayOrderStatusClass: string;
       displayOrderStatusBgClass: string;
@@ -143,22 +145,16 @@ export default function HistoryTable({
       const { value: outAmt } = getValueFromPrecision(item.OutAmt);
       const { value: remainingAmt } = getValueFromPrecision(item.RemainingAmt);
       
-      const inValue = typeof item.InValue === 'number' ? item.InValue : 0;
-      const outValue = typeof item.OutValue === 'number' ? item.OutValue : 0;
-      const remainingValue = typeof item.RemainingValue === 'number' ? item.RemainingValue : 0;
-      
+      const inValue = item.InValue ? Number(item.InValue) : 0;
+      const outValue = item.OutValue ? Number(item.OutValue) : 0;
+      const remainingValue = item.RemainingValue ? Number(item.RemainingValue) : 0;
+      const serviceFee = item.ServiceFee ? Number(item.ServiceFee) : 0;
       const displayOrderStatusClass = item.OrderType === 2 ? "text-green-600" : item.OrderType === 1 ? "text-red-500" : "text-gray-600";
       const displayOrderStatusBgClass = Number(item.Done) === 1
         ? "bg-green-500 text-green-700 border-green-400"
         : Number(item.Done) === 2
           ? "bg-gray-500 text-gray-700 border-gray-400"
           : "bg-blue-500 text-blue-700 border-blue-400";
-
-      let serviceFee = 0;
-
-      if (item.OrderType === 2 && outAmt > 0) {
-        serviceFee = Math.floor(price * expectedAmt * 0.008) + 10;
-      }
 
       // 展示字段提前计算
       const displayOrderTypeLabel = orderTypeLabels[item.OrderType] || item.OrderType;
@@ -167,7 +163,7 @@ export default function HistoryTable({
       let displayTradeAmountSats = outValue;
 
       if (item.OrderType === 1) {
-        displayTradeQuantity = inAmt - remainingAmt;
+        displayTradeQuantity = inAmt - outAmt;
       }
 
       if (item.OrderType === 2 && outAmt > 0) {
@@ -194,6 +190,7 @@ export default function HistoryTable({
         displayOrderQuantity,
         displayTradeQuantity,
         displayTradeAmountSats,
+        serviceFee,
         displayOrderStatusClass,
         displayOrderStatusBgClass,
       };
@@ -220,6 +217,7 @@ export default function HistoryTable({
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_quantity")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_quantity")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
+              {/* <TableHead className="text-center whitespace-nowrap">{t("common.service_fee")}</TableHead> */}
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_status")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">Reason</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.tx")}</TableHead>
@@ -240,6 +238,7 @@ export default function HistoryTable({
                   <TableCell className="text-center">{order.displayOrderQuantity}</TableCell>
                   <TableCell className="text-center">{order.displayTradeQuantity}</TableCell>
                   <TableCell className="text-center">{order.displayTradeAmountSats}</TableCell>
+                  {/* <TableCell className="text-center">{order.serviceFee}</TableCell> */}
                   <TableCell className="text-center">
                     <span
                       className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${order.displayOrderStatusBgClass}`}
