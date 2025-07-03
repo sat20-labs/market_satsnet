@@ -222,12 +222,15 @@
     "description": "Create a new launch pool for your asset. Please fill in the details below.",
     "step1": {
       "title": "Step 1: Deploy Asset",
-      "description": "Select the protocol and provide basic details about your asset."
+      "description": "Select the protocol and provide basic details about your asset.",
+      "bindingSatTips": "Number of assets bound to each satoshi for Layer 1 OrdX minting. Higher values reduce the minting cost per asset."
     },
     "step2": {
       "title": "Step 2: Configure Smart Contract",
       "description": "Set up the smart contract parameters for your launch pool.",
-      "currentBlockHeight": "Current Block Height"
+      "currentBlockHeight": "Current Block Height",
+      "estimatedPoolFunds": "Estimated Pool Funds",
+      "mintAmtPerSatTips": "Number of assets per satoshi for Layer 2 distribution. Lower values mean higher pool capacity (minimum is 1; suggested: 1/10/100/1000/10000)."
     },
     "step3": {
       "title": "Step 3: Monitor Pool",
