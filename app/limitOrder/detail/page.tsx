@@ -12,10 +12,7 @@ import { useLimitOrderDetailData } from '@/hooks/pages/useLimitOrderDetailData';
 import MyOrders from '@/components/satoshinet/common/MyOrders';
 import HistoryOrders from '@/components/satoshinet/common/HistoryOrders';
 import { useTranslation } from 'react-i18next';
-
-function Loading() {
-  return <div className="p-4 bg-black text-white w-full">Loading...</div>;
-}
+import { Loading } from '@/components/Loading';
 
 function OrderPageContent() {
   const params = useSearchParams();
@@ -41,7 +38,7 @@ function OrderPageContent() {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
   }
   if (isLoading) {
-    return <div className="p-4 bg-black text-white w-full">Loading...</div>;
+    return <Loading />;
   }
   if (error) {
     return <div className="p-4 bg-black text-white w-full">Error loading data: {error.message}</div>;

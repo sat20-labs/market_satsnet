@@ -15,10 +15,7 @@ import { AssetInfoCard } from '@/components/AssetInfoCard';
 import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
 import MySwapOrders from '@/components/satoshinet/common/MySwapOrders';
 import HistorySwapOrders from '@/components/satoshinet/common/HistorySwapOrders';
-
-function Loading() {
-  return <div className="p-4 bg-black text-white w-full">Loading...</div>;
-}
+import { Loading } from '@/components/Loading';
 
 function OrderPageContent() {
   const params = useSearchParams();
@@ -53,6 +50,9 @@ function OrderPageContent() {
 
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
+  }
+  if (isLoading) {
+    return <Loading />;
   }
   if (!swapStatusData) {
     return (

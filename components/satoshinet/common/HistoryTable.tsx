@@ -35,7 +35,13 @@ interface RawOrderData {
     Value: number;
     Precision: number;
   };
+  RemainingAmt?: {
+    Value: number;
+    Precision: number;
+  };
   OutValue?: number;
+  ServiceFee?: number;
+  RemainingValue?: number;
   Done: number;
   OutTxId?: string;
   InUtxo?: string;
@@ -124,31 +130,51 @@ export default function HistoryTable({
 
   // Process raw orders into formatted orders
   const orders = React.useMemo(() => {
-    return rawOrders.map((item): HistoryTableOrder => {
+    return rawOrders.map((item): HistoryTableOrder & {
+      displayOrderQuantity: number;
+      displayTradeQuantity: number;
+      displayTradeAmountSats: number;
+      serviceFee: number;
+      displayOrderTypeLabel: string | number;
+      displayOrderStatusClass: string;
+      displayOrderStatusBgClass: string;
+    } => {
       const { value: price } = getValueFromPrecision(item.UnitPrice);
       const { value: inAmt } = getValueFromPrecision(item.InAmt);
       const { value: expectedAmt } = getValueFromPrecision(item.ExpectedAmt);
       const { value: outAmt } = getValueFromPrecision(item.OutAmt);
+      const { value: remainingAmt } = getValueFromPrecision(item.RemainingAmt);
       
-      const inValue = typeof item.InValue === 'number' ? item.InValue : 0;
-      const outValue = typeof item.OutValue === 'number' ? item.OutValue : 0;
-      const remainingAmt = 0; // Add if needed from raw data
-      const remainingValue = 0; // Add if needed from raw data
+      const inValue = item.InValue ? Number(item.InValue) : 0;
+      const outValue = item.OutValue ? Number(item.OutValue) : 0;
+      const remainingValue = item.RemainingValue ? Number(item.RemainingValue) : 0;
+      const serviceFee = item.ServiceFee ? Number(item.ServiceFee) : 0;
+      const displayOrderStatusClass = item.OrderType === 2 ? "text-green-600" : item.OrderType === 1 ? "text-red-500" : "text-gray-600";
+      const displayOrderStatusBgClass = Number(item.Done) === 1
+        ? "bg-green-500 text-green-700 border-green-400"
+        : Number(item.Done) === 2
+          ? "bg-gray-500 text-gray-700 border-gray-400"
+          : "bg-blue-500 text-blue-700 border-blue-400";
 
-      let status: string;
-      if (item.Done === 1) {
-        status = t("common.limitorder_status_completed");
-      } else if (item.Done === 2) {
-        status = t("common.limitorder_status_cancelled");
-      } else {
-        status = t("common.limitorder_status_pending");
+      // 展示字段提前计算
+      const displayOrderTypeLabel = orderTypeLabels[item.OrderType] || item.OrderType;
+      const displayOrderQuantity = item.OrderType === 1 ? inAmt : expectedAmt;
+      let displayTradeQuantity = outAmt;
+      let displayTradeAmountSats = outValue;
+
+      if (item.OrderType === 1) {
+        displayTradeQuantity = inAmt - outAmt;
+      }
+
+      if (item.OrderType === 2 && outAmt > 0) {
+        displayTradeAmountSats = inValue - remainingValue - serviceFee;
       }
 
       return {
         orderType: item.OrderType,
         price,
         quantity: inAmt,
-        status,
+        status: item.Done === 1 ? t("common.limitorder_status_completed") : item.Done === 2 ? t("common.limitorder_status_cancelled") : t("common.limitorder_status_pending"),
         done: item.Done,
         outAmt,
         expectedAmt,
@@ -160,9 +186,16 @@ export default function HistoryTable({
         OrderTime: item.OrderTime,
         rawData: item,
         reason: item.Reason || '',
+        displayOrderTypeLabel,
+        displayOrderQuantity,
+        displayTradeQuantity,
+        displayTradeAmountSats,
+        serviceFee,
+        displayOrderStatusClass,
+        displayOrderStatusBgClass,
       };
     });
-  }, [rawOrders, t]);
+  }, [rawOrders, t, orderTypeLabels]);
 
   if (isLoading) {
     return <div className="text-center py-2">{t("common.loading")}</div>;
@@ -182,9 +215,9 @@ export default function HistoryTable({
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_unit_price")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_quantity")}</TableHead>
-              <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_amount_sats")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_quantity")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
+              {/* <TableHead className="text-center whitespace-nowrap">{t("common.service_fee")}</TableHead> */}
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_status")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">Reason</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.tx")}</TableHead>
@@ -197,23 +230,18 @@ export default function HistoryTable({
               .sort((a, b) => b.OrderTime - a.OrderTime)
               .map((order, i) => (
                 <TableRow className="text-xs" key={`${order.rawData.Id || i}-${i}`}>
-                  <TableCell className={`text-center font-bold ${order.rawData.OrderType === 2 ? "text-green-600" : order.rawData.OrderType === 1 ? "text-red-500" : "text-gray-600"}`}>
-                    {orderTypeLabels[order.rawData.OrderType] || order.rawData.OrderType}
+                  <TableCell className={`text-center font-bold ${order.displayOrderStatusClass}`}>
+                    {order.displayOrderTypeLabel}
                   </TableCell>
                   <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
                   <TableCell className="text-center">{order.price.toFixed(8)}</TableCell>
-                  <TableCell className="text-center">{order.rawData.OrderType === 1 ? order.inAmt : order.expectedAmt}</TableCell>
-                  <TableCell className="text-center">{Math.ceil(order.expectedAmt * order.price)}</TableCell>
-                  <TableCell className="text-center">{order.outAmt}</TableCell>
-                  <TableCell className="text-center">{(order.rawData.OrderType === 2 && order.done !== 0) ? order.inValue - order.outValue : order.outValue}</TableCell>
+                  <TableCell className="text-center">{order.displayOrderQuantity}</TableCell>
+                  <TableCell className="text-center">{order.displayTradeQuantity}</TableCell>
+                  <TableCell className="text-center">{order.displayTradeAmountSats}</TableCell>
+                  {/* <TableCell className="text-center">{order.serviceFee}</TableCell> */}
                   <TableCell className="text-center">
                     <span
-                      className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${Number(order.done) === 1
-                        ? "bg-green-500 text-green-700 border-green-400"
-                        : Number(order.done) === 2
-                          ? "bg-gray-500 text-gray-700 border-gray-400"
-                          : "bg-blue-500 text-blue-700 border-blue-400"
-                        }`}
+                      className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${order.displayOrderStatusBgClass}`}
                       title={order.status}
                     >
                       {order.status}

@@ -66,7 +66,7 @@ function adaptPoolData(pool, satsnetHeight) {
   };
 }
 
-const LimitOrder = () => {
+const MarketPage = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
 
   const { satsnetHeight } = useCommonStore();
@@ -209,4 +209,4 @@ const LimitOrder = () => {
   );
 };
 
-export default LimitOrder;
+export default MarketPage;
