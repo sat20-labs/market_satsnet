@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState , useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
@@ -14,6 +14,7 @@ import { hideStr } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Icon } from '@iconify/react';
+import { BtcPrice } from "../BtcPrice";
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const { t, i18n } = useTranslation(); // Specify the namespace
@@ -120,6 +121,21 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const isStep1Complete = !!(formData.protocol && formData.ticker && formData.n);
   const isStep2Complete = !!(formData.limit && formData.launchRatio && formData.maxSupply);
 
+  const estimatedPoolFunds = useMemo(() => {
+    const maxSupply = Number(formData.maxSupply);
+    const launchRatio = Number(formData.launchRatio) / 100; // 转换为百分比
+    const mintAmtPerSat = Number(formData.mintAmtPerSat);
+  
+    if (maxSupply > 0 && launchRatio > 0 && mintAmtPerSat > 0) {
+      const sats = Math.floor((maxSupply * launchRatio) / mintAmtPerSat); // 计算池子资金量（单位：sats）
+      const btc = sats / 1e8; // 转换为 BTC
+      return btc.toFixed(8).replace(/\.?0+$/, ''); // 精确到 8 位并去掉多余的 0
+    }
+    return '0'; // 如果数据无效，返回 0
+  }, [formData.maxSupply, formData.launchRatio, formData.mintAmtPerSat]);
+
+   const estimatedPoolFundsUsd = estimatedPoolFunds ? <BtcPrice btc={estimatedPoolFunds} /> : 0;
+
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
       <div className="sticky top-0 text bg-zinc-800/50 border border-zinc-800 z-10 p-4 rounded-lg shadow-lg">
@@ -192,18 +208,24 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                   {t('pages.createPool.runesTickerNote')}
                 </p>
               )}
-            <div className="flex gap-4 mt-4">
-              <div className="flex-1">
-                {formData.protocol === 'ordx' && (
+
+             <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.maxSupply')}</label>
+              <Input
+                placeholder={t('pages.createPool.maxSupply')}
+                type="number"
+                value={formData.maxSupply}
+                onChange={(e) => handleInputChange('maxSupply', e.target.value)}
+              />            
+               {formData.protocol === 'ordx' && (
                   <>
-                    <div className="flex items-center mb-1">
-                      <label className="block text-sm font-medium text-gray-300 mb-0">{t('pages.createPool.bindingSat')}</label>
+                    <div className="flex items-center mt-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-1">{t('pages.createPool.bindingSat')}</label>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span className="ml-1 cursor-pointer align-middle inline-flex"><Icon icon="lucide:help-circle" className="w-4 h-4 text-zinc-400" /></span>
                         </TooltipTrigger>
                         <TooltipContent sideOffset={4}>
-                          每一聪绑定的资产数量，每一聪携带的该资产数量，用于在一层铸造ordx资产时使用
+                          {t("pages.createPool.step1.bindingSatTips")}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -227,28 +249,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                     )}
                   </>
                 )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.mintAmtPerSat')}</label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="ml-1 cursor-pointer align-middle inline-flex"><Icon icon="lucide:help-circle" className="w-4 h-4 text-zinc-400" /></span>
-                    </TooltipTrigger>
-                    <TooltipContent sideOffset={4}>
-                      在二层分发时，每一聪换多少资产数量，一般MintAmtPerSat比Bindingsat小10-1000倍
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Input
-                  placeholder={t('pages.createPool.mintAmtPerSat')}
-                  type="number"
-                  value={formData.mintAmtPerSat}
-                  onChange={(e) => handleInputChange('mintAmtPerSat', e.target.value)}
-                />
-                {/* <p className="mt-1 text-xs text-gray-400">{t('pages.createPool.mintAmtPerSatSuggest', { min: Math.floor(Number(formData.n || 1000) / 10), max: Math.floor(Number(formData.n || 1000) / 1000) })}</p> */}
-              </div>
-            </div>
+                 {/* <p className="mt-1 text-xs text-gray-400">{t('pages.createPool.mintAmtPerSatSuggest', { min: Math.floor(Number(formData.n || 1000) / 10), max: Math.floor(Number(formData.n || 1000) / 1000) })}</p> */}
+
             {formData.protocol === 'runes' && (
               <>
                 <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.assetSymbol')}</label>
@@ -273,6 +275,24 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
             <p className="text-sm text-zinc-400 mt-2">
               {t('pages.createPool.step2.currentBlockHeight')}: <span className="font-bold text-white">{satsnetHeight}</span>
             </p>
+            <div className="flex items-center mt-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">{t('pages.createPool.mintAmtPerSat')}</label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="ml-1 cursor-pointer align-middle inline-flex"><Icon icon="lucide:help-circle" className="w-4 h-4 text-zinc-400" /></span>
+                    </TooltipTrigger>
+                    <TooltipContent sideOffset={4}>
+                    {t("pages.createPool.step2.mintAmtPerSatTips")}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  placeholder={t('pages.createPool.mintAmtPerSat')}
+                  type="number"
+                  value={formData.mintAmtPerSat}
+                  onChange={(e) => handleInputChange('mintAmtPerSat', e.target.value)}
+                />
+
             <label className="block text-sm font-medium mt-4 text-gray-300 mb-1">{t('pages.createPool.limit')}</label>
             <Input
               placeholder={t('pages.createPool.limit')}
@@ -295,16 +315,17 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                 }
               }}
             />
+
             {errorLaunchRatio && (
               <p className="mt-1 text-xs text-red-400 gap-2">* {errorLaunchRatio}</p>
             )}
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.maxSupply')}</label>
-            <Input
-              placeholder={t('pages.createPool.maxSupply')}
-              type="number"
-              value={formData.maxSupply}
-              onChange={(e) => handleInputChange('maxSupply', e.target.value)}
-            />
+
+            <p className="mt-1 text-xs text-gray-400">{t('pages.createPool.step2.estimatedPoolFunds')} : 
+              <span className='text-red-500'> {estimatedPoolFunds} </span>
+              <span className='text-zinc-500'>BTC</span> 
+              <span className='text-zinc-500 ml-2'>( ${estimatedPoolFundsUsd} )</span>
+             </p>
+            
             <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.startBlock')}</label>
             <Input
               placeholder={t('pages.createPool.startBlock')}
@@ -419,3 +440,4 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
 };
 
 export default CreatePool;
+

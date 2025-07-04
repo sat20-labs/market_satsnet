@@ -208,12 +208,16 @@
     "description": "为您的资产创建一个新的 LaunchPool。请填写以下详细信息。",
     "step1": {
       "title": "步骤 1: 部署资产",
-      "description": "选择协议并提供有关资产的基本信息。"
+      "description": "选择协议并提供有关资产的基本信息。",
+      "bindingSatTips": "每聪绑定的资产数量，用于一层铸造 OrdX 资产。值越大，单位资产铸造成本越低。"
+      
     },
     "step2": {
       "title": "步骤 2: 配置智能合约",
       "description": "为您的 LaunchPool 设置智能合约参数。",
-      "currentBlockHeight": "当前区块高度"
+      "currentBlockHeight": "当前区块高度",
+      "estimatedPoolFunds": "预计池子资金",
+      "mintAmtPerSatTips": "每聪可兑换的资产数量，用于二层分发，值越小池子资金量越大（最小为1，建议设置1/10/100/1000/10000）。"      
     },
     "step3": {
       "title": "步骤 3: 监控池子",
