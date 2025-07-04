@@ -40,9 +40,6 @@ export default function DepthPanel({
   const { balance } = useWalletStore();
   const divisibility = tickerInfo?.divisibility || 0;
 
-  const [price, setPrice] = React.useState('');
-  const [quantity, setQuantity] = React.useState('');
-
   const handleRowClick = (type: string, selectedPrice: number, selectedQuantity: number) => {
     updateState({ price: selectedPrice.toString(), quantity: selectedQuantity.toString() });
     if (type !== state.orderType) {
