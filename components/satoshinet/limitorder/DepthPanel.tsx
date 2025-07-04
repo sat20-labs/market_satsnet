@@ -43,8 +43,11 @@ export default function DepthPanel({
   const [price, setPrice] = React.useState('');
   const [quantity, setQuantity] = React.useState('');
 
-  const handleRowClick = (selectedPrice: number, selectedQuantity: number) => {
+  const handleRowClick = (type: string, selectedPrice: number, selectedQuantity: number) => {
     updateState({ price: selectedPrice.toString(), quantity: selectedQuantity.toString() });
+    if (type !== state.orderType) {
+      updateState({ orderType: type });
+    }
     console.log(`xxxxxxx Selected Price: ${selectedPrice}, Quantity: ${selectedQuantity}`);
   };
 

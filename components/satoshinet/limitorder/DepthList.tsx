@@ -44,7 +44,7 @@ const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen
             className={`relative flex justify-between text-${isSell ? 'red' : 'green'}-500 text-sm px-1 py-0.5 cursor-pointer hover:bg-zinc-800`} // 添加 hover 样式
             role="row"
             aria-label={`${type} order at price ${order.price}`}
-            onClick={() => onRowClick(order.price, order.quantity)} // 绑定点击事件
+            onClick={() => onRowClick(type, order.price, order.quantity)} // 绑定点击事件
           >
             <div
               className="absolute left-0 top-0 h-full z-0"
