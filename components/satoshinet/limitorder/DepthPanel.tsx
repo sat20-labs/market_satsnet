@@ -49,11 +49,11 @@ export default function DepthPanel({
       const availableSats = balance.availableAmt;
       const maxBuyQuantity = price > 0 ? Math.floor(availableSats / price) : 0; // 计算买入时的最大数量
       const adjustedQuantity = Math.min(quantity, maxBuyQuantity); // 检查余额，更新为最大可买数量
-      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'buy' });
+      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'sell' });
     } else if (type === 'sell') {
       const availableAssets = assetBalance.availableAmt;
       const adjustedQuantity = Math.min(quantity, availableAssets); // 检查余额，更新为最大可卖数量
-      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'sell' });
+      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'buy' });
     }
   
     console.log(`Selected Price: ${price}, Adjusted Quantity: ${quantity}`);
