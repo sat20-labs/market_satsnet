@@ -11,7 +11,7 @@ interface DepthListProps {
   depth: DepthItem[];
   type: 'buy' | 'sell';
   maxQtyLen: number;
-  onRowClick: (price: number, quantity: number) => void; // 添加回调函数
+  onRowClick: (type: string, price: number, quantity: number) => void; // 添加回调函数
 }
 
 const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen, onRowClick }) => {
