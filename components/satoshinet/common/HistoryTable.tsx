@@ -168,7 +168,7 @@ export default function HistoryTable({
       }
 
       if (item.OrderType === 2 && outAmt > 0) {
-        displayTradeAmountSats = inValue - remainingValue - serviceFee;
+        displayTradeAmountSats = inValue - remainingValue - serviceFee - outValue;
       }
 
       return {

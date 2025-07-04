@@ -27,7 +27,7 @@ const DepthList: React.FC<DepthListProps> = React.memo(({ depth, type, maxQtyLen
       const widthPercent = maxCumQty ? (cumQty / maxCumQty) * 100 : 0;
       return { ...order, cumQty, widthPercent };
     });
-    return isSell ? processedDepth.reverse() : processedDepth; // 如果是 sell 类型，反转数据
+    return isSell ? processedDepth.reverse() : processedDepth;
   }, [depth, isSell]);
 
   return (
