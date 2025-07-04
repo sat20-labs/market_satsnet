@@ -86,18 +86,7 @@ export default function DepthPanel({
 
   return (
     <>
-      <Tabs value={state.orderType} onValueChange={(value) => updateState({ orderType: value })} className="w-full">
-        <TabsList className="flex gap-4">
-          <TabsTrigger value="buy" className={`w-full px-4 py-2 rounded ${state.orderType === 'buy' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
-            {t('common.limitorder_buy')}
-          </TabsTrigger>
-          <TabsTrigger value="sell" className={`w-full px-4 py-2 rounded ${state.orderType === 'sell' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
-            {t('common.limitorder_sell')}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      <div className="flex flex-col md:flex-row pt-4 gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <Card className="w-full">
           <CardContent className="p-2">
             <div className="flex flex-col gap-2">
@@ -126,15 +115,17 @@ export default function DepthPanel({
       </div>
 
       <div className="mt-4 flex flex-col gap-2 flex-wrap">
-        {/* <Select value={state.orderType} onValueChange={(value) => updateState({ orderType: value })}>
-          <SelectTrigger className="w-36 h-14 bg-white text-zinc-300 border px-2 py-2 rounded">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="buy">{t('common.limitorder_buy')}</SelectItem>
-            <SelectItem value="sell">{t('common.limitorder_sell')}</SelectItem>
-          </SelectContent>
-        </Select> */}
+       {/* 买入/卖出Tabs */}
+        <Tabs value={state.orderType} onValueChange={(value) => updateState({ orderType: value })} className="w-full">
+          <TabsList className="flex gap-4">
+            <TabsTrigger value="buy" className={`w-full px-4 py-2 rounded-xl ${state.orderType === 'buy' ? 'bg-purple-500 text-white btn-gradient' : 'bg-zinc-800 text-gray-400'}`}>
+              {t('common.limitorder_buy')}
+            </TabsTrigger>
+            <TabsTrigger value="sell" className={`w-full px-4 py-2 rounded-xl ${state.orderType === 'sell' ? 'bg-purple-500 text-white btn-gradient' : 'bg-zinc-800 text-gray-400'}`}>
+              {t('common.limitorder_sell')}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="mt-2 flex flex-col gap-4 flex-wrap">
           <Label className="text-sm text-gray-500">{t('common.limitorder_price')}</Label>

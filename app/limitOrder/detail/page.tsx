@@ -62,10 +62,10 @@ function OrderPageContent() {
           </div>
         </div>
         <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
-          <div className="max-w-full mx-auto p-4 bg-zinc-900 text-zinc-200 rounded-2xl shadow-lg border border-zinc-700/50 w-full h-full">
+          <div className="max-w-full mx-auto px-4 bg-transparent text-zinc-200 rounded-2xl shadow-lg  w-full h-full">
             {/* DepthPanel 盘口 */}
             {isContractStatusLoading ? (
-              <div className="w-full mt-4 text-center text-gray-400">加载中...</div>
+              <div className="w-full mt-4 text-center text-gray-400">Loading...</div>
             ) : !contractUrl ? (
               <div className="w-full mt-4">
                 <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
