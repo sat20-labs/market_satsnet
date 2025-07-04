@@ -42,9 +42,7 @@ export default function DepthPanel({
 
   const handleRowClick = (type: string, selectedPrice: number, selectedQuantity: number) => {
     updateState({ price: selectedPrice.toString(), quantity: selectedQuantity.toString() });
-    if (type !== state.orderType) {
-      updateState({ orderType: type });
-    }
+    updateState({ orderType: type === 'buy' ? 'sell' : 'buy' });
     console.log(`xxxxxxx Selected Price: ${selectedPrice}, Quantity: ${selectedQuantity}`);
   };
 
@@ -85,19 +83,19 @@ export default function DepthPanel({
   }, [depthData]);
   console.log('sellDepth', sellDepth);
   console.log('buyDepth', buyDepth);
-  
+
   return (
     <>
-     <Tabs value={state.orderType} onValueChange={(value) => updateState({ orderType: value })} className="w-full">
-          <TabsList className="flex gap-4">
-            <TabsTrigger value="buy" className={`w-full px-4 py-2 rounded ${state.orderType === 'buy' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
-              {t('common.limitorder_buy')}
-            </TabsTrigger>
-            <TabsTrigger value="sell" className={`w-full px-4 py-2 rounded ${state.orderType === 'sell' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
-              {t('common.limitorder_sell')}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <Tabs value={state.orderType} onValueChange={(value) => updateState({ orderType: value })} className="w-full">
+        <TabsList className="flex gap-4">
+          <TabsTrigger value="buy" className={`w-full px-4 py-2 rounded ${state.orderType === 'buy' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
+            {t('common.limitorder_buy')}
+          </TabsTrigger>
+          <TabsTrigger value="sell" className={`w-full px-4 py-2 rounded ${state.orderType === 'sell' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
+            {t('common.limitorder_sell')}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       <div className="flex flex-col md:flex-row pt-4 gap-4">
         <Card className="w-full">
@@ -121,7 +119,7 @@ export default function DepthPanel({
                   );
                 })()}
               </div>
-              <DepthList depth={buyDepth} type="buy" maxQtyLen={maxBuyQtyLen} onRowClick={handleRowClick}/>
+              <DepthList depth={buyDepth} type="buy" maxQtyLen={maxBuyQtyLen} onRowClick={handleRowClick} />
             </div>
           </CardContent>
         </Card>
@@ -137,64 +135,64 @@ export default function DepthPanel({
             <SelectItem value="sell">{t('common.limitorder_sell')}</SelectItem>
           </SelectContent>
         </Select> */}
-        
+
         <div className="mt-2 flex flex-col gap-4 flex-wrap">
           <Label className="text-sm text-gray-500">{t('common.limitorder_price')}</Label>
-          <QuickPriceButtons 
-            price={state.price} 
-            setPrice={(value) => updateState({ price: value })} 
-            sellDepth={sellDepth} 
-            buyDepth={buyDepth} 
+          <QuickPriceButtons
+            price={state.price}
+            setPrice={(value) => updateState({ price: value })}
+            sellDepth={sellDepth}
+            buyDepth={buyDepth}
           />
           <div className="relative w-full">
-          {/* <span className="flex justify-start items-center text-sm text-gray-500 gap-2"> */}
+            {/* <span className="flex justify-start items-center text-sm text-gray-500 gap-2"> */}
             <Input
               type="number"
-              placeholder={t('common.limitorder_placeholder_price')}              
+              placeholder={t('common.limitorder_placeholder_price')}
               value={state.price}
               onChange={(e) => updateState({ price: e.target.value })} // 更新 state.price
               className="h-10 text-zinc-200"
               min={1}
               required
-            /> 
-            
+            />
+
             <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
-            {t('common.sats')}
-          </span>
+              {t('common.sats')}
+            </span>
           </div>
           <Label className="text-sm text-gray-500">{t('common.quantity')}</Label>
           <div className="relative w-full">
-          <Input
-            type="number"
-            placeholder={t('common.limitorder_placeholder_quantity')}
-            value={state.quantity}
-            onChange={(e) => updateState({ quantity: e.target.value })} // 更新 state.quantity
-            className="h-10"
-            min={1}
-            step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`}
-            onKeyDown={(e) => {
-              // 当 divisibility 为 0 时，阻止输入小数点
-              if (divisibility === 0 && e.key === '.') {
-                e.preventDefault();
-              }
-            }}
-            required
-          />
+            <Input
+              type="number"
+              placeholder={t('common.limitorder_placeholder_quantity')}
+              value={state.quantity}
+              onChange={(e) => updateState({ quantity: e.target.value })} // 更新 state.quantity
+              className="h-10"
+              min={1}
+              step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility - 1)}1`}
+              onKeyDown={(e) => {
+                // 当 divisibility 为 0 时，阻止输入小数点
+                if (divisibility === 0 && e.key === '.') {
+                  e.preventDefault();
+                }
+              }}
+              required
+            />
             <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               {ticker}
             </span>
           </div>
-        
+
           <p className="text-xs sm:text-sm gap-1 text-zinc-500">
-              <span>{t('common.availableBalance')} </span>
-              <span className="gap-1">
-                {state.orderType === 'buy' 
-                  ? `${balance.availableAmt} ${t('common.sats')}`
-                  : `${assetBalance.availableAmt} ${ticker}`
-                }
-              </span>
-            </p> 
-         
+            <span>{t('common.availableBalance')} </span>
+            <span className="gap-1">
+              {state.orderType === 'buy'
+                ? `${balance.availableAmt} ${t('common.sats')}`
+                : `${assetBalance.availableAmt} ${ticker}`
+              }
+            </span>
+          </p>
+
           <OrderSummary
             orderType={state.orderType}
             price={state.price}
