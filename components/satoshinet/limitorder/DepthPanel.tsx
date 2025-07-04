@@ -209,28 +209,44 @@ export default function DepthPanel({
             {/* <Label className="text-sm text-gray-500">{t("common.slider_quantity")}</Label> */}
            
            {/* 显示百分比 */}
-            <div
+           <div
               className="absolute mx-2 text-xs text-gray-400"
               style={{
                 left: `${(sliderValue / maxQuantity) * 100}%`,
                 transform: "translateX(-50%)",
-                top: "-12px", // 调整位置到滑动条上方
+                top: "-14px", // 调整位置到滑动条上方
               }}
             >
               {sliderValue > 0 ? `${((sliderValue / maxQuantity) * 100).toFixed(2)}%` : "0%"}
             </div>
+
+            {/* 刻度节点 */}
+            <div className="relative w-full h-2 rounded-lg z-1">
+            {[...Array(5)].map((_, index) => (
+              <div
+                key={index}
+                className={`absolute w-2 h-2 ${index === 0 ? "bg-green-500 ml-1" : index === 4 ? "bg-green-500 mr-1" : "bg-gray-600"} rounded-full`}
+                style={{
+                  left: `${(index / 4) * 100}%`, // 5等分，节点位置
+                  transform: "translateX(-50%)",
+                  top: "8px", // 确保与滑动条对齐
+                }}
+              />
+            ))}
+          </div>
+
             <input
               type="range"
               min="0"
               max={maxQuantity}
               value={sliderValue}
               onChange={(e) => handleSliderChange(Number(e.target.value))}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              className="absolute w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
               style={{
                 background: `linear-gradient(to right, #22c55e ${sliderValue / maxQuantity * 100}%, #374151 ${sliderValue / maxQuantity * 100}%)`,
               }}
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <div className="flex justify-between text-xs text-gray-400 mt-4">
               <span>0</span>
               <span>{maxQuantity}</span>
             </div>
