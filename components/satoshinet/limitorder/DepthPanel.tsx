@@ -205,8 +205,20 @@ export default function DepthPanel({
           </div>
           
           {/* 滑动条 */}
-          <div className="mt-0">
+          <div className="relative mt-2">
             {/* <Label className="text-sm text-gray-500">{t("common.slider_quantity")}</Label> */}
+           
+           {/* 显示百分比 */}
+            <div
+              className="absolute mx-2 text-xs text-gray-400"
+              style={{
+                left: `${(sliderValue / maxQuantity) * 100}%`,
+                transform: "translateX(-50%)",
+                top: "-12px", // 调整位置到滑动条上方
+              }}
+            >
+              {sliderValue > 0 ? `${((sliderValue / maxQuantity) * 100).toFixed(2)}%` : "0%"}
+            </div>
             <input
               type="range"
               min="0"
