@@ -144,7 +144,11 @@ export default function HistoryTable({
       const { value: expectedAmt } = getValueFromPrecision(item.ExpectedAmt);
       const { value: outAmt } = getValueFromPrecision(item.OutAmt);
       const { value: remainingAmt } = getValueFromPrecision(item.RemainingAmt);
-      
+      if (item.OrderType === 3)  {
+        console.log('item', item);
+        
+        console.log('price', price, 'inAmt', inAmt, 'expectedAmt', expectedAmt, 'outAmt', outAmt, 'remainingAmt', remainingAmt);
+      }
       const inValue = item.InValue ? Number(item.InValue) : 0;
       const outValue = item.OutValue ? Number(item.OutValue) : 0;
       const remainingValue = item.RemainingValue ? Number(item.RemainingValue) : 0;
@@ -157,7 +161,7 @@ export default function HistoryTable({
           : "bg-blue-500 text-blue-700 border-blue-400";
 
       const displayOrderTypeLabel = orderTypeLabels[item.OrderType] || item.OrderType;
-      const displayOrderQuantity = item.OrderType === 1 ? inAmt : expectedAmt;
+      const displayOrderQuantity = expectedAmt;
       let displayTradeQuantity = outAmt;
       let displayTradeAmountSats = outValue;
       
@@ -168,12 +172,31 @@ export default function HistoryTable({
       if (item.OrderType === 2 && outAmt > 0) {
         displayTradeAmountSats = inValue - remainingValue - serviceFee - outValue;
       }
+      let status = t("common.limitorder_status_completed");
+      if (item.OrderType === 1) {
+        if (item.Done === 1) {
+          status = t("common.limitorder_status_completed");
+        } else if (item.Done === 2) {
+          status = t("common.limitorder_status_cancelled");
+        } else {
+          status = t("common.limitorder_status_pending_sell");
+        }
+      }
+      if (item.OrderType === 2) {
+        if (item.Done === 1) {
+          status = t("common.limitorder_status_completed");
+        } else if (item.Done === 2) {
+          status = t("common.limitorder_status_cancelled");
+        } else {
+          status = t("common.limitorder_status_pending_buy");
+        }
+      }
 
       return {
         orderType: item.OrderType,
         price,
         quantity: inAmt,
-        status: item.Done === 1 ? t("common.limitorder_status_completed") : item.Done === 2 ? t("common.limitorder_status_cancelled") : t("common.limitorder_status_pending"),
+        status,
         done: item.Done,
         outAmt,
         expectedAmt,
@@ -195,7 +218,7 @@ export default function HistoryTable({
       };
     });
   }, [rawOrders, t, orderTypeLabels]);
-
+  console.log('orders', orders);
   if (isLoading) {
     return <div className="text-center py-2">{t("common.loading")}</div>;
   }

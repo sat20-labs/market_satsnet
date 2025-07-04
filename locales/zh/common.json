@@ -213,6 +213,8 @@
   "limitorder_status_completed": "已完成",
   "limitorder_status_cancelled": "已取消",  
   "limitorder_status_pending": "处理中",
+  "limitorder_status_pending_buy": "买入中",
+  "limitorder_status_pending_sell": "卖出中",
 
   "history_no_more_data": "没有更多数据了",
   "history_loading": "加载中...",

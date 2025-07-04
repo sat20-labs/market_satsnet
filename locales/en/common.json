@@ -214,6 +214,8 @@
   "limitorder_status_completed": "Completed",
   "limitorder_status_cancelled": "Cancelled",  
   "limitorder_status_pending": "Pending",
+  "limitorder_status_pending_buy": "On Buy",
+  "limitorder_status_pending_sell": "On Sell",
 
   "history_loading": "Loading...",
   "history_no_records": "No records yet",
