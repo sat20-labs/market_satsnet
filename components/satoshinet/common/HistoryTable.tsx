@@ -161,7 +161,6 @@ export default function HistoryTable({
       const displayOrderQuantity = item.OrderType === 1 ? inAmt : expectedAmt;
       let displayTradeQuantity = outAmt;
       let displayTradeAmountSats = outValue;
-      console.log('item.OrderType', item.OrderType);
       
       if (item.OrderType === 1) {
         displayTradeQuantity = inAmt - remainingAmt;
