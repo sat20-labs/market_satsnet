@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Label } from "@radix-ui/react-dropdown-menu";
@@ -39,11 +39,24 @@ export default function DepthPanel({
   const { satsnetHeight } = useCommonStore();
   const { balance } = useWalletStore();
   const divisibility = tickerInfo?.divisibility || 0;
+  const [sliderValue, setSliderValue] = useState(0); // 滑动条的值
 
   const handleRowClick = (type: string, selectedPrice: number, selectedQuantity: number) => {
-    updateState({ price: selectedPrice.toString(), quantity: selectedQuantity.toString() });
-    updateState({ orderType: type === 'buy' ? 'sell' : 'buy' });
-    console.log(`xxxxxxx Selected Price: ${selectedPrice}, Quantity: ${selectedQuantity}`);
+    const price = selectedPrice;
+    const quantity = selectedQuantity;
+  
+    if (type === 'buy') {
+      const availableSats = balance.availableAmt;
+      const maxBuyQuantity = price > 0 ? Math.floor(availableSats / price) : 0; // 计算买入时的最大数量
+      const adjustedQuantity = Math.min(quantity, maxBuyQuantity); // 检查余额，更新为最大可买数量
+      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'buy' });
+    } else if (type === 'sell') {
+      const availableAssets = assetBalance.availableAmt;
+      const adjustedQuantity = Math.min(quantity, availableAssets); // 检查余额，更新为最大可卖数量
+      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'sell' });
+    }
+  
+    console.log(`Selected Price: ${price}, Adjusted Quantity: ${quantity}`);
   };
 
   const { state, serviceFee, updateState, handleQuantityChange, handleSubmitClick, handleConfirm } = useOrderForm({
@@ -57,6 +70,23 @@ export default function DepthPanel({
     depthData,
     onOrderSuccess,
   });
+
+  const maxQuantity = useMemo(() => {
+    if (state.orderType === "buy") {
+      const price = Number(state.price);
+      const availableSats = balance.availableAmt;
+      return price > 0 ? Math.floor(availableSats / price) : 0; // 计算买入时的最大数量
+    } else {
+      return assetBalance.availableAmt; // 卖出时的最大数量
+    }
+  }, [state.orderType, state.price, balance.availableAmt, assetBalance.availableAmt]);
+
+  const handleSliderChange = (value: number) => {
+    setSliderValue(value);
+    updateState({ quantity: value.toString() }); // 更新下单数量
+  };
+
+
 
   // 处理深度数据
   const { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen } = useMemo(() => {
@@ -172,6 +202,26 @@ export default function DepthPanel({
             <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               {ticker}
             </span>
+          </div>
+          
+          {/* 滑动条 */}
+          <div className="mt-0">
+            {/* <Label className="text-sm text-gray-500">{t("common.slider_quantity")}</Label> */}
+            <input
+              type="range"
+              min="0"
+              max={maxQuantity}
+              value={sliderValue}
+              onChange={(e) => handleSliderChange(Number(e.target.value))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #22c55e ${sliderValue / maxQuantity * 100}%, #374151 ${sliderValue / maxQuantity * 100}%)`,
+              }}
+            />
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>0</span>
+              <span>{maxQuantity}</span>
+            </div>
           </div>
 
           <p className="text-xs sm:text-sm gap-1 text-zinc-500">
