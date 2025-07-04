@@ -156,14 +156,13 @@ export default function HistoryTable({
           ? "bg-gray-500 text-gray-700 border-gray-400"
           : "bg-blue-500 text-blue-700 border-blue-400";
 
-      // 展示字段提前计算
       const displayOrderTypeLabel = orderTypeLabels[item.OrderType] || item.OrderType;
       const displayOrderQuantity = item.OrderType === 1 ? inAmt : expectedAmt;
       let displayTradeQuantity = outAmt;
       let displayTradeAmountSats = outValue;
       
       if (item.OrderType === 1) {
-        displayTradeQuantity = inAmt - remainingAmt;
+        displayTradeQuantity = inAmt - remainingAmt - outAmt;
       }
 
       if (item.OrderType === 2 && outAmt > 0) {
