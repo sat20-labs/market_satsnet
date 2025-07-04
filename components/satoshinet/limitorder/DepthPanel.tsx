@@ -214,6 +214,9 @@ export default function DepthPanel({
 
       <Dialog open={state.showConfirm} onOpenChange={(value) => updateState({ showConfirm: value })}>
         <DialogContent>
+          <div className={`font-bold text-lg mb-2 text-center ${state.orderType === 'sell' ? 'text-red-500' : 'text-green-500'}`}>
+            {state.orderType === 'buy' ? t('common.limitorder_buy') : t('common.limitorder_sell')}
+          </div>
           {state.orderType === 'buy' ? (
             <>
               <div className="font-bold text-lg mb-2">
