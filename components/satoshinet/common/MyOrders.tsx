@@ -59,7 +59,7 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
       contractURL,
       JSON.stringify(params),
       asset,
-      '1',
+      '0',
       '1',
       {
         action: 'refund',
