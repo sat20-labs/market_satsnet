@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { BtcPrice } from "../../BtcPrice";
 
 interface OrderSummaryProps {
   orderType: string;
@@ -94,14 +95,14 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           {summaryData.type === 'buy' && (
             <>
               <span className="font-semibold text-zinc-200 gap-2">
-                {summaryData.totalPay.toLocaleString()} {t('common.sats')}
+                {summaryData.totalPay.toLocaleString()}<span className="text-zinc-500"> {t('common.sats')} ($<BtcPrice btc={summaryData.totalPay / 1e8} /> )</span>
               </span>
             </>
           )}
           {summaryData.type === 'sell' && (
             <>
               <span className="font-semibold text-zinc-300 gap-2">
-                {summaryData.totalReceive.toLocaleString()} <span className="text-zinc-500">{t('common.sats')}</span>
+                {summaryData.totalReceive.toLocaleString()} <span className="text-zinc-500">{t('common.sats')} ($<BtcPrice btc={summaryData.totalReceive / 1e8} /> )</span>
               </span>
             </>
           )}

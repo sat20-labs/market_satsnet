@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Label } from "@radix-ui/react-dropdown-menu";
@@ -39,11 +39,24 @@ export default function DepthPanel({
   const { satsnetHeight } = useCommonStore();
   const { balance } = useWalletStore();
   const divisibility = tickerInfo?.divisibility || 0;
+  const [sliderValue, setSliderValue] = useState(0); // 滑动条的值
 
   const handleRowClick = (type: string, selectedPrice: number, selectedQuantity: number) => {
-    updateState({ price: selectedPrice.toString(), quantity: selectedQuantity.toString() });
-    updateState({ orderType: type === 'buy' ? 'sell' : 'buy' });
-    console.log(`xxxxxxx Selected Price: ${selectedPrice}, Quantity: ${selectedQuantity}`);
+    const price = selectedPrice;
+    const quantity = selectedQuantity;
+  
+    if (type === 'buy') {
+      const availableSats = balance.availableAmt;
+      const maxBuyQuantity = price > 0 ? Math.floor(availableSats / price) : 0; // 计算买入时的最大数量
+      const adjustedQuantity = Math.min(quantity, maxBuyQuantity); // 检查余额，更新为最大可买数量
+      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'sell' });
+    } else if (type === 'sell') {
+      const availableAssets = assetBalance.availableAmt;
+      const adjustedQuantity = Math.min(quantity, availableAssets); // 检查余额，更新为最大可卖数量
+      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'buy' });
+    }
+  
+    console.log(`Selected Price: ${price}, Adjusted Quantity: ${quantity}`);
   };
 
   const { state, serviceFee, updateState, handleQuantityChange, handleSubmitClick, handleConfirm } = useOrderForm({
@@ -57,6 +70,23 @@ export default function DepthPanel({
     depthData,
     onOrderSuccess,
   });
+
+  const maxQuantity = useMemo(() => {
+    if (state.orderType === "buy") {
+      const price = Number(state.price);
+      const availableSats = balance.availableAmt;
+      return price > 0 ? Math.floor(availableSats / price) : 0; // 计算买入时的最大数量
+    } else {
+      return assetBalance.availableAmt; // 卖出时的最大数量
+    }
+  }, [state.orderType, state.price, balance.availableAmt, assetBalance.availableAmt]);
+
+  const handleSliderChange = (value: number) => {
+    setSliderValue(value);
+    updateState({ quantity: value.toString() }); // 更新下单数量
+  };
+
+
 
   // 处理深度数据
   const { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen } = useMemo(() => {
@@ -86,18 +116,7 @@ export default function DepthPanel({
 
   return (
     <>
-      <Tabs value={state.orderType} onValueChange={(value) => updateState({ orderType: value })} className="w-full">
-        <TabsList className="flex gap-4">
-          <TabsTrigger value="buy" className={`w-full px-4 py-2 rounded ${state.orderType === 'buy' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
-            {t('common.limitorder_buy')}
-          </TabsTrigger>
-          <TabsTrigger value="sell" className={`w-full px-4 py-2 rounded ${state.orderType === 'sell' ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-gray-400'}`}>
-            {t('common.limitorder_sell')}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      <div className="flex flex-col md:flex-row pt-4 gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <Card className="w-full">
           <CardContent className="p-2">
             <div className="flex flex-col gap-2">
@@ -126,15 +145,17 @@ export default function DepthPanel({
       </div>
 
       <div className="mt-4 flex flex-col gap-2 flex-wrap">
-        {/* <Select value={state.orderType} onValueChange={(value) => updateState({ orderType: value })}>
-          <SelectTrigger className="w-36 h-14 bg-white text-zinc-300 border px-2 py-2 rounded">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="buy">{t('common.limitorder_buy')}</SelectItem>
-            <SelectItem value="sell">{t('common.limitorder_sell')}</SelectItem>
-          </SelectContent>
-        </Select> */}
+       {/* 买入/卖出Tabs */}
+        <Tabs value={state.orderType} onValueChange={(value) => updateState({ orderType: value })} className="w-full">
+          <TabsList className="flex gap-4">
+            <TabsTrigger value="buy" className={`w-full px-4 py-2 rounded-xl ${state.orderType === 'buy' ? 'bg-purple-500 text-white btn-gradient' : 'bg-zinc-800 text-gray-400'}`}>
+              {t('common.limitorder_buy')}
+            </TabsTrigger>
+            <TabsTrigger value="sell" className={`w-full px-4 py-2 rounded-xl ${state.orderType === 'sell' ? 'bg-purple-500 text-white btn-gradient' : 'bg-zinc-800 text-gray-400'}`}>
+              {t('common.limitorder_sell')}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="mt-2 flex flex-col gap-4 flex-wrap">
           <Label className="text-sm text-gray-500">{t('common.limitorder_price')}</Label>
@@ -181,6 +202,54 @@ export default function DepthPanel({
             <span className="absolute top-1/2 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               {ticker}
             </span>
+          </div>
+          
+          {/* 滑动条 */}
+          <div className="relative mt-2">
+            {/* <Label className="text-sm text-gray-500">{t("common.slider_quantity")}</Label> */}
+           
+           {/* 显示百分比 */}
+           <div
+              className="absolute mx-2 text-xs text-gray-400"
+              style={{
+                left: `${(sliderValue / maxQuantity) * 100}%`,
+                transform: "translateX(-50%)",
+                top: "-14px", // 调整位置到滑动条上方
+              }}
+            >
+              {sliderValue > 0 ? `${((sliderValue / maxQuantity) * 100).toFixed(2)}%` : "0%"}
+            </div>
+
+            {/* 刻度节点 */}
+            <div className="relative w-full h-2 rounded-lg z-1">
+            {[...Array(5)].map((_, index) => (
+              <div
+                key={index}
+                className={`absolute w-2 h-2 ${index === 0 ? "bg-green-500 ml-1" : index === 4 ? "bg-green-500 mr-1" : "bg-gray-600"} rounded-full`}
+                style={{
+                  left: `${(index / 4) * 100}%`, // 5等分，节点位置
+                  transform: "translateX(-50%)",
+                  top: "8px", // 确保与滑动条对齐
+                }}
+              />
+            ))}
+          </div>
+
+            <input
+              type="range"
+              min="0"
+              max={maxQuantity}
+              value={sliderValue}
+              onChange={(e) => handleSliderChange(Number(e.target.value))}
+              className="absolute w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #22c55e ${sliderValue / maxQuantity * 100}%, #374151 ${sliderValue / maxQuantity * 100}%)`,
+              }}
+            />
+            <div className="flex justify-between text-xs text-gray-400 mt-4">
+              <span>0</span>
+              <span>{maxQuantity}</span>
+            </div>
           </div>
 
           <p className="text-xs sm:text-sm gap-1 text-zinc-500">
