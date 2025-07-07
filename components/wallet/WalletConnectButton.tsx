@@ -21,6 +21,8 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore, useAssetStore, useUtxoStore, useWalletStore } from '@/store';
 import { generateMempoolUrl } from '@/utils';
+import clientApi from '@/api/clientApi';
+import { useQuery } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query';
 import { useHeight } from '@/lib/hooks/useHeight';
 
@@ -42,6 +44,16 @@ const WalletConnectButton = () => {
   const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
 
+
+  const { data: balanceData } = useQuery({
+    queryKey: ['balance', address],
+    queryFn: () => clientApi.getAddressSummary(address),
+    enabled: !!address,
+  });
+  console.log('balanceData', balanceData);
+  const totalBalance = useMemo(() => {
+    return balanceData?.data?.reduce((acc: number, item: any) => acc + Number(item.Amount), 0);
+  }, [balanceData]);
   useHeight();
   useEffect(() => {
     console.log('address', address);
@@ -127,9 +139,9 @@ const WalletConnectButton = () => {
     }
   };
   const showAmount = useMemo(() => {
-    const btcValue = satsToBitcoin(balance.availableAmt);
+    const btcValue = satsToBitcoin(totalBalance);
     return formatBtcAmount(btcValue);
-  }, [balance]);
+  }, [totalBalance]);
   const checkSignature = async () => {
     // if (signature && publicKey) {
     //   console.log('checkSignature', signature);
