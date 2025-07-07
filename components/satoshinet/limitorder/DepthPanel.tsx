@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Label } from "@radix-ui/react-dropdown-menu";
@@ -45,18 +45,18 @@ export default function DepthPanel({
     const price = selectedPrice;
     const quantity = selectedQuantity;
   
-    if (type === 'buy') {
+    if (type === 'sell') {
       const availableSats = balance.availableAmt;
       const maxBuyQuantity = price > 0 ? Math.floor(availableSats / price) : 0; // 计算买入时的最大数量
       const adjustedQuantity = Math.min(quantity, maxBuyQuantity); // 检查余额，更新为最大可买数量
-      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'sell' });
-    } else if (type === 'sell') {
+      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'buy' });
+    } else if (type === 'buy') {
       const availableAssets = assetBalance.availableAmt;
       const adjustedQuantity = Math.min(quantity, availableAssets); // 检查余额，更新为最大可卖数量
-      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'buy' });
+      updateState({ price: price.toString(), quantity: adjustedQuantity.toString(), orderType: 'sell' });
     }
   
-    console.log(`Selected Price: ${price}, Adjusted Quantity: ${quantity}`);
+    //console.log(`Selected Price: ${price}, Adjusted Quantity: ${quantity}`);
   };
 
   const { state, serviceFee, updateState, handleQuantityChange, handleSubmitClick, handleConfirm } = useOrderForm({
@@ -86,8 +86,6 @@ export default function DepthPanel({
     updateState({ quantity: value.toString() }); // 更新下单数量
   };
 
-
-
   // 处理深度数据
   const { sellDepth, buyDepth, maxSellQtyLen, maxBuyQtyLen } = useMemo(() => {
     if (!depthData) return { sellDepth: [], buyDepth: [], maxSellQtyLen: 1, maxBuyQtyLen: 1 };
@@ -113,6 +111,15 @@ export default function DepthPanel({
   }, [depthData]);
   console.log('sellDepth', sellDepth);
   console.log('buyDepth', buyDepth);
+
+  useEffect(() => {
+    const quantity = Number(state.quantity);
+    const maxQuantity = state.orderType === "buy"
+      ? Math.floor(balance.availableAmt / Number(state.price))
+      : assetBalance.availableAmt;
+  
+    setSliderValue(quantity > maxQuantity ? maxQuantity : quantity); // 更新滑动条位置
+  }, [state.price, state.quantity, state.orderType, balance.availableAmt, assetBalance.availableAmt]);
 
   return (
     <>
@@ -225,7 +232,7 @@ export default function DepthPanel({
             {[...Array(5)].map((_, index) => (
               <div
                 key={index}
-                className={`absolute w-2 h-2 ${index === 0 ? "bg-green-500 ml-1" : index === 4 ? "bg-green-500 mr-1" : "bg-gray-600"} rounded-full`}
+                className={`absolute w-2 h-2 ${index === 0 ? "ml-1" : index === 4 ? "mr-2" : "bg-gray-600"} rounded-full`}
                 style={{
                   left: `${(index / 4) * 100}%`, // 5等分，节点位置
                   transform: "translateX(-50%)",
@@ -240,10 +247,16 @@ export default function DepthPanel({
               min="0"
               max={maxQuantity}
               value={sliderValue}
-              onChange={(e) => handleSliderChange(Number(e.target.value))}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                setSliderValue(value);
+                updateState({ quantity: value.toString() }); // 更新数量
+              }}
               className="absolute w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, #22c55e ${sliderValue / maxQuantity * 100}%, #374151 ${sliderValue / maxQuantity * 100}%)`,
+                background: sliderValue === 0
+                  ? "#374151" // 全灰色背景
+                  : `linear-gradient(to right, #22c55e ${(sliderValue / maxQuantity) * 100}%, #374151 ${(sliderValue / maxQuantity) * 100}%)`,
               }}
             />
             <div className="flex justify-between text-xs text-gray-400 mt-4">
@@ -281,43 +294,53 @@ export default function DepthPanel({
 
       <Dialog open={state.showConfirm} onOpenChange={(value) => updateState({ showConfirm: value })}>
         <DialogContent>
-          <div className={`font-bold text-lg mb-2 text-center ${state.orderType === 'sell' ? 'text-red-500' : 'text-green-500'}`}>
-            {state.orderType === 'buy' ? t('common.limitorder_buy') : t('common.limitorder_sell')}
-          </div>
           {state.orderType === 'buy' ? (
             <>
-              <div className="font-bold text-lg mb-2">
-                <span>{t('common.orderSummary')}</span>
+              <div className="items-center font-bold text-lg border-b border-zinc-700 pb-4">
+               <span className="mr-4">{t('common.orderSummary')}</span> <span className="bg-green-800/90 text-xs px-3 py-2 rounded-xl">{state.orderType === 'buy' ? <> {t('common.limitorder_buy')} </> : <> {t('common.limitorder_sell')} </>}</span>
               </div>
-              <div className="flex justify-between"><span>{t('common.value')}</span><span>{state.confirmData.value} {t('common.sats')}</span></div>
-              <div className="flex justify-between"><span>{t('common.serviceFee')}</span><span>{state.confirmData.feeSats} {t('common.sats')}</span></div>
-              <div className="flex justify-between"><span>{t('common.networkFee')}</span><span>{state.confirmData.netFeeSats} {t('common.sats')}</span></div>
+
               <div className="font-bold text-lg my-2 flex justify-between">
                 <span>{t('common.estPay')}</span>
-                <span>{state.confirmData.paySats} {t('common.sats')}</span>
+                <span>{state.confirmData.paySats} <span className="text-zinc-500 ml-1">{t('common.sats')}</span></span>
               </div>
+              <div className="flex justify-between"><span className="text-zinc-400">{t('common.value')}</span><span className="text-zinc-400">{state.confirmData.value} <span className="text-zinc-500 ml-1">{t('common.sats')}</span></span></div>
+              <div className="flex justify-between"><span className="text-zinc-400">{t('common.serviceFee')}</span><span className="text-zinc-400">{state.confirmData.feeSats} <span className="text-zinc-500 ml-1">{t('common.sats')}</span></span></div>
+              <div className="flex justify-between"><span className="text-zinc-400">{t('common.networkFee')}</span><span className="text-zinc-400">{state.confirmData.netFeeSats} <span className="text-zinc-500 ml-1">{t('common.sats')}</span></span></div>
+             
             </>
           ) : (
             <>
-              <div className="font-bold text-lg mb-2">
-                <span>{t('common.orderSummary')}</span>
+              <div className="items-center font-bold text-lg border-b border-zinc-800 pb-4">
+                <span className="mr-4">{t('common.orderSummary')}</span><span className="bg-red-800/80 text-xs px-3 py-2 rounded-xl">{state.orderType === 'buy' ? <> {t('common.limitorder_buy')} </> : <> {t('common.limitorder_sell')} </>}</span>
               </div>
+
               <div className="flex justify-between">
                 <span>{t('common.estReceive')}</span>
-                <span>{state.confirmData.value} {t('common.sats')}</span>
+                <span>{state.confirmData.value} <span className="text-zinc-500 ml-1">{t('common.sats')}</span></span>
               </div>
               <div className="flex justify-between">
-                <span>{t('common.networkFee')}</span>
-                <span>{state.confirmData.netFeeSats} {t('common.sats')}</span>
+                <span className="text-zinc-400">{t('common.networkFee')}</span>
+                <span className="text-zinc-400">{state.confirmData.netFeeSats} 
+                 <span className="text-zinc-500 ml-1">{t('common.sats')}</span>
+                </span>
               </div>
             </>
           )}
 
-          <div className="flex justify-between"><span>{t('common.limitorder_price')}</span><span>{state.confirmData.bidPrice} {t('common.sats')}</span></div>
-          <div className="flex justify-between"><span>{t('common.walletBalance')}</span><span>{balance.availableAmt.toLocaleString()} {t('common.sats')}</span></div>
+          <div className="flex justify-between">
+            <span className="text-zinc-400">{t('common.limitorder_price')}</span>
+            <span className="text-zinc-400">{state.confirmData.bidPrice} 
+            <span className="text-zinc-500 ml-1">{t('common.sats')}</span></span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-zinc-400">{t('common.walletBalance')}</span>
+            <span className="text-zinc-400">{balance.availableAmt.toLocaleString()} 
+            <span className="text-zinc-500 ml-1">{t('common.sats')}</span></span>
+          </div>
           <DialogFooter>
-            <Button onClick={handleConfirm}>{t('buttons.submit')}</Button>
-            <Button variant="outline" onClick={() => updateState({ showConfirm: false })}>{t('buttons.cancel')}</Button>
+            <Button className="w-32 btn-gradient" onClick={handleConfirm}>{t('buttons.submit')}</Button>
+            <Button className="w-32" variant="outline" onClick={() => updateState({ showConfirm: false })}>{t('buttons.cancel')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
