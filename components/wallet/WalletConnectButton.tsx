@@ -52,7 +52,8 @@ const WalletConnectButton = () => {
   });
   console.log('balanceData', balanceData);
   const totalBalance = useMemo(() => {
-    return balanceData?.data?.reduce((acc: number, item: any) => acc + Number(item.Amount), 0);
+    console.log('balanceData', balanceData);
+    return balanceData?.data?.find((item: any) => item.Name.Type === '*')?.Amount || 0;
   }, [balanceData]);
   useHeight();
   useEffect(() => {
