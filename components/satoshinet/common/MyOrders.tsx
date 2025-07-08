@@ -55,17 +55,10 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
       action: 'refund',
     };
 
-    const result = await window.sat20.invokeContractV2_SatsNet(
+    const result = await window.sat20.invokeContract_SatsNet(
       contractURL,
       JSON.stringify(params),
-      asset,
-      '0',
       '1',
-      {
-        action: 'refund',
-        assetName: asset,
-        networkFee: 10,
-      }
     );
     if (result.txId) {
       setTimeout(() => {
