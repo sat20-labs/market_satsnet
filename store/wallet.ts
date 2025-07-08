@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import clientApi from '@/api/clientApi';
 
 interface Balance {
   availableAmt: number,
@@ -29,7 +30,6 @@ export const useWalletStore = create<WalletState>()(
             return;
           }
           const amountResult = await window.sat20.getAssetAmount_SatsNet(address, '::')
-          console.log('amountResult', amountResult);
           set({ balance: {
             availableAmt: amountResult.availableAmt,
             lockedAmt: amountResult.lockedAmt
