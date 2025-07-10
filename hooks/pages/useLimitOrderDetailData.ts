@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { clientApi, marketApi } from "@/api";
 import { contractService } from "@/domain/services/contract";
 import { useMemo } from "react";
-import { useWalletStore } from "@/store";
+import { useCommonStore, useWalletStore } from "@/store";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 
@@ -28,16 +28,24 @@ interface TickerInfo {
 
 export const useLimitOrderDetailData = (asset: string) => {
   const ticker = asset.split(':')[2];
-
+  const { network } = useCommonStore();
   const { address } = useReactWalletStore();
   const tickerQuery = useQuery<any>({
-    queryKey: ['ticker', asset],
+    queryKey: ['ticker', asset, network],
     queryFn: () => clientApi.getTickerInfo(asset),
     enabled: !!asset,
   });
 
+  const holdersQuery = useQuery<any>({
+    queryKey: ['ticker', 'holders', asset, network],
+    queryFn: () => clientApi.getTickerHolders(asset, 1, 10),
+    enabled: !!asset,
+    refetchInterval: 60000,
+    refetchOnWindowFocus: false,
+  });
+
   const contractUrlQuery = useQuery({
-    queryKey: ['contractUrl'],
+    queryKey: ['contractUrl', network],
     queryFn: () => contractService.getDeployedContractInfo(),
     enabled: !!ticker,
   });
@@ -46,7 +54,7 @@ export const useLimitOrderDetailData = (asset: string) => {
   }, [contractUrlQuery.data, ticker]);
 
   const { data: contractStatus, isLoading: isContractStatusLoading, refetch: refetchStatus } = useQuery({
-    queryKey: ["swap", 'status', contractUrl],
+    queryKey: ["swap", 'status', contractUrl, network],
     queryFn: () => contractService.getContractStatus(contractUrl),
     refetchInterval: 6000,
     enabled: !!contractUrl,
@@ -54,7 +62,7 @@ export const useLimitOrderDetailData = (asset: string) => {
   });
 
   const { data: analytics, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
-    queryKey: ["swap", 'analytics', contractUrl],
+    queryKey: ["swap", 'analytics', contractUrl, network],
     queryFn: () => contractService.getContractAnalytics(contractUrl),
     refetchInterval: 60000,
     enabled: !!contractUrl,
@@ -83,6 +91,7 @@ export const useLimitOrderDetailData = (asset: string) => {
     satsBalance,
     assetBalance,
     analyticsData: analytics,
+    holders: holdersQuery.data?.data || {},
     refresh
   }
 };

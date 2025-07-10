@@ -125,6 +125,11 @@ class ClientApi {
       `ns/address/${address}/${sub}?start=${start}&limit=${limit}`,
     );
   }
+  
+  getTickerHolders = async (ticker: string, page: number = 1, pagesize: number = 10): Promise<any> => {
+    const start = (page - 1) * pagesize;
+    return this.request(`v3/tick/holders/${ticker}?start=${start}&limit=${pagesize}`);
+  }
 
   pushTx = async (hex: string): Promise<any> => {
     return this.request('btc/tx', { hex }, 'POST');
@@ -139,6 +144,8 @@ class ClientApi {
     const response = await fetch(url);
     return response.json();
   }
+
+
 }
 
 const clientApi = new ClientApi();

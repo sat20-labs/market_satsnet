@@ -6,13 +6,13 @@ import { formatLargeNumber } from "@/utils";
 
 interface AssetInfoProps {
   depthData: any;
+  holders: any;
   tickerInfo: any; // Allow any type for assetData to re-introduce it
 }
 
-export const AssetInfo = ({ depthData, tickerInfo }: AssetInfoProps) => {
+export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) => {
   const { t } = useTranslation();
-  console.log('AssetInfo', depthData);
-  console.log('AssetInfo', tickerInfo);
+  console.log('holders', holders);
   let mintProgress = tickerInfo?.totalMinted > 0 && tickerInfo?.maxSupply > 0
     ? `${Math.floor((tickerInfo.totalMinted / tickerInfo.maxSupply) * 100)}%`
     : '100%';
@@ -53,7 +53,7 @@ export const AssetInfo = ({ depthData, tickerInfo }: AssetInfoProps) => {
         {/* Holders */}
         <div>
           <span className="text-gray-400 text-sm">{t('common.holder_count')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{tickerInfo.holdersCount}</p>
+          <p className="text-zinc-200 text-lg font-bold">{holders.total}</p>
         </div>
       </div>
 

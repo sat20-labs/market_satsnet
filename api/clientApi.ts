@@ -181,6 +181,10 @@ class ClientApi {
     const response = await fetch(url);
     return response.json();
   }
+  getTickerHolders = async (ticker: string, page: number = 1, pagesize: number = 10): Promise<any> => {
+    const start = (page - 1) * pagesize;
+    return this.request(`v3/tick/holders/${ticker}?start=${start}&limit=${pagesize}`);
+  }
 }
 
 const clientApi = new ClientApi();

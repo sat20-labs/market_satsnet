@@ -25,7 +25,7 @@ function OrderPageContent() {
     queryFn: () => marketApi.getAssetsSummary({ assets_name: asset ?? '' }),
     enabled: !!asset,
   });
-  const { ticker, assetBalance, contractData, tickerInfo, isAnalyticsLoading, analyticsData, contractUrl, isContractStatusLoading, refresh } = useLimitOrderDetailData(asset ?? '');
+  const { ticker, assetBalance, contractData, tickerInfo, isAnalyticsLoading, analyticsData, contractUrl, isContractStatusLoading, refresh, holders } = useLimitOrderDetailData(asset ?? '');
   console.log('tickerInfo', tickerInfo);
 
   const refreshHandler = () => {
@@ -58,7 +58,7 @@ function OrderPageContent() {
             />
           </div>
           <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
-            <AssetInfo depthData={contractData} tickerInfo={tickerInfo} />
+            <AssetInfo depthData={contractData} tickerInfo={tickerInfo} holders={holders} />
           </div>
         </div>
         <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
