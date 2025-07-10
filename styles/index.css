@@ -45,6 +45,48 @@ body {
   /* 禁用状态的透明度 */
 }
 
+/* 只显示边框为渐变色的按钮 */
+.btn-gradient-border {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1em 2em;
+  background-color: var(--color-zinc-800);
+  color: #ffffff; /* 可自定义文字颜色 */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 0;
+  transition: transform 0.5s ease;
+}
+
+.btn-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px; /* 控制边框宽度 */
+  background: linear-gradient(to right, #7342dbd5, #d846efc4);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: -1;
+}
+
+.btn-gradient-border:hover {
+  transform: scale(1.05);
+}
+
+.btn-gradient-border:disabled {
+  color: #a1a1a1;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
 .lock-icon {
   transition: opacity 0.3s ease, transform 0.3s ease;
   opacity: 0;

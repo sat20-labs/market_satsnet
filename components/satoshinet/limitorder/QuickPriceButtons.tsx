@@ -67,15 +67,15 @@ const QuickPriceButtons: React.FC<QuickPriceButtonsProps> = ({
           key={btn.label}
           type="button"
           variant="outline"
-          className={`flex flex-col items-center justify-center text-xs h-16 ${btn.selected ? "btn-gradient" : "bg-gray-700"}`}
+          className={`flex flex-col items-center justify-center text-xs h-14 ${btn.selected ? "btn-gradient-border" : "bg-gray-700"}`}
           size="sm"
           onClick={btn.onClick}
           disabled={btn.disabled}
-        >
+        >          
           {btn.label}
           <span className="ml-1 text-xs text-gray-400">
             {btn.value !== undefined ? btn.value : "--"}
-          </span>
+          </span>          
         </Button>
       ))}
     </div>
