@@ -24,6 +24,11 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
         key: 'runes',
         value: assets.runes.reduce((sum, asset) => sum + asset.amount, 0),
       },
+      // {
+      //   label: 'Points',
+      //   key: 'points',
+      //   value: '12800', // Assuming points are not yet implemented
+      // },
     ];
   }, [assets]);
   
@@ -59,8 +64,18 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
           <CardContent className="p-3 pt-1 leading-8">
             <div className="flex items-center text-base sm:text-md">
               {/* <Icon icon="cryptocurrency-color:btc" className="mr-1" /> */}
-               <Icon icon="cryptocurrency:btc" className="mr-1 custom-btc-small-icon" />
-              <span className='font-extrabold text-zinc-200'>{item.value}</span>
+              {item.label === 'Points' ? (
+                  <>
+                    <Icon icon="mdi:medal-outline" className="mr-1 custom-medal-icon" />
+                    <span className='font-extrabold text-zinc-200'>{item.value}</span><span className='text-zinc-400 ml-1'>MP</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon icon="cryptocurrency:btc" className="mr-1 custom-btc-small-icon" />
+                    <span className='font-extrabold text-zinc-200'>{item.value}</span>
+                  </>
+                )}
+              
             </div>
             <div className="flex text-xs sm:font-bold">
               {/* <span className="text-yellow-400 w-5"> &nbsp;$</span> */}
