@@ -1,0 +1,50 @@
+'use client';
+
+import React, { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Loading } from '@/components/Loading';
+import { useQuery } from '@tanstack/react-query';
+import { clientApi } from '@/api';
+import { useCommonStore } from '@/store/common';
+import { AssetInfoCard } from '@/components/satoshinet/AssetInfoCard';
+import { AssetTransfersPanel } from '@/components/satoshinet/AssetTransfersPanel';
+
+function TickerDetailContent() {
+  const params = useSearchParams();
+  const asset = params.get('asset');
+  const [total, setTotal] = useState(0);  
+  const { network } = useCommonStore();
+  
+  const { data, isLoading: isTickerLoading } = useQuery<any>({
+    queryKey: ['ticker', asset, network],
+    queryFn: () => clientApi.getTickerInfo(asset ?? ''),
+    enabled: !!asset,
+  });
+  const tickerInfo = data?.data;
+
+
+
+  if (!asset) {
+    return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
+  }
+  if (isTickerLoading) {
+    return <Loading />;
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      <AssetInfoCard asset={asset} tickerInfo={tickerInfo} holdersTotal={total}/>
+      <AssetTransfersPanel asset={asset} onTotalChange={setTotal}/>
+    </div>
+  );
+}
+
+export default function TickerDetailPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <TickerDetailContent />
+    </Suspense>
+  );
+}

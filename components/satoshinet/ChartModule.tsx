@@ -5,21 +5,24 @@ import { Button } from '@/components/ui/button';
 import { OrderLineChart } from '@/components/chart/OrderLineChart';
 import { ContentLoading } from '@/components/ContentLoading';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
+import Link from 'next/link';
 
 interface ChartModuleProps {
   ticker: string;
+  asset: string;
   analyticsData?: any;
   isLoading?: boolean;
   refresh?: () => void;
   isRefreshing?: boolean;
 }
 
-export const ChartModule = ({ 
-  ticker, 
-  analyticsData, 
+export const ChartModule = ({
+  ticker,
+  asset,
+  analyticsData,
   isLoading = false,
   refresh,
-  isRefreshing = false 
+  isRefreshing = false
 }: ChartModuleProps) => {
   const [type, setType] = useState('24h');
 
@@ -100,7 +103,15 @@ export const ChartModule = ({
   return (
     <div className="w-full h-full bg-zinc-900/50 border-1 border-zinc-700/50 rounded-lg">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-bold text-zinc-400 ml-4 py-4">Chart for {ticker}</h2>
+        <div className="flex items-center">
+          <h2 className="text-lg font-bold text-zinc-400 ml-4 py-4">Chart for {ticker}</h2>
+          <Button variant="outline" className="ml-4">
+            <Link href={`/ticker/detail/?asset=${asset}`} prefetch className="text-zinc-400">
+              View Info
+            </Link>
+          </Button>
+        </div>
+
         <div className="mr-4">
           <ButtonRefresh
             onRefresh={refresh}
