@@ -73,6 +73,7 @@ function OrderPageContent() {
           {/* Tradingview Chart */}
           <div className="flex items-center justify-center min-h-[320px] sm:min-h-[640px] sm:mb-0">
             <ChartModule
+              asset={asset}
               ticker={ticker}
               isLoading={isAnalyticsLoading}
               analyticsData={analyticsData}
