@@ -123,7 +123,7 @@ export const ChartModule = ({
       <div className="p-2 max-w-[100rem]">
         <ContentLoading loading={isLoading}>
           <div className="flex justify-end items-center mb-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center mr-6 gap-2">
               {types.map((item) => (
                 <Button
                   key={item.value}
