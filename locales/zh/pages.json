@@ -239,6 +239,7 @@
       "runes": "Runes"
     },
     "ticker": "资产名称",
+    "selectTicker": "请选择资产名称",
     "bindingSat": "N (每聪铸造的资产数量)",
     "assetSymbol": "资产符号",
     "limit": "限制（单地址领取的最大数）",

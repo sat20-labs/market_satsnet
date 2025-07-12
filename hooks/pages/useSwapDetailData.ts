@@ -56,7 +56,7 @@ export const useSwapDetailData = (asset: string) => {
     return contractUrlQuery.data?.filter((url: string) => url.indexOf(`${ticker}_amm.tc`) > -1)[0];
   }, [contractUrlQuery.data, ticker]);
 
-  const { data: swapStatus, isLoading: isSwapStatusLoading, refetch: refetchStatus } = useQuery({
+  const { data: swapStatus, isPending: isSwapStatusPending, isLoading: isSwapStatusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ["swap", 'status', contractUrl, network],
     queryFn: () => contractService.getContractStatus(contractUrl),
     refetchInterval: 6000,
@@ -64,7 +64,7 @@ export const useSwapDetailData = (asset: string) => {
     refetchOnWindowFocus: false,
   });
 
-  const { data: analytics, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
+  const { data: analytics, isPending: isAnalyticsPending, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
     queryKey: ["swap", 'analytics', contractUrl, network],
     queryFn: () => contractService.getContractAnalytics(contractUrl),
     refetchInterval: 60000,
@@ -72,7 +72,7 @@ export const useSwapDetailData = (asset: string) => {
     refetchOnWindowFocus: false,
   });
 
-  const isLoading = tickerQuery.isLoading || isSwapStatusLoading || isAnalyticsLoading;
+  const isLoading = tickerQuery.isPending || isSwapStatusPending || isAnalyticsPending;
 
 
   const { balance: satsBalance, getBalance } = useWalletStore();

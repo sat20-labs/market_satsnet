@@ -41,8 +41,8 @@ function OrderPageContent() {
     refreshAll
   } = useSwapDetailData(asset ?? '');
   const protocol = useMemo(() => swapStatusData?.Contract?.assetName?.Protocol || '', [swapStatusData]);
-  
-  
+
+
   const refreshHandler = () => {
     setTimeout(() => {
       refreshAll();
@@ -141,16 +141,16 @@ function OrderPageContent() {
           </div>
         </div>
       </div>
-      <div className="bg-zinc-900 rounded-2xl p-4 mt-4">        
+      <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
         <Tabs defaultValue="myOrders">
           <TabsList className="mb-2">
             <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
             <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
           </TabsList>
-          <TabsContent value="myOrders">
+          <TabsContent value="myOrders" className="-mt-10">
             <MySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
-          <TabsContent value="history">
+          <TabsContent value="history" className="-mt-10">
             <HistorySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
         </Tabs>

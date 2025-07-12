@@ -95,10 +95,10 @@ function OrderPageContent() {
             <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
             <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
           </TabsList>
-          <TabsContent value="myOrders">
+          <TabsContent value="myOrders" className="-mt-10">
             <MyOrders contractURL={contractUrl} type="trade" asset={asset} />
           </TabsContent>
-          <TabsContent value="history">
+          <TabsContent value="history" className="-mt-10">
             <HistoryOrders contractURL={contractUrl} type="trade" />
           </TabsContent>
         </Tabs>
