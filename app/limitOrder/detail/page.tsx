@@ -114,7 +114,7 @@ function OrderPageContent() {
         </div>
       </div>
       {/* 我的订单和所有订单 */}
-      <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
+      <div className="bg-zinc-900 rounded-2xl p-4 mt-4 mb-4">
         <Tabs defaultValue="myOrders">
           <div className="flex justify-between items-center mt-2 mb-4 border-b border-gray-800">
             <TabsList className="flex justify-start w-full bg-transparent">
@@ -139,13 +139,13 @@ function OrderPageContent() {
             <div className="flex justify-between items-center gap-2">
               <Button
                 variant="outline"
-                className="px-4 mb-2 h-9"
+                className="px-4 mb-2 h-9 text-zinc-400"
                 size="sm"
                 onClick={cancelOrder}
               >
                 Cancel  Orders
               </Button>
-              <ButtonRefresh className="mx-4" loading={isLoading} onRefresh={() => refresh()} />
+              <ButtonRefresh className="mx-4 mb-2" loading={isLoading} onRefresh={() => refresh()} />
             </div>
           </div>
           <TabsContent value="myOrders">
