@@ -254,6 +254,7 @@
     },
     "currentBlockHeight": "Current Block Height",
     "ticker": "Ticker",
+    "selectTicker": "Select Ticker",
     "bindingSat": "N (BindingSat)",
     "assetSymbol": "Asset Symbol",
     "limit": "Limit(Max amount per address)",
