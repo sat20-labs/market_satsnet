@@ -112,7 +112,7 @@ export const Header = () => {
                 alt="logo"
                 width={56}
                 height={56}
-                className="w-14 h-14 min-w-14"
+                className="w-14 h-14 min-w-14 mb-1"
               />
               <p className="font-bold text-xl bg-gradient-to-tr from-[#8000cc] to-[#cc098b] bg-clip-text text-transparent hidden md:block">
                 SATSWAP

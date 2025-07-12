@@ -50,9 +50,9 @@ export default function HistoryOrders({ contractURL, type }: HistoryOrdersProps)
   console.log('allOrders', allOrders);
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      {/* <div className="flex justify-end">
         <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
-      </div>
+      </div> */}
       <HistoryTable
         rawOrders={allOrders}
         orderTypeLabels={ORDER_TYPE_LABELS}

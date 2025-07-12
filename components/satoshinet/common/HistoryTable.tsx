@@ -229,7 +229,7 @@ export default function HistoryTable({
 
   return (
     <div className="max-w-full">
-      <div className="w-full max-h-80 rounded-md border overflow-y-auto">
+      <div className="w-full max-h-80 rounded-md overflow-y-auto">
         <Table className="overflow-x-auto">
           <TableHeader>
             <TableRow className="bg-zinc-800 text-gray-500 text-xs">

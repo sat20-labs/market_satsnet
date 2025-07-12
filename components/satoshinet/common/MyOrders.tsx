@@ -74,17 +74,17 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end items-center gap-2">
+      {/* <div className="flex justify-between items-center gap-2">
         <Button
           variant="outline"
-          className="px-4"
+          className="px-4 h-10"
           size="sm"
           onClick={cancelOrder}
         >
-          Cancel
+          Cancel All Orders
         </Button>
-        <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
-      </div>
+        <ButtonRefresh className="mx-4" loading={isLoading} onRefresh={() => refetch()} />
+      </div> */}
       <HistoryTable
         rawOrders={allOrders}
         orderTypeLabels={ORDER_TYPE_LABELS}

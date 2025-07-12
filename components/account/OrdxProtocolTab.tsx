@@ -24,11 +24,11 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
         key: 'runes',
         value: assets.runes.reduce((sum, asset) => sum + asset.amount, 0),
       },
-      // {
-      //   label: 'Points',
-      //   key: 'points',
-      //   value: '12800', // Assuming points are not yet implemented
-      // },
+      {
+        label: 'Points',
+        key: 'points',
+        value: '12800', // Assuming points are not yet implemented
+      },
     ];
   }, [assets]);
   

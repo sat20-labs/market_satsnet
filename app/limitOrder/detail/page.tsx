@@ -13,12 +13,16 @@ import MyOrders from '@/components/satoshinet/common/MyOrders';
 import HistoryOrders from '@/components/satoshinet/common/HistoryOrders';
 import { useTranslation } from 'react-i18next';
 import { Loading } from '@/components/Loading';
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
+import { toast } from "sonner";
 
 function OrderPageContent() {
   const params = useSearchParams();
   const asset = params.get('asset');
   const { t } = useTranslation();
-  
+
   // Fetch asset summary
   const { data, isLoading, error } = useQuery({
     queryKey: ['assetSummary', asset],
@@ -43,6 +47,27 @@ function OrderPageContent() {
   if (error) {
     return <div className="p-4 bg-black text-white w-full">Error loading data: {error.message}</div>;
   }
+
+  const cancelOrder = async () => {
+    const params = {
+      action: 'refund',
+    };
+
+    const result = await window.sat20.invokeContract_SatsNet(
+      contractUrl,
+      JSON.stringify(params),
+      '1',
+    );
+    if (result.txId) {
+      setTimeout(() => {
+        refresh();
+      }, 1000);
+      toast.success(`Order cancelled successfully, txid: ${result.txId}`);
+      return;
+    } else {
+      toast.error('Order cancellation failed');
+    }
+  };
 
   return (
     <div className="w-full">
@@ -91,10 +116,38 @@ function OrderPageContent() {
       {/* 我的订单和所有订单 */}
       <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
         <Tabs defaultValue="myOrders">
-          <TabsList className="mb-2">
-            <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
-            <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
-          </TabsList>
+          <div className="flex justify-between items-center mt-2 mb-4 border-b border-gray-800">
+            <TabsList className="flex justify-start w-full bg-transparent">
+              <TabsTrigger
+                value="myOrders"
+                className={cn(
+                  "w-28 rounded-none px-4 py-3 text-sm font-medium text-gray-400 hover:text-white focus:text-white border-b-3 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent data-[state=active]:text-white"
+                )}
+              >
+                {t('common.my_activities')}
+              </TabsTrigger>
+              <TabsTrigger
+                value="history"
+                className={cn(
+                  "w-28 rounded-none px-4 py-3 text-sm font-medium text-gray-400 hover:text-white focus:text-white border-b-3 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent data-[state=active]:text-white"
+                )}
+              >
+                {t('common.activities')}
+              </TabsTrigger>
+
+            </TabsList>
+            <div className="flex justify-between items-center gap-2">
+              <Button
+                variant="outline"
+                className="px-4 mb-2 h-9"
+                size="sm"
+                onClick={cancelOrder}
+              >
+                Cancel  Orders
+              </Button>
+              <ButtonRefresh className="mx-4" loading={isLoading} onRefresh={() => refresh()} />
+            </div>
+          </div>
           <TabsContent value="myOrders">
             <MyOrders contractURL={contractUrl} type="trade" asset={asset} />
           </TabsContent>
