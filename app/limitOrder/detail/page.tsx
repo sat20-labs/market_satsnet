@@ -151,7 +151,7 @@ function OrderPageContent() {
           <TabsContent value="myOrders">
             <MyOrders contractURL={contractUrl} type="trade" asset={asset} />
           </TabsContent>
-          <TabsContent value="history" className="-mt-10">
+          <TabsContent value="history" className="">
             <HistoryOrders contractURL={contractUrl} type="trade" />
           </TabsContent>
         </Tabs>
