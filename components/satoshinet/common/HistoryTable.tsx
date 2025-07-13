@@ -273,7 +273,7 @@ export default function HistoryTable({
                   <TableCell className="text-center">
                     {order.rawData.OutTxId ? (
                       <a
-                        href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: chain || Chain.SATNET, env: 'dev' })}
+                        href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: chain || Chain.SATNET, env: 'test' })}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center hover:text-primary"
@@ -287,7 +287,7 @@ export default function HistoryTable({
                   <TableCell className="text-center">
                     {order.rawData.InUtxo ? (
                       <a
-                        href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.InUtxo}`, chain: chain || Chain.SATNET, env: 'dev' })}
+                        href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.InUtxo}`, chain: chain || Chain.SATNET, env: 'test' })}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center hover:text-primary"
