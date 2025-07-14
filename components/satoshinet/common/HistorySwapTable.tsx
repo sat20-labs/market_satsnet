@@ -40,6 +40,8 @@ interface RawOrderData {
   OutTxId?: string;
   InUtxo?: string;
   Reason?: string;
+  ToL1?: boolean;
+  FromL1?: boolean;
 }
 
 export interface HistoryTableOrder {
@@ -231,8 +233,8 @@ export default function HistorySwapTable({
                   <TableCell className="text-center">
                     {order.rawData.OutTxId ? (
                       <a
-                        href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: chain || Chain.SATNET, env: 'dev' })}
-                        target="_blank"
+                        href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.OutTxId}`, chain: order.rawData?.ToL1 ? Chain.BTC : Chain.SATNET, env: 'dev' })}
+                        target="_blank" 
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center hover:text-primary"
                       >
@@ -245,7 +247,7 @@ export default function HistorySwapTable({
                   <TableCell className="text-center">
                     {order.rawData.InUtxo ? (
                       <a
-                        href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.InUtxo}`, chain: chain || Chain.SATNET, env: 'dev' })}
+                        href={generateMempoolUrl({ network: 'testnet', path: `tx/${order.rawData.InUtxo}`, chain: order.rawData.FromL1 ? Chain.BTC : Chain.SATNET, env: 'dev' })}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center hover:text-primary"
