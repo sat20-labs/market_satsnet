@@ -27,7 +27,7 @@ const getBaseUrl = (chain: RequestContext['chain'], network: RequestContext['net
     baseUrl += network === 'testnet' ? '/testnet' : '';
   } else if (chain === 'SatoshiNet') {
     baseUrl = process.env.NEXT_PUBLIC_SATESTNET_HOST as string;
-    baseUrl += network === 'testnet' ? '/satsnet/testnet' : '/satsnet';
+    baseUrl += network === 'testnet' ? '/testnet' : '';
   }
 
   // Environment-specific adjustments (consider moving this logic elsewhere if complex)
