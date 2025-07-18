@@ -7,6 +7,7 @@ import { LanguageSelect } from '@/components/LanguageSelect';
 import NextLink from 'next/link';
 import { UpdateVersionModal } from './UpdateVersionModal';
 import { FeerateSelectButton } from '@/components/fee/FeerateSelectButton';
+import { BtcFeerateSelectButton } from '@/components/fee/BtcFeerateSelectButton';
 import { useTranslation } from 'react-i18next';
 import { usePathname } from 'next/navigation';
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -153,6 +154,7 @@ export const Header = () => {
             <NetworkSelect />
             <ChainSelect />
             <FeerateSelectButton />
+            <BtcFeerateSelectButton />
             <LanguageSelect /> {/* Ensure this is correctly rendered */}
           </div>
 
@@ -178,6 +180,7 @@ export const Header = () => {
                     </div>
                     <div className="flex items-center gap-3 w-full">
                       <FeerateSelectButton />
+                      <BtcFeerateSelectButton />
                       <LanguageSelect />
                     </div>
                   </div>

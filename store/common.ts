@@ -9,6 +9,10 @@ interface CommonState {
     value: number;
     type?: string;
   };
+  btcFeeRate: {
+    value: number;
+    type?: string;
+  };
   chain: Chain;
   network: Network; // 将 network 类型改为 Network
   btcHeight: number;
@@ -26,6 +30,7 @@ interface CommonState {
   setSatsnetHeight: (h: number) => void;
   setSignature: (signature: string) => void;
   setFeeRate: (feeRate: any) => void;
+  setBtcFeeRate: (btcFeeRate: any) => void;
   reset: () => void;
 }
 
@@ -34,6 +39,10 @@ export const useCommonStore = create<CommonState>()(
     persist(
       (set) => ({
         feeRate: {
+          value: 10,
+          type: 'custom',
+        },
+        btcFeeRate: {
           value: 1,
           type: 'custom',
         },
@@ -68,6 +77,11 @@ export const useCommonStore = create<CommonState>()(
         setSignature: (signature) => {
           set({
             signature,
+          });
+        },
+        setBtcFeeRate: (rate) => {
+          set({
+            btcFeeRate: rate,
           });
         },
         setFeeRate: (rate) => {

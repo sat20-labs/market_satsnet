@@ -17,12 +17,13 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button";
 import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
 import { toast } from "sonner";
+import { useCommonStore } from '@/store/common';
 
 function OrderPageContent() {
   const params = useSearchParams();
   const asset = params.get('asset');
   const { t } = useTranslation();
-
+  const { btcFeeRate } = useCommonStore((state) => state);
   // Fetch asset summary
   const { data, isLoading, error } = useQuery({
     queryKey: ['assetSummary', asset],
@@ -56,7 +57,7 @@ function OrderPageContent() {
     const result = await window.sat20.invokeContract_SatsNet(
       contractUrl,
       JSON.stringify(params),
-      '1',
+      btcFeeRate.toString(),
     );
     if (result.txId) {
       setTimeout(() => {

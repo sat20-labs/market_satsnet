@@ -8,6 +8,7 @@ import HistoryTable from "./HistoryTable";
 import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useCommonStore } from "@/store/common";
 
 interface MyOrdersProps {
   contractURL: string;
@@ -17,6 +18,7 @@ interface MyOrdersProps {
 
 export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
   const pageSize = 20;
+  const { btcFeeRate } = useCommonStore((state) => state);
   const { t } = useTranslation();
   const { address } = useReactWalletStore();
 
@@ -58,7 +60,7 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
     const result = await window.sat20.invokeContract_SatsNet(
       contractURL,
       JSON.stringify(params),
-      '1',
+      btcFeeRate,
     );
     if (result.txId) {
       setTimeout(() => {

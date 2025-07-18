@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { contractService } from '@/domain/services/contract';
+import { useCommonStore } from '@/store/common';
 
 interface OrderFormState {
   orderType: string;
@@ -44,6 +45,7 @@ export const useOrderForm = ({
   onOrderSuccess,
 }: UseOrderFormProps) => {
   const { t } = useTranslation();
+  const { btcFeeRate } = useCommonStore((state) => state);
   const [state, setState] = useState<OrderFormState>({
     orderType: "buy",
     price: "",
@@ -216,7 +218,7 @@ export const useOrderForm = ({
         JSON.stringify(params),
         _asset,
         amt.toString(),
-        "1",
+        btcFeeRate.toString(),
         {
           action: "swap",
           orderType: state.orderType === 'buy' ? 2 : 1,

@@ -66,42 +66,17 @@ export const FeerateSelectButton = () => {
   }, [isOpen, feeRate]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild disabled>
-        <Button
-          variant="ghost"
-          disabled={isLoading}
-          className="bg-transparent sm:px-2 px-8 sm:gap-2 gap-3 text-xs sm:text-base text-zinc-300 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
-        >
-          {isLoading ? (
-            <Icon icon="eos-icons:loading" className="text-xl0" />
-          ) : (
-            <Icon icon="mdi:gas-station" className="text-xl0" />
-          )}
-          <span className='mr-4 sm:mr-1'>10 sats</span>
-          {/* {feeRate.value}{' sat'}
-          <span className="hidden sm:inline dark:text-gray-400 text-slate-600">/vB</span> */}
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t('common.gas_fee')}</DialogTitle>
-        </DialogHeader>
-        <BtcFeeRate
-          onChange={feeChange}
-          value={fee.value}
-          feeType={fee.type}
-          feeRateData={feeRateData}
-        />
-        <DialogFooter>
-          <Button variant="ghost" onClick={handleCancel}>
-            {t('common.close')}
-          </Button>
-          <Button onClick={handleOk}>
-            {t('common.ok')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <Button
+      variant="ghost"
+      disabled={isLoading}
+      className="bg-transparent sm:px-2 px-8 sm:gap-2 gap-3 text-xs sm:text-base text-zinc-300 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
+    >
+      {isLoading ? (
+        <Icon icon="eos-icons:loading" className="text-xl0" />
+      ) : (
+        <Icon icon="mdi:gas-station" className="text-xl0" />
+      )}
+      <span className='mr-4 sm:mr-1'>10 sats/tx</span>
+    </Button>
   );
 };

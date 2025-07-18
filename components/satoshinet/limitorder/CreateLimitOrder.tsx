@@ -13,7 +13,7 @@ import { clientApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 
-const CreateLimitOrder =   ({ closeModal }: { closeModal: () => void }) => {
+const CreateLimitOrder = ({ closeModal }: { closeModal: () => void }) => {
   const { t, i18n } = useTranslation(); // Specify the namespace
   console.log('Current Language:', i18n.language); // Debugging: Check current language
   console.log('Translation for createPool.title:', t('createPool.title')); // Debugging: Check translation key
@@ -26,9 +26,9 @@ const CreateLimitOrder =   ({ closeModal }: { closeModal: () => void }) => {
     endBlock: '0',
   });
   const { address } = useReactWalletStore();
-  const { network } = useCommonStore();
+  const { network, btcFeeRate } = useCommonStore();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  
+
   const { data: summaryData } = useQuery({
     queryKey: ['summary', address, network],
     queryFn: () => clientApi.getAddressSummary(address),
@@ -37,7 +37,7 @@ const CreateLimitOrder =   ({ closeModal }: { closeModal: () => void }) => {
   });
   const assetList = summaryData?.data || [];
   console.log('summaryQuery data', assetList);
-  
+
   const { satsnetHeight } = useCommonStore();
   const contractType = 'swap.tc';
 
@@ -69,7 +69,7 @@ const CreateLimitOrder =   ({ closeModal }: { closeModal: () => void }) => {
       assetName,
     };
     try {
-      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1, bol);
+      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate, bol);
       console.log('result:', result);
       const { txId } = result;
       if (txId) {
@@ -124,7 +124,7 @@ const CreateLimitOrder =   ({ closeModal }: { closeModal: () => void }) => {
           <Select
             onValueChange={(value) => handleInputChange('ticker', value)}
             value={formData.ticker}
-           
+
             disabled={filteredTickerOptions.length === 0}
           >
             <SelectTrigger className="w-full py-4 h-12">

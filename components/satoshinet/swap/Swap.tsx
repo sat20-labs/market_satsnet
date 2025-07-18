@@ -54,7 +54,7 @@ const Swap = ({
   const [toAmount, setToAmount] = useState<string>("");
   const [activeInput, setActiveInput] = useState<'from' | 'to'>('from');
   const [slippage, setSlippage] = useState<string>("0");
-  const { satsnetHeight } = useCommonStore();
+  const { satsnetHeight, btcFeeRate  } = useCommonStore();
   const assetAmtInPool = useMemo(() => getValueFromPrecision(swapData?.AssetAmtInPool), [swapData?.AssetAmtInPool]);
   const divisibility = tickerInfo?.divisibility || 0;
 
@@ -277,7 +277,7 @@ const Swap = ({
           JSON.stringify(params),
           "::",
           fromAmount,
-          "1",
+          btcFeeRate.toString(),
           {
             action: "swap",
             orderType: 2,
@@ -298,7 +298,7 @@ const Swap = ({
           JSON.stringify(params),
           asset,
           fromAmount.toString(),
-          "1",
+          btcFeeRate.toString(),
           {
             action: "swap",
             orderType: 1,

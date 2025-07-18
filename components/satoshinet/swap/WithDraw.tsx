@@ -7,6 +7,7 @@ import { sleep } from 'radash';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
+import { useCommonStore } from '@/store/common';
 
 interface WithDrawProps {
   contractUrl: string;
@@ -39,7 +40,7 @@ const WithDraw: React.FC<WithDrawProps> = ({
   const [amount, setAmount] = useState('');
   const { address } = useReactWalletStore();
   const divisibility = tickerInfo?.divisibility || 0;
-
+  const { btcFeeRate } = useCommonStore((state) => state);
   const displayAssetBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
 
   const withdrawMutation = useMutation({
@@ -62,7 +63,7 @@ const WithDraw: React.FC<WithDrawProps> = ({
         JSON.stringify(params),
         assetName,
         amount,
-        '1',
+        btcFeeRate.toString(),
         {
           action: "withdraw",
           orderType: 7,

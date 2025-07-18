@@ -8,6 +8,7 @@ import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { Icon } from "@iconify/react";
 import { useTranslation } from 'react-i18next';
 import { contractService } from '@/domain/services/contract';
+import { useCommonStore } from '@/store/common';
 interface JoinPoolProps {
   closeModal: () => void;
   poolData: any;
@@ -15,6 +16,7 @@ interface JoinPoolProps {
 
 const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   const { t } = useTranslation(); // Specify the namespace
+  const { btcFeeRate } = useCommonStore((state) => state);
   const limit = Number(poolData?.limit) || 1;
   const [amount, setAmount] = useState('');
   const [satsCost, setSatsCost] = useState(0);
@@ -84,7 +86,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
       param: amount.toString()
     };
     const result = await window.sat20.invokeContract_SatsNet(
-      poolData.contractURL, JSON.stringify(params), '1');
+      poolData.contractURL, JSON.stringify(params), btcFeeRate.toString());
     if (result.txId) {
       toast.success(t('pages.joinPool.success', { amount, txId: result.txId }));
       closeModal();

@@ -37,11 +37,10 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [contractURL, setcontractURL] = useState<string | null>(null);
-
   const [errorMessage, setErrorMessage] = useState('');
   const [errorLaunchRatio, setErrorLaunchRatio] = useState('');
 
-  const { satsnetHeight } = useCommonStore();
+  const { satsnetHeight, btcFeeRate } = useCommonStore();
   const contractType = 'launchpool.tc';
 
   const handleNextStep = () => setStep((prev) => prev + 1);
@@ -105,7 +104,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol.charCodeAt(0) } : {}),
       ...(formData.protocol === 'ordx' ? { bindingSat: Number(formData.n) } : {}),
     };
-    const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), 1, bol);
+    const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate, bol);
     console.log('result:', result);
     const { contractURL, txId } = result;
     if (txId) {
