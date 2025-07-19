@@ -120,6 +120,7 @@ export const Header = () => {
                 SATSWAP
               </p>
             </NextLink>
+            <ChainSelect />
           </div>
 
           {/* <div className="sm:hidden flex">
@@ -153,7 +154,6 @@ export const Header = () => {
         <div className="flex flex-1 items-center justify-end space-x-2 sm:space-x-4">
           <div className="hidden xl:flex items-center gap-2">
             <NetworkSelect />
-            <ChainSelect />
             <FeerateSelectButton />
             <BtcFeerateSelectButton />
             <LanguageSelect /> {/* Ensure this is correctly rendered */}
@@ -177,7 +177,7 @@ export const Header = () => {
                     <p className="text-sm font-medium text-muted-foreground">{t('settings')}</p>
                     <div className="flex items-center gap-3">
                       <NetworkSelect />
-                      <ChainSelect />
+                      
                     </div>
                     <div className="flex items-center gap-3 w-full">
                       <FeerateSelectButton />
