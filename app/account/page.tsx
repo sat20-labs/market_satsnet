@@ -18,6 +18,8 @@ import { useTranslation } from 'react-i18next';
 import { OrdxBillList } from '@/components/account/OrdxBillList';
 import { marketApi } from '@/api';
 import { useCommonStore } from '@/store';
+import ReferrerBind from '@/components/account/ReferrerBind';
+import ReferrerRegister from '@/components/account/ReferrerRegister';
 
 function AccountContent() {
   const { t } = useTranslation();
@@ -62,6 +64,7 @@ function AccountContent() {
         <TabsTrigger value="utxo">{t('buttons.my_assets')}</TabsTrigger>
         <TabsTrigger value="history">{t('common.tx_history')}</TabsTrigger>
         <TabsTrigger value="order">{t('common.my_listings')}</TabsTrigger>
+        <TabsTrigger value="referrer">{t('common.referrer')}</TabsTrigger>
       </TabsList>
       <TabsContent value="utxo">
         <Assets />
@@ -71,6 +74,20 @@ function AccountContent() {
       </TabsContent>
       <TabsContent value="order">
         <OrdxOrderList address={address} />
+      </TabsContent>
+      <TabsContent value="referrer">
+        <Tabs defaultValue="register" className="w-full">
+          <TabsList>
+            <TabsTrigger value="register">{t('common.become_referrer')}</TabsTrigger>
+            <TabsTrigger value="bind">{t('common.bind_referrer')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="register">
+            <ReferrerRegister />
+          </TabsContent>
+          <TabsContent value="bind">
+            <ReferrerBind />
+          </TabsContent>
+        </Tabs>
       </TabsContent>
     </Tabs>
     </div>
