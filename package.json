@@ -30,7 +30,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@react-aria/ssr": "^3.8.0",
     "@react-aria/visually-hidden": "^3.8.6",
-    "@sat20/btc-connect": "1.4.60",
+    "@sat20/btc-connect": "1.4.62",
     "@tanstack/react-query": "^5.69.0",
     "@tanstack/react-table": "^8.17.0",
     "@types/node": "20.5.7",

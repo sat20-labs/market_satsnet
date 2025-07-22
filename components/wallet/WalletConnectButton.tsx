@@ -105,6 +105,9 @@ const WalletConnectButton = () => {
     setSignature('');
     await disconnect();
   };
+  const networkChange = () => {
+    disconnect()
+  };
   const accountAndNetworkChange = async () => {
     console.log('accountAndNetworkChange');
     console.log('connected', connected);
@@ -179,14 +182,14 @@ const WalletConnectButton = () => {
         getBalance();
       }, 1000);
       btcWallet?.on('accountsChanged', accountAndNetworkChange);
-      btcWallet?.on('networkChanged', accountAndNetworkChange);
+      btcWallet?.on('networkChanged', networkChange);
     } else {
       btcWallet?.removeListener('accountsChanged', accountAndNetworkChange);
-      btcWallet?.removeListener('networkChanged', accountAndNetworkChange);
+      btcWallet?.removeListener('networkChanged', networkChange);
     }
     return () => {
       btcWallet?.removeListener('accountsChanged', accountAndNetworkChange);
-      btcWallet?.removeListener('networkChanged', accountAndNetworkChange);
+      btcWallet?.removeListener('networkChanged', networkChange);
     };
   }, [connected, address, network, publicKey, signature]);
 
@@ -203,6 +206,7 @@ const WalletConnectButton = () => {
 
       config={{
         network: 'mainnet' as any,
+        enabledConnectors: ['sat20']
       }}
       ui={{
         connectClass: 'bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-red-500 focus:ring-0 focus-visible:ring-0',
