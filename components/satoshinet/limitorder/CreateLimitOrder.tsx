@@ -69,7 +69,7 @@ const CreateLimitOrder = ({ closeModal }: { closeModal: () => void }) => {
       assetName,
     };
     try {
-      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate, bol);
+      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
       console.log('result:', result);
       const { txId } = result;
       if (txId) {

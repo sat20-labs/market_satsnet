@@ -63,7 +63,7 @@ const WithDraw: React.FC<WithDrawProps> = ({
         JSON.stringify(params),
         assetName,
         amount,
-        btcFeeRate.toString(),
+        btcFeeRate.value.toString(),
         {
           action: "withdraw",
           orderType: 7,

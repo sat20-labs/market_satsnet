@@ -60,7 +60,7 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
     const result = await window.sat20.invokeContract_SatsNet(
       contractURL,
       JSON.stringify(params),
-      btcFeeRate,
+      btcFeeRate.value.toString(),
     );
     if (result.txId) {
       setTimeout(() => {

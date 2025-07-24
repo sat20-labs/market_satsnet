@@ -3,7 +3,6 @@
 import { Icon } from '@iconify/react';
 import { useEffect, useState, useMemo } from 'react';
 import { useCommonStore } from '@/store';
-import { BtcFeeRate } from './BtcFeeRate';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { marketApi } from '@/api';

@@ -104,7 +104,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       ...(formData.protocol === 'runes' && formData.assetSymbol ? { assetSymbol: formData.assetSymbol.charCodeAt(0) } : {}),
       ...(formData.protocol === 'ordx' ? { bindingSat: Number(formData.n) } : {}),
     };
-    const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate, bol);
+    const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
     console.log('result:', result);
     const { contractURL, txId } = result;
     if (txId) {

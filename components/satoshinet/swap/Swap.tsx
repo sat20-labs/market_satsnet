@@ -277,7 +277,7 @@ const Swap = ({
           JSON.stringify(params),
           "::",
           fromAmount,
-          btcFeeRate.toString(),
+          btcFeeRate.value.toString(),
           {
             action: "swap",
             orderType: 2,
@@ -298,7 +298,7 @@ const Swap = ({
           JSON.stringify(params),
           asset,
           fromAmount.toString(),
-          btcFeeRate.toString(),
+          btcFeeRate.value.toString(),
           {
             action: "swap",
             orderType: 1,

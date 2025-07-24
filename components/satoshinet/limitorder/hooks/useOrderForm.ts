@@ -218,7 +218,7 @@ export const useOrderForm = ({
         JSON.stringify(params),
         _asset,
         amt.toString(),
-        btcFeeRate.toString(),
+        btcFeeRate.value.toString(),
         {
           action: "swap",
           orderType: state.orderType === 'buy' ? 2 : 1,
