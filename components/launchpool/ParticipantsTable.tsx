@@ -42,11 +42,18 @@ const fetchParticipants = async (contractURL: string, bindingSat: number, pageSt
     }
     resultStatusList.sort((a, b) => (a.address > b.address ? 1 : -1));
     return resultStatusList.map(v => {
-      const TotalMint = v.valid?.TotalMint || 0;
+      // 获取数量值，考虑精度
+      const totalMint = v.valid?.TotalMint;
+      let amount = 0;
+      if (totalMint?.Value !== undefined && totalMint?.Precision !== undefined) {
+        // 根据精度计算实际数量
+        amount = totalMint.Value / Math.pow(10, totalMint.Precision);
+      }
+      
       return {
         ...v,
-        amount: TotalMint,
-        sats: Math.floor((TotalMint + bindingSat - 1) / bindingSat),
+        amount: amount,
+        sats: Math.floor((amount + bindingSat - 1) / bindingSat),
       };
     });
   } catch (e) {
@@ -70,14 +77,22 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   console.log('participantsList', participantsList);
   // 适配 amount 字段
   const adaptedList = participantsList.map((participant: any) => {
-    const TotalMint = participant.valid?.TotalMint || 0;
-    const sats = Math.floor((TotalMint + bindingSat - 1) / bindingSat);
+    // 获取数量值，考虑精度
+    const totalMint = participant.valid?.TotalMint;
+    let amount = 0;
+    if (totalMint?.Value !== undefined && totalMint?.Precision !== undefined) {
+      // 根据精度计算实际数量
+      amount = totalMint.Value / Math.pow(10, totalMint.Precision);
+    }
+    
+    const sats = Math.floor((amount + bindingSat - 1) / bindingSat);
+    console.log('totalMint', totalMint);
+    console.log('amount', amount);
     console.log('sats', sats);
-    console.log('TotalMint', TotalMint);
     console.log('bindingSat', bindingSat);
     return {
       ...participant,
-      amount: TotalMint,
+      amount: amount,
       sats: sats
     };
   });

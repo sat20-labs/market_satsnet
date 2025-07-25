@@ -31,8 +31,14 @@ import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 
 
 function adaptPoolData(pool, satsnetHeight) {
-  const totalMinted = pool.TotalMinted / pool.maxSupply * 100
-  const progress = Math.floor(Math.min(totalMinted / pool.launchRation, 1) * 100);
+  // 修正 TotalMinted 为对象的情况
+  const totalMintedValue = typeof pool.TotalMinted === 'object' && pool.TotalMinted !== null
+    ? pool.TotalMinted.Value ?? 0
+    : pool.TotalMinted ?? 0;
+  const maxSupply = pool.maxSupply ?? pool.totalSupply ?? 1;
+  const launchRation = pool.launchRation ?? 1;
+  const totalMinted = totalMintedValue / maxSupply * 100;
+  const progress = Math.floor(Math.min(totalMinted / launchRation, 1) * 100);
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
   const enableBlock = Number(pool.enableBlock);
@@ -62,7 +68,7 @@ function adaptPoolData(pool, satsnetHeight) {
     assetName: pool.assetName,
     unitPrice: pool.unitPrice ?? '',
     marketCap: pool.marketCap ?? '',
-    totalSupply: pool.maxSupply ?? pool.totalSupply ?? '',
+    totalSupply: maxSupply,
     poolSize: pool.limit ?? pool.poolSize ?? '',
     progress,
     protocol: pool.assetName.Protocol ?? '',
@@ -120,7 +126,10 @@ const LaunchPool = () => {
 
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
+    
   }, [poolList, satsnetHeight]);
+  console.log('poolList', poolList);
+  
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
