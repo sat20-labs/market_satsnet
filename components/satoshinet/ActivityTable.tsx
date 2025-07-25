@@ -9,7 +9,10 @@ import { useState } from 'react';
 import { Copy, ChevronDown, Bitcoin } from 'lucide-react';
 import { Button,} from '@/components/ui/button';
 import { toast } from 'sonner';
+import { generateMempoolUrl } from '@/utils/url';
 import { useTranslation } from 'react-i18next';
+import { Chain } from "@/types";
+import { useCommonStore } from "@/store/common";
 
 interface ActivityTableProps {
   activities: Activity[];
@@ -19,6 +22,7 @@ interface ActivityTableProps {
 
 export const ActivityTable = ({ activities, isLoading, error }: ActivityTableProps) => {
   const { t } = useTranslation();
+  const { network } = useCommonStore();
   const [isCopied, setIsCopied] = useState(false);
   const copyAddress = (address) => {
     if (address) {
@@ -133,7 +137,11 @@ export const ActivityTable = ({ activities, isLoading, error }: ActivityTablePro
             {activity.time}
             {activity.txid && (
               <a
-                href={`https://mempool.dev.sat20.org/tx/${activity.txid}`}
+                href={generateMempoolUrl({
+                  network: network,
+                  path: `tx/${activity.txid}`,
+                  chain: Chain.SATNET
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t('common.view_transaction')}
