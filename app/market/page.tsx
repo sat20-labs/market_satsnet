@@ -143,7 +143,7 @@ const MarketPage = () => {
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2 mr-4">
-          <WalletConnectBus asChild>
+          <WalletConnectBus asChild text="Create LimitOrder">
             <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/limitOrder/create')}>
               Create LimitOrder
             </Button>
