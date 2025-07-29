@@ -26,6 +26,7 @@ export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t, i18n } = useTranslation();
   const pathname = usePathname();
+  const walletUrl = 'https://github.com/sat20-labs/sat20wallet/releases/download/0.0.1/sat20wallet-chrome.zip';
   const { data: btcData } = useQuery({
     queryKey: ['btcPrice'],
     queryFn: marketApi.getBTCPrice,
@@ -73,6 +74,16 @@ export const Header = () => {
       {
         label: t('pages.my_assets.title'),
         href: '/account',
+      },
+      {
+        label: (
+          <>
+            Wallet
+            <Icon icon="mdi:download" className="ml-1 text-sm text-zinc-400" />
+          </>
+        ),
+        href: walletUrl,
+        target: '_blank',
       },
     ];
     return menus;
