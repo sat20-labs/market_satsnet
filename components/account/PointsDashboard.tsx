@@ -40,7 +40,7 @@ export default function PointsDashboard() {
 
         {/* 积分记录 */}
         <TabsContent value="history" className="mt-4 space-y-2">
-          {["交易返利 +60 MP", "质押奖励 +100 MP", "发射池奖励 +20 MP"].map((text, i) => (
+          {["交易返利 +60 MP", "质押奖励 +100 MP", "发射池奖励 +20 MP",  "推荐人奖励 +100 MP"].map((text, i) => (
             <Card key={i} className="p-3 text-sm bg-zinc-900 border border-zinc-700">
               {text}
             </Card>
@@ -53,10 +53,12 @@ export default function PointsDashboard() {
             <h3 className="text-lg font-semibold">交易行为</h3>
             <p className="text-sm text-zinc-400 mt-1">每消耗 10 聪手续费 = 1 MP</p>
           </Card>
+          
           <Card className="p-4 bg-zinc-900 border border-zinc-700">
             <h3 className="text-lg font-semibold">质押行为</h3>
             <p className="text-sm text-zinc-400 mt-1">每质押 10 万聪，每 10 天获得 1 MP</p>
           </Card>
+          
           <Card className="p-4 bg-zinc-900 border border-zinc-700">
             <h3 className="text-lg font-semibold">发射池行为</h3>
             <p className="text-sm text-zinc-400 mt-1">每铸造 10,000 聪获得 1 MP</p>
