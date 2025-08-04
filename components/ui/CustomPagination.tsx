@@ -1,178 +1,110 @@
 'use client';
 
 import React from 'react';
-import { useMediaQuery } from 'react-responsive';
-import { useTranslation } from 'react-i18next';
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/pagination';
+import { useTranslation } from 'react-i18next';
 
 interface CustomPaginationProps {
   currentPage: number;
   totalPages: number;
-  onPageChange: (page: number) => void;
+  totalCount: number;
   pageSize: number;
-  onPageSizeChange: (size: number) => void;
-  availablePageSizes: number[];
-  isLoading?: boolean;
+  onPageChange: (page: number) => void;
+  showInfo?: boolean;
 }
 
-const MAX_VISIBLE_PAGES = 5; // Maximum number of page links to show
-
-export const CustomPagination: React.FC<CustomPaginationProps> = ({
+const CustomPagination: React.FC<CustomPaginationProps> = ({
   currentPage,
   totalPages,
-  onPageChange,
+  totalCount,
   pageSize,
-  onPageSizeChange,
-  availablePageSizes,
-  isLoading = false,
+  onPageChange,
+  showInfo = true,
 }) => {
   const { t } = useTranslation();
-  const isMobile = useMediaQuery({ maxWidth: 640 });
-  // Reduce visible pages on mobile
-  const MAX_VISIBLE_PAGES = isMobile ? 1 : 5;
 
-  const handlePrevious = () => {
-    if (currentPage > 1 && !isLoading) {
-      onPageChange(currentPage - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages && !isLoading) {
-      onPageChange(currentPage + 1);
-    }
-  };
-
-  const handlePageClick = (pageNumber: number) => {
-    if (!isLoading) {
-      onPageChange(pageNumber);
-    }
-  };
-
-  const handleSizeChange = (value: string) => {
-    if (!isLoading) {
-      onPageSizeChange(Number(value));
-    }
-  };
-
-  const renderPageNumbers = () => {
-    const pageNumbers: React.ReactNode[] = [];
+  // 生成分页按钮
+  const generatePaginationItems = () => {
+    const items: React.ReactNode[] = [];
     
-    // For mobile, show a simplified version
-    if (isMobile) {
-      // Just show current page number
-      pageNumbers.push(
-        <PaginationItem key={currentPage}>
-          <PaginationLink isActive={true}>
-            {currentPage}
-          </PaginationLink>
-        </PaginationItem>
-      );
-      
-      return pageNumbers;
-    }
+    // 只显示当前页附近的页码，最多显示5个
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
     
-    // For desktop, show the standard pagination
-    const startPage = Math.max(1, currentPage - Math.floor(MAX_VISIBLE_PAGES / 2));
-    const endPage = Math.min(totalPages, startPage + MAX_VISIBLE_PAGES - 1);
-
-    if (startPage > 1) {
-      pageNumbers.push(
-        <PaginationItem key={1}>
-          <PaginationLink onClick={() => handlePageClick(1)} isActive={currentPage === 1}>
-            1
-          </PaginationLink>
-        </PaginationItem>
-      );
-      if (startPage > 2) {
-        pageNumbers.push(<PaginationItem key="start-ellipsis"><PaginationEllipsis /></PaginationItem>);
-      }
-    }
-
     for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(
+      items.push(
         <PaginationItem key={i}>
-          <PaginationLink onClick={() => handlePageClick(i)} isActive={currentPage === i}>
+          <PaginationLink
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onPageChange(i);
+            }}
+            isActive={currentPage === i}
+          >
             {i}
           </PaginationLink>
         </PaginationItem>
       );
     }
-
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        pageNumbers.push(<PaginationItem key="end-ellipsis"><PaginationEllipsis /></PaginationItem>);
-      }
-      pageNumbers.push(
-        <PaginationItem key={totalPages}>
-          <PaginationLink onClick={() => handlePageClick(totalPages)} isActive={currentPage === totalPages}>
-            {totalPages}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    return pageNumbers;
+    
+    return items;
   };
 
-  if (totalPages <= 0) return null;
+  if (totalPages <= 1) {
+    return null;
+  }
 
   return (
-    <div className="flex flex-row justify-between items-center gap-4 my-4">
-      <Pagination className="justify-start flex-grow">
+    <div className="flex flex-col items-center gap-4">
+      {/* 分页组件 */}
+      <Pagination>
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
-              onClick={handlePrevious}
-              className={currentPage <= 1 || isLoading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (currentPage > 1) {
+                  onPageChange(currentPage - 1);
+                }
+              }}
+              className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
             />
           </PaginationItem>
-
-          {renderPageNumbers()}
-
+          
+          {generatePaginationItems()}
+          
           <PaginationItem>
             <PaginationNext
-              onClick={handleNext}
-              className={currentPage >= totalPages || isLoading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                  onPageChange(currentPage + 1);
+                }
+              }}
+              className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
             />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
 
-      <div className="flex items-center gap-1 justify-end">
-        <span className="text-sm text-gray-400 whitespace-nowrap">{t('common.items_per_page')}</span>
-        <Select
-          value={String(pageSize)}
-          onValueChange={handleSizeChange}
-          disabled={isLoading}
-        >
-          <SelectTrigger className="w-[65px] h-8 text-xs sm:text-sm bg-zinc-800 border-zinc-700 text-gray-300">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-gray-300">
-            {availablePageSizes.map((size) => (
-              <SelectItem key={size} value={String(size)} className="text-xs sm:text-sm">
-                {size}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* 分页信息 */}
+      {showInfo && totalCount > 0 && (
+        <div className="text-sm text-muted-foreground">
+          {t('common.showing')} {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalCount)} {t('common.of')} {totalCount} {t('common.items')}
+        </div>
+      )}
     </div>
   );
 };
+
+export default CustomPagination;
