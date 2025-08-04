@@ -18,8 +18,6 @@ import { BtcPrice } from "../BtcPrice";
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const { t, i18n } = useTranslation(); // Specify the namespace
-  console.log('Current Language:', i18n.language); // Debugging: Check current language
-  console.log('Translation for createPool.title:', t('createPool.title')); // Debugging: Check translation key
 
   const [bol, setBol] = useState(true);
   const [step, setStep] = useState(1);
@@ -271,9 +269,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               <span className="px-4 py-2 border-l-6 border-purple-500">{t('pages.createPool.step2.title')}</span>
             </div>
             <p className="text-sm text-zinc-400 mt-2">{t('pages.createPool.step2.description')}</p>
-            <p className="text-sm text-zinc-400 mt-2">
-              {t('pages.createPool.step2.currentBlockHeight')}: <span className="font-bold text-white">{satsnetHeight}</span>
-            </p>
             <div className="flex items-center mt-4">
                   <label className="block text-sm font-medium text-gray-300 mb-1">{t('pages.createPool.mintAmtPerSat')}</label>
                   <Tooltip>
@@ -325,7 +320,12 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               <span className='text-zinc-500 ml-2'>( ${estimatedPoolFundsUsd} )</span>
              </p>
             
-            <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.startBlock')}</label>
+            <div className="flex items-center justify-between mt-4">
+              <label className="block text-sm font-medium text-gray-300 mb-1">{t('pages.createPool.startBlock')}</label>
+              <span className="text-sm text-zinc-400">
+                {t('pages.createPool.step2.currentBlockHeight')}: <span className="font-bold text-white">{satsnetHeight}</span>
+              </span>
+            </div>
             <Input
               placeholder={t('pages.createPool.startBlock')}
               type="number"
