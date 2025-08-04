@@ -15,10 +15,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Icon } from '@iconify/react';
 import { BtcPrice } from "../BtcPrice";
+import { useRouter } from 'next/navigation';
 
 const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const { t, i18n } = useTranslation(); // Specify the namespace
-
+  const router = useRouter();
   const [bol, setBol] = useState(true);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -106,9 +107,10 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     console.log('result:', result);
     const { contractURL, txId } = result;
     if (txId) {
-      toast.success(`Contract deployed successfully, txid: ${txId}`);
-      setcontractURL(contractURL);
-      setStep(3);
+      router.back();
+      // toast.success(`Contract deployed successfully, txid: ${txId}`);
+      // setcontractURL(contractURL);
+      // setStep(3);
     } else {
       toast.error('Contract deployment failed');
     }
