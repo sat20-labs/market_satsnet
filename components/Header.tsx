@@ -103,7 +103,7 @@ export const Header = () => {
     <nav className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 items-center space-x-2 px-2 sm:px-4 sm:justify-between sm:space-x-0">
         <div className="flex gap-2 sm:gap-4 items-center">
-          <div className="flex items-center gap-[2px] sm:gap-2 mr-4">
+          <div className="flex items-center gap-[2px] sm:gap-2">
             <NextLink
               href="https://ordx.market/"
               className="flex items-center justify-start gap-1"
@@ -111,9 +111,9 @@ export const Header = () => {
               <NextImage
                 src="/logo.png"
                 alt="logo"
-                width={52}
-                height={52}
-                className="w-13 h-13 min-w-1 mb-1"
+                width={50}
+                height={50}
+                className="w-auto h-10 sm:h-12 max-w-[50px] max-h-[50px] min-w-0 "
               />
               {/* <p className="font-bold text-xl bg-gradient-to-tr from-[#a816fc] to-[#d84113] bg-clip-text text-transparent hidden md:block"> */}
               <p className="font-bold text-xl text-white hidden md:block">

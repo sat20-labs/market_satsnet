@@ -15,8 +15,8 @@ import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 const CreateLimitOrder = ({ closeModal }: { closeModal: () => void }) => {
   const { t, i18n } = useTranslation(); // Specify the namespace
-  console.log('Current Language:', i18n.language); // Debugging: Check current language
-  console.log('Translation for createPool.title:', t('createPool.title')); // Debugging: Check translation key
+ // console.log('Current Language:', i18n.language); // Debugging: Check current language
+ // console.log('Translation for createPool.title:', t('createPool.title')); // Debugging: Check translation key
 
   const [bol, setBol] = useState(false);
   const [formData, setFormData] = useState({
@@ -98,7 +98,7 @@ const CreateLimitOrder = ({ closeModal }: { closeModal: () => void }) => {
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
       <div className="sticky top-0 text bg-zinc-800/50 border border-zinc-800 z-10 p-4 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-2">🚀 Create Swap</h2>
+        <h2 className="text-xl font-bold mb-2">🚀 Create LimitOrder</h2>
         <button
           className="absolute top-4 right-6 text-zinc-400 hover:text-white"
           onClick={closeModal}
@@ -110,6 +110,9 @@ const CreateLimitOrder = ({ closeModal }: { closeModal: () => void }) => {
       <hr className="mb-6 h-1" />
       <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-800 rounded-lg shadow-lg">
         <form className="flex flex-col gap-4" onSubmit={handleConfirm}>
+            <p className="text-sm text-zinc-400 mt-2">
+              {t('pages.createPool.step2.currentBlockHeight')}: <span className="font-bold text-green-500">{satsnetHeight}</span>
+            </p>
           <div className="flex items-center gap-4">
             <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.protocol.title')}</label>
             <Select onValueChange={(value) => handleInputChange('protocol', value)} value={formData.protocol}>
