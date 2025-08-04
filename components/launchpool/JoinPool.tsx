@@ -29,6 +29,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
     { label: t('pages.joinPool.asset_name'), value: poolData?.assetName.Ticker },
     { label: t('pages.joinPool.asset_protocol'), value: poolData?.assetName.Protocol },
     { label: t('pages.joinPool.binding_sat'), value: poolData?.bindingSat },
+    { label: t('pages.poolDetail.mint_amt_per_sat'), value: poolData?.mintAmtPerSat },
     { label: t('pages.joinPool.contract_type'), value: poolData?.contractType },
     { label: t('pages.joinPool.contract_url'), value: poolData?.contractURL },
     { label: t('pages.joinPool.enable_block'), value: poolData?.enableBlock },
@@ -64,11 +65,11 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   }, [address, poolData?.contractURL, limit]);
 
   useEffect(() => {
-    const bindingSat = Number(poolData?.bindingSat);
-    if (bindingSat > 0) {
+    const mintAmtPerSat = Number(poolData?.mintAmtPerSat);
+    if (mintAmtPerSat > 0) {
       const numAmount = Number(amount);
       if (numAmount > 0) {
-        const cost = Math.floor((numAmount + bindingSat - 1) / bindingSat);
+        const cost = Math.floor((numAmount + mintAmtPerSat - 1) / mintAmtPerSat);
         setSatsCost(cost);
       } else {
         setSatsCost(0);

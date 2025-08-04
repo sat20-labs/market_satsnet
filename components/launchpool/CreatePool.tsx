@@ -108,9 +108,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     const { contractURL, txId } = result;
     if (txId) {
       router.back();
-      // toast.success(`Contract deployed successfully, txid: ${txId}`);
-      // setcontractURL(contractURL);
-      // setStep(3);
     } else {
       toast.error('Contract deployment failed');
     }
