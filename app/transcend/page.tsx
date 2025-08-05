@@ -12,7 +12,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow, 
+  TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CustomPagination } from '@/components/ui/CustomPagination';
@@ -148,10 +148,10 @@ const TranscendPage = () => {
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-  
+
   console.log('adaptedPoolList', satsnetHeight);
   console.log('adaptedPoolList', poolList);
-  
+
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
@@ -173,7 +173,7 @@ const TranscendPage = () => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-  
+
   console.log('filteredPoolList', filteredPoolList);
 
   // 处理分页变化
@@ -206,7 +206,7 @@ const TranscendPage = () => {
           <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
         </div>
       )}
-      
+
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
@@ -236,13 +236,7 @@ const TranscendPage = () => {
                         : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
                     </AvatarFallback>
                   </Avatar>
-                  <Link
-                    href={`/limitOrder/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
-                    className="cursor-pointer text-primary hover:underline"
-                    prefetch={true}
-                  >
-                    {adaptedPool.assetName}
-                  </Link>
+                  {adaptedPool.assetName}
                 </TableCell>
                 <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
                 <TableCell className="px-4 py-2">
