@@ -54,6 +54,10 @@ export const Header = () => {
         href: '/market',
       },
       {
+        label: 'Transcend',
+        href: '/transcend',
+      },
+      {
         label: 'Swap',
         href: '/swap',
       },

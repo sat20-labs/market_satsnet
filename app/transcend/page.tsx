@@ -69,7 +69,7 @@ function adaptPoolData(pool, satsnetHeight) {
   };
 }
 
-const MarketPage = () => {
+const TranscendPage = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
   const { satsnetHeight } = useCommonStore();
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,7 +89,7 @@ const MarketPage = () => {
     queryFn: async () => {
       const deployed = await getDeployedContractInfo();
       const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
-      return contractURLs.filter((c: string) => c.indexOf('swap.tc') > -1);
+      return contractURLs.filter((c: string) => c.indexOf('transcend.tc') > -1);
     },
     gcTime: 0,
     refetchInterval: 60000,
@@ -155,10 +155,6 @@ const MarketPage = () => {
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
-    { key: 'dealPrice', label: t('Price') },
-    { key: 'satsValueInPool', label: t('Sats In Pool') },
-    { key: 'totalDealSats', label: t('Total Deal Sats') },
-    { key: 'totalDealCount', label: t('Total Deal Count') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
     // { key: 'action', label: t('pages.launchpool.action') },
   ];
@@ -191,9 +187,9 @@ const MarketPage = () => {
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2 mr-4">
-          <WalletConnectBus asChild text="Create LimitOrder">
-            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/limitOrder/create')}>
-              Create LimitOrder
+          <WalletConnectBus asChild text="Create Transcend">
+            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/transcend/create')}>
+              Create Transcend
             </Button>
           </WalletConnectBus>
         </div>
@@ -250,10 +246,6 @@ const MarketPage = () => {
                     {statusTextMap[adaptedPool.poolStatus]}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.dealPrice}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.satsValueInPool}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.totalDealSats}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.totalDealCount}</TableCell>
                 <TableCell className="px-4 py-2">
                   {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                 </TableCell>
@@ -277,4 +269,4 @@ const MarketPage = () => {
   );
 };
 
-export default MarketPage;
+export default TranscendPage;
