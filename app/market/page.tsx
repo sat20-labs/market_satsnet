@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import CustomPagination from '@/components/ui/CustomPagination';
+import { CustomPagination } from '@/components/ui/CustomPagination';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/store/common';
@@ -73,7 +73,8 @@ const MarketPage = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
   const { satsnetHeight } = useCommonStore();
   const [currentPage, setCurrentPage] = useState(1);
-  
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const PAGE_SIZES = [10, 20, 50, 100];
   const sortList = useMemo(
     () => [
       { label: t('common.time_1D'), value: 1 },
@@ -184,7 +185,10 @@ const MarketPage = () => {
     setCurrentPage(page);
   };
 
-
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };    
 
   return (
     <div className="p-4 relative">
@@ -268,9 +272,11 @@ const MarketPage = () => {
         <CustomPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={PAGE_SIZE}
           onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSize={pageSize}
+          availablePageSizes={PAGE_SIZES}
+          isLoading={isLoading}
         />
       </div>
     </div>

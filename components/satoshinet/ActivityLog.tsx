@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useTranslation } from 'react-i18next';
 import { Activity, Order, ApiResponse } from './types';
-import { ActivityTable } from './ActivityTable';
+import { ActivityTable } from './ActivityTable';  
 import { CustomPagination } from "@/components/ui/CustomPagination";
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
 import { ActivityTabs } from './ActivityTabs';

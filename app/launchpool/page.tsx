@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import CustomPagination from '@/components/ui/CustomPagination';
+import { CustomPagination } from '@/components/ui/CustomPagination';
 
 import { useTranslation } from 'react-i18next';
 import DistributionList from '@/components/launchpool/DistributionList';
@@ -92,7 +92,8 @@ const LaunchPool = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
   const { satsnetHeight } = useCommonStore();
   const [currentPage, setCurrentPage] = useState(1);
-  
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const PAGE_SIZES = [10, 20, 50, 100];
   const sortList = useMemo(
     () => [
       { label: t('common.time_1D'), value: 1 },
@@ -168,7 +169,7 @@ const LaunchPool = () => {
   }, [poolList, satsnetHeight]);
 
   console.log('poolList', poolList);
-  
+
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
@@ -221,7 +222,10 @@ const LaunchPool = () => {
     setCurrentPage(page);
   };
 
-
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="p-4 relative">
@@ -235,7 +239,7 @@ const LaunchPool = () => {
           </WalletConnectBus>
         </div>
       </div>
-      
+
       {/* 加载状态 */}
       {isLoading && (
         <div className="flex justify-center items-center py-8">
@@ -243,7 +247,7 @@ const LaunchPool = () => {
           <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
         </div>
       )}
-      
+
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
@@ -328,9 +332,11 @@ const LaunchPool = () => {
         <CustomPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={PAGE_SIZE}
+          pageSize={pageSize}
           onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          availablePageSizes={PAGE_SIZES}
+          isLoading={isLoading}
         />
       </div>
 

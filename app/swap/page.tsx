@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import CustomPagination from '@/components/ui/CustomPagination';
+import { CustomPagination } from '@/components/ui/CustomPagination';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useCommonStore } from '@/store/common';
@@ -68,7 +68,8 @@ const Swap = () => {
   const { t } = useTranslation(); // Specify the namespace 
   const { satsnetHeight } = useCommonStore();
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const PAGE_SIZES = [10, 20, 50, 100];
   // 获取所有合约URL列表
   const { data: contractURLsData } = useQuery({
     queryKey: ['ammContractURLs'],
@@ -164,7 +165,10 @@ const Swap = () => {
     setCurrentPage(page);
   };
 
-
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="p-4 relative">
@@ -252,9 +256,11 @@ const Swap = () => {
         <CustomPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={PAGE_SIZE}
           onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSize={pageSize}
+          availablePageSizes={PAGE_SIZES}
+          isLoading={isLoading}
         />
       </div>
     </div>
