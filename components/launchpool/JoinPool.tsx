@@ -86,14 +86,8 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
       action: 'mint',
       param: amount.toString()
     };
-    const result = await window.sat20.invokeContract_SatsNet(
-      poolData.contractURL, JSON.stringify(params), btcFeeRate.value.toString());
-    if (result.txId) {
-      toast.success(t('pages.joinPool.success', { amount, txId: result.txId }));
-      closeModal();
-    } else {
-      toast.error(t('pages.joinPool.failure'));
-    }
+    await window.sat20.invokeContract_SatsNet(poolData.contractURL, JSON.stringify(params), btcFeeRate.value.toString());
+    closeModal();
   };
 
   return (

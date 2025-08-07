@@ -272,7 +272,7 @@ const Swap = ({
       };
 
       if (swapType === 'sats-to-asset') {
-        return await window.sat20.invokeContractV2_SatsNet(
+        await window.sat20.invokeContractV2_SatsNet(
           contractUrl,
           JSON.stringify(params),
           "::",
@@ -293,7 +293,7 @@ const Swap = ({
         );
       } else {
         // 用资产换聪
-        return await window.sat20.invokeContractV2_SatsNet(
+        await window.sat20.invokeContractV2_SatsNet(
           contractUrl,
           JSON.stringify(params),
           asset,
@@ -313,18 +313,17 @@ const Swap = ({
           }
         );
       }
+      
+      // invokeContractV2_SatsNet 没有返回值，提交就当作成功
+      return { success: true };
     },
     onSuccess: async (result) => {
-      const { txId } = result;
-      if (txId) {
-        toast.success(`Swap successful, txid: ${txId}`);
-        setFromAmount("");
-        setToAmount("");
-        setSlippage("0");
-        onSwapSuccess?.();
-      } else {
-        toast.error("Swap failed");
-      }
+      // invokeContractV2_SatsNet 没有返回值，提交就当作成功
+      // toast.success("Swap submitted successfully");
+      setFromAmount("");
+      setToAmount("");
+      setSlippage("0");
+      onSwapSuccess?.();
     },
     onError: (error: Error) => {
       toast.error(error.message || "Swap failed");

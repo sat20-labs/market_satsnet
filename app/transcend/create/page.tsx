@@ -14,9 +14,12 @@ import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useRouter } from 'next/navigation';
 
 
+
 const CreateTranscend = () => {
   const { t, i18n } = useTranslation(); // Specify the namespace
-  const router = useRouter();
+  // console.log('Current Language:', i18n.language); // Debugging: Check current language
+  // console.log('Translation for createPool.title:', t('createPool.title')); // Debugging: Check translation key
+
   const [bol, setBol] = useState(false);
   const [formData, setFormData] = useState({
     protocol: 'ordx',
@@ -27,7 +30,7 @@ const CreateTranscend = () => {
   const { address } = useReactWalletStore();
   const { network, btcFeeRate } = useCommonStore();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-
+  const router = useRouter();
   const { data: summaryData } = useQuery({
     queryKey: ['summary', address, network],
     queryFn: () => clientApi.getAddressSummary(address),
@@ -69,17 +72,32 @@ const CreateTranscend = () => {
     };
     try {
       const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
-      console.log('result:', result);
-      const { txId } = result;
-      if (txId) {
-        toast.success(`Contract deployed successfully, txid: ${txId}`);
-      } else {
-        toast.error('Contract deployment failed');
-      }
     } catch (error) {
       toast.error('Contract deployment failed');
     }
 
+  }
+
+  // 新增：创建白聪的处理函数
+  async function handleCreateWhiteSats(): Promise<void> {
+    const assetName = {
+      Protocol: '',
+      Type: '',
+      Ticker: '',
+    };
+    const params = {
+      contractType: contractType,
+      startBlock: Number(formData.startBlock),
+      endBlock: Number(formData.endBlock),
+      assetName,
+    };
+    try {
+      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
+      console.log('result:', result);
+      router.back();
+    } catch (error) {
+      toast.error('白聪创建失败');
+    }
   }
 
   const isFormComplete = !!(formData.protocol && formData.ticker);
@@ -97,7 +115,7 @@ const CreateTranscend = () => {
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
       <div className="sticky top-0 text bg-zinc-800/50 border border-zinc-800 z-10 p-4 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-2">🚀 Create Transcend</h2>
+        <h2 className="text-xl font-bold mb-2">🚀 Create LimitOrder</h2>
         <button
           className="absolute top-4 right-6 text-zinc-400 hover:text-white"
           onClick={() => router.back()}
@@ -109,9 +127,9 @@ const CreateTranscend = () => {
       <hr className="mb-6 h-1" />
       <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-800 rounded-lg shadow-lg">
         <form className="flex flex-col gap-4" onSubmit={handleConfirm}>
-            <p className="text-sm text-zinc-400 mt-2">
-              {t('pages.createPool.step2.currentBlockHeight')}: <span className="font-bold text-green-500">{satsnetHeight}</span>
-            </p>
+          <p className="text-sm text-zinc-400 mt-2">
+            {t('pages.createPool.step2.currentBlockHeight')}: <span className="font-bold text-green-500">{satsnetHeight}</span>
+          </p>
           <div className="flex items-center gap-4">
             <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.protocol.title')}</label>
             <Select onValueChange={(value) => handleInputChange('protocol', value)} value={formData.protocol}>
@@ -145,28 +163,24 @@ const CreateTranscend = () => {
               {t('pages.createPool.runesTickerNote')}
             </p>
           )}
-          <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.startBlock')}</label>
-          <Input
-            placeholder={t('pages.createPool.startBlock')}
-            type="number"
-            value={formData.startBlock}
-            onChange={(e) => handleInputChange('startBlock', e.target.value)}
-          />
-          <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.endBlock')}</label>
-          <Input
-            placeholder={t('pages.createPool.endBlock')}
-            type="number"
-            value={formData.endBlock}
-            onChange={(e) => handleInputChange('endBlock', e.target.value)}
-          />
-          <Button
-            className="w-40 sm:w-48 btn-gradient mt-4"
-            variant="outline"
-            type="submit"
-            disabled={!isFormComplete}
-          >
-            {t('pages.createPool.submitTemplate')}
-          </Button>
+          <div className="flex gap-4 mt-4">
+            <Button
+              className="w-40 sm:w-48 btn-gradient"
+              variant="outline"
+              type="submit"
+              disabled={!isFormComplete}
+            >
+              {t('pages.createPool.submitTemplate')}
+            </Button>
+            <Button
+              className="w-40 sm:w-48 btn-gradient"
+              variant="outline"
+              type="button"
+              onClick={handleCreateWhiteSats}
+            >
+              创建白聪
+            </Button>
+          </div>
         </form>
       </div>
     </div>

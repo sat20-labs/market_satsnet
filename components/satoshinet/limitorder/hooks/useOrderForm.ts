@@ -213,7 +213,7 @@ export const useOrderForm = ({
     };
 
     try {
-      const result = await window.sat20.invokeContractV2_SatsNet(
+      await window.sat20.invokeContractV2_SatsNet(
         contractURL,
         JSON.stringify(params),
         _asset,
@@ -231,20 +231,16 @@ export const useOrderForm = ({
           networkFee: 10,
         }
       );
-      const { txId } = result;
-      if (txId) {
-        toast.success(t('common.order_placed_successfully', { txId }));
-        updateState({ isPlacingOrder: false, price: "", quantity: "" });
-        if (onOrderSuccess) onOrderSuccess();
-        return;
-      } else {
-        toast.error(t('common.order_placement_failed'));
-      }
+      
+      // invokeContractV2_SatsNet 没有返回值，提交就当作成功
+      // toast.success(t('common.order_placed_successfully'));
+      updateState({ isPlacingOrder: false, price: "", quantity: "" });
+      if (onOrderSuccess) onOrderSuccess();
     } catch (error) {
       console.log('error', error);
       toast.error(t('common.order_placement_failed'));
+      updateState({ isPlacingOrder: false, price: "", quantity: "" });
     }
-    updateState({ isPlacingOrder: false, price: "", quantity: "" });
   }, [
     state.price,
     state.quantity,
