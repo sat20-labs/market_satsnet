@@ -12,7 +12,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow, 
+  TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CustomPagination } from '@/components/ui/CustomPagination';
@@ -148,10 +148,10 @@ const TranscendPage = () => {
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-  
+
   console.log('adaptedPoolList', satsnetHeight);
   console.log('adaptedPoolList', poolList);
-  
+
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
@@ -173,7 +173,7 @@ const TranscendPage = () => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-  
+
   console.log('filteredPoolList', filteredPoolList);
 
   // 处理分页变化
@@ -193,7 +193,7 @@ const TranscendPage = () => {
         <div className="flex items-center gap-2 mr-4">
           <WalletConnectBus asChild text="Create Transcend">
             <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/transcend/create')}>
-              Create Transcend
+              创建BTC穿越合约
             </Button>
           </WalletConnectBus>
         </div>
@@ -206,7 +206,7 @@ const TranscendPage = () => {
           <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
         </div>
       )}
-      
+
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
