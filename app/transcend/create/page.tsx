@@ -115,7 +115,7 @@ const CreateTranscend = () => {
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
       <div className="sticky top-0 text bg-zinc-800/50 border border-zinc-800 z-10 p-4 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-2">🚀 Create LimitOrder</h2>
+        <h2 className="text-xl font-bold mb-2">🚀 创建BTC穿越合约</h2>
         <button
           className="absolute top-4 right-6 text-zinc-400 hover:text-white"
           onClick={() => router.back()}
