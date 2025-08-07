@@ -125,7 +125,26 @@ const CreateTranscend = () => {
       </div>
 
       <hr className="mb-6 h-1" />
+      
+      {/* 创建白聪的独立框 */}
+      <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-800 rounded-lg shadow-lg mb-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-300">⚡ 快速创建白聪</h3>
+        <p className="text-sm text-zinc-400 mb-4">
+          无需选择协议和代币，直接创建白聪合约
+        </p>
+        <Button
+          className="w-40 sm:w-48 btn-gradient"
+          variant="outline"
+          type="button"
+          onClick={handleCreateWhiteSats}
+        >
+          创建白聪
+        </Button>
+      </div>
+
+      {/* 原有的表单框 */}
       <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-800 rounded-lg shadow-lg">
+        <h3 className="text-lg font-semibold mb-4 text-gray-300">📋 创建指定代币合约</h3>
         <form className="flex flex-col gap-4" onSubmit={handleConfirm}>
           <p className="text-sm text-zinc-400 mt-2">
             {t('pages.createPool.step2.currentBlockHeight')}: <span className="font-bold text-green-500">{satsnetHeight}</span>
@@ -163,24 +182,14 @@ const CreateTranscend = () => {
               {t('pages.createPool.runesTickerNote')}
             </p>
           )}
-          <div className="flex gap-4 mt-4">
-            <Button
-              className="w-40 sm:w-48 btn-gradient"
-              variant="outline"
-              type="submit"
-              disabled={!isFormComplete}
-            >
-              {t('pages.createPool.submitTemplate')}
-            </Button>
-            <Button
-              className="w-40 sm:w-48 btn-gradient"
-              variant="outline"
-              type="button"
-              onClick={handleCreateWhiteSats}
-            >
-              创建白聪
-            </Button>
-          </div>
+          <Button
+            className="w-40 sm:w-48 btn-gradient mt-4"
+            variant="outline"
+            type="submit"
+            disabled={!isFormComplete}
+          >
+            {t('pages.createPool.submitTemplate')}
+          </Button>
         </form>
       </div>
     </div>

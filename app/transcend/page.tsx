@@ -29,7 +29,7 @@ function adaptPoolData(pool, satsnetHeight) {
   // 适配 contractStatus 结构
   console.log('pool', pool);
   const assetNameObj = pool.Contract.assetName || {};
-  const ticker = assetNameObj.Ticker || 'plain utxo';
+  const ticker = assetNameObj.Ticker || 'BTC';
   const protocol = assetNameObj.Protocol || '-';
   // 状态适配
   let poolStatus = PoolStatus.NOT_STARTED;
