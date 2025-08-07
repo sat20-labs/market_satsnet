@@ -25,6 +25,21 @@ import Link from 'next/link';
 // 每页显示的数量
 const PAGE_SIZE = 12;
 
+/**
+ * 处理transcend详情页面的链接生成
+ * @param assetName - 资产名称对象，包含Protocol和Ticker
+ * @returns 格式化后的详情页面链接
+ */
+const generateTranscendDetailHref = (assetName: { Protocol?: string; Ticker?: string }): string => {
+  if (!assetName?.Protocol || !assetName?.Ticker) {
+    return '/transcend/detail?asset=::';
+  }
+  
+  // 构建标准的资产标识符格式: Protocol:f:Ticker
+  const assetIdentifier = `${assetName.Protocol}:f:${assetName.Ticker}`;
+  return `/transcend/detail?asset=${encodeURIComponent(assetIdentifier)}`;
+};
+
 function adaptPoolData(pool, satsnetHeight) {
   // 适配 contractStatus 结构
   console.log('pool', pool);
@@ -190,13 +205,13 @@ const TranscendPage = () => {
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
-        <div className="flex items-center gap-2 mr-4">
-          <WalletConnectBus asChild text="Create Transcend">
-            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/transcend/create')}>
-              创建BTC穿越合约
-            </Button>
-          </WalletConnectBus>
-        </div>
+                  <div className="flex items-center gap-2 mr-4">
+            <WalletConnectBus asChild text="Create Transcend">
+              <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/transcend/create')}>
+                创建BTC穿越合约
+              </Button>
+            </WalletConnectBus>
+          </div>
       </div>
 
       {/* 加载状态 */}
@@ -237,7 +252,7 @@ const TranscendPage = () => {
                     </AvatarFallback>
                   </Avatar>
                   <Link
-                    href={`/transcend/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                    href={generateTranscendDetailHref(adaptedPool.Contract.assetName)}
                     className="cursor-pointer text-primary hover:underline"
                     prefetch={true}
                   >
