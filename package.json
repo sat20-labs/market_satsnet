@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.1.0",
-    "@antv/g2": "^5.3.5",
+    "@antv/g2": "^5.2.12",
     "@cmdcode/crypto-tools": "^2.8.0",
     "@iconify/react": "^4.1.1",
     "@nextui-org/react": "^2.6.11",
@@ -72,7 +72,7 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
-    "@antv/g-canvas": "^2.0.48",
+    "@antv/g-canvas": "^2.0.40",
     "@antv/g-lite": "^2.2.16",
     "@tailwindcss/postcss": "^4.1.11",
     "husky": "^9.1.7",
