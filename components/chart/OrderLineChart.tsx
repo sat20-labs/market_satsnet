@@ -8,6 +8,8 @@ interface Props {
   data: any;
 }
 export const OrderLineChart = ({ data = [] }: Props) => {
+  console.log('data', data);
+  
   const container = useRef(null);
   const chart = useRef<any>(null);
 
