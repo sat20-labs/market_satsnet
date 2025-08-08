@@ -29,7 +29,7 @@ interface TickerInfo {
 export const useTranscendDetailData = (asset: string) => {
   const { network } = useCommonStore();
 
-  const ticker = asset.split(':')?.[2];
+  const ticker = asset.split(':')?.[2] || 'BTC';
 
   const { address } = useReactWalletStore();
   const tickerQuery = useQuery<any>({
