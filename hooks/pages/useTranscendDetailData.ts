@@ -28,10 +28,8 @@ interface TickerInfo {
 
 export const useTranscendDetailData = (asset: string) => {
   const { network } = useCommonStore();
-  const queryClient = useQueryClient();
 
-  const ticker = asset.split(':')[2];
-  console.log('transcend ticker', ticker);
+  const ticker = asset.split(':')?.[2];
 
   const { address } = useReactWalletStore();
   const tickerQuery = useQuery<any>({
@@ -50,12 +48,12 @@ export const useTranscendDetailData = (asset: string) => {
   const contractUrlQuery = useQuery({
     queryKey: ['contractUrl', network],
     queryFn: () => contractService.getDeployedContractInfo(),
-    enabled: !!ticker,
+    enabled: !!asset,
   });
   const contractUrl = useMemo(() => {
-    return contractUrlQuery.data?.filter((url: string) => url.indexOf(`${ticker}_transcend.tc`) > -1)[0];
-  }, [contractUrlQuery.data, ticker]);
-
+    return contractUrlQuery.data?.filter((url: string) => url.indexOf(`${asset}_transcend.tc`) > -1)[0];
+  }, [contractUrlQuery.data, asset]);
+  console.log('contractUrl', contractUrl);
   const { data: transcendStatus, isPending: isTranscendStatusPending, isLoading: isTranscendStatusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ["transcend", 'status', contractUrl, network],
     queryFn: () => contractService.getContractStatus(contractUrl),

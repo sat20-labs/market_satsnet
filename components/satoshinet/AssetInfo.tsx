@@ -12,7 +12,7 @@ interface AssetInfoProps {
 
 export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) => {
   const { t } = useTranslation();
-  console.log('holders', holders);
+  console.log('depthData', depthData);
   let mintProgress = tickerInfo?.totalMinted > 0 && tickerInfo?.maxSupply > 0
     ? `${Math.floor((tickerInfo.totalMinted / tickerInfo.maxSupply) * 100)}%`
     : '100%';
