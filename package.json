@@ -10,6 +10,9 @@
     "lint": "next lint",
     "prepare": "husky || true",
     "pre-commit": "lint-staged"
+
+
+    
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.1.0",

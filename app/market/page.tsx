@@ -32,6 +32,7 @@ function adaptPoolData(pool, satsnetHeight) {
   const ticker = assetNameObj.Ticker || '-';
   const protocol = assetNameObj.Protocol || '-';
   // 状态适配
+  
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
   const enableBlock = Number(pool.enableBlock);
@@ -71,7 +72,7 @@ function adaptPoolData(pool, satsnetHeight) {
 
 const MarketPage = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
-  const { satsnetHeight } = useCommonStore();
+  const { satsnetHeight, network } = useCommonStore();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const PAGE_SIZES = [10, 20, 50, 100];
@@ -86,7 +87,7 @@ const MarketPage = () => {
 
   // 获取所有合约URL列表
   const { data: contractURLsData } = useQuery({
-    queryKey: ['swapContractURLs'],
+    queryKey: ['swapContractURLs', network],
     queryFn: async () => {
       const deployed = await getDeployedContractInfo();
       const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
