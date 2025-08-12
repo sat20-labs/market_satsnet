@@ -31,12 +31,17 @@ const CreateTranscend = () => {
   const { network, btcFeeRate } = useCommonStore();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const router = useRouter();
-  const { data: summaryData } = useQuery({
+  const { data: summaryData } = useQuery<any>({
     queryKey: ['summary', address, network],
-    queryFn: () => clientApi.getAddressSummary(address),
+    queryFn: async  () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_ORDX_HOST}/btc/${network === 'testnet' ? 'testnet' : 'mainnet'}/v3/address/summary/${address}`);
+      const data = await res.json();
+      return data;
+    },
     refetchInterval: 3000,
     enabled: !!address,
   });
+  console.log('summaryData', summaryData);
   const assetList = summaryData?.data || [];
   console.log('summaryQuery data', assetList);
 
@@ -104,6 +109,7 @@ const CreateTranscend = () => {
 
   // 在组件内部 return 之前，插入过滤ticker的逻辑
   // 根据protocol过滤assetList，且Type为'f'且Ticker非空
+  console.log('assetList', assetList);
   const filteredTickerOptions = assetList.filter(
     (item) =>
       item.Name &&
