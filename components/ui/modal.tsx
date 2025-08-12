@@ -14,9 +14,9 @@ export const Modal = ({ children, onClose }: ModalProps) => {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <div className="bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg p-6 w-full max-w-md">
         <div className="flex justify-end">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} className="text-zinc-400 hover:text-white">
             ✕
           </Button>
         </div>

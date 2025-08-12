@@ -272,7 +272,14 @@
     "bindingSatError": "BindingSat must be greater than 0 and a multiple of 10",
     "mintAmtPerSat": "Mint Amount Per Sat",
     "mintAmtPerSatTip": "The amount of asset distributed per satoshi. Usually 10-1000 times smaller than the binding sat. For example, if binding sat is 1000, mint amount per sat is typically 1-100.",
-    "mintAmtPerSatSuggest": "Suggested: {{min}} ~ {{max}} (based on binding sat)"
+    "mintAmtPerSatSuggest": "Suggested: {{min}} ~ {{max}} (based on binding sat)",
+    "largePoolWarning": {
+      "title": "Large Pool Warning",
+      "message": "Your launch pool exceeds 100 BTC, and the current success rate is low. Please confirm if you wish to proceed.",
+      "description": "You can click \"Back\" to adjust the Mint Amount Per Sat or Max Supply parameters to reduce the total pool size.",
+      "confirm": "Confirm Continue",
+      "back": "Back to Adjust"
+    }
   },
   "joinPool": {
     "title": "Join Pool",
