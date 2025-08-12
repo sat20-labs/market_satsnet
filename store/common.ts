@@ -47,7 +47,7 @@ export const useCommonStore = create<CommonState>()(
           type: 'custom',
         },
         chain: 'SatoshiNet',
-        network: 'testnet', // 默认值改为 mainnet
+        network: 'mainnet', // 默认值改为 mainnet
         btcHeight: 0,
         satsnetHeight: 0,
         runtimeEnv: 'dev',
