@@ -23,7 +23,7 @@ export function AssetTransfersPanel({ asset, onTotalChange }: AssetTransfersPane
     queryKey: ["ticker", "holders", asset, network, page, pageSize],
     queryFn: () => clientApi.getTickerHolders(asset, page, pageSize),
     enabled: !!asset,
-    refetchInterval: 60000,
+    refetchInterval: 60000, 
     refetchOnWindowFocus: false,
   });
    console.log('holdersData', holdersData);

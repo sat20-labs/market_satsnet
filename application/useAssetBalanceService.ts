@@ -12,12 +12,11 @@ async function getAssetAmount_SatsNet(address: string, assetName: string): Promi
 export function useAssetBalance(address: string, assetName: string) {
   const setBalance = useAssetBalanceStore((s) => s.setBalance);
   const balance = useAssetBalanceStore((s) => s.getBalance(assetName));
-  const queryClient = useQueryClient();
   const query = useQuery<AssetBalance, Error>({
     queryKey: ['assetBalance', address, assetName],
     queryFn: () => getAssetAmount_SatsNet(address, assetName),
     enabled: !!address && !!assetName,
-    refetchInterval: 3000,
+    refetchInterval: 20000,
     refetchIntervalInBackground: false,
   });
   useEffect(() => {

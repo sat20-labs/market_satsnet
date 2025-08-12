@@ -57,7 +57,7 @@ function OrderPageContent() {
     const result = await window.sat20.invokeContract_SatsNet(
       contractUrl,
       JSON.stringify(params),
-      btcFeeRate.toString(),
+      btcFeeRate.value.toString(),
     );
     if (result.txId) {
       setTimeout(() => {

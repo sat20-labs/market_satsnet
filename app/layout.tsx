@@ -50,7 +50,7 @@ export default function RootLayout({
             <footer id="footer">
               <ul className="flex justify-center h-14 gap-4 items-center border-t border-zinc-700/50 text-gray-500">
                 <li>
-                  <a href="https://x.com/Sat20Nexus/" target="_blank" rel="noopener noreferrer">  
+                  <a href="https://x.com/SATSWAPMarket/" target="_blank" rel="noopener noreferrer">  
                     <Avatar>
                       <AvatarFallback>
                         {/* <img src="/twitter.png" alt="sat20 twitter" className="w-full h-full object-cover" /> */}

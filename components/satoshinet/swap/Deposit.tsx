@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useQueryKey } from '@/lib/hooks/useQueryKey';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
+import { useCommonStore } from '@/store';
 
 interface DepositProps {
   asset: string;
@@ -24,6 +25,7 @@ interface DepositParams {
 
 const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo }) => {
   const { t } = useTranslation();
+  const { btcFeeRate } = useCommonStore();
   const [amount, setAmount] = useState('');
   const { address } = useReactWalletStore();
   const queryClient = useQueryClient();
@@ -57,14 +59,13 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
           amt: amount
         })
       };
-      const btcFeeRate = 1;
       
       const result = await window.sat20.invokeContractV2(
         contractUrl,
         JSON.stringify(params),
         asset,
         amount,
-        btcFeeRate.toString(),
+        btcFeeRate.value.toString(),
         {
           action: "deposit",
           orderType: 6,

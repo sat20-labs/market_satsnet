@@ -30,6 +30,7 @@ export const useWalletStore = create<WalletState>()(
             return;
           }
           const amountResult = await window.sat20.getAssetAmount_SatsNet(address, '::')
+          console.log('amountResult', amountResult)
           set({ balance: {
             availableAmt: amountResult.availableAmt,
             lockedAmt: amountResult.lockedAmt

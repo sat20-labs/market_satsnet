@@ -117,12 +117,12 @@ export const useCommonStore = create<CommonState>()(
       }),
       {
         name: 'common-store',
-        partialize: (state) =>
-          Object.fromEntries(
-            Object.entries(state).filter(([key]) =>
-              ['signature'].includes(key),
-            ),
-          ),
+        // partialize: (state) =>
+        //   Object.fromEntries(
+        //     Object.entries(state).filter(([key]) =>
+        //       ['signature'].includes(key),
+        //     ),
+        //   ),
       },
     ),
   ),

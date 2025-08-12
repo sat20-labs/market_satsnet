@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CustomPagination } from '@/components/ui/CustomPagination';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useCommonStore } from '@/store/common';
@@ -20,6 +21,9 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { BtcPrice } from '@/components/BtcPrice';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
+
+// 每页显示的数量
+const PAGE_SIZE = 12;
 
 function adaptPoolData(pool, satsnetHeight) {
   const assetNameObj = pool.Contract.assetName || {};
@@ -62,38 +66,75 @@ function adaptPoolData(pool, satsnetHeight) {
 
 const Swap = () => {
   const { t } = useTranslation(); // Specify the namespace 
+  const { satsnetHeight, network } = useCommonStore();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const PAGE_SIZES = [10, 20, 50, 100];
+  // 获取所有合约URL列表
+  const { data: contractURLsData } = useQuery({
+    queryKey: ['ammContractURLs', network],
+    queryFn: async () => {
+      const deployed = await getDeployedContractInfo();
+      const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
+      return contractURLs.filter((c: string) => c.indexOf('amm.tc') > -1);
+    },
+    gcTime: 0,
+    refetchInterval: 60000,
+  });
 
-  const { satsnetHeight } = useCommonStore();
+  // 分页获取合约状态
+  const getSwapList = async ({ pageParam = 1 }) => {
+    if (!contractURLsData || contractURLsData.length === 0) {
+      return { pools: [], totalCount: 0 };
+    }
 
-  const getSwapList = async () => {
-    const deployed = await getDeployedContractInfo();
-    const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
-    const list = contractURLs.filter((c: string) => c.indexOf('amm.tc') > -1);
+    const startIndex = (pageParam - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    const pageURLs = contractURLsData.slice(startIndex, endIndex);
+
+    // 并发请求当前页的合约状态
     const statusList = await Promise.all(
-      list.map(async (item: string) => {
-        const { status } = await getContractStatus(item);
-
-        if (status) {
-          return {
-            ...JSON.parse(status),
-            contractURL: item,
-          };
+      pageURLs.map(async (item: string) => {
+        try {
+          const { status } = await getContractStatus(item);
+          if (status) {
+            return {
+              ...JSON.parse(status),
+              contractURL: item,
+            };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Failed to get contract status for ${item}:`, error);
+          return null;
         }
-        return null;
       })
     );
-    return statusList.filter(Boolean);
+
+    const validPools = statusList.filter(Boolean);
+    return {
+      pools: validPools,
+      totalCount: contractURLsData.length,
+      nextPage: endIndex < contractURLsData.length ? pageParam + 1 : undefined,
+    };
   };
 
-  const { data: poolList = [] } = useQuery({
-    queryKey: ['swapList'],
-    queryFn: getSwapList,
+  const { data: poolListData, isLoading } = useQuery({
+    queryKey: ['swapList', currentPage],
+    queryFn: () => getSwapList({ pageParam: currentPage }),
+    enabled: !!contractURLsData,
     gcTime: 0,
+    refetchInterval: 60000,
   });
+
+  const poolList = poolListData?.pools || [];
+  const totalCount = poolListData?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
+  
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
@@ -119,6 +160,16 @@ const Swap = () => {
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
 
+  // 处理分页变化
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="p-4 relative">
       <div className="mb-2 px-2 flex items-center">
@@ -134,6 +185,15 @@ const Swap = () => {
           </WalletConnectBus> */}
         </div>
       </div>
+      
+      {/* 加载状态 */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
+        </div>
+      )}
+      
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
@@ -189,6 +249,19 @@ const Swap = () => {
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      {/* 分页组件 */}
+      <div className="mt-6">
+        <CustomPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSize={pageSize}
+          availablePageSizes={PAGE_SIZES}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

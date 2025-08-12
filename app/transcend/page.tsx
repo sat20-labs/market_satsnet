@@ -25,14 +25,28 @@ import Link from 'next/link';
 // 每页显示的数量
 const PAGE_SIZE = 12;
 
+/**
+ * 处理transcend详情页面的链接生成
+ * @param assetName - 资产名称对象，包含Protocol和Ticker
+ * @returns 格式化后的详情页面链接
+ */
+const generateTranscendDetailHref = (assetName: { Protocol?: string; Ticker?: string }): string => {
+  if (!assetName?.Protocol || !assetName?.Ticker) {
+    return '/transcend/detail?asset=::';
+  }
+  
+  // 构建标准的资产标识符格式: Protocol:f:Ticker
+  const assetIdentifier = `${assetName.Protocol}:f:${assetName.Ticker}`;
+  return `/transcend/detail?asset=${encodeURIComponent(assetIdentifier)}`;
+};
+
 function adaptPoolData(pool, satsnetHeight) {
   // 适配 contractStatus 结构
   console.log('pool', pool);
   const assetNameObj = pool.Contract.assetName || {};
-  const ticker = assetNameObj.Ticker || '-';
+  const ticker = assetNameObj.Ticker || 'BTC';
   const protocol = assetNameObj.Protocol || '-';
   // 状态适配
-  
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
   const enableBlock = Number(pool.enableBlock);
@@ -70,7 +84,7 @@ function adaptPoolData(pool, satsnetHeight) {
   };
 }
 
-const MarketPage = () => {
+const TranscendPage = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
   const { satsnetHeight, network } = useCommonStore();
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,7 +105,7 @@ const MarketPage = () => {
     queryFn: async () => {
       const deployed = await getDeployedContractInfo();
       const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
-      return contractURLs.filter((c: string) => c.indexOf('swap.tc') > -1);
+      return contractURLs.filter((c: string) => c.indexOf('transcend.tc') > -1);
     },
     gcTime: 0,
     refetchInterval: 60000,
@@ -149,18 +163,14 @@ const MarketPage = () => {
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-  
+
   console.log('adaptedPoolList', satsnetHeight);
   console.log('adaptedPoolList', poolList);
-  
+
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
-    { key: 'dealPrice', label: t('Price') },
-    { key: 'satsValueInPool', label: t('Sats In Pool') },
-    { key: 'totalDealSats', label: t('Total Deal Sats') },
-    { key: 'totalDealCount', label: t('Total Deal Count') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
     // { key: 'action', label: t('pages.launchpool.action') },
   ];
@@ -178,7 +188,7 @@ const MarketPage = () => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-  
+
   console.log('filteredPoolList', filteredPoolList);
 
   // 处理分页变化
@@ -189,19 +199,19 @@ const MarketPage = () => {
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
     setCurrentPage(1);
-  };    
+  };
 
   return (
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
-        <div className="flex items-center gap-2 mr-4">
-          <WalletConnectBus asChild text="Create LimitOrder">
-            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/limitOrder/create')}>
-              Create LimitOrder
-            </Button>
-          </WalletConnectBus>
-        </div>
+                  <div className="flex items-center gap-2 mr-4">
+            <WalletConnectBus asChild text="Create Transcend">
+              <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/transcend/create')}>
+                创建BTC穿越合约
+              </Button>
+            </WalletConnectBus>
+          </div>
       </div>
 
       {/* 加载状态 */}
@@ -211,7 +221,7 @@ const MarketPage = () => {
           <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
         </div>
       )}
-      
+
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
@@ -242,7 +252,7 @@ const MarketPage = () => {
                     </AvatarFallback>
                   </Avatar>
                   <Link
-                    href={`/limitOrder/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                    href={generateTranscendDetailHref(adaptedPool.Contract.assetName)}
                     className="cursor-pointer text-primary hover:underline"
                     prefetch={true}
                   >
@@ -255,10 +265,6 @@ const MarketPage = () => {
                     {statusTextMap[adaptedPool.poolStatus]}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.dealPrice}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.satsValueInPool}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.totalDealSats}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.totalDealCount}</TableCell>
                 <TableCell className="px-4 py-2">
                   {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                 </TableCell>
@@ -284,4 +290,4 @@ const MarketPage = () => {
   );
 };
 
-export default MarketPage;
+export default TranscendPage;

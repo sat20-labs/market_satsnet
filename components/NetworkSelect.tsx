@@ -2,14 +2,19 @@
 
 import { useState, useRef } from 'react';
 import { useCommonStore } from '@/store';
-import type { Network } from '@/store'; 
+import type { Network } from '@/store';
 import { Icon } from '@iconify/react'; // 引入 Iconify 图标
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+
 
 export const NetworkSelect = () => {
   const { network, setNetwork } = useCommonStore(); // 假设 store 中有 network 和 setNetwork
   const [isOpen, setIsOpen] = useState(false);
   const closeTimeout = useRef<NodeJS.Timeout | null>(null); // 用于存储关闭菜单的定时器
-
+  const {
+    connected,
+    disconnect,
+  } = useReactWalletStore((state) => state);
   const handleMouseEnter = () => {
     if (window.innerWidth > 768) {
       if (closeTimeout.current) {
@@ -36,8 +41,11 @@ export const NetworkSelect = () => {
   };
 
   const handleSelectionChange = (value: Network) => {
-      setNetwork(value); // 更新网络的值
-      setIsOpen(false); // 选择后关闭菜单
+    setNetwork(value); // 更新网络的值
+    setIsOpen(false); // 选择后关闭菜单
+    if (connected) {
+      disconnect();
+    }
   };
 
   return (

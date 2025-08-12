@@ -25,7 +25,8 @@ export const ChartModule = ({
   isRefreshing = false
 }: ChartModuleProps) => {
   const [type, setType] = useState('24h');
-
+  console.log('analyticsData', analyticsData);
+  
   const dataSource = useMemo(() => {
     if (!analyticsData) return [];
     const items_24hours = analyticsData?.items_24hours?.filter(Boolean) || [];
@@ -82,6 +83,8 @@ export const ChartModule = ({
         volume
       });
     }
+    console.log('lineArr', lineArr);
+    
     return lineArr;
   }, [dataSource, type]);
 

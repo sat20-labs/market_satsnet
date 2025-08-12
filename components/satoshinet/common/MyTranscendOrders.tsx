@@ -4,21 +4,17 @@ import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { useTranslation } from "react-i18next";
 import { contractService } from "@/domain/services/contract";
 import { Chain } from "@/types";
-import HistoryTable from "./HistoryTable";
+import HistorySwapTable from "./HistorySwapTable";
 import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { useCommonStore } from "@/store/common";
 
-interface MyOrdersProps {
+interface MyTranscendOrdersProps {
   contractURL: string;
-  asset: string;
-  type: 'swap' | 'trade';
+  type: 'transcend' | 'trade';
+  ticker: string; // 添加 ticker 属性
 }
 
-export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
+export default function MyTranscendOrders({ contractURL, type, ticker }: MyTranscendOrdersProps) {
   const pageSize = 20;
-  const { btcFeeRate } = useCommonStore((state) => state);
   const { t } = useTranslation();
   const { address } = useReactWalletStore();
 
@@ -41,7 +37,7 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
     isLoading,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['myOrders', type, contractURL, address],
+    queryKey: ['myTranscendOrders', type, contractURL, address],
     queryFn: ({ pageParam = 0 }) => contractService.getUserHistoryInContract(contractURL, address, pageParam * pageSize, pageSize),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.data.length || lastPage.data.length < pageSize) return undefined;
@@ -52,46 +48,23 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
     refetchIntervalInBackground: false,
     enabled: !!contractURL && !!address,
   });
-  const cancelOrder = async () => {
-    const params = {
-      action: 'refund',
-    };
 
-    const result = await window.sat20.invokeContract_SatsNet(
-      contractURL,
-      JSON.stringify(params),
-      btcFeeRate.value.toString(),
-    );
-    if (result.txId) {
-      setTimeout(() => {
-        refetch();
-      }, 1000);
-      toast.success(`Order cancelled successfully, txid: ${result.txId}`);
-      return;
-    } else {
-      toast.error('Order cancellation failed');
-    }
-  };
   const allOrders = data?.pages.flatMap(page => page.data) ?? [];
 
   return (
     <div className="space-y-4">
-      {/* <div className="flex justify-between items-center gap-2">
-        <Button
-          variant="outline"
-          className="px-4 h-10"
-          size="sm"
-          onClick={cancelOrder}
-        >
-          Cancel All Orders
-        </Button>
-        <ButtonRefresh className="mx-4" loading={isLoading} onRefresh={() => refetch()} />
-      </div> */}
-      <HistoryTable
+      <div className="flex justify-end">
+        <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
+      </div>
+      <HistorySwapTable
         rawOrders={allOrders}
         orderTypeLabels={ORDER_TYPE_LABELS}
         isLoading={isLoading}
-        noDataMessage={t("common.nodata")}
+        noDataMessage={type === 'transcend' 
+          ? t("common.history_no_records")
+          : t("common.history_no_records")
+        }
+        ticker={ticker} // 传递 ticker 到子组件
         onLoadMore={fetchNextPage}
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}
