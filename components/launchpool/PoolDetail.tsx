@@ -18,7 +18,7 @@ import ParticipantsTable from './ParticipantsTable';
 
 const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
   const { t } = useTranslation(); // Specify the namespace
-  const { satsnetHeight } = useCommonStore();
+  const { satsnetHeight, network } = useCommonStore();
   console.log('poolDetails', poolDetails);
   const canViewParticipants = () => {
     return [
@@ -149,7 +149,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.DeployTickerTxId ? (
                           <a href={generateMempoolUrl({
-                            network: 'testnet',
+                            network: network,
                             path: `tx/${poolDetails.DeployTickerTxId}`,
                             chain: Chain.BTC,
                             env: 'dev',
@@ -163,7 +163,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.MintTxId ? (
                           <a href={generateMempoolUrl({
-                            network: 'testnet',
+                            network: network,
                             path: `tx/${poolDetails.MintTxId}`,
                             chain: Chain.BTC,
                             env: 'dev',
@@ -177,7 +177,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       <td className="p-2 flex justify-start items-center whitespace-nowrap">
                         {poolDetails.AnchorTxId ? (
                           <a href={generateMempoolUrl({
-                            network: 'testnet',
+                            network: network,
                             path: `tx/${poolDetails.AnchorTxId}`,
                             chain: Chain.SATNET,
                             env: 'dev',
@@ -196,7 +196,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                               <div key={txid} className="flex items-center">
                                 <a
                                   href={generateMempoolUrl({
-                                    network: 'testnet',
+                                    network: network,
                                     path: `tx/${txid}`,
                                     chain: Chain.SATNET,
                                     env: 'dev',
@@ -226,7 +226,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                               <div key={txid} className="flex items-center">
                                 <a
                                   href={generateMempoolUrl({
-                                    network: 'testnet',
+                                    network: network,
                                     path: `tx/${txid}`,
                                     chain: Chain.SATNET,
                                     env: 'dev',

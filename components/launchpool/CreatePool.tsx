@@ -40,7 +40,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [errorLaunchRatio, setErrorLaunchRatio] = useState('');
 
-  const { satsnetHeight, btcFeeRate } = useCommonStore();
+  const { satsnetHeight, btcFeeRate, network } = useCommonStore();
   const contractType = 'launchpool.tc';
 
   const handleNextStep = () => setStep((prev) => prev + 1);
@@ -412,7 +412,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                   <div className="text-sm text-zinc-300 mb-2">
                     DeployTickerTxId: {poolStatusData?.DeployTickerTxId ? (
                       <a href={generateMempoolUrl({
-                        network: 'testnet',
+                        network: network,
                         path: `tx/${poolStatusData.DeployTickerTxId}`,
                         chain: Chain.BTC,
                         env: 'dev',
@@ -422,7 +422,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                   <div className="text-sm text-zinc-300 mb-2">
                     MintTxId: {poolStatusData?.MintTxId ? (
                       <a href={generateMempoolUrl({
-                        network: 'testnet',
+                        network: network,
                         path: `tx/${poolStatusData.MintTxId}`,
                         chain: Chain.BTC,
                         env: 'dev',
@@ -432,7 +432,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
                   <div className="text-sm text-zinc-300 mb-2">
                     AnchorTxId: {poolStatusData?.AnchorTxId ? (
                       <a href={generateMempoolUrl({
-                        network: 'testnet',
+                        network: network,
                         path: `tx/${poolStatusData.AnchorTxId}`,
                         chain: Chain.SATNET,
                         env: 'dev',

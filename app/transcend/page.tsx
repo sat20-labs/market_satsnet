@@ -101,7 +101,7 @@ const TranscendPage = () => {
 
   // 获取所有合约URL列表
   const { data: contractURLsData } = useQuery({
-    queryKey: ['swapContractURLs', network],
+    queryKey: ['transcendContractURLs', network],
     queryFn: async () => {
       const deployed = await getDeployedContractInfo();
       const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
@@ -112,13 +112,13 @@ const TranscendPage = () => {
   });
 
   // 分页获取合约状态
-  const getSwapList = async ({ pageParam = 1 }) => {
+  const getTranscendList = async ({ pageParam = 1 }) => {
     if (!contractURLsData || contractURLsData.length === 0) {
       return { pools: [], totalCount: 0 };
     }
 
-    const startIndex = (pageParam - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
+    const startIndex = (pageParam - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
     const pageURLs = contractURLsData.slice(startIndex, endIndex);
 
     // 并发请求当前页的合约状态
@@ -149,8 +149,8 @@ const TranscendPage = () => {
   };
 
   const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['swapList', currentPage],
-    queryFn: () => getSwapList({ pageParam: currentPage }),
+    queryKey: ['transcendList', currentPage, pageSize, network],
+    queryFn: () => getTranscendList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,
     refetchInterval: 60000,
@@ -158,7 +158,18 @@ const TranscendPage = () => {
 
   const poolList = poolListData?.pools || [];
   const totalCount = poolListData?.totalCount || 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // 添加调试信息
+  console.log('Transcend Page Debug:', {
+    currentPage,
+    pageSize,
+    totalCount,
+    totalPages,
+    poolListLength: poolList.length,
+    contractURLsDataLength: contractURLsData?.length || 0,
+    isLoading
+  });
 
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
@@ -185,8 +196,8 @@ const TranscendPage = () => {
   ];
 
   const filteredPoolList = useMemo(() => {
-    let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
-    return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
+    // 由于数据已经在服务器端分页，这里只需要按协议过滤，不需要再次排序
+    return protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
   }, [adaptedPoolList, protocol]);
 
   console.log('filteredPoolList', filteredPoolList);

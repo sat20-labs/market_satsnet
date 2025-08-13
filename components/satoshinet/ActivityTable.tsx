@@ -13,7 +13,7 @@ import { generateMempoolUrl } from '@/utils/url';
 import { useTranslation } from 'react-i18next';
 import { Chain } from "@/types";
 import { useCommonStore } from "@/store/common";
-
+  
 interface ActivityTableProps {
   activities: Activity[];
   isLoading?: boolean;

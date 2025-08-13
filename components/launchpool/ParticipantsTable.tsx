@@ -15,6 +15,7 @@ import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
 import { marketApi } from '@/api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useCommonStore } from '@/store';
 
 interface ParticipantsTableProps {
   contractURL: string;
@@ -133,7 +134,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const availablePageSizes = [10, 20, 50, 100];
-
+  const { network } = useCommonStore();
   // 计算分页参数
   const pageStart = (currentPage - 1) * pageSize;
   const pageLimit = pageSize;
@@ -276,7 +277,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                                 <li key={i} className="flex items-center space-x-2">
                                   <a 
                                     href={generateMempoolUrl({
-                                      network: 'testnet',
+                                      network: network, 
                                       path: `tx/${txid}`,
                                       chain: Chain.SATNET,
                                       env: 'dev',
@@ -304,7 +305,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                                 <li key={i} className="flex items-center space-x-2">
                                   <a 
                                     href={generateMempoolUrl({
-                                      network: 'testnet',
+                                      network: network,
                                       path: `tx/${txid}`,
                                       chain: Chain.SATNET,
                                       env: 'dev',
