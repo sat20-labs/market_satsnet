@@ -280,8 +280,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold mb-2">{t('pages.poolDetail.participants_info')}</h3>
                   <div className="flex justify-between mb-3">
-                    <p className="text-zinc-400">{t('pages.poolDetail.total_participants')}: --</p>
-                    <p className="text-zinc-400">{t('pages.poolDetail.total_deposited')}: --</p>
+                    {/* <p className="text-zinc-400">{t('pages.poolDetail.total_participants')}: --</p> */}
+                    {/* <p className="text-zinc-400">{t('pages.poolDetail.total_deposited')}: --</p> */}
                   </div>
                   <div className="overflow-x-auto">
                     <ParticipantsTable
