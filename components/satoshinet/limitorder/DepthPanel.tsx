@@ -285,7 +285,7 @@ export default function DepthPanel({
             ticker={ticker}
           />
           <WalletConnectBus asChild>
-            <Button onClick={handleSubmitClick} disabled={state.isPlacingOrder} className="min-w-[80px] btn-gradient h-11">
+            <Button onClick={handleSubmitClick} disabled={state.isPlacingOrder || true} className="min-w-[80px] btn-gradient h-11">
               {state.isPlacingOrder ? t('common.submitting') : t('common.submit')}
             </Button>
           </WalletConnectBus>
