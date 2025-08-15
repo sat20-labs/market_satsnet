@@ -28,7 +28,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     n: '1000',
     mintAmtPerSat: '1',
     limit: '',
-    launchRatio: '70',
+    launchRatio: '60',
     maxSupply: '',
     startBlock: '0',
     endBlock: '0',
@@ -38,7 +38,6 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
   const [showLargePoolWarning, setShowLargePoolWarning] = useState(false);
   const [contractURL, setcontractURL] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [errorLaunchRatio, setErrorLaunchRatio] = useState('');
 
   const { satsnetHeight, btcFeeRate, network } = useCommonStore();
   const contractType = 'launchpool.tc';
@@ -82,6 +81,14 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
 
   async function handleConfirm(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
     event.preventDefault();
+    
+    // 验证 launchRatio 范围
+    const launchRatio = Number(formData.launchRatio);
+    if (launchRatio < 60 || launchRatio > 90) {
+      toast.error(t('pages.createPool.launchRatioError'));
+      return;
+    }
+    
     if (formData.endBlock !== '0' && Number(formData.endBlock) <= satsnetHeight) {
       toast.error(t('End Block must be 0 or greater than current block height'));
       return;
@@ -135,7 +142,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
     }
   }
 
-  const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply && !errorLaunchRatio);
+  const isFormComplete = !!(formData.protocol && formData.ticker && formData.n && formData.limit && formData.launchRatio && formData.maxSupply);
   const isStep1Complete = !!(formData.protocol && formData.ticker && formData.n);
   const isStep2Complete = !!(formData.limit && formData.launchRatio && formData.maxSupply);
 
@@ -354,21 +361,16 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               <Input
                 placeholder={t('pages.createPool.launchRatio')}
                 type="number"
+                min="60"
+                max="90"
                 value={formData.launchRatio}
                 onChange={(e) => {
                   const value = e.target.value;
                   handleInputChange('launchRatio', value);
-                  if (Number(value) < 60 || Number(value) > 90) {
-                    setErrorLaunchRatio(t('pages.createPool.launchRatioError'));
-                  } else {
-                    setErrorLaunchRatio('');
-                  }
                 }}
               />
 
-              {errorLaunchRatio && (
-                <p className="mt-1 text-xs text-red-400 gap-2">* {errorLaunchRatio}</p>
-              )}
+              <p className="mt-1 text-xs text-gray-400">{t('pages.createPool.launchRatio')} {t('pages.createPool.range')}: 60-90</p>
 
               <p className="mt-1 text-xs text-gray-400">{t('pages.createPool.step2.estimatedPoolFunds')} :
                 <span className='text-red-500'> {estimatedPoolFunds} </span>
@@ -406,7 +408,7 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
               <p className="text-sm text-zinc-400 mt-2">{t('Monitor the progress of your launch pool and user participation.')}</p>
               <p className="mt-4">{t('Waiting for user participation and pool completion...')}</p>
               {contractURL && (
-                <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
+                <div className="mt-6 p-4 bg-zinc-900 rounded-lg border border-zinc-60">
                   <div className="mb-2 font-bold text-white">{t('pages.createPool.step3.poolStatus')}</div>
                   <div className="text-sm text-zinc-300 mb-2">{t('pages.createPool.step3.status')}: {statusTextMap[String(poolStatusData?.status)] ?? poolStatusData?.status ?? '-'}</div>
                   <div className="text-sm text-zinc-300 mb-2">

@@ -34,7 +34,8 @@
     "continue": "继续",
     "force_distribution": "强制分发",
     "auto_refund": "自动退款",
-    "launchRatioError": "分发比例必须在60到90之间"
+    "launchRatioError": "分发比例必须在60到90之间",
+    "range": "范围"
   },
   "tools": {
     "title": "工具箱",

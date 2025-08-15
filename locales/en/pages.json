@@ -34,7 +34,8 @@
     "continue": "Continue",
     "force_distribution": "Force Distribution",
     "auto_refund": "Auto Refund",
-    "launchRatioError": "Launch ratio must be between 60 and 90"
+    "launchRatioError": "Launch ratio must be between 60 and 90",
+    "range": "range"
   },
   "tools": {
     "title": "Toolbox",
