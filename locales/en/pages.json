@@ -9,6 +9,22 @@
     "ordx": "OrdX",
     "runes": "Runes"
   },
+  "footer":{
+    "help": {
+      "title": "Help",
+      "description": "If you encounter any issues during use, please check the help manual first, and feel free to contact us @SAT20Market.",
+      "lauchpool": "Wallet Operation Manual",
+      "wallet": "Launch Pool Operation Manual",
+      "support": "Support",
+      "faq": "Frequently Asked Questions"
+    },
+    "legal": {
+      "title": "Legal",
+      "terms": "Terms and Conditions",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Policy"
+    }
+  },
   "market": {
     "title": "MarketPlace"
   },

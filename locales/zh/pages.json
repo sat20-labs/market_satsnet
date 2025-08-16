@@ -9,6 +9,22 @@
     "ordx": "OrdX",
     "runes": "Runes"
   },
+  "footer":{
+    "help": {
+      "title": "帮助",
+      "description": "如果您在使用过程中遇到任何问题，请先查看帮助手册，仍有问题随时联系我们 @SAT20Market。",
+      "lauchpool": "钱包操作手册",
+      "wallet": "发射池操作手册",
+      "support": "支持",
+      "faq": "常见问题解答"
+    },
+    "legal": {
+      "title": "法律",
+      "terms": "条款和条件",
+      "privacy": "隐私政策",
+      "cookies": "Cookie政策"
+    }
+  },
   "market": {
     "title": "市场"
   },
