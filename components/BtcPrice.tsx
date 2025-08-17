@@ -6,5 +6,6 @@ interface Props {
 }
 export const BtcPrice = ({ btc, className }: Props) => {
   const price = useBtcPrice(btc);
+  console.log('price', price);
   return <span className={className}>{price}</span>;
 };

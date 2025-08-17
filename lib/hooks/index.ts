@@ -6,6 +6,8 @@ import { Decimal } from 'decimal.js';
 
 export const useBtcPrice = (btc: string | number) => {
   const { btcPrice } = useCommonStore();
+  console.log('btcPrice', btc);
+  console.log('btcPrice', btcPrice);
   const btcUsd = useMemo(() => {
     const a = new Decimal(btc);
     const b = new Decimal(btcPrice);
