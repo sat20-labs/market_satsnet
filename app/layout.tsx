@@ -70,7 +70,7 @@ export default function RootLayout({
                 <li className="flex w-full sm:w-auto sm:flex-row justify-center items-center gap-2 px-4 text-center">
                 <span>
                   <a
-                    href={`https://app.ordx.market/privacy/${lang}/`}
+                    href={`https://app.ordx.market/privacy/${lang === 'en' ? 'en' : 'zh'}/`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-purple-500 transition-colors"
