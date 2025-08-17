@@ -4,7 +4,7 @@ import React from "react";
 import { useCommonStore } from "@/store/common";
 import { generateMempoolUrl, generateOrdUrl } from "@/utils/url";
 import { Chain } from '@/types';
-import {formatLargeNumber} from '@/utils';
+import { formatLargeNumber } from '@/utils';
 
 export function AssetInfoCard({ asset, tickerInfo, holdersTotal }) {
   const { network } = useCommonStore();
@@ -33,32 +33,20 @@ export function AssetInfoCard({ asset, tickerInfo, holdersTotal }) {
         <div className="space-y-2 sm:space-x-2">
           {/* <InfoRow label="Ticker" value={tickerInfo.Ticker || asset} /> */}
           <InfoRow label="Ticker" value={tickerInfo.name.Ticker} />
-          <InfoRow label="Protocol" value={tickerInfo.name.Protocol} />          
+          <InfoRow label="Protocol" value={tickerInfo.name.Protocol} />
           {/* <InfoRow label="Supply" value={formatLargeNumber(tickerInfo.maxSupply)} /> */}
           <InfoRow
             label="Supply"
-            value={
-              typeof tickerInfo.maxSupply === "number"
-                ? tickerInfo.maxSupply.toLocaleString()
-                : Number(tickerInfo.maxSupply).toLocaleString()
-            }
+            value={tickerInfo.maxSupply}
           />
           <InfoRow
             label="Minted"
-            value={
-              typeof tickerInfo.totalMinted === "number"
-                ? tickerInfo.totalMinted.toLocaleString()
-                : Number(tickerInfo.totalMinted).toLocaleString()
-            }
+            value={tickerInfo.totalMinted}
           />
           <InfoRow
             label="Limit per mint"
-            value={
-              typeof tickerInfo.limit === "number"
-                ? tickerInfo.limit.toLocaleString()
-                : Number(tickerInfo.limit).toLocaleString()
-            }
-          />         
+            value={tickerInfo.limit}
+          />
           <InfoRow label="Decimal" value={18} />
           <InfoRow label="Deploy By" value={<Link href={deployAddressLink} target="_blank" className="text-bright-blue underline">{tickerInfo.deployAddress}</Link>} />
           <InfoRow label="Deploy Height" value={tickerInfo.deployHeight} />
@@ -80,17 +68,16 @@ function InfoRow({ label, value }) {
   const isLink = React.isValidElement(value) && value.type === Link; // 判断是否为 Link 元素  
   return (
     <>
-   
-    <div className="flex justify-between items-center bg-zinc-900 py-2 mt-3 border-b last:border-b-0 border-zinc-800/50">
-      <span className="font-semibold text-zinc-500 text-base">{label}</span>
-      <span
-        className={`text-right text-base break-all ${
-          isLink ? "text-sky-700" : "text-zinc-400"
-        }`}
-      >
-        {value}
-      </span>
-    </div>
+
+      <div className="flex justify-between items-center bg-zinc-900 py-2 mt-3 border-b last:border-b-0 border-zinc-800/50">
+        <span className="font-semibold text-zinc-500 text-base">{label}</span>
+        <span
+          className={`text-right text-base break-all ${isLink ? "text-sky-700" : "text-zinc-400"
+            }`}
+        >
+          {value}
+        </span>
+      </div>
     </>
   );
 }
