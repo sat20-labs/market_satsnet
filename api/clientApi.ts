@@ -92,23 +92,41 @@ class ClientApi {
    * @param ticker 资产ticker
    */
   getTickerInfo = async (ticker: string): Promise<any> => {
+    const CACHE_EXPIRE_TIME = 10 * 60 * 1000; // 10分钟缓存失效时间（毫秒）
+    const currentTime = Date.now();
+
     // 1. 先查内存缓存
     if (this.tickerInfoCache.has(ticker)) {
-      return this.tickerInfoCache.get(ticker);
+      const cachedData = this.tickerInfoCache.get(ticker);
+      // 检查缓存是否过期
+      if (currentTime - cachedData.timestamp < CACHE_EXPIRE_TIME) {
+        return cachedData.data;
+      } else {
+        // 缓存过期，删除内存缓存
+        this.tickerInfoCache.delete(ticker);
+      }
     }
+
     // 2. 再查 sessionStorage
     const sessionKey = `tickerInfoCache_${ticker}`;
     const cachedStr = sessionStorage.getItem(sessionKey);
     if (cachedStr) {
       try {
         const cachedData = JSON.parse(cachedStr);
-        // 同步到内存缓存
-        this.tickerInfoCache.set(ticker, cachedData);
-        return cachedData;
+        // 检查缓存是否过期
+        if (currentTime - cachedData.timestamp < CACHE_EXPIRE_TIME) {
+          // 同步到内存缓存
+          this.tickerInfoCache.set(ticker, cachedData);
+          return cachedData.data;
+        } else {
+          // 缓存过期，删除sessionStorage缓存
+          sessionStorage.removeItem(sessionKey);
+        }
       } catch (e) {
         // 解析失败则忽略，继续请求接口
       }
     }
+
     // 3. 都没有则请求接口
     const { network } = useCommonStore.getState();
     const baseUrl = `${this.BASE_URL}${network === 'testnet' ? '/btc/testnet' : '/btc/mainnet'}`;
@@ -123,9 +141,14 @@ class ClientApi {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    // 写入缓存（内存+sessionStorage）
-    this.tickerInfoCache.set(ticker, data);
-    sessionStorage.setItem(sessionKey, JSON.stringify(data));
+    
+    // 写入缓存（内存+sessionStorage），包含时间戳
+    const cacheData = {
+      data: data,
+      timestamp: currentTime
+    };
+    this.tickerInfoCache.set(ticker, cacheData);
+    sessionStorage.setItem(sessionKey, JSON.stringify(cacheData));
     return data;
   }
   getNsName = async (name: string): Promise<any> => {
