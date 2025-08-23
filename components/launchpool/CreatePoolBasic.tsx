@@ -108,7 +108,7 @@ export default function CreatePoolBasic({ closeModal }: Props) {
                 <p className="text-zinc-400">
                     {t('pages.createPool.basic_description')}
                     <a
-                        href={`/files/LaunchPool_User_Guide_${i18n.language === 'en' ? 'en' : 'zh'}.pdf`}
+                        href={`/files/LaunchPool_User_Guide_${i18n.language === 'en' ? 'en' : 'cn'}.pdf`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-purple-500 hover:underline ml-1"

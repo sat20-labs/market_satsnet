@@ -208,7 +208,7 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
                         {t('pages.createPool.advanced_description')}
 
                         <a
-                            href={`/files/LaunchPool_User_Guide_${i18n.language === 'en' ? 'en' : 'zh'}.pdf`}
+                            href={`/files/LaunchPool_User_Guide_${i18n.language === 'en' ? 'en' : 'cn'}.pdf`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-purple-500 hover:underline ml-1"
