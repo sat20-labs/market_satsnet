@@ -35,13 +35,11 @@ const PAGE_SIZE = 12;
 
 function adaptPoolData(pool, satsnetHeight) {
   // 修正 TotalMinted 为对象的情况
-  const totalMintedValue = typeof pool.TotalMinted === 'object' && pool.TotalMinted !== null
-    ? pool.TotalMinted.Value ?? 0
-    : pool.TotalMinted ?? 0;
+  const totalMintedValue = pool.TotalMinted?.Value ?? 0;
   const maxSupply = pool.maxSupply ?? pool.totalSupply ?? 1;
   const launchRation = pool.launchRation ?? 1;
   const totalMinted = totalMintedValue / maxSupply * 100;
-  const progress = Math.floor(Math.min(totalMinted / launchRation, 1) * 100);
+  const progress = Number((Math.min(totalMinted / launchRation, 1) * 100).toFixed(3));
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
   const enableBlock = Number(pool.enableBlock);
