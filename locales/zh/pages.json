@@ -224,11 +224,12 @@
     "advanced_title": "创建 LaunchPool(高级模式)",
     "advanced_description": "为您的资产创建一个新的 LaunchPool。请填写以下详细信息。",
     "basic_title": "创建 LaunchPool(简单模式)",
-    "basic_description": "为您的资产创建一个新的 LaunchPool。请填写以下详细信息。",
+    "basic_description": "为您的资产创建一个新的 LaunchPool。请选择协议并填写自从名称。",
+    "guide": "<<发射池指南>>",
     "step1": {
       "title": "步骤 1: 部署资产",
       "description": "选择协议并提供有关资产的基本信息。",
-      "bindingSatTips": "每聪绑定的资产数量，用于一层铸造 OrdX 资产。值越大，单位资产铸造成本越低。"
+      "bindingSatTips": "每聪铸造资产数量，用于一层铸造 OrdX 资产。值越大，单位资产铸造成本越低。"
     },
     "step2": {
       "title": "步骤 2: 配置智能合约",

@@ -239,6 +239,7 @@
     "advanced_description": "Create a new launch pool for your asset. Please fill in the details below.",
     "basic_title": "Create LaunchPool (Simple Mode)",
     "basic_description": "Create a new launch pool for your asset. Please fill in the details below.",
+    "guide": "<<Launch Pool Guide>>",
     "step1": {
       "title": "Step 1: Deploy Asset",
       "description": "Select the protocol and provide basic details about your asset.",

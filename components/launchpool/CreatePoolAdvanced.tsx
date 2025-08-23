@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function CreatePoolAdvanced({ closeModal }: Props) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const router = useRouter();
     const [bol, setBol] = useState(true);
     const [step, setStep] = useState(1);
@@ -204,7 +204,18 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
             <div className="max-w-[1360px] mx-auto rounded-lg shadow-md">
                 <div className="sticky top-0 text bg-zinc-800/50 border border-zinc-800 z-10 p-6 mb-6 rounded-lg shadow-lg">
                     <h2 className="text-xl font-bold mb-2">🚀 {t('pages.createPool.advanced_title')}</h2>
-                    <p className="text-zinc-400">{t('pages.createPool.advanced_description')}</p>
+                    <p className="text-zinc-400">
+                        {t('pages.createPool.advanced_description')}
+
+                        <a
+                            href={`/files/LaunchPool_User_Guide_${i18n.language === 'en' ? 'en' : 'zh'}.pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-500 hover:underline ml-1"
+                        >
+                            {t('pages.createPool.guide')}
+                        </a>
+                    </p>
                     <button className="absolute top-4 right-6 text-zinc-400 hover:text-white" onClick={closeModal}>
                         ✕
                     </button>
