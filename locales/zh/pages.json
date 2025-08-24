@@ -224,7 +224,7 @@
     "advanced_title": "创建 LaunchPool(高级模式)",
     "advanced_description": "为您的资产创建一个新的 LaunchPool。请填写以下详细信息。",
     "basic_title": "创建 LaunchPool(简单模式)",
-    "basic_description": "为您的资产创建一个新的 LaunchPool。请选择协议并填写自从名称。",
+    "basic_description": "为您的资产创建一个新的 LaunchPool。请选择协议并填写资产名称。",
     "guide": "<<发射池指南>>",
     "step1": {
       "title": "步骤 1: 部署资产",
