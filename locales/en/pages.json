@@ -9,7 +9,7 @@
     "ordx": "OrdX",
     "runes": "Runes"
   },
-  "footer":{
+  "footer": {
     "help": {
       "title": "Help",
       "description": "If you encounter any issues during use, please check the help manual first, and feel free to contact us @SAT20Market.",
@@ -235,8 +235,11 @@
     }
   },
   "createPool": {
-    "title": "Create LaunchPool",
-    "description": "Create a new launch pool for your asset. Please fill in the details below.",
+    "advanced_title": "Create LaunchPool(Advanced Mode)",
+    "advanced_description": "Create a new launch pool for your asset. Please fill in the details below.",
+    "basic_title": "Create LaunchPool (Simple Mode)",
+    "basic_description": "Create a new launch pool for your asset. Please select the protocol and provide the asset name.",
+    "guide": "<<Launch Pool Guide>>",
     "step1": {
       "title": "Step 1: Deploy Asset",
       "description": "Select the protocol and provide basic details about your asset.",
@@ -258,9 +261,8 @@
       "note": "Note",
       "noteDescription": "Contract deployment may take some time. Please be patient."
     },
-    
     "network": {
-      "title": "Network", 
+      "title": "Network",
       "btc": "BTC Mainnet",
       "satsnet": "SatoshiNet"
     },
@@ -272,13 +274,13 @@
     "currentBlockHeight": "Current Block Height",
     "ticker": "Ticker",
     "selectTicker": "Select Ticker",
-    "bindingSat": "N (BindingSat)",
+    "bindingSat": "Mint Amount Per Sat(Mainnet)",
     "assetSymbol": "Asset Symbol",
-    "limit": "Limit(Max amount per address)",
+    "limit": "Single Address Minting Limit (SatoshiNet)",
     "launchRatio": "Launch Ratio",
     "maxSupply": "Max Supply",
-    "startBlock": "Start Block",
-    "endBlock": "End Block",
+    "startBlock": "Start Block(SatoshiNet)",
+    "endBlock": "End Block(SatoshiNet)",
     "next": "Next",
     "previous": "Previous",
     "submitTemplate": "Submit Template",
@@ -287,7 +289,7 @@
     "runesTickerNote": "* Input spaces as separators to replace Runes symbols, e.g.,: XXX YYY ZZZ",
     "deployFeeTip": "* Deployment fees can be paid via Mainnet or SatoshiNet.",
     "bindingSatError": "BindingSat must be greater than 0 and a multiple of 10",
-    "mintAmtPerSat": "Mint Amount Per Sat",
+    "mintAmtPerSat": "Mint Amount Per Sat(SatoshiNet)",
     "mintAmtPerSatTip": "The amount of asset distributed per satoshi. Usually 10-1000 times smaller than the binding sat. For example, if binding sat is 1000, mint amount per sat is typically 1-100.",
     "mintAmtPerSatSuggest": "Suggested: {{min}} ~ {{max}} (based on binding sat)",
     "largePoolWarning": {
@@ -367,5 +369,3 @@
     }
   }
 }
-
-
