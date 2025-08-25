@@ -76,17 +76,17 @@ const WalletConnectButton = () => {
   }, []);
 
   const onConnectSuccess = async (wallet: any) => {
-    if (!signature) {
-      console.log('signature text', process.env.NEXT_PUBLIC_SIGNATURE_TEXT);
-      try {
-        const _s = await wallet.signMessage(
-          process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
-        );
-        setSignature(_s);
-      } catch (error) {
-        await disconnect();
-      }
-    }
+    // if (!signature) {
+    //   console.log('signature text', process.env.NEXT_PUBLIC_SIGNATURE_TEXT);
+    //   try {
+    //     const _s = await wallet.signMessage(
+    //       process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
+    //     );
+    //     setSignature(_s);
+    //   } catch (error) {
+    //     await disconnect();
+    //   }
+    // }
     if (walletNetwork !== network) {
       try {
         await window.sat20.switchNetwork(network === 'mainnet' ? 'livenet' : 'testnet');
@@ -114,39 +114,35 @@ const WalletConnectButton = () => {
     await disconnect();
   };
   const networkChange = () => {
-    setTimeout(() => {
-      check();
-    }, 1000);
+    initCheck()
   };
   const accountAndNetworkChange = async () => {
     console.log('accountAndNetworkChange');
     console.log('connected', connected);
     console.log('btcWallet', btcWallet);
-
-
     const windowState =
       document.visibilityState === 'visible' || !document.hidden;
     try {
       await initCheck();
       if (process.env.NEXT_PUBLIC_SIGNATURE_TEXT && connected) {
-        try {
-          console.log('checkSignature');
-          console.log(windowState);
-          if (windowState) {
-            const _s = await btcWallet?.signMessage(
-              process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
-            );
-            if (_s) {
-              setSignature(_s);
-            } else {
-              await handlerDisconnect();
-            }
-          } else {
-            handlerDisconnect();
-          }
-        } catch (error) {
-          await handlerDisconnect();
-        }
+        // try {
+        //   console.log('checkSignature');
+        //   console.log(windowState);
+        //   if (windowState) {
+        //     const _s = await btcWallet?.signMessage(
+        //       process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
+        //     );
+        //     if (_s) {
+        //       setSignature(_s);
+        //     } else {
+        //       await handlerDisconnect();
+        //     }
+        //   } else {
+        //     handlerDisconnect();
+        //   }
+        // } catch (error) {
+        //   await handlerDisconnect();
+        // }
       }
     } catch (error) {
       console.log('Account/Network change check error:', error);
