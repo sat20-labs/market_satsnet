@@ -23,7 +23,7 @@ import { BtcPrice } from '@/components/BtcPrice';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 
 // 每页显示的数量
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 function adaptPoolData(pool, satsnetHeight) {
   const assetNameObj = pool.Contract.assetName || {};

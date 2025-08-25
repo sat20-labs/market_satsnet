@@ -23,7 +23,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
 // 每页显示的数量
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 /**
  * 处理transcend详情页面的链接生成

@@ -30,8 +30,6 @@ interface CustomPaginationProps {
   isLoading?: boolean;
 }
 
-const MAX_VISIBLE_PAGES = 5; // Maximum number of page links to show
-
 export const CustomPagination: React.FC<CustomPaginationProps> = ({
   currentPage,
   totalPages,
@@ -43,7 +41,7 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
 }) => {
   const { t } = useTranslation();
   const isMobile = useMediaQuery({ maxWidth: 640 });
-  // Reduce visible pages on mobile
+  // Maximum number of page links to show
   const MAX_VISIBLE_PAGES = isMobile ? 1 : 5;
 
   const handlePrevious = () => {

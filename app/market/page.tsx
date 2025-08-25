@@ -22,9 +22,6 @@ import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
-// 每页显示的数量
-const PAGE_SIZE = 12;
-
 function adaptPoolData(pool, satsnetHeight) {
   // 适配 contractStatus 结构
   console.log('pool', pool);
@@ -74,7 +71,7 @@ const MarketPage = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
   const { satsnetHeight, network } = useCommonStore();
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(10);
   const PAGE_SIZES = [10, 20, 50, 100];
   const sortList = useMemo(
     () => [
@@ -103,8 +100,8 @@ const MarketPage = () => {
       return { pools: [], totalCount: 0 };
     }
 
-    const startIndex = (pageParam - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
+    const startIndex = (pageParam - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
     const pageURLs = contractURLsData.slice(startIndex, endIndex);
 
     // 并发请求当前页的合约状态
@@ -135,7 +132,7 @@ const MarketPage = () => {
   };
 
   const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['swapList', currentPage],
+    queryKey: ['swapList', currentPage, pageSize],
     queryFn: () => getSwapList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,
@@ -144,7 +141,7 @@ const MarketPage = () => {
 
   const poolList = poolListData?.pools || [];
   const totalCount = poolListData?.totalCount || 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));

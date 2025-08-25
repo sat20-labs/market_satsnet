@@ -31,7 +31,7 @@ import { useRouter } from 'next/navigation';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 
 // 每页显示的数量
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 function adaptPoolData(pool, satsnetHeight) {
   // 修正 TotalMinted 为对象的情况
