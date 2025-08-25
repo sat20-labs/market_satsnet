@@ -112,6 +112,7 @@ const LaunchPool = () => {
     gcTime: 0,
     refetchInterval: 60000,
   });
+  console.log('contractURLsData', contractURLsData);
 
   // 分页获取合约状态
   const getPoolList = async ({ pageParam = 1 }) => {

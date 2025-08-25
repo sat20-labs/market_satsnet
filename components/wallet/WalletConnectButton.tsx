@@ -28,7 +28,7 @@ import { useHeight } from '@/lib/hooks/useHeight';
 
 const WalletConnectButton = () => {
 
-  const { network } = useCommonStore();
+  const { network, setNetwork } = useCommonStore();
   const { t } = useTranslation();
   const { theme } = useTheme();
   const {
@@ -38,6 +38,7 @@ const WalletConnectButton = () => {
     publicKey,
     disconnect,
     btcWallet,
+    network: walletNetwork,
   } = useReactWalletStore((state) => state);
   const { getBalance, balance } = useWalletStore();
   const { refreshAssets } = useAssetStore();
@@ -86,6 +87,13 @@ const WalletConnectButton = () => {
         await disconnect();
       }
     }
+    if (walletNetwork !== network) {
+      try {
+        await window.sat20.switchNetwork(network === 'mainnet' ? 'livenet' : 'testnet');
+      } catch (error) {
+        toast.error('Switch network failed');
+      }
+    }
   };
   const onConnectError = (error: any) => {
     console.error('Connect Wallet Failed', error);
@@ -106,7 +114,9 @@ const WalletConnectButton = () => {
     await disconnect();
   };
   const networkChange = () => {
-    disconnect()
+    setTimeout(() => {
+      check();
+    }, 1000);
   };
   const accountAndNetworkChange = async () => {
     console.log('accountAndNetworkChange');

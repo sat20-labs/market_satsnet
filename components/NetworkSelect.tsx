@@ -5,6 +5,7 @@ import { useCommonStore } from '@/store';
 import type { Network } from '@/store';
 import { Icon } from '@iconify/react'; // 引入 Iconify 图标
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import { toast } from 'sonner';
 
 
 export const NetworkSelect = () => {
@@ -12,8 +13,10 @@ export const NetworkSelect = () => {
   const [isOpen, setIsOpen] = useState(false);
   const closeTimeout = useRef<NodeJS.Timeout | null>(null); // 用于存储关闭菜单的定时器
   const {
+    network: walletNetwork,
     connected,
     disconnect,
+    switchNetwork,
   } = useReactWalletStore((state) => state);
   const handleMouseEnter = () => {
     if (window.innerWidth > 768) {
@@ -40,11 +43,18 @@ export const NetworkSelect = () => {
     setIsOpen((prev) => !prev); // 点击时切换菜单状态
   };
 
-  const handleSelectionChange = (value: Network) => {
-    setNetwork(value); // 更新网络的值
+  const handleSelectionChange = async(value: Network) => {
     setIsOpen(false); // 选择后关闭菜单
-    if (connected) {
-      disconnect();
+    const _v = value === 'mainnet' ? 'livenet' : 'testnet';
+    if (connected && walletNetwork !== _v) {
+      try {
+        await window.sat20.switchNetwork(_v);
+        setNetwork(value); // 更新网络的值
+      } catch (error) {
+        toast.error('Switch network failed');
+      }
+    } else {
+      setNetwork(value); // 更新网络的值
     }
   };
 
