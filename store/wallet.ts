@@ -29,12 +29,35 @@ export const useWalletStore = create<WalletState>()(
           if (!address) {
             return;
           }
-          const amountResult = await window.sat20.getAssetAmount_SatsNet(address, '::')
-          console.log('amountResult', amountResult)
-          set({ balance: {
-            availableAmt: amountResult.availableAmt,
-            lockedAmt: amountResult.lockedAmt
-          } });
+          const { data } = await clientApi.getAddressSummary(address);
+          console.log('data', data);
+          const list = data?.map((item: any) => {
+            const { Protocol, Type, Ticker } = item.Name;
+            let key;
+            if (Protocol === '' && Type === '') {
+              key = '::'
+            } else {
+              key = `${Protocol}:${Type}:${Ticker}`;
+            }
+            return {
+              key,
+              ...item,
+            };
+          }) || [];
+          console.log('list', list);
+          const _v = list.find((item: any) => item.key === '::');
+          if (_v) {
+            set({ balance: {
+              availableAmt: Number(_v.Amount),
+              lockedAmt: 0,
+            } });
+          } else {
+            set({ balance: {
+              availableAmt: 0,
+              lockedAmt: 0,
+            } });
+          }
+          console.log('balance', get().balance);
 
         },
       }),
