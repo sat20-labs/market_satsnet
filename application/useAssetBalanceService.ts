@@ -38,7 +38,6 @@ export function useAssetBalance(address: string, assetName: string) {
   console.log('list', assetName, list);
   const balance = useMemo(() => {
     const _v = list.find((item: any) => item.key === assetName);
-    console.log('balance', assetName, _v);
     if (_v) {
       return {
         availableAmt: Number(_v.Amount),
