@@ -1,18 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
-import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
-import { useCommonStore } from '@/store/common';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useCommonStore } from '@/store';
 
-interface UnstakeProps {
-  contractUrl: string;
+interface StakeProps {
   asset: string;
   ticker: string;
+  contractUrl: string;
+  refresh: () => void;
+  isRefreshing: boolean;
+  tickerInfo?: any;
+  swapData?: any;
   assetBalance: {
     availableAmt: number;
     lockedAmt: number;
@@ -21,41 +23,64 @@ interface UnstakeProps {
     availableAmt: number;
     lockedAmt: number;
   };
-  onUnstakeSuccess: () => void;
-  refresh: () => void;
-  isRefreshing: boolean;
-  tickerInfo?: any;
-  swapData?: any;
 }
 
-interface UnstakeParams {
+interface StakeParams {
   amount: string;
-  assetName: string;
+  asset: string;
   contractUrl: string;
   value: string;
-  toL1: boolean;
 }
 
-const Unstake: React.FC<UnstakeProps> = ({
-  contractUrl,
-  asset,
-  ticker,
-  assetBalance,
-  satsBalance,
-  onUnstakeSuccess,
-  refresh,
-  isRefreshing,
-  tickerInfo,
-  swapData
-}) => {
+const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo, swapData, assetBalance, satsBalance }) => {
   const { t } = useTranslation();
+  const { btcFeeRate } = useCommonStore();
   const [amount, setAmount] = useState('');
   const [value, setValue] = useState('');
-  const [toL1, setToL1] = useState(false);
   const { address } = useReactWalletStore();
   const divisibility = tickerInfo?.divisibility || 0;
-  const { btcFeeRate } = useCommonStore((state) => state);
-  const displayAssetBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
+
+  const stakeMutation = useMutation({
+    mutationFn: async ({ amount, asset, contractUrl, value }: StakeParams) => {
+      const params = {
+        action: "stake",
+        param: JSON.stringify({
+          orderType: 9,
+          assetName: asset,
+          amt: amount,
+          value: parseInt(value)
+        })
+      };
+
+      window.sat20.invokeContractV2_SatsNet(
+        contractUrl,
+        JSON.stringify(params),
+        asset,
+        amount,
+        btcFeeRate.value.toString(),
+        {
+          action: "stake",
+          orderType: 9,
+          assetName: asset,
+          amt: amount,
+          value: parseInt(value),
+          quantity: amount,
+        }
+      );
+
+      return { success: true };
+    },
+    onSuccess: async (data) => {
+      toast.success(`Stake successful`);
+      setAmount("");
+      refresh();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Stake failed");
+    }
+  });
+
+  const displayAssetBalance = assetBalance?.availableAmt ?? 0;
 
   // 获取池子中的资产数量和聪数量
   const assetAmtInPool = useMemo(() => {
@@ -69,7 +94,7 @@ const Unstake: React.FC<UnstakeProps> = ({
     if (!assetAmtInPool || !satValueInPool) return 0;
     // 按照池子中资产和聪的比例计算
     const ratio = amt / assetAmtInPool;
-    return Math.ceil(ratio * satValueInPool);
+    return Math.round(ratio * satValueInPool);
   };
 
   // 根据value计算对应的amt
@@ -91,48 +116,6 @@ const Unstake: React.FC<UnstakeProps> = ({
     if (!value) return 0;
     return calculateAmountFromValue(Number(value));
   }, [value, assetAmtInPool, satValueInPool]);
-
-  const unstakeMutation = useMutation({
-    mutationFn: async ({ amount, assetName, contractUrl, value, toL1 }: UnstakeParams) => {
-      const params = {
-        action: "unstake",
-        param: JSON.stringify({
-          orderType: 10,
-          assetName: assetName,
-          amt: amount,
-          value: parseInt(value),
-          toL1: toL1
-        })
-      };
-
-      window.sat20.invokeContractV2_SatsNet(
-        contractUrl,
-        JSON.stringify(params),
-        assetName,
-        amount,
-        btcFeeRate.value.toString(),
-        {
-          action: "unstake",
-          orderType: 10,
-          quantity: amount,
-          assetName: assetName,
-          value: parseInt(value),
-          toL1: toL1,
-        }
-      );
-
-      return {success: true};
-    },
-    onSuccess: async (data) => {
-      toast.success(`Unstake successful`);
-      setAmount("");
-      setToL1(false);
-      onUnstakeSuccess();
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Unstake failed");
-    }
-  });
 
   const handleAmountChange = (value: string) => {
     if (!value) {
@@ -162,19 +145,13 @@ const Unstake: React.FC<UnstakeProps> = ({
 
 
 
-  const handleUnstake = () => {
+  const handleStake = () => {
     if (!amount || !value || !asset || !contractUrl) {
       toast.error("Please enter a valid amount and value");
       return;
     }
 
-    unstakeMutation.mutate({
-      amount,
-      assetName: asset,
-      contractUrl,
-      value: value,
-      toL1
-    });
+    stakeMutation.mutate({ amount, asset, contractUrl, value: value });
   };
 
   const handleMaxClick = () => {
@@ -190,21 +167,19 @@ const Unstake: React.FC<UnstakeProps> = ({
       <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 relative">
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
-            <span className="py-2 uppercase">{t('common.unstake')}</span>
-            
+            <span className="py-2 uppercase">{t('common.stake')}</span>
             <span className="flex items-center text-xs text-zinc-500">
               <button
                 onClick={handleMaxClick}
                 className="mr-2 px-2 py-1 rounded-md bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white"
-                disabled={unstakeMutation.isPending}
               >
                 {t('common.max')}
               </button>
               <ButtonRefresh
-                  onRefresh={refresh}
-                  loading={isRefreshing}
-                  className="bg-zinc-800/50"
-                />
+                onRefresh={refresh}
+                loading={isRefreshing}
+                className="bg-zinc-800/50"
+              />
             </span>
           </div>
           <div className="relative w-full">
@@ -215,47 +190,34 @@ const Unstake: React.FC<UnstakeProps> = ({
               className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4"
               placeholder={t('common.enterAssetAmount')}
               min={1}
-              step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`}
+              step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility - 1)}1`}
               onKeyDown={(e) => {
                 if (divisibility === 0 && e.key === '.') {
                   e.preventDefault();
                 }
               }}
-              disabled={unstakeMutation.isPending}
+              disabled={stakeMutation.isPending}
             />
             <p className='text-xs font-medium text-zinc-500 mb-2'>
-              {/* <span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>L 2</span>  */}
+              {/* <span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>L 1</span> */}
               {t('common.balance')}: {displayAssetBalance.toLocaleString()} {ticker}
             </p>
           </div>
-          
+
           {/* Value display for calculated satoshi amount */}
           <div className="relative w-full mt-4">
             <input
               type="number"
               value={value}
               className="w-full input-swap border-none rounded-lg px-4 py-2 text-lg sm:text-2xl font-bold text-white pr-16 mb-4 bg-zinc-800/50"
-              placeholder="Calculated satoshi amount" 
+              placeholder="Calculated satoshi amount"
               readOnly
-              disabled={unstakeMutation.isPending}
+              disabled={stakeMutation.isPending}
             />
-
-          </div>
-
-          {/* ToL1 checkbox */}
-          <div className="flex items-center space-x-2 mt-4">
-            <Checkbox
-              id="toL1"
-              checked={toL1}
-              onCheckedChange={(checked) => setToL1(checked as boolean)}
-              disabled={unstakeMutation.isPending}
-            />
-            <label
-              htmlFor="toL1"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-zinc-300"
-            >
-              Withdraw to L1
-            </label>
+            <p className='text-xs font-medium text-zinc-500 mb-2'>
+              <span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>BTC</span>
+              {t('common.balance')}: {(satsBalance.availableAmt + satsBalance.lockedAmt).toLocaleString()} sats
+            </p>
           </div>
         </div>
       </div>
@@ -263,13 +225,13 @@ const Unstake: React.FC<UnstakeProps> = ({
         type="button"
         size="lg"
         className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient"
-        onClick={handleUnstake}
-        disabled={unstakeMutation.isPending}
+        onClick={handleStake}
+        disabled={stakeMutation.isPending}
       >
-        {unstakeMutation.isPending ? t('common.unstaking') : t('common.unstake')}
+        {stakeMutation.isPending ? t('common.staking') : t('common.stake')}
       </Button>
     </div>
   );
 };
 
-export default Unstake;
+export default Stack;

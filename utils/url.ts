@@ -51,7 +51,7 @@ export const generateMempoolUrl = ({
     url += `/${locale}`;
   }
   if (chain !== Chain.SATNET && network === 'testnet') {
-    url += '/testnet4';
+    url += '/testnet';
   } else if (network === 'testnet') {
     url += `/${network}`;
   }

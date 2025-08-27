@@ -21,7 +21,6 @@ const CreateStack = () => {
     assetAmt: '',
     satValue: '',
     k: '',
-    settlePeriod: '',
   });
   const { address } = useReactWalletStore();
   const { network, btcFeeRate, btcHeight } = useCommonStore();
@@ -76,12 +75,12 @@ const CreateStack = () => {
       assetAmt: formData.assetAmt,
       satValue: Number(formData.satValue),
       k: formData.k,
-      settlePeriod: Number(formData.settlePeriod),
       assetName,
     };
     try {
       const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
       console.log('result:', result);
+      router.back();
       // const { txId } = result;
       // if (txId) {
       //   toast.success(`Contract deployed successfully, txid: ${txId}`);
@@ -182,13 +181,7 @@ const CreateStack = () => {
             disabled={true}
             className="bg-gray-700 text-gray-400"
           />
-          <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">Settle Period</label>
-          <Input
-            placeholder="Settle Period"
-            type="number"
-            value={formData.settlePeriod}
-            onChange={(e) => handleInputChange('settlePeriod', e.target.value)}
-          />
+
           <Button
             className="w-40 sm:w-48 btn-gradient mt-4"
             variant="outline"
