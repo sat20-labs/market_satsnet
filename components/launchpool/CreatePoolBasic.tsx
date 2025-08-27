@@ -42,7 +42,7 @@ export default function CreatePoolBasic({ closeModal }: Props) {
     useEffect(() => {
         const s = Number(satsnetHeight || 0) + 50;
         setStartBlock(s);
-        setEndBlock(s + 21600);
+        setEndBlock(s + 10000);
     }, [satsnetHeight]);
 
     const isValid = ticker.trim().length > 0;
