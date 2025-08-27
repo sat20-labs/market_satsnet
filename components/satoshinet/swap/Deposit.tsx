@@ -75,14 +75,14 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
         }
       );
 
-      if (!result.txId) {
-        throw new Error("Deposit failed: No transaction ID received");
-      }
+      // if (!result.txId) {
+      //   throw new Error("Deposit failed: No transaction ID received");
+      // }
 
-      return result;
+      return {success: true};
     },
     onSuccess: async (data) => {
-      toast.success(`Deposit successful, txid: ${data.txId}`);
+      toast.success(`Deposit successful`);
       setAmount("");
       await queryClient.invalidateQueries({ queryKey });
     },

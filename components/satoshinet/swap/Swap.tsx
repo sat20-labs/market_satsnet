@@ -272,7 +272,7 @@ const Swap = ({
       };
 
       if (swapType === 'sats-to-asset') {
-        await window.sat20.invokeContractV2_SatsNet(
+        window.sat20.invokeContractV2_SatsNet(
           contractUrl,
           JSON.stringify(params),
           "::",
@@ -293,7 +293,7 @@ const Swap = ({
         );
       } else {
         // 用资产换聪
-        await window.sat20.invokeContractV2_SatsNet(
+        window.sat20.invokeContractV2_SatsNet(
           contractUrl,
           JSON.stringify(params),
           asset,

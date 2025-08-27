@@ -52,7 +52,7 @@ const Stake: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
         })
       };
       
-      const result = await window.sat20.invokeContractV2(
+      window.sat20.invokeContractV2_SatsNet(
         contractUrl,
         JSON.stringify(params),
         asset,
@@ -68,14 +68,10 @@ const Stake: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
         }
       );
 
-      if (!result.txId) {
-        throw new Error("Stake failed: No transaction ID received");
-      }
-
-      return result;
+      return {success: true};
     },
     onSuccess: async (data) => {
-      toast.success(`Stake successful, txid: ${data.txId}`);
+      toast.success(`Stake successful`);
       setAmount("");
       refresh();
     },

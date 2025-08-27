@@ -105,7 +105,7 @@ const Unstake: React.FC<UnstakeProps> = ({
         })
       };
 
-      const result = await window.sat20.invokeContractV2_SatsNet(
+      window.sat20.invokeContractV2_SatsNet(
         contractUrl,
         JSON.stringify(params),
         assetName,
@@ -121,14 +121,10 @@ const Unstake: React.FC<UnstakeProps> = ({
         }
       );
 
-      if (!result.txId) {
-        throw new Error("Unstake failed: No transaction ID received");
-      }
-
-      return result;
+      return {success: true};
     },
     onSuccess: async (data) => {
-      toast.success(`Unstake successful, txid: ${data.txId}`);
+      toast.success(`Unstake successful`);
       setAmount("");
       setToL1(false);
       onUnstakeSuccess();
