@@ -404,7 +404,7 @@ const Swap = ({
                       className={`px-2 py-1 rounded  bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white ${toAmount === value.toString() ? 'bg-purple-500 text-white' : 'text-gray-400'
                         }`}
                     >
-                      {value}
+                      {Number.isInteger(value) ? value : parseFloat(value.toFixed(2))}
                     </button>
                   ))
                 )}

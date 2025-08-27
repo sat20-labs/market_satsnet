@@ -27,6 +27,8 @@ export default function MyTranscendOrders({ contractURL, type, ticker }: MyTrans
     6: t("common.deposit"),
     7: t("common.withdraw"),
     8: t("common.unused"),
+    9: t("common.stake"),
+    10: t("common.unstake"),
   };
 
   const {

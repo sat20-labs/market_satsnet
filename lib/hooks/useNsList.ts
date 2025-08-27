@@ -10,7 +10,7 @@ export const useNsList = () => {
     queryKey: ['nsList', address],
     enabled: !!address,
     queryFn: async () => {
-      const res = await fetch(`https://apiprd.sat20.org/${network === 'testnet' ? 'testnet4' : 'mainnet'}/ns/address/${address}`);
+      const res = await fetch(`https://apiprd.sat20.org/${network === 'testnet' ? 'testnet' : 'mainnet'}/ns/address/${address}`);
       const data = await res.json();
       return data.data;
     },

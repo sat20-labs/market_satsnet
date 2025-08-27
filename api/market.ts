@@ -469,7 +469,7 @@ export const getAppVersion = async () => {
 };
 
 export const getSats = async ({ address, network }: any) => {
-  const url = `${process.env.NEXT_PUBLIC_ORDX_HOST}${network === 'testnet' ? '/testnet4' : '/mainnet'}/exotic/address/${address}`;
+  const url = `${process.env.NEXT_PUBLIC_ORDX_HOST}${network === 'testnet' ? '/testnet' : '/mainnet'}/exotic/address/${address}`;
   const res = await fetch(url);
   return res.json();
 };
@@ -487,7 +487,7 @@ export const getOrdxAddressHolders = async ({
 };
 
 export const getSatsByAddress = async ({ address, sats, network }: any) => {
-  const url = `${process.env.NEXT_PUBLIC_ORDX_HOST}${network === 'testnet' ? '/testnet4' : '/mainnet'}/sat/FindSatsInAddress`;
+  const url = `${process.env.NEXT_PUBLIC_ORDX_HOST}${network === 'testnet' ? '/testnet' : '/mainnet'}/sat/FindSatsInAddress`;
   const data = {
     address: address,
     sats: sats,
