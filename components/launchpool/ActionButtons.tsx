@@ -82,7 +82,7 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
         <div className="relative">
           <Button
             variant="outline"
-            className="w-9 h-9 flex items-center justify-center text-zinc-400"
+            className="w-8 h-8 flex items-center justify-center text-xs text-zinc-400"
             onClick={() => setIsMenuOpen(!isMenuOpen)} // 切换菜单显示状态
           >
             ···
