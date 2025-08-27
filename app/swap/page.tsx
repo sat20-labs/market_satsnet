@@ -21,6 +21,8 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { BtcPrice } from '@/components/BtcPrice';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
+import { Button } from '@/components/ui/button';
+import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
@@ -178,11 +180,11 @@ const Swap = () => {
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2 mr-4">
-          {/* <WalletConnectBus asChild>
+          <WalletConnectBus asChild>
             <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/swap/create')}>
-              Create LimitOrder
+              Create Stack
             </Button>
-          </WalletConnectBus> */}
+          </WalletConnectBus>
         </div>
       </div>
       

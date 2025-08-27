@@ -62,6 +62,10 @@ export const Header = () => {
         href: '/swap',
       },
       {
+        label: 'Stack',
+        href: '/stack',
+      },
+      {
         label: t('pages.launchpool.title'), // 新增 LaunchPool 菜单
         href: '/launchpool',
       },

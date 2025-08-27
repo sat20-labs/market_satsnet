@@ -10,6 +10,8 @@ import Swap from '@/components/satoshinet/swap/Swap';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import WithDraw from '@/components/satoshinet/swap/WithDraw';
 import Deposit from '@/components/satoshinet/swap/Deposit';
+import Stake from '@/components/satoshinet/swap/Stake';
+import Unstake from '@/components/satoshinet/swap/Unstake';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import { AssetInfoCard } from '@/components/AssetInfoCard';
 import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
@@ -102,6 +104,8 @@ function OrderPageContent() {
                 <TabsTrigger value="swap">{t('common.swap')}</TabsTrigger>
                 <TabsTrigger value="deposit">{t('common.deposit')}</TabsTrigger>
                 <TabsTrigger value="withdraw">{t('common.withdraw')}</TabsTrigger>
+                <TabsTrigger value="stake">{t('common.stake')}</TabsTrigger>
+                <TabsTrigger value="unstake">{t('common.unstake')}</TabsTrigger>
               </TabsList>
               <TabsContent value="swap">
                 <Swap
@@ -135,6 +139,33 @@ function OrderPageContent() {
                   onWithdrawSuccess={() => { refreshHandler() }}
                   refresh={refreshBalances}
                   isRefreshing={isSwapStatusLoading}
+                />
+              </TabsContent>
+              <TabsContent value="stake">
+                <Stake
+                  asset={asset}
+                  ticker={ticker}
+                  contractUrl={contractUrl}
+                  refresh={refreshBalances}
+                  isRefreshing={isSwapStatusLoading}
+                  tickerInfo={tickerInfo}
+                  swapData={swapStatusData}
+                  assetBalance={assetBalance}
+                  satsBalance={satsBalance}
+                />
+              </TabsContent>
+              <TabsContent value="unstake">
+                <Unstake
+                  contractUrl={contractUrl}
+                  asset={asset}
+                  ticker={ticker}
+                  assetBalance={assetBalance}
+                  satsBalance={satsBalance}
+                  onUnstakeSuccess={() => { refreshHandler() }}
+                  refresh={refreshBalances}
+                  isRefreshing={isSwapStatusLoading}
+                  tickerInfo={tickerInfo}
+                  swapData={swapStatusData}
                 />
               </TabsContent>
             </Tabs>
