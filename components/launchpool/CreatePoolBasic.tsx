@@ -26,7 +26,7 @@ export default function CreatePoolBasic({ closeModal }: Props) {
         mintAmtPerSat: 100,
         launchRatio: 90,               // 90%
         limit: 900_000_000,            // 9亿
-        bindingSat: 1_000,             // ordx专用
+        bindingSat: 10_000,             // ordx专用
     };
 
     // network 固定主网
