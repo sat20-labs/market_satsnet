@@ -121,7 +121,7 @@ const Unstack: React.FC<UnstakeProps> = ({
         }
       );
 
-      return {success: true};
+      return { success: true };
     },
     onSuccess: async (data) => {
       toast.success(`Unstake successful`);
@@ -191,7 +191,7 @@ const Unstack: React.FC<UnstakeProps> = ({
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
             <span className="py-2 uppercase">{t('common.unstake')}</span>
-            
+
             <span className="flex items-center text-xs text-zinc-500">
               <button
                 onClick={handleMaxClick}
@@ -201,10 +201,10 @@ const Unstack: React.FC<UnstakeProps> = ({
                 {t('common.max')}
               </button>
               <ButtonRefresh
-                  onRefresh={refresh}
-                  loading={isRefreshing}
-                  className="bg-zinc-800/50"
-                />
+                onRefresh={refresh}
+                loading={isRefreshing}
+                className="bg-zinc-800/50"
+              />
             </span>
           </div>
           <div className="relative w-full">
@@ -215,7 +215,7 @@ const Unstack: React.FC<UnstakeProps> = ({
               className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4"
               placeholder={t('common.enterAssetAmount')}
               min={1}
-              step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`}
+              step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility - 1)}1`}
               onKeyDown={(e) => {
                 if (divisibility === 0 && e.key === '.') {
                   e.preventDefault();
@@ -223,23 +223,28 @@ const Unstack: React.FC<UnstakeProps> = ({
               }}
               disabled={unstakeMutation.isPending}
             />
+            <span className="absolute top-1/3 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
+              {ticker}
+            </span>
             <p className='text-xs font-medium text-zinc-500 mb-2'>
               {/* <span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>L 2</span>  */}
               {t('common.balance')}: {displayAssetBalance.toLocaleString()} {ticker}
             </p>
           </div>
-          
+
           {/* Value display for calculated satoshi amount */}
           <div className="relative w-full mt-4">
             <input
               type="number"
               value={value}
-              className="w-full input-swap border-none rounded-lg px-4 py-2 text-lg sm:text-2xl font-bold text-white pr-16 mb-4 bg-zinc-800/50"
-              placeholder="Calculated satoshi amount" 
+              className="w-full input-swap border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4 bg-zinc-800/50"
+              placeholder="0"
               readOnly
               disabled={unstakeMutation.isPending}
             />
-
+            <span className="absolute top-1/3 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
+              sats
+            </span>
           </div>
 
           {/* ToL1 checkbox */}

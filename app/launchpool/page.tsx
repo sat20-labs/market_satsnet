@@ -127,12 +127,19 @@ export default function LaunchPoolProgressSortTest() {
     const { data: poolList = [], isLoading } = useQuery({
         queryKey: ['poolListAll', network, contractURLsData?.length ?? 0],
         enabled: !!contractURLsData && contractURLsData.length > 0,
-        gcTime: 0,
-        refetchInterval: 60000,
+        // 延长缓存；同一页面/路由间复用，避免重复打接口
+        staleTime: 120_000,   // 2min 内不重新拉
+        gcTime: 10 * 60_000,  // 10min 内缓存不回收
+        // 避免频繁后台刷新
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        refetchInterval: false, // 如需实时，可设为 60_000 或更长
+        retry: 1,
         queryFn: async () => {
             const urls: string[] = contractURLsData || [];
             if (urls.length === 0) return [];
-            const BATCH_SIZE = 20;
+            // 降低并发，减轻瞬时压力（权衡加载时间）
+            const BATCH_SIZE = 8;
             const all: any[] = [];
             for (let i = 0; i < urls.length; i += BATCH_SIZE) {
                 const pageURLs = urls.slice(i, i + BATCH_SIZE);
@@ -140,12 +147,9 @@ export default function LaunchPoolProgressSortTest() {
                     pageURLs.map(async (item: string) => {
                         try {
                             const { status } = await getContractStatus(item);
-                            if (status) {
-                                return { ...JSON.parse(status), contractURL: item };
-                            }
+                            if (status) return { ...JSON.parse(status), contractURL: item };
                             return null;
-                        } catch (error) {
-                            console.error(`Failed to get contract status for ${item}:`, error);
+                        } catch {
                             return null;
                         }
                     })
@@ -155,7 +159,6 @@ export default function LaunchPoolProgressSortTest() {
             return all;
         },
     });
-
     // 适配数据
     const adaptedPoolList = useMemo(() => {
         return poolList.map((pool: any) => adaptPoolData(pool, satsnetHeight));
