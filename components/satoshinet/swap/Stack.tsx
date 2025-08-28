@@ -198,6 +198,9 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
               }}
               disabled={stakeMutation.isPending}
             />
+            <span className="absolute top-1/3 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
+              {ticker}
+            </span>
             <p className='text-xs font-medium text-zinc-500 mb-2'>
               {/* <span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>L 1</span> */}
               {t('common.balance')}: {displayAssetBalance.toLocaleString()} {ticker}
@@ -209,11 +212,14 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
             <input
               type="number"
               value={value}
-              className="w-full input-swap border-none rounded-lg px-4 py-2 text-lg sm:text-2xl font-bold text-white pr-16 mb-4 bg-zinc-800/50"
-              placeholder="Calculated satoshi amount"
+              className="w-full input-swap border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4 bg-zinc-800/50"
+              placeholder="0"
               readOnly
               disabled={stakeMutation.isPending}
             />
+            <span className="absolute top-1/3 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
+              sats
+            </span>
             <p className='text-xs font-medium text-zinc-500 mb-2'>
               <span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>BTC</span>
               {t('common.balance')}: {(satsBalance.availableAmt + satsBalance.lockedAmt).toLocaleString()} sats
