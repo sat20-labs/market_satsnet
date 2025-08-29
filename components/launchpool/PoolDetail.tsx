@@ -289,7 +289,13 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       bindingSat={poolDetails.mintAmtPerSat || poolDetails.bindingSat}
                       showMintHistory={true}
                       showIndex={false}
-                      tableHeaders={[t('pages.poolDetail.address'), '资产数量/聪']}
+                      tableHeaders={[
+                        t('pages.poolDetail.address'), 
+                        !Array.isArray(poolDetails.LaunchTxIDs) || poolDetails.LaunchTxIDs.length === 0 
+                          ? '退款聪数' 
+                          : '资产数量/聪'
+                      ]}
+                      isLaunchFailed={!Array.isArray(poolDetails.LaunchTxIDs) || poolDetails.LaunchTxIDs.length === 0}
                     />
                   </div>
                 </div>

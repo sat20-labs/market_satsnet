@@ -24,6 +24,7 @@ interface ParticipantsTableProps {
   showMintHistory?: boolean;
   tableHeaders?: string[];
   onClose?: () => void;
+  isLaunchFailed?: boolean;
 }
 
 /**
@@ -38,14 +39,14 @@ const fetchParticipantsWithPagination = async (
   contractURL: string, 
   bindingSat: number, 
   pageStart: number = 0, 
-  pageLimit: number = 20
+  pageLimit: number = 20,
+  isLaunchFailed?: boolean
 ) => {
   if (!contractURL) return { data: [], total: 0 };
   
   try {
     // 获取分页的地址列表
     const response = await marketApi.getContractAllAddresses(contractURL, pageStart, pageLimit);
-    console.log('response', response);
 
     // 处理返回的数据结构
     let list: any[] = [];
@@ -99,16 +100,25 @@ const fetchParticipantsWithPagination = async (
     
     // 处理数据并计算数量
     const processedData = resultStatusList.map(v => {
-      const totalMint = v.valid?.TotalMint;
       let amount = 0;
-      if (totalMint?.Value !== undefined && totalMint?.Precision !== undefined) {
-        amount = totalMint.Value / Math.pow(10, totalMint.Precision);
+      let sats = 0;
+      
+      if (isLaunchFailed) {
+        // 发射失败时，计算退款数量（只有聪，没有资产数量）
+        sats = v.invalid?.MintHistory?.reduce((acc: number, item: any) => acc + item.OutValue, 0) || 0;
+      } else {
+        // 正常情况，计算资产数量
+        const totalMint = v.valid?.TotalMint;
+        if (totalMint?.Value !== undefined && totalMint?.Precision !== undefined) {
+          amount = totalMint.Value / Math.pow(10, totalMint.Precision);
+        }
+        sats = Math.floor((amount + bindingSat - 1) / bindingSat);
       }
       
       return {
         ...v,
         amount: amount,
-        sats: Math.floor((amount + bindingSat - 1) / bindingSat),
+        sats: sats,
       };
     });
 
@@ -129,6 +139,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   showMintHistory = false,
   tableHeaders = ['地址', '资产数量/聪'],
   onClose,
+  isLaunchFailed = false,
 }) => {
   // 分页状态
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,8 +152,8 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
 
   // 使用分页查询
   const { data: participantsData, isLoading, error } = useQuery({
-    queryKey: ['participants', contractURL, bindingSat, currentPage, pageSize],
-    queryFn: () => fetchParticipantsWithPagination(contractURL, bindingSat, pageStart, pageLimit),
+    queryKey: ['participants', contractURL, bindingSat, currentPage, pageSize, isLaunchFailed],
+    queryFn: () => fetchParticipantsWithPagination(contractURL, bindingSat, pageStart, pageLimit, isLaunchFailed),
     enabled: !!contractURL,
     staleTime: 30000, // 30秒内不重新获取
     retry: 2, // 失败时重试2次
@@ -173,7 +184,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   };
 
   const handleRetry = () => {
-    queryClient.invalidateQueries({ queryKey: ['participants', contractURL, bindingSat, currentPage, pageSize] });
+    queryClient.invalidateQueries({ queryKey: ['participants', contractURL, bindingSat, currentPage, pageSize, isLaunchFailed] });
   };
 
   // 展开行状态
@@ -259,7 +270,13 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                       )}
                     </TableCell>
                     <TableCell className="p-3">
-                      {participant.amount ? `${participant.amount}/${participant.sats}` : '-'}
+                      {isLaunchFailed ? (
+                        // 发射失败时只显示退款聪数量
+                        participant.sats ? `${participant.sats} 聪 (退款)` : '-'
+                      ) : (
+                        // 正常情况显示资产数量/聪
+                        participant.amount ? `${participant.amount}/${participant.sats}` : '-'
+                      )}
                     </TableCell>
                   </TableRow>
                   {showMintHistory && isExpanded && (
