@@ -9,6 +9,7 @@ import { Icon } from "@iconify/react";
 import { useTranslation } from 'react-i18next';
 import { contractService } from '@/domain/services/contract';
 import { useCommonStore } from '@/store/common';
+import { getValueFromPrecision } from '@/utils';
 interface JoinPoolProps {
   closeModal: () => void;
   poolData: any;
@@ -44,13 +45,18 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
       if (!address || !poolData?.contractURL) return;
       setLoading(true);
       try {
+        console.log('fetchMinted', poolData?.contractURL);
         const data = await contractService.getContractStatusByAddress(poolData.contractURL, address);
-        const mintedAmt = Number(data?.valid?.MintHistory?.[0]?.Amt || 0);
-        setMinted(mintedAmt);
-        setMaxJoin(Math.max(limit - mintedAmt, 0));
+        console.log('fetchMinted', data);
+        const totalMinted = data?.valid?.MintHistory?.reduce((acc: number, item: any) => {
+          const amt = getValueFromPrecision(item.OutAmt);
+          return acc + amt.value;
+        }, 0) || 0;
+        setMinted(totalMinted);
+        setMaxJoin(Math.max(limit - totalMinted, 0));
         setAmount(prev => {
           const n = Number(prev);
-          if (n > limit - mintedAmt) return String(Math.max(limit - mintedAmt, 0));
+          if (n > limit - totalMinted) return String(Math.max(limit - totalMinted, 0));
           return prev;
         });
       } catch (e) {

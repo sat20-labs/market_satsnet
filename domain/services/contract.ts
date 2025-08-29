@@ -38,8 +38,8 @@ export default class ContractService {
   }
 
   async getContractStatusByAddress(url: string, address: string) {
-    const res = await this.client.getContractStatusByAddress(url, address);
-    return res;
+    const { status} = await this.client.getContractStatusByAddress(url, address);
+    return status ? JSON.parse(status) : null;
   }
 
   async getUserHistoryInContract(url: string, address: string, pageStart: number = 0, pageLimit: number = 20) {
