@@ -54,7 +54,7 @@ const Swap = ({
   const [toAmount, setToAmount] = useState<string>("");
   const [activeInput, setActiveInput] = useState<'from' | 'to'>('from');
   const [slippage, setSlippage] = useState<string>("0");
-  const { satsnetHeight, btcFeeRate  } = useCommonStore();
+  const { satsnetHeight, btcFeeRate } = useCommonStore();
   const assetAmtInPool = useMemo(() => getValueFromPrecision(swapData?.AssetAmtInPool), [swapData?.AssetAmtInPool]);
   const divisibility = tickerInfo?.divisibility || 0;
 
@@ -313,7 +313,7 @@ const Swap = ({
           }
         );
       }
-      
+
       // invokeContractV2_SatsNet 没有返回值，提交就当作成功
       return { success: true };
     },

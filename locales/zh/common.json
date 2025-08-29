@@ -18,6 +18,7 @@
   "content": "内容",
   "selfmint": "铸造比例",
   "max": "最大值",
+  "max_supply": "最大供应量",
   "source": "来源",
   "my_blog": "博客",
   "rarity": "稀有度",
@@ -52,7 +53,7 @@
   "listsell": "上架卖单",
   "listbuy": "上架买单",
   "buy": "买入",
-  "sell_unit_price": "每资产单价",  
+  "sell_unit_price": "每资产单价",
   "ok": "确定",
   "time": "时间",
   "tx": "交易",
@@ -133,7 +134,7 @@
   "quantityPositive": "数量必须为正数。",
   "pricePositive": "价格必须为正数。",
   "estPay": "预计支付:",
-  "sats": "sats", 
+  "sats": "sats",
   "processing": "处理中...",
   "buySuccess": "买单提交成功！",
   "buyFailed": "提交买单失败",
@@ -144,7 +145,7 @@
   "you_pay": "您将支付",
   "you_receive": "您将收到",
   "takeorder": "订单薄",
-  "makeorder": "挂单", 
+  "makeorder": "挂单",
   "swap": "Swap",
   "deposit": "存款",
   "withdraw": "提取",
@@ -174,11 +175,9 @@
   "quickInput": "快捷输入",
   "currentPrice": "当前价格",
   "protocol": "协议",
-
   "limitorder": "限价单",
   "limitorder_sell": "限价卖出",
   "limitorder_buy": "限价买入",
-
   "limitorder_depth": "深度",
   "limitorder_price": "价格(sats)",
   "limitorder_quantity": "数量",
@@ -189,17 +188,14 @@
   "limitorder_myorders": "我的交易",
   "limitorder_history": "交易历史",
   "limitorder_cancel": "取消",
-  
   "limitorder_table_type": "类型",
   "limitorder_table_time": "时间",
   "limitorder_table_price": "价格",
   "limitorder_table_quantity": "数量",
   "limitorder_table_amount": "金额",
   "limitorder_table_filled_quantity": "成交数量",
-  "limitorder_table_tradeprice": "成交价格",  
-  "limitorder_table_status": "状态",  
-
-
+  "limitorder_table_tradeprice": "成交价格",
+  "limitorder_table_status": "状态",
   "limitorder_history_type": "类型",
   "limitorder_history_order_time": "时间",
   "limitorder_history_unit_price": "单价(sats)",
@@ -211,20 +207,15 @@
   "limitorder_history_cancel": "撤销",
   "limitorder_history_buy": "买",
   "limitorder_history_sell": "卖",
-
-
-
   "limitorder_status_completed": "已完成",
-  "limitorder_status_cancelled": "已取消",  
+  "limitorder_status_cancelled": "已取消",
   "limitorder_status_pending": "处理中",
   "limitorder_status_pending_buy": "买入中",
   "limitorder_status_pending_sell": "卖出中",
-
   "history_no_more_data": "没有更多数据了",
   "history_loading": "加载中...",
   "history_no_records": "暂无交易记录",
   "history_scroll_to_load_more": "向下滚动以加载更多",
-
   "makeorder_sell": "挂卖单",
   "makeorder_buy": "挂买单",
   "takeorder_sell": "卖出（吃买单）",
@@ -273,8 +264,7 @@
   "swap_funds": "资金",
   "swap_profit": "收益",
   "swap_recharge": "充值",
-  "swap_unused": "未使用", 
-
+  "swap_unused": "未使用",
   "orderSummary": "订单总览",
   "value": "金额",
   "walletBalance": "钱包余额",
@@ -313,5 +303,5 @@
   "registering": "注册中...",
   "register_success": "成功注册为推荐人",
   "register_failed": "注册推荐人失败",
-  "please_input_name": "请输入名称"  
+  "please_input_name": "请输入名称"
 }
