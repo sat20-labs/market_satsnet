@@ -37,7 +37,7 @@
     "asset_name": "资产名称",
     "pool_status": "池子状态",
     "total_supply": "总供应量",
-    "launch_ration": "启动比例",
+    "launch_ratio": "启动比例",
     "deploy_time": "部署时间",
     "enable_block": "启用区块",
     "start_block": "起始区块",
