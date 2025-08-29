@@ -6,6 +6,7 @@ import JoinPool from '@/components/launchpool/JoinPool';
 import LaunchPoolDetails from '@/components/launchpool/PoolDetail';
 import LaunchPoolTemplate from '@/components/launchpool/[templateId]/TemplateDetailsClient';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
+import { HomeMintTabs } from '@/components/market/HomeMintTabs';
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
@@ -111,6 +112,21 @@ export default function LaunchPoolProgressSortTest() {
         { label: t('pages.launchpool.runes'), key: 'runes' },
     ];
 
+    // ===== 新增：状态筛选（全部 / 正在铸造 / 铸造已完成）=====
+    const [statusFilter, setStatusFilter] = useState<'all' | 'minting' | 'completed'>('all');
+    const statusTabs = [
+        { label: 'All', key: 'all' },
+        { label: 'Minting', key: 'minting' },
+        { label: 'Completed', key: 'completed' },
+    ];
+    const handleStatusChange = (val: string) => {
+        if (val === 'all' || val === 'minting' || val === 'completed') {
+            setStatusFilter(val);
+            setCurrentPage(1);
+        }
+    };
+    // ===== 新增结束 =====
+
     // 获取所有合约URL列表
     const { data: contractURLsData } = useQuery({
         queryKey: ['launchpoolContractURLs', network],
@@ -179,11 +195,23 @@ export default function LaunchPoolProgressSortTest() {
 
     // 全局过滤 + 排序（由 sortKey + sortOrder 决定）
     const filteredPoolList = useMemo(() => {
-        const list =
+        // 协议过滤
+        let list =
             protocol === 'all'
                 ? adaptedPoolList
                 : adaptedPoolList.filter((p: any) => p.protocol === protocol);
 
+        // ===== 新增：状态过滤 =====
+        if (statusFilter !== 'all') {
+            list = list.filter((p: any) =>
+                statusFilter === 'minting'
+                    ? p.poolStatus === PoolStatus.ACTIVE
+                    : p.poolStatus === PoolStatus.COMPLETED || p.poolStatus === PoolStatus.CLOSED
+            );
+        }
+        // ===== 新增结束 =====
+
+        // 排序
         return list
             .slice()
             .sort((a: any, b: any) => {
@@ -191,13 +219,12 @@ export default function LaunchPoolProgressSortTest() {
                 const vb = Number(b[sortKey]) || 0;
                 if (va !== vb) return sortOrder === 'asc' ? va - vb : vb - va;
 
-                // 次级排序：与主键相反的键，固定倒序保证稳定感知
                 const secondaryKey = sortKey === 'progress' ? 'deployTime' : 'progress';
                 const sa = Number(a[secondaryKey]) || 0;
                 const sb = Number(b[secondaryKey]) || 0;
                 return sb - sa;
             });
-    }, [adaptedPoolList, protocol, sortKey, sortOrder]);
+    }, [adaptedPoolList, protocol, statusFilter, sortKey, sortOrder]);
 
     // 前端分页切片
     const pagedPoolList = useMemo(() => {
@@ -219,7 +246,7 @@ export default function LaunchPoolProgressSortTest() {
         { key: 'assetName', label: t('pages.launchpool.asset_name') },
         { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
         { key: 'totalSupply', label: t('pages.launchpool.total_supply') },
-        { key: 'launchRation', label: t('pages.launchpool.launch_ration') },
+        { key: 'launchRation', label: t('pages.launchpool.launch_ratio') },
 
         { key: 'enableBlock', label: t('pages.launchpool.enable_block') },
         { key: 'startBlock', label: t('pages.launchpool.start_block') },
@@ -245,12 +272,28 @@ export default function LaunchPoolProgressSortTest() {
     };
 
     return (
-        <div className="p-4 relative">
-            <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
-                <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
-                <div className="flex items-center gap-2 mr-4">
+        <div className="p-2 relative">
+            {/* 头部：移动端两行，桌面一行 */}
+            <div className="my-2 px-2 sm:px-1 flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+                {/* 行1：协议筛选 */}
+                <div className="w-full md:w-auto">
+                    <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
+                </div>
+
+                {/* 行2：状态筛选 + 按钮（移动端整行展示，桌面靠右横排） */}
+                <div className="w-full md:w-auto sm:mr-16 md:mr-32 flex items-center justify-between md:justify-end gap-2 md:gap-4 flex-wrap">
+                    {/* 状态筛选 Tabs */}
+                    <HomeMintTabs
+                        value={statusFilter}
+                        onChange={handleStatusChange}
+                        tabs={statusTabs}
+                        variant="underline"
+                    />
                     <WalletConnectBus asChild>
-                        <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/launchpool/create')}>
+                        <Button
+                            className="h-10 btn-gradient w-auto sm:w-auto md:w-auto"
+                            onClick={() => (window.location.href = '/launchpool/create')}
+                        >
                             {t('pages.launchpool.create_pool')}
                         </Button>
                     </WalletConnectBus>
@@ -264,7 +307,7 @@ export default function LaunchPoolProgressSortTest() {
                 </div>
             )}
 
-            <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
+            <div className="relative overflow-x-auto w-full px-1 py-4 bg-zinc-950/50 rounded-lg">
                 <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
                     <TableHeader>
                         <TableRow>
@@ -348,18 +391,18 @@ export default function LaunchPoolProgressSortTest() {
                                 </TableCell>
 
                                 <TableCell className="px-4 py-2 text-center">
-                                    <div className="flex items-center h-full gap-2">
+                                    <div className="flex justify-start items-center h-full gap-4">
                                         <ActionButtons pool={adaptedPool} openModal={openModal} />
                                         {adaptedPool.progress >= 100 && (
                                             <button
-                                                className="mt-2 text-zinc-400 hover:text-indigo-500 transition-colors"
+                                                className="rounded-md border border-zinc-700 p-2 text-zinc-400 hover:text-indigo-500 transition-colors"
                                                 onClick={() =>
                                                     router.push(
                                                         `/swap/detail?asset=${adaptedPool.assetName.Protocol}:f:${adaptedPool.assetName.Ticker}`
                                                     )
                                                 }
                                             >
-                                                <Icon icon="mdi:open-in-new" className="w-5 h-5" />
+                                                <Icon icon="lucide:arrow-left-right" className="w-5 h-5 text-base" />
                                             </button>
                                         )}
                                     </div>

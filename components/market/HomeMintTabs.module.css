@@ -1,0 +1,23 @@
+.root {
+    /* 防止排版插件等影响 */
+    isolation: isolate;
+}
+
+/* 仅重置本组件内的触发器基础外观，避免被全局 button/typography 影响 */
+.root :where([role="tab"]) {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    line-height: 1;
+    box-shadow: none;
+}
+
+/* 也顺带确保列表容器不被外部 margin/padding 影响 */
+.root :where([data-radix-tabs][data-state]) {
+    margin: 0;
+    padding: 0;
+}
