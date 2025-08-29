@@ -104,8 +104,8 @@ function OrderPageContent() {
                 <TabsTrigger value="swap">{t('common.swap')}</TabsTrigger>
                 <TabsTrigger value="deposit">{t('common.deposit')}</TabsTrigger>
                 <TabsTrigger value="withdraw">{t('common.withdraw')}</TabsTrigger>
-                <TabsTrigger value="stake">{t('common.stake')}</TabsTrigger>
-                <TabsTrigger value="unstake">{t('common.unstake')}</TabsTrigger>
+                {/* <TabsTrigger value="stake">{t('common.stake')}</TabsTrigger>
+                <TabsTrigger value="unstake">{t('common.unstake')}</TabsTrigger> */}
               </TabsList>
               <TabsContent value="swap">
                 <Swap
@@ -141,7 +141,7 @@ function OrderPageContent() {
                   isRefreshing={isSwapStatusLoading}
                 />
               </TabsContent>
-              <TabsContent value="stake">
+              {/* <TabsContent value="stake">
                 <Stake
                   asset={asset}
                   ticker={ticker}
@@ -167,7 +167,7 @@ function OrderPageContent() {
                   tickerInfo={tickerInfo}
                   swapData={swapStatusData}
                 />
-              </TabsContent>
+              </TabsContent> */}
             </Tabs>
           </div>
         </div>
