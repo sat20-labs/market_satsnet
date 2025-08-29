@@ -5,6 +5,7 @@ import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from "@/types";
 import { getValueFromPrecision } from "@/utils";
 import { format } from "date-fns";
+import { BtcPrice } from "../../BtcPrice";
 import {
   Table,
   TableBody,
@@ -137,7 +138,7 @@ export default function HistorySwapTable({
       const { value: inAmt } = getValueFromPrecision(item.InAmt);
       const { value: expectedAmt } = getValueFromPrecision(item.ExpectedAmt);
       const { value: outAmt } = getValueFromPrecision(item.OutAmt);
-      
+
       const inValue = typeof item.InValue === 'number' ? item.InValue : 0;
       const outValue = typeof item.OutValue === 'number' ? item.OutValue : 0;
       const remainingAmt = 0; // Add if needed from raw data
@@ -179,7 +180,7 @@ export default function HistorySwapTable({
   if (!orders.length) {
     return <div className="text-center py-2 text-gray-500">{noDataMessage}</div>;
   }
-  
+
 
   return (
     <div className="max-w-full">
@@ -188,7 +189,7 @@ export default function HistorySwapTable({
           <TableHeader>
             <TableRow className="bg-zinc-800 text-gray-500 text-xs sticky top-0 z-10">
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_type")}</TableHead>
-              <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>              
+              <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_order_time")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.swap")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_price")}</TableHead>
               <TableHead className="text-left whitespace-nowrap">{t("common.swap_order_quantity")}</TableHead>
@@ -210,14 +211,32 @@ export default function HistorySwapTable({
                   <TableCell className={`text-center font-bold ${order.rawData.OrderType === 2 ? "text-green-500" : order.rawData.OrderType === 1 ? "text-red-500" : "text-gray-600"}`}>
                     {orderTypeLabels[order.rawData.OrderType] || order.rawData.OrderType}
                   </TableCell>
-                  <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>                  
-                  <TableCell className="text-center text-zinc-400 text-xs">{order.rawData.OrderType === 2 ?  "SATS → " + ticker?.toUpperCase() : order.rawData.OrderType === 1 ?  ticker?.toUpperCase() + " → SATS" : "-"}</TableCell>
+                  <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
+                  <TableCell className="text-center text-zinc-400 text-xs">{order.rawData.OrderType === 2 ? "SATS → " + ticker?.toUpperCase() : order.rawData.OrderType === 1 ? ticker?.toUpperCase() + " → SATS" : "-"}</TableCell>
                   <TableCell className="text-center">{order.price.toFixed(8)}</TableCell>
-                  <TableCell className="text-left">{order.rawData.OrderType === 2 ? <>{order.inValue} <span className="text-zinc-400"> sats </span></> : order.rawData.OrderType === 1 ?<> {order.inAmt} <span className="text-zinc-400">${ticker}</span></>: "-"}</TableCell>
+                  <TableCell className="text-left">{order.rawData.OrderType === 2 ? <>{order.inValue} <span className="text-zinc-400"> sats </span></> : order.rawData.OrderType === 1 ? <> {order.inAmt} <span className="text-zinc-400">${ticker}</span></> : "-"}</TableCell>
                   {/* <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell> */}
                   <TableCell className="text-left">{order.side === "Cancelled" ? "-" : order.side === "Buy" ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-400">${ticker}</span></TableCell>
-                  <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : order.outValue}</TableCell>
+                  <TableCell className="text-center">
+                    {/* {order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : order.outValue} */}
+                    {(() => {
+                      if (order.side === "Cancelled") return "-";
+                      const sats =
+                        order.side === "Buy" && order.done !== 0
+                          ? order.inValue - order.outValue
+                          : order.outValue;
+                      return (
+                        <div className="flex flex-col items-center leading-none gap-2">
+                          <div className="text-[13px]">{sats}</div>
+                          <div className="text-[10px] font-medium text-zinc-500">
+                            ($<BtcPrice btc={Number(sats) / 100000000} />)
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                  </TableCell>
                   <TableCell className="text-center">
                     <span
                       className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${Number(order.done) === 1
@@ -236,7 +255,7 @@ export default function HistorySwapTable({
                     {order.rawData.OutTxId ? (
                       <a
                         href={generateMempoolUrl({ network: network, path: `tx/${order.rawData.OutTxId}`, chain: order.rawData?.ToL1 ? Chain.BTC : Chain.SATNET, env: 'dev' })}
-                        target="_blank" 
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center hover:text-primary"
                       >

@@ -5,6 +5,7 @@ import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from "@/types";
 import { getValueFromPrecision } from "@/utils";
 import { format } from "date-fns";
+import { BtcPrice } from "../../BtcPrice";
 import {
   Table,
   TableBody,
@@ -150,9 +151,9 @@ export default function HistoryTable({
       const { value: expectedAmt } = getValueFromPrecision(item.ExpectedAmt);
       const { value: outAmt } = getValueFromPrecision(item.OutAmt);
       const { value: remainingAmt } = getValueFromPrecision(item.RemainingAmt);
-      if (item.OrderType === 3)  {
+      if (item.OrderType === 3) {
         console.log('item', item);
-        
+
         console.log('price', price, 'inAmt', inAmt, 'expectedAmt', expectedAmt, 'outAmt', outAmt, 'remainingAmt', remainingAmt);
       }
       const inValue = item.InValue ? Number(item.InValue) : 0;
@@ -170,7 +171,7 @@ export default function HistoryTable({
       const displayOrderQuantity = expectedAmt;
       let displayTradeQuantity = outAmt;
       let displayTradeAmountSats = outValue;
-      
+
       if (item.OrderType === 1) {
         displayTradeQuantity = inAmt - remainingAmt - outAmt;
       }
@@ -266,7 +267,22 @@ export default function HistoryTable({
                   <TableCell className="text-center">{order.price.toFixed(8)}</TableCell>
                   <TableCell className="text-center">{order.displayOrderQuantity}</TableCell>
                   <TableCell className="text-center">{order.displayTradeQuantity}</TableCell>
-                  <TableCell className="text-center">{order.displayTradeAmountSats}</TableCell>
+                  <TableCell className="text-center">
+                    {/* {order.displayTradeAmountSats} */}
+                    {(() => {
+
+                      return (
+                        <div className="flex flex-col items-center leading-none gap-2">
+                          <div className="text-[13px]">{order.displayTradeAmountSats}</div>
+                          <div className="text-[10px] font-medium text-zinc-500">
+                            ($<BtcPrice btc={Number(order.displayTradeAmountSats) / 100000000} />)
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                  </TableCell>
+
                   {/* <TableCell className="text-center">{order.serviceFee}</TableCell> */}
                   <TableCell className="text-center">
                     <span
