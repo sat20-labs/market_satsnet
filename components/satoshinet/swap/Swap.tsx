@@ -436,7 +436,7 @@ const Swap = ({
             <span>{t('common.balance')}: <span className="font-bold">{swapType === 'sats-to-asset' ? displaySatsBalance.toLocaleString() : displayAssetBalance.toLocaleString()} </span> {swapType === 'sats-to-asset' ? 'sats' : ticker}
               {swapType === 'sats-to-asset' && (
                 <span className="text-xs text-zinc-600 ml-2">
-                  ($<BtcPrice btc={displayAssetBalance / 100000000} />)
+                  ($<BtcPrice btc={displaySatsBalance / 100000000} />)
                 </span>
               )}
             </span>
