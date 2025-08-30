@@ -59,12 +59,14 @@ function adaptPoolData(pool, satsnetHeight) {
     protocol: protocol,
     poolStatus,
     deployTime: pool.deployTime ?? '',
-    dealPrice: pool.dealPrice ?? '-',
-    satsValueInPool: pool.SatsValueInPool ?? '-',
-    totalDealSats: pool.TotalDealSats ?? '-',
-    totalDealCount: pool.TotalDealCount ?? '-',
+    // 转为数值，便于排序
+    dealPrice: Number(pool.dealPrice ?? 0),
+    satsValueInPool: Number(pool.SatsValueInPool ?? 0),
+    totalDealSats: Number(pool.TotalDealSats ?? 0),
+    totalDealCount: Number(pool.TotalDealCount ?? 0),
   };
 }
+
 
 const Swap = () => {
   const { t } = useTranslation(); // Specify the namespace 
@@ -136,7 +138,7 @@ const Swap = () => {
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-  
+
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
@@ -157,10 +159,26 @@ const Swap = () => {
     { label: t('pages.launchpool.runes'), key: 'runes' },
   ];
 
+  // 默认按“交易量(总成交sats)”倒序；若相等再看成交笔数，然后按部署时间倒序
   const filteredPoolList = useMemo(() => {
-    let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
-    return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
+    let list =
+      protocol === 'all'
+        ? adaptedPoolList
+        : adaptedPoolList.filter(pool => pool.protocol === protocol);
+
+    return list.slice().sort((a, b) => {
+      const vA = Number(a.totalDealSats ?? 0);
+      const vB = Number(b.totalDealSats ?? 0);
+      if (vA !== vB) return vB - vA;
+
+      const cA = Number(a.totalDealCount ?? 0);
+      const cB = Number(b.totalDealCount ?? 0);
+      if (cA !== cB) return cB - cA;
+
+      return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
+    });
   }, [adaptedPoolList, protocol]);
+
 
   // 处理分页变化
   const handlePageChange = (page: number) => {
@@ -187,7 +205,7 @@ const Swap = () => {
           </WalletConnectBus> */}
         </div>
       </div>
-      
+
       {/* 加载状态 */}
       {isLoading && (
         <div className="flex justify-center items-center py-8">
@@ -195,7 +213,7 @@ const Swap = () => {
           <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
         </div>
       )}
-      
+
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
