@@ -108,7 +108,8 @@ const TranscendPage = () => {
       return contractURLs.filter((c: string) => c.indexOf('transcend.tc') > -1);
     },
     gcTime: 0,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   // 分页获取合约状态
@@ -149,11 +150,12 @@ const TranscendPage = () => {
   };
 
   const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['transcendList', currentPage, pageSize, network],
+    queryKey: ['transcendList', currentPage, pageSize],
     queryFn: () => getTranscendList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   const poolList = poolListData?.pools || [];

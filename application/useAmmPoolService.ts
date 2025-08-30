@@ -12,8 +12,8 @@ export function useAmmPool(contractUrl: string) {
     queryKey: ['ammPool', contractUrl],
     queryFn: () => fetchAmmPoolStatus(contractUrl),
     enabled: !!contractUrl,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: false,
+    refetchInterval: 10000, // 增加到10秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   useEffect(() => {

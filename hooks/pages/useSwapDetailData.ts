@@ -43,7 +43,8 @@ export const useSwapDetailData = (asset: string) => {
     queryKey: ['ticker', 'holders', asset, network],
     queryFn: () => clientApi.getTickerHolders(asset, 1, 10),
     enabled: !!asset,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     refetchOnWindowFocus: false,
   });
 
@@ -59,7 +60,8 @@ export const useSwapDetailData = (asset: string) => {
   const { data: swapStatus, isPending: isSwapStatusPending, isLoading: isSwapStatusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ["swap", 'status', contractUrl, network],
     queryFn: () => contractService.getContractStatus(contractUrl),
-    refetchInterval: 6000,
+    refetchInterval: 15000, // 增加到15秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractUrl,
     refetchOnWindowFocus: false,
   });
@@ -67,7 +69,8 @@ export const useSwapDetailData = (asset: string) => {
   const { data: analytics, isPending: isAnalyticsPending, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
     queryKey: ["swap", 'analytics', contractUrl, network],
     queryFn: () => contractService.getContractAnalytics(contractUrl),
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractUrl,
     refetchOnWindowFocus: false,
   });

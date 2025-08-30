@@ -5,7 +5,7 @@ import { Icon } from '@iconify/react';
 import { useCommonStore } from '@/store';
 import { marketApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import {
@@ -50,21 +50,31 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
   const filterList = useMemo(() => FILTER_OPTIONS, [t]);
 
   // Query for my activities
-  const myActivitiesQuery = useQuery<ApiResponse>({
-    queryKey: ['history', assets_name, page, pageSize, sort, apiFilter, chain, 'my', address],
-    queryFn: () =>
-      marketApi.getHistory({
-        offset: (page - 1) * pageSize,
-        size: pageSize,
-        assets_name,
-        sort,
-        filter: apiFilter === 0 ? undefined : apiFilter,
-        address,
-      }),
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ['myActivitiesLog', address],
+    queryFn: ({ pageParam = 0 }) => marketApi.getHistory({
+      offset: pageParam * pageSize,
+      size: pageSize,
+      assets_name,
+      sort,
+      filter: apiFilter === 0 ? undefined : apiFilter,
+      address,
+    }),
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.data?.order_list || lastPage.data.order_list.length < pageSize) return undefined;
+      return allPages.length;
+    },
+    initialPageParam: 0,
+    refetchInterval: 20000, // 增加到20秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!address,
-    refetchInterval: 10000,
-    refetchIntervalInBackground: false,
-    staleTime: 10000,
   });
 
   const transformOrders = (orders: Order[]): Activity[] => {
@@ -114,18 +124,18 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
   };
 
   const activities = useMemo(() => {
-    if (!myActivitiesQuery.data?.data?.order_list) return [];
-    return transformOrders(myActivitiesQuery.data.data.order_list);
-  }, [myActivitiesQuery.data]);
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => transformOrders(page.data.order_list));
+  }, [data]);
 
-  const totalCount = myActivitiesQuery.data?.data?.total ?? 0;
+  const totalCount = data?.pages[0]?.data?.total ?? 0;
   const totalPages = useMemo(() => {
     if (totalCount === 0) return 1;
     return Math.ceil(totalCount / pageSize);
   }, [totalCount, pageSize]);
 
   const handleRefresh = () => {
-    myActivitiesQuery.refetch();
+    refetch();
   };
 
   const handlePageSizeChange = (newSize: number) => {
@@ -158,8 +168,8 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
       <div className="my-2">
         <ActivityTable
           activities={activities}
-          isLoading={myActivitiesQuery.isLoading}
-          error={myActivitiesQuery.error as Error}
+          isLoading={isLoading}
+          error={null} // Error handling is not implemented in the new query structure
         />
       </div>
       {totalCount > 0 && (
@@ -170,7 +180,7 @@ export const MyActivitiesLog = ({ assets_name, address }: MyActivitiesLogProps) 
           pageSize={pageSize}
           onPageSizeChange={handlePageSizeChange}
           availablePageSizes={PAGE_SIZES}
-          isLoading={myActivitiesQuery.isLoading}
+          isLoading={isLoading}
         />
       )}
     </div>

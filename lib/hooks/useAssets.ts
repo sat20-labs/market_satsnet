@@ -59,29 +59,22 @@ export const useAssets = () => {
   // 错误状态
   const [error, setError] = useState<Error | null>(null);
 
-  // 资产摘要查询
-  const summaryQuery = useQuery({
-    queryKey: ['summary', address, network],
-    queryFn: async () => {
-      try {
-        return await clientApi.getAddressSummary(address);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch summary data'));
-        throw err;
-      }
-    },
-    refetchInterval: 3000,
-    enabled: false,
+  const { data, isLoading, isFetching, refetch } = useQuery<any, Error>({
+    queryKey: ['getAddressSummary', address],
+    queryFn: () => clientApi.getAddressSummary(address),
+    enabled: !!address,
+    refetchInterval: 15000, // 增加到15秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   /**
    * 解析资产摘要数据并更新状态
    */
   const parseAssetSummary = useCallback(async () => {
-    if (!summaryQuery.data) return;
+    if (!data) return;
 
     try {
-      const assets = summaryQuery.data?.data || [];
+      const assets = data?.data || [];
       const newAssetList: AssetItem[] = [];
       console.log('assets', assets);
       
@@ -133,14 +126,14 @@ export const useAssets = () => {
       setError(err instanceof Error ? err : new Error('Failed to parse asset summary'));
       throw err;
     }
-  }, [summaryQuery.data, rawAssetList, setRawAssetList, updateAssetsByProtocol, setAvailableAssetTypes]);
+  }, [data, rawAssetList, setRawAssetList, updateAssetsByProtocol, setAvailableAssetTypes]);
 
   /**
    * 加载资产摘要数据
    */
   const loadSummaryData = useCallback(async () => {
     try {
-      const result = await summaryQuery.refetch();
+      const result = await refetch();
       if (result.data) {
         await parseAssetSummary();
         return result.data;
@@ -150,7 +143,7 @@ export const useAssets = () => {
       setError(err instanceof Error ? err : new Error('Failed to load summary data'));
       return null;
     }
-  }, [summaryQuery, parseAssetSummary]);
+  }, [refetch, parseAssetSummary]);
 
   /**
    * 加载资产的UTXO数据
@@ -207,10 +200,10 @@ export const useAssets = () => {
 
   return {
     // 状态
-    loading: summaryQuery.isLoading,
+    loading: isLoading || isFetching,
     error,
-    isSummaryLoading: summaryQuery.isLoading,
-    summaryData: summaryQuery.data,
+    isSummaryLoading: isLoading || isFetching,
+    summaryData: data,
     assetList: rawAssetList,
 
     // 方法

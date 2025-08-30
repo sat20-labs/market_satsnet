@@ -4,10 +4,11 @@ import clientApi from '@/api/clientApi';
 import { useCommonStore } from '@/store/common';
 
 export const useHeight = () => {
-  const { data, isLoading } = useQuery({
-    queryKey: ['bestHeight'],
-    queryFn: clientApi.getBestHeight,
-    refetchInterval: 2000,
+  const { data, isLoading, isFetching, refetch } = useQuery<any, Error>({
+    queryKey: ['getHeight'],
+    queryFn: () => clientApi.getHeight(),
+    refetchInterval: 10000, // 增加到10秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
   const setSatsnetHeight = useCommonStore((s) => s.setSatsnetHeight);
 

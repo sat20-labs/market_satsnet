@@ -93,8 +93,8 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
     },
     enabled: !!assetInfo.assetName,
     placeholderData: keepPreviousData,
-    refetchInterval: 20000,
-    refetchIntervalInBackground: false,
+    refetchInterval: 30000, // 增加到30秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     staleTime: 20000,
   });
 

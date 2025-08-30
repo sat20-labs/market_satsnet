@@ -136,49 +136,60 @@ export default function LaunchPoolProgressSortTest() {
             return contractURLs.filter((c: string) => c.indexOf('launchpool.tc') > -1);
         },
         gcTime: 0,
-        refetchInterval: 60000,
+        refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+        refetchIntervalInBackground: false, // 禁止后台刷新
     });
 
-    // 全量获取合约状态（分批并发），用于“全局排序→前端分页”
-    const { data: poolList = [], isLoading } = useQuery({
-        queryKey: ['poolListAll', network, contractURLsData?.length ?? 0],
-        enabled: !!contractURLsData && contractURLsData.length > 0,
-        // 延长缓存；同一页面/路由间复用，避免重复打接口
-        staleTime: 120_000,   // 2min 内不重新拉
-        gcTime: 10 * 60_000,  // 10min 内缓存不回收
-        // 避免频繁后台刷新
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
-        refetchInterval: false, // 如需实时，可设为 60_000 或更长
-        retry: 1,
-        queryFn: async () => {
-            const urls: string[] = contractURLsData || [];
-            if (urls.length === 0) return [];
-            // 降低并发，减轻瞬时压力（权衡加载时间）
-            const BATCH_SIZE = 8;
-            const all: any[] = [];
-            for (let i = 0; i < urls.length; i += BATCH_SIZE) {
-                const pageURLs = urls.slice(i, i + BATCH_SIZE);
-                const statusList = await Promise.all(
-                    pageURLs.map(async (item: string) => {
-                        try {
-                            const { status } = await getContractStatus(item);
-                            if (status) return { ...JSON.parse(status), contractURL: item };
-                            return null;
-                        } catch {
-                            return null;
-                        }
-                    })
-                );
-                all.push(...statusList.filter(Boolean));
-            }
-            return all;
-        },
+    // 分页获取合约状态
+    const getLaunchpoolList = async ({ pageParam = 1 }) => {
+        if (!contractURLsData || contractURLsData.length === 0) {
+            return { pools: [], totalCount: 0 };
+        }
+
+        const startIndex = (pageParam - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageURLs = contractURLsData.slice(startIndex, endIndex);
+
+        // 并发请求当前页的合约状态
+        const statusList = await Promise.all(
+            pageURLs.map(async (item: string) => {
+                try {
+                    const { status } = await getContractStatus(item);
+                    if (status) {
+                        return {
+                            ...JSON.parse(status),
+                            contractURL: item,
+                        };
+                    }
+                    return null;
+                } catch (error) {
+                    console.error(`Failed to get contract status for ${item}:`, error);
+                    return null;
+                }
+            })
+        );
+
+        const validPools = statusList.filter(Boolean);
+        return {
+            pools: validPools,
+            totalCount: contractURLsData.length,
+            nextPage: endIndex < contractURLsData.length ? pageParam + 1 : undefined,
+        };
+    };
+
+    const { data: poolListData, isLoading } = useQuery({
+        queryKey: ['launchpoolList', currentPage, pageSize],
+        queryFn: () => getLaunchpoolList({ pageParam: currentPage }),
+        enabled: !!contractURLsData,
+        gcTime: 0,
+        refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+        refetchIntervalInBackground: false, // 禁止后台刷新
     });
+
     // 适配数据
     const adaptedPoolList = useMemo(() => {
-        return poolList.map((pool: any) => adaptPoolData(pool, satsnetHeight));
-    }, [poolList, satsnetHeight]);
+        return poolListData?.pools?.map((pool: any) => adaptPoolData(pool, satsnetHeight)) || [];
+    }, [poolListData?.pools, satsnetHeight]);
 
     // ===== 新增：排序状态 =====
     const [sortKey, setSortKey] = useState<'progress' | 'deployTime'>('progress');

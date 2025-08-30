@@ -22,21 +22,22 @@ export const UpdateVersionModal = () => {
   };
 
   // Get data from useQuery
-  const { data: appVersion } = useQuery({
-    queryKey: ['getAppVersion', version],
-    queryFn: marketApi.getAppVersion,
-    refetchInterval: 1000 * 60 * 2,
+  const { data: versionData } = useQuery({
+    queryKey: ['version'],
+    queryFn: () => fetch('/api/version').then(res => res.json()),
+    refetchInterval: 300000, // 增加到5分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   // Handle side effect in useEffect
   useEffect(() => {
-    if (appVersion) {
-      console.log(appVersion);
-      if (Number(appVersion) > version) {
+    if (versionData) {
+      console.log(versionData);
+      if (Number(versionData) > version) {
         showModal();
       }
     }
-  }, [appVersion]); // Depend on appVersion data
+  }, [versionData]); // Depend on appVersion data
 
   const timer = useRef<any>(null);
 

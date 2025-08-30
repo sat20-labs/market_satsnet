@@ -91,7 +91,8 @@ const MarketPage = () => {
       return contractURLs.filter((c: string) => c.indexOf('swap.tc') > -1);
     },
     gcTime: 0,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   // 分页获取合约状态
@@ -136,7 +137,8 @@ const MarketPage = () => {
     queryFn: () => getSwapList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   const poolList = poolListData?.pools || [];

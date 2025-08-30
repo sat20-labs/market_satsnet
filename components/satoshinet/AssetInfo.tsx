@@ -3,6 +3,7 @@
 import { BtcPrice } from "../BtcPrice";
 import { useTranslation } from 'react-i18next';
 import { formatLargeNumber } from "@/utils";
+import { getValueFromPrecision } from "@/utils";
 
 interface AssetInfoProps {
   depthData: any;
@@ -20,9 +21,9 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
     mintProgress = '100%';
   }
 
-  const totalVolumeBtc = depthData && depthData['30day']?.volume ? Number(depthData['30day'].volume) : 0;
+  const totalVolumeBtc = depthData && depthData.TotalDealAssets ? getValueFromPrecision(depthData.TotalDealAssets).value : 0;
   const volumeBtc = depthData && depthData['24hour']?.volume ? Number(depthData['24hour'].volume) : 0;
-  const lastPrice = depthData && depthData.LastDealPrice ? Number(depthData.LastDealPrice.Value) / (10 ** depthData.LastDealPrice.Precision) : 0;
+  const lastPrice = depthData && depthData.LastDealPrice ? getValueFromPrecision(depthData.LastDealPrice).value : 0;
   const marketCapBtc = Math.floor(tickerInfo.maxSupply * lastPrice);
   const transactions = depthData?.TotalDealCount ?? 0;
 
@@ -42,9 +43,9 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
           <p className="text-gray-400 text-xs mb-3">${volumeUsd}</p>
         </div>
 
-        {/* 30day Volume  */}
+        {/* Total Deal Assets  */}
         <div className="border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
-          <span className="text-gray-400 text-sm">{t('common.tx_total_volume')} {t('common.time_30D')}</span>
+          <span className="text-gray-400 text-sm">{t('common.tx_total_volume')}</span>
           <p className="text-zinc-200 text-lg font-bold">{formatLargeNumber(totalVolumeBtc / 1e8)}<span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs mb-3">${totalVolumeUsd}</p>
         </div>

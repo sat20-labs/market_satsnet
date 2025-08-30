@@ -55,7 +55,7 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
 
   // Query for all activities
   const allActivitiesQuery = useQuery<ApiResponse>({
-    queryKey: ['history', assets_name, page, pageSize, sort, apiFilter, chain, 'all'],
+    queryKey: ['history', assets_name, page, pageSize, sort, apiFilter, chain],
     queryFn: () =>
       marketApi.getHistory({
         offset: (page - 1) * pageSize,
@@ -65,8 +65,8 @@ export const ActivityLog = ({ assets_name }: ActivityLogProps) => {
         filter: apiFilter === 0 ? undefined : apiFilter,
       }),
     enabled: !!assets_name && activeTab === 'activities',
-    refetchInterval: 10000,
-    refetchIntervalInBackground: false,
+    refetchInterval: 20000, // 增加到20秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     staleTime: 10000,
   });
 

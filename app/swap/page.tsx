@@ -76,14 +76,15 @@ const Swap = () => {
   const PAGE_SIZES = [10, 20, 50, 100];
   // 获取所有合约URL列表
   const { data: contractURLsData } = useQuery({
-    queryKey: ['ammContractURLs', network],
+    queryKey: ['swapContractURLs', network],
     queryFn: async () => {
       const deployed = await getDeployedContractInfo();
       const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
-      return contractURLs.filter((c: string) => c.indexOf('amm.tc') > -1);
+      return contractURLs.filter((c: string) => c.indexOf('swap.tc') > -1);
     },
     gcTime: 0,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   // 分页获取合约状态
@@ -92,8 +93,8 @@ const Swap = () => {
       return { pools: [], totalCount: 0 };
     }
 
-    const startIndex = (pageParam - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
+    const startIndex = (pageParam - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
     const pageURLs = contractURLsData.slice(startIndex, endIndex);
 
     // 并发请求当前页的合约状态
@@ -124,11 +125,12 @@ const Swap = () => {
   };
 
   const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['swapList', currentPage],
+    queryKey: ['swapList', currentPage, pageSize],
     queryFn: () => getSwapList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   const poolList = poolListData?.pools || [];

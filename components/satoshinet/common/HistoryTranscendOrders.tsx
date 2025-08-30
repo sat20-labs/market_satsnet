@@ -37,15 +37,15 @@ export default function HistoryTranscendOrders({ contractURL, type, ticker }: Hi
     isLoading,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['historyTranscendOrders', type, contractURL],
-    queryFn: ({ pageParam = 0 }) => contractService.getContractInvokeHistory(contractURL, pageParam * pageSize, pageSize),
+    queryKey: ['historyTranscendOrders', contractURL],
+    queryFn: ({ pageParam = 0 }) => contractService.getContractHistory(contractURL, pageParam * pageSize, pageSize),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.data.length || lastPage.data.length < pageSize) return undefined;
       return allPages.length;
     },
     initialPageParam: 0,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: false,
+    refetchInterval: 10000, // 增加到10秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractURL,
   });
 

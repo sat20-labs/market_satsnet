@@ -29,7 +29,8 @@ const CreateStack = () => {
   const { data: summaryData } = useQuery({
     queryKey: ['summary', address, network],
     queryFn: () => clientApi.getAddressSummary(address),
-    refetchInterval: 3000,
+    refetchInterval: 15000, // 增加到15秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!address,
   });
   const assetList = summaryData?.data || [];

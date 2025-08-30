@@ -17,8 +17,8 @@ export function useAssetBalance(address: string, assetName: string) {
     queryKey: ['getAddressSummary', address],
     queryFn: () => clientApi.getAddressSummary(address),
     enabled: !!address,
-    refetchInterval: 6000,
-    refetchIntervalInBackground: false,
+    refetchInterval: 15000, // 增加到15秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
   const list = useMemo(() => {
     return data?.data?.map((item: any) => {

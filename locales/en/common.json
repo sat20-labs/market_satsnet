@@ -3,6 +3,8 @@
   "notice": "Notice",
   "action": "Action",
   "assets_name": "Assets",
+  "view": "View",
+  "create": "Create",
   "assets_type": "AssetType",
   "domain_name": "Domain Name",
   "deploy": "Deploy",

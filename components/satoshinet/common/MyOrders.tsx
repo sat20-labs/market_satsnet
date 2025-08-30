@@ -50,8 +50,8 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
       return allPages.length;
     },
     initialPageParam: 0,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: false,
+    refetchInterval: 10000, // 增加到10秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractURL && !!address,
   });
   const cancelOrder = async () => {

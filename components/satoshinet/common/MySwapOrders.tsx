@@ -39,15 +39,15 @@ export default function MyOrders({ contractURL, type, ticker }: MyOrdersProps) {
     isLoading,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['myOrders', type, contractURL, address],
+    queryKey: ['mySwapOrders', contractURL, address],
     queryFn: ({ pageParam = 0 }) => contractService.getUserHistoryInContract(contractURL, address, pageParam * pageSize, pageSize),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.data.length || lastPage.data.length < pageSize) return undefined;
       return allPages.length;
     },
     initialPageParam: 0,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: false,
+    refetchInterval: 10000, // 增加到10秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractURL && !!address,
   });
 

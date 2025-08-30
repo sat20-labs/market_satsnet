@@ -68,7 +68,8 @@ const CreatePool = ({ closeModal }: { closeModal: () => void }) => {
       return null;
     },
     enabled: !!contractURL && step === 3,
-    refetchInterval: 3000,
+    refetchInterval: 15000, // 增加到15秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   const statusTextMap = {

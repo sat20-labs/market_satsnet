@@ -41,7 +41,8 @@ export const useTranscendDetailData = (asset: string) => {
     queryKey: ['ticker', 'holders', asset, network],
     queryFn: () => clientApi.getTickerHolders(asset, 1, 10),
     enabled: !!asset,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     refetchOnWindowFocus: false,
   });
 
@@ -57,7 +58,8 @@ export const useTranscendDetailData = (asset: string) => {
   const { data: transcendStatus, isPending: isTranscendStatusPending, isLoading: isTranscendStatusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ["transcend", 'status', contractUrl, network],
     queryFn: () => contractService.getContractStatus(contractUrl),
-    refetchInterval: 6000,
+    refetchInterval: 15000, // 增加到15秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractUrl,
     refetchOnWindowFocus: false,
   });
@@ -65,7 +67,8 @@ export const useTranscendDetailData = (asset: string) => {
   const { data: analytics, isPending: isAnalyticsPending, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
     queryKey: ["transcend", 'analytics', contractUrl, network],
     queryFn: () => contractService.getContractAnalytics(contractUrl),
-    refetchInterval: 60000,
+    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractUrl,
     refetchOnWindowFocus: false,
   });

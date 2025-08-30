@@ -31,14 +31,11 @@ const CreateTranscend = () => {
   const { network, btcFeeRate } = useCommonStore();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const router = useRouter();
-  const { data: summaryData } = useQuery<any>({
+  const { data: summaryData } = useQuery({
     queryKey: ['summary', address, network],
-    queryFn: async  () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_ORDX_HOST}/btc/${network === 'testnet' ? 'testnet' : 'mainnet'}/v3/address/summary/${address}`);
-      const data = await res.json();
-      return data;
-    },
-    refetchInterval: 3000,
+    queryFn: () => clientApi.getAddressSummary(address),
+    refetchInterval: 15000, // 增加到15秒，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!address,
   });
   console.log('summaryData', summaryData);

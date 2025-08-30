@@ -5,17 +5,10 @@ import { useEffect, useState, useMemo } from 'react';
 import { useCommonStore } from '@/store';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { marketApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+
+import { clientApi } from '@/api';
 
 export const FeerateSelectButton = () => {
   const { t } = useTranslation();
@@ -25,16 +18,11 @@ export const FeerateSelectButton = () => {
   const [fee, setFee] = useState({ value: 1, type: 'Normal' });
   const { setFeeRate, feeRate } = useCommonStore((state) => state);
 
-  const { data: feeRateData, isLoading } = useQuery({
-    queryKey: ['getRecommendedFees', chain, network],
-    queryFn: marketApi.getRecommendedFees,
-    refetchInterval: 1000 * 60 * 10,
-    select: (data) => {
-      if (data?.code === 200) {
-        return data.data;
-      }
-      return {};
-    },
+  const { data: feeRateData, isLoading: isFeeRateLoading } = useQuery({
+    queryKey: ['btcFeeRate'],
+    queryFn: () => clientApi.getRecommendedFees(),
+    refetchInterval: 600000, // 增加到10分钟，减少刷新频率
+    refetchIntervalInBackground: false, // 禁止后台刷新
   });
 
   const handleOk = () => {
@@ -67,10 +55,10 @@ export const FeerateSelectButton = () => {
   return (
     <Button
       variant="ghost"
-      disabled={isLoading}
+      disabled={isFeeRateLoading}
       className="bg-transparent sm:px-2 px-8 sm:gap-2 gap-3 text-xs sm:text-base text-zinc-300 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
     >
-      {isLoading ? (
+      {isFeeRateLoading ? (
         <Icon icon="eos-icons:loading" className="text-xl0" />
       ) : (
         <Icon icon="mdi:gas-station" className="text-xl0" />

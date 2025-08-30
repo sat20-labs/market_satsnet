@@ -44,7 +44,7 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
       };
     },
     enabled: !!address && !!asset,
-    refetchInterval: 10000,
+    refetchInterval: 20000, // 增加到20秒，减少刷新频率
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
