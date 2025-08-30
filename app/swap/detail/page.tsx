@@ -40,8 +40,7 @@ function OrderPageContent() {
     refreshSwapStatus,
     refreshAnalytics,
     refreshBalances,
-    refreshAll,
-    debug
+    refreshAll
   } = useSwapDetailData(asset ?? '');
   const protocol = useMemo(() => swapStatusData?.Contract?.assetName?.Protocol || '', [swapStatusData]);
 
@@ -55,34 +54,9 @@ function OrderPageContent() {
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
   }
-  
-  // 在开发环境下显示调试信息
-  if (process.env.NODE_ENV === 'development' && debug) {
-    console.log('Debug info:', debug);
-  }
-  
   if (isLoading) {
     return <Loading />;
   }
-  
-  // 检查是否找到了合约URL
-  if (!contractUrl) {
-    return (
-      <div className="w-full mt-4">
-        <div className="mb-4 p-4 bg-yellow-100 text-yellow-700 border border-yellow-300 rounded">
-          <p className="font-semibold">合约未找到</p>
-          <p>无法找到资产 {ticker} 对应的AMM合约，请检查资产名称是否正确。</p>
-          <p className="text-sm mt-2">Debug信息: ticker={ticker}, asset={asset}</p>
-          {process.env.NODE_ENV === 'development' && debug && (
-            <pre className="text-xs mt-2 bg-gray-100 p-2 rounded overflow-auto">
-              {JSON.stringify(debug, null, 2)}
-            </pre>
-          )}
-        </div>
-      </div>
-    );
-  }
-  
   if (!swapStatusData) {
     return (
       <div className="w-full mt-4">
