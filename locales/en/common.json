@@ -107,6 +107,8 @@
   "my_activities": "My Activities",
   "activities": "Activities",
   "items_per_page": "PageSize",
+  "page": "Page",
+  "of": "of",
   "unit_price_sats": "Unit Price",
   "total_value_sats": "Total Value",
   "quantity": "Quantity",

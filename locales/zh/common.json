@@ -112,6 +112,8 @@
   "my_activities": "我的交易",
   "activities": "交易记录",
   "items_per_page": "每页",
+  "page": "第",
+  "of": "页，共",
   "unit_price_sats": "单价(sats)",
   "total_value_sats": "总价(sats)",
   "quantity": "数量",

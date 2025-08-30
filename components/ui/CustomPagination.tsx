@@ -71,13 +71,13 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
   const renderPageNumbers = () => {
     const pageNumbers: React.ReactNode[] = [];
     
-    // For mobile, show a simplified version
+    // For mobile, show current page number with total pages info
     if (isMobile) {
-      // Just show current page number
+      // Show current page number with total pages
       pageNumbers.push(
         <PaginationItem key={currentPage}>
           <PaginationLink isActive={true}>
-            {currentPage}
+            {currentPage} / {totalPages}
           </PaginationLink>
         </PaginationItem>
       );
@@ -132,25 +132,34 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
 
   return (
     <div className="flex flex-row justify-between items-center gap-4 my-4">
-      <Pagination className="justify-start flex-grow">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={handlePrevious}
-              className={currentPage <= 1 || isLoading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-            />
-          </PaginationItem>
+      <div className="flex items-center gap-4 flex-grow">
+        <Pagination className="justify-start">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={handlePrevious}
+                className={currentPage <= 1 || isLoading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              />
+            </PaginationItem>
 
-          {renderPageNumbers()}
+            {renderPageNumbers()}
 
-          <PaginationItem>
-            <PaginationNext
-              onClick={handleNext}
-              className={currentPage >= totalPages || isLoading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+            <PaginationItem>
+              <PaginationNext
+                onClick={handleNext}
+                className={currentPage >= totalPages || isLoading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+
+        {/* 桌面端显示总页数信息 */}
+        {!isMobile && (
+          <div className="text-sm text-gray-400 whitespace-nowrap">
+            {t('common.page')} {currentPage} {t('common.of')} {totalPages}
+          </div>
+        )}
+      </div>
 
       <div className="flex items-center gap-1 justify-end">
         <span className="text-sm text-gray-400 whitespace-nowrap">{t('common.items_per_page')}</span>
