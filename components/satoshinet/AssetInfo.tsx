@@ -21,7 +21,7 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
     mintProgress = '100%';
   }
 
-  const totalVolumeBtc = depthData && depthData.TotalDealAssets ? getValueFromPrecision(depthData.TotalDealAssets).value : 0;
+  const totalVolumeBtc = depthData?.TotalDealSats ?? 0;
   const volumeBtc = depthData && depthData['24hour']?.volume ? Number(depthData['24hour'].volume) : 0;
   const lastPrice = depthData && depthData.LastDealPrice ? getValueFromPrecision(depthData.LastDealPrice).value : 0;
   const marketCapBtc = Math.floor(tickerInfo.maxSupply * lastPrice);
