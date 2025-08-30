@@ -14,10 +14,11 @@ export default class ContractService {
 
   async getContractStatus(uri: string) {
     const { status } = await this.client.getContractStatus(uri);
+    console.log('status', status);
     return status ? JSON.parse(status) : null;
   }
 
-  async getContractInvokeHistory(url: string, pageStart: number = 0, pageLimit: number = 20) {
+  async getContractHistory(url: string, pageStart: number = 0, pageLimit: number = 20) {
     const { status } = await this.client.getContractInvokeHistory(url, pageStart, pageLimit);
     const data = status ? JSON.parse(status) : null;
     if (!data) return { data: [], total: 0 };

@@ -44,13 +44,6 @@ export function AssetTransfersPanel({ asset, onTotalChange }: AssetTransfersPane
     onTotalChange(total);
   }, [total]);
 
-  const { data: transfersData, isLoading: isTransfersLoading, refetch: refetchTransfers } = useQuery({
-    queryKey: ['assetTransfers', asset],
-    queryFn: () => clientApi.getAssetTransfers(asset),
-    enabled: !!asset,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
-  });
   return (
     <Tabs defaultValue="holders" className="mt-6">
       <TabsList>

@@ -24,13 +24,14 @@ export const ChartModule = ({
   refresh,
   isRefreshing = false
 }: ChartModuleProps) => {
-  const [type, setType] = useState('24h');
+  const [type, setType] = useState('15m');
   console.log('analyticsData', analyticsData);
   
   const dataSource = useMemo(() => {
     if (!analyticsData) return [];
     const items_24hours = analyticsData?.items_24hours?.filter(Boolean) || [];
     const items_30days = analyticsData?.items_30days?.filter(Boolean) || [];
+    const items_15hours = analyticsData?.items_15hours?.filter(Boolean) || [];
 
     // 排序函数：先按 date 升序，再按 time 升序
     const sortAsc = (a: any, b: any) => {
@@ -46,7 +47,9 @@ export const ChartModule = ({
       return 0;
     };
 
-    if (type === '24h') {
+    if (type === '15m') {
+      return [...items_15hours].sort(sortAsc);
+    } else if (type === '24h') {
       return [...items_24hours].sort(sortAsc);
     } else if (type === '7d') {
       return [...items_30days].sort(sortAsc).slice(-7);
@@ -61,8 +64,16 @@ export const ChartModule = ({
     if (!dataSource) return [];
     for (let i = 0; i < dataSource.length; i++) {
       const item = dataSource[i];
-      const label =
-        type === '24h' ? item.time : item.date?.replace(/^[0-9]{4}-/, '').replace('-', '/');
+      let label;
+      if (type === '15m') {
+        // 对于15分钟数据，显示时间格式为 HH:MM
+        label = item.time || item.date;
+      } else if (type === '24h') {
+        label = item.time;
+      } else {
+        label = item.date?.replace(/^[0-9]{4}-/, '').replace('-', '/');
+      }
+      
       let value = item.avg_price
         ? Number(item.avg_price.Value) / Math.pow(10, Number(item.avg_price.Precision))
         : 0;
@@ -89,6 +100,10 @@ export const ChartModule = ({
   }, [dataSource, type]);
 
   const types = [
+    {
+      label: '15m',
+      value: '15m',
+    },
     {
       label: '24h',
       value: '24h',

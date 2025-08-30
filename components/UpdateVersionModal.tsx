@@ -24,7 +24,7 @@ export const UpdateVersionModal = () => {
   // Get data from useQuery
   const { data: versionData } = useQuery({
     queryKey: ['version'],
-    queryFn: () => fetch('/api/version').then(res => res.json()),
+    queryFn: () => fetch('/version.txt').then(res => res.json()),
     refetchInterval: 300000, // 增加到5分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
   });

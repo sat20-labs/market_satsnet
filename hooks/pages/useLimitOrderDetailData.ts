@@ -27,8 +27,8 @@ interface TickerInfo {
 }
 
 export const useLimitOrderDetailData = (asset: string) => {
-  const ticker = asset.split(':')[2];
   const { network } = useCommonStore();
+  const ticker = asset.split(':')[2];
   const { address } = useReactWalletStore();
   const tickerQuery = useQuery<any>({
     queryKey: ['ticker', asset, network],

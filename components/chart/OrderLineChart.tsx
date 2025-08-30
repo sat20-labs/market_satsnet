@@ -83,7 +83,7 @@ export const OrderLineChart = ({ data = [] }: Props) => {
       .tooltip((d) => {
         return {
           title: d.label,
-          name: 'Valume',
+          name: 'Vloume',
           value: d.volume ? `${satsToBitcoin(d.volume)} btc` : '-',
         };
       })

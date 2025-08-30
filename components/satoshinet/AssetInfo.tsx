@@ -60,7 +60,7 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
         {/* Max Supply */}
         <div className="border-r-1 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.max_supply')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{formatLargeNumber(tickerInfo.maxSupply)}</p>
+          <p className="text-zinc-200 text-lg font-bold">{tickerInfo.maxSupply}</p>
         </div>
 
         {/* Transactions */}

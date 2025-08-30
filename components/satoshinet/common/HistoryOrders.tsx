@@ -37,7 +37,7 @@ export default function HistoryOrders({ contractURL, type }: HistoryOrdersProps)
     refetch,
   } = useInfiniteQuery({
     queryKey: ['historyOrders', type, contractURL],
-    queryFn: ({ pageParam = 0 }) => contractService.getContractInvokeHistory(contractURL, pageParam * pageSize, pageSize),
+    queryFn: ({ pageParam = 0 }) => contractService.getContractHistory(contractURL, pageParam * pageSize, pageSize),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.data.length || lastPage.data.length < pageSize) return undefined;
       return allPages.length;

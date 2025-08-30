@@ -141,18 +141,14 @@ export default function LaunchPoolProgressSortTest() {
     });
 
     // 分页获取合约状态
-    const getLaunchpoolList = async ({ pageParam = 1 }) => {
+    const getLaunchpoolList = async () => {
         if (!contractURLsData || contractURLsData.length === 0) {
             return { pools: [], totalCount: 0 };
         }
 
-        const startIndex = (pageParam - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const pageURLs = contractURLsData.slice(startIndex, endIndex);
-
-        // 并发请求当前页的合约状态
+        // 获取所有合约状态，不使用分页
         const statusList = await Promise.all(
-            pageURLs.map(async (item: string) => {
+            contractURLsData.map(async (item: string) => {
                 try {
                     const { status } = await getContractStatus(item);
                     if (status) {
@@ -173,13 +169,12 @@ export default function LaunchPoolProgressSortTest() {
         return {
             pools: validPools,
             totalCount: contractURLsData.length,
-            nextPage: endIndex < contractURLsData.length ? pageParam + 1 : undefined,
         };
     };
 
     const { data: poolListData, isLoading } = useQuery({
-        queryKey: ['launchpoolList', currentPage, pageSize],
-        queryFn: () => getLaunchpoolList({ pageParam: currentPage }),
+        queryKey: ['launchpoolList'],
+        queryFn: getLaunchpoolList,
         enabled: !!contractURLsData,
         gcTime: 0,
         refetchInterval: 120000, // 增加到2分钟，减少刷新频率

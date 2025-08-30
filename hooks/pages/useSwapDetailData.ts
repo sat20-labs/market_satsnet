@@ -27,8 +27,8 @@ interface TickerInfo {
 }
 
 export const useSwapDetailData = (asset: string) => {
+  console.log('asset', asset);
   const { network } = useCommonStore();
-  const queryClient = useQueryClient();
 
   const ticker = asset.split(':')[2];
   console.log('swap ticker', ticker);
@@ -39,14 +39,14 @@ export const useSwapDetailData = (asset: string) => {
     queryFn: () => clientApi.getTickerInfo(asset),
     enabled: !!asset,
   });
-  const holdersQuery = useQuery<any>({
-    queryKey: ['ticker', 'holders', asset, network],
-    queryFn: () => clientApi.getTickerHolders(asset, 1, 10),
-    enabled: !!asset,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
-    refetchOnWindowFocus: false,
-  });
+  // const holdersQuery = useQuery<any>({
+  //   queryKey: ['ticker', 'holders', asset, network],
+  //   queryFn: () => clientApi.getTickerHolders(asset, 1, 10),
+  //   enabled: !!asset,
+  //   refetchInterval: 120000, // 增加到2分钟，减少刷新频率
+  //   refetchIntervalInBackground: false, // 禁止后台刷新
+  //   refetchOnWindowFocus: false,
+  // });
 
   const contractUrlQuery = useQuery({
     queryKey: ['contractUrl', network],
@@ -75,7 +75,28 @@ export const useSwapDetailData = (asset: string) => {
     refetchOnWindowFocus: false,
   });
 
-  const isLoading = tickerQuery.isPending || isSwapStatusPending || isAnalyticsPending;
+  console.log('analytics', analytics);
+  console.log('tickerQuery', tickerQuery);
+  console.log('isSwapStatusPending', isSwapStatusPending);
+  console.log('isAnalyticsPending', isAnalyticsPending);
+  console.log('contractUrl', contractUrl);
+  console.log('contractUrlQuery.data', contractUrlQuery.data);
+  console.log('ticker', ticker);
+  
+  // 修复isLoading逻辑：只有在查询enabled时才检查pending状态
+  const isLoading = 
+    tickerQuery.isPending || 
+    (!!contractUrl && isSwapStatusPending) || 
+    (!!contractUrl && isAnalyticsPending);
+
+  // 添加调试信息
+  console.log('Loading states:', {
+    tickerQueryPending: tickerQuery.isPending,
+    contractUrlExists: !!contractUrl,
+    swapStatusPending: isSwapStatusPending,
+    analyticsPending: isAnalyticsPending,
+    finalIsLoading: isLoading
+  });
 
 
   const { balance: satsBalance, getBalance } = useWalletStore();
@@ -108,7 +129,7 @@ export const useSwapDetailData = (asset: string) => {
     isSwapStatusLoading,
     isAnalyticsLoading,
     tickerInfo: tickerQuery.data?.data || {},
-    holders: holdersQuery.data?.data || {},
+    holders: {},
     isLoading,
     contractUrl,
     swapData: swapStatus,
@@ -119,6 +140,17 @@ export const useSwapDetailData = (asset: string) => {
     refreshSwapStatus,
     refreshAnalytics,
     refreshBalances,
-    refreshAll
+    refreshAll,
+    // 添加调试信息
+    debug: {
+      asset,
+      ticker,
+      contractUrl,
+      contractUrlQueryData: contractUrlQuery.data,
+      tickerQueryPending: tickerQuery.isPending,
+      swapStatusPending: isSwapStatusPending,
+      analyticsPending: isAnalyticsPending,
+      isLoading
+    }
   }
 };

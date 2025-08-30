@@ -199,7 +199,7 @@ class ClientApi {
   getRecommendedFees = async (): Promise<any> => {
     const store = useCommonStore.getState();
     const { network } = store;
-    const url = `https://apiprd.ordx.market/${network === 'mainnet' ? 'btc' : 'testnet/'
+    const url = `https://apiprd.ordx.market/${network === 'mainnet' ? '' : 'testnet/'
       }ordx/GetRecommendedFees`;
     const response = await fetch(url);
     return response.json();

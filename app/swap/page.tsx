@@ -80,7 +80,7 @@ const Swap = () => {
     queryFn: async () => {
       const deployed = await getDeployedContractInfo();
       const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
-      return contractURLs.filter((c: string) => c.indexOf('swap.tc') > -1);
+      return contractURLs.filter((c: string) => c.indexOf('amm.tc') > -1);
     },
     gcTime: 0,
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
@@ -132,7 +132,7 @@ const Swap = () => {
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
   });
-
+  console.log('poolListData', poolListData);
   const poolList = poolListData?.pools || [];
   const totalCount = poolListData?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
