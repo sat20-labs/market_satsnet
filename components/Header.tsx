@@ -53,10 +53,7 @@ export const Header = () => {
         label: t('pages.market.title'),
         href: '/market',
       },
-      // {
-      //   label: 'Transcend',
-      //   href: '/transcend',
-      // },
+      
       {
         label: 'Swap',
         href: '/swap',
@@ -64,6 +61,10 @@ export const Header = () => {
       {
         label: t('pages.launchpool.title'), // 新增 LaunchPool 菜单
         href: '/launchpool',
+      },
+      {
+        label: 'Transcend',
+        href: '/transcend',
       },
       // {
       //   label: 'LimitOrder',

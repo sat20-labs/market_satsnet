@@ -58,7 +58,7 @@ export const useSwapDetailData = (asset: string) => {
   }, [contractUrlQuery.data, ticker]);
 
   const { data: swapStatus, isPending: isSwapStatusPending, isLoading: isSwapStatusLoading, refetch: refetchStatus } = useQuery({
-    queryKey: ["swap", 'status', contractUrl, network],
+    queryKey: ["amm", 'status', contractUrl, network],
     queryFn: () => contractService.getContractStatus(contractUrl),
     refetchInterval: 15000, // 增加到15秒，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
@@ -67,7 +67,7 @@ export const useSwapDetailData = (asset: string) => {
   });
 
   const { data: analytics, isPending: isAnalyticsPending, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
-    queryKey: ["swap", 'analytics', contractUrl, network],
+    queryKey: ["amm", 'analytics', contractUrl, network],
     queryFn: () => contractService.getContractAnalytics(contractUrl),
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新

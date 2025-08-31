@@ -537,43 +537,158 @@ export const getTwitterActivity = async ({ address, activity_id }) => {
   return res;
 };
 
+// Function to determine the base URL based on chain and network
+const getContractBaseUrl = (chain: RequestContext['chain'], network: RequestContext['network']): string => {
+  let baseUrl = '';
+  baseUrl = process.env.NEXT_PUBLIC_SATESTNET_HOST as string;
+  baseUrl += network === 'testnet' ? '/stp/testnet' : '/stp/mainnet';
+
+  // Environment-specific adjustments (consider moving this logic elsewhere if complex)
+  if (typeof window !== 'undefined') { // Ensure this runs only client-side if needed
+    if (location.hostname.includes('test')) {
+      // Example: baseUrl = baseUrl.replace('api.', 'api.test.');
+    } else if (location.hostname.includes('dev')) {
+      baseUrl = baseUrl.replace('apiprd', 'apidev'); // Adjust based on your actual env logic
+    }
+  }
+  return baseUrl;
+};
+export const requestContract = async (
+  path: string,
+  options: RequestOptions = {},
+  customContext?: Partial<RequestContext>,
+) => {
+  const { publicKey, connected } = useReactWalletStore.getState();
+  const { signature } = useCommonStore.getState();
+  const { chain, network } = useCommonStore.getState();
+  let context: RequestContext = { publicKey, signature, chain, network, connected };
+  if (customContext) {
+    context = { ...context, ...customContext };
+  }
+  const { publicKey: ctxPublicKey, signature: ctxSignature, chain: ctxChain, network: ctxNetwork, connected: ctxConnected } = context;
+  const {
+    headers: customHeaders = {},
+    method = 'GET',
+    data,
+    formData,
+    timeout = 10000,
+    ...restOptions
+  } = options;
+  const baseUrl = getContractBaseUrl(ctxChain, ctxNetwork);
+  let url = `${baseUrl}${path}`;
+  const fetchOptions: RequestInit = {
+    method,
+    ...restOptions,
+  };
+  const initialHeaders = customHeaders;
+  const headers = new Headers(initialHeaders as HeadersInit);
+  fetchOptions.headers = headers;
+  if (method === 'GET' && data) {
+    const query = new URLSearchParams(removeObjectEmptyValue(data)).toString();
+    if (query) {
+      url += `?${query}`;
+    }
+  } else if (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+    if (formData) {
+      fetchOptions.body = formData;
+      headers.delete('Content-Type');
+    } else if (data) {
+      fetchOptions.body = JSON.stringify(data);
+      if (!headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
+    }
+  }
+  if (ctxConnected && ctxSignature && ctxPublicKey) {
+    headers.set('Publickey', ctxPublicKey);
+    headers.set('Signature', ctxSignature);
+  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  fetchOptions.signal = controller.signal;
+  try {
+    console.log('fetch request:', method, url, fetchOptions);
+    const response = await fetch(url, fetchOptions);
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      let errorBody: any = null;
+      let errorMessage = `HTTP error! Status: ${response.status} ${response.statusText} for ${method} ${url}`;
+      try {
+        errorBody = await response.json();
+        errorMessage = errorBody?.msg || errorBody?.message || errorMessage;
+        if (errorBody?.code) {
+          errorMessage += ` (API Code: ${errorBody.code})`;
+        }
+      } catch (parseError) {
+        console.warn("Could not parse error response body as JSON:", parseError);
+        try {
+          const textError = await response.text();
+          errorMessage += `\nResponse body: ${textError}`;
+        } catch (textErrorErr) { }
+      }
+      throw new Error(errorMessage);
+    }
+    if (response.status === 204) {
+      return null;
+    }
+    const responseData = await response.json();
+    console.log('fetch response data:', responseData);
+    if (responseData?.code === -1 || responseData?.code === 500) {
+      const errorMsg = responseData?.msg || responseData?.message || 'Unknown API error';
+      console.error('API Error:', errorMsg, responseData);
+      if (errorMsg.includes('signature verification failed') || errorMsg.includes('public and signature parameters are required')) {
+        console.warn('API Signature Error, potentially clearing signature:', errorMsg);
+      }
+      throw new Error(`API Error: ${errorMsg} (Code: ${responseData.code})`);
+    }
+    return responseData;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    console.error(`Request failed: ${method} ${url}`, error);
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timed out after ${timeout / 1000} seconds for ${method} ${url}`);
+    }
+    throw error;
+  }
+};
+
 // 获取支持的合约列表
 export const getSupportedContracts = async () => {
-  return request('/ordx/info/contracts/support', {});
+  return requestContract('/info/contracts/support', {});
 };
 
 // 获取已部署合约信息
 export const getDeployedContractInfo = async () => {
-  return request('/ordx/info/contracts/deployed', {});
+  return requestContract('/info/contracts/deployed', {});
 };
 
 // 获取单个合约状态
 export const getContractStatus = async (uri: string) => {
-  return request(`/ordx/info/contract/${uri}`, {});
+  return requestContract(`/info/contract/${uri}`, {});
 };
 
 // 获取合约调用历史
 export const getContractInvokeHistory = async (url: string, pageStart: number = 0, pageLimit: number = 20) => {
-  return request(`/ordx/info/contract/history/${url}?start=${pageStart}&limit=${pageLimit}`, {});
+  return requestContract(`/info/contract/history/${url}?start=${pageStart}&limit=${pageLimit}`, {});
 };
 
 // 获取合约所有用户地址
 export const getContractAllAddresses = async (uri: string, pageStart: number = 0, pageLimit: number = 20) => {
-  return request(`/ordx/info/contract/alluser/${uri}?start=${pageStart}&limit=${pageLimit}`, {});
+  return requestContract(`/info/contract/alluser/${uri}?start=${pageStart}&limit=${pageLimit}`, {});
 };
 
 // 获取合约分析数据
 export const getContractAnalytics = async (url: string) => {
-  return request(`/ordx/info/contract/analytics/${url}`, {});
+  return requestContract(`/info/contract/analytics/${url}`, {});
 };
 
 // 获取某用户在某合约的状态
 export const getContractStatusByAddress = async (url: string, address: string) => {
-  return request(`/ordx/info/contract/user/${url}/${address}`, {});
+  return requestContract(`/info/contract/user/${url}/${address}`, {});
 };
 
 // 获取某用户在某合约的历史
 export const getUserHistoryInContract = async (url: string, address: string, pageStart: number = 0, pageLimit: number = 20) => {
-  return request(`/ordx/info/contract/userhistory/${url}/${address}?start=${pageStart}&limit=${pageLimit}`, {});
+  return requestContract(`/info/contract/userhistory/${url}/${address}?start=${pageStart}&limit=${pageLimit}`, {});
 };
 
