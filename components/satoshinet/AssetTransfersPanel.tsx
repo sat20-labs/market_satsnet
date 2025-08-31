@@ -9,10 +9,11 @@ import clientApi from "@/api/clientApi";
 
 interface AssetTransfersPanelProps {
   asset: string;
+  tickerInfo: any;
   onTotalChange: (total: number) => void;
 }
 
-export function AssetTransfersPanel({ asset, onTotalChange }: AssetTransfersPanelProps) {
+export function AssetTransfersPanel({ asset, onTotalChange, tickerInfo }: AssetTransfersPanelProps) {
   const { network } = useCommonStore();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -82,11 +83,11 @@ export function AssetTransfersPanel({ asset, onTotalChange }: AssetTransfersPane
                   </TableCell>
                   <TableCell className="text-left">
                     {/* {((item.total_balance / totalBalance) * 100).toFixed(2)}% */}
-                    <span className="text-gray-400 text-sm">{((item.total_balance / totalBalance) * 100).toFixed(2)}%</span> 
+                    <span className="text-gray-400 text-sm">{parseFloat(((item.total_balance / tickerInfo.maxSupply) * 100).toFixed(10))}%</span> 
                     <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
                       <div
                         className="bg-green-500 h-2 rounded-full mb-2"
-                        style={{ width: `${((item.total_balance / totalBalance) * 100).toFixed(2)}%` }}
+                        style={{ width: `${parseFloat(((item.total_balance / tickerInfo.maxSupply) * 100).toFixed(10))}%` }}
                       ></div>
                     </div>   
                   </TableCell>

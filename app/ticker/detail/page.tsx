@@ -48,7 +48,7 @@ function TickerDetailContent() {
       <h3 className="text-2xl font-bold mb-4 text-center">{tickerInfo.name.Ticker || asset}  <span className='text-zinc-500 ml-4'>Overview</span></h3>      
     
       <AssetInfoCard asset={asset} tickerInfo={tickerInfo} holdersTotal={total}/>
-      <AssetTransfersPanel asset={asset} onTotalChange={setTotal}/>
+      <AssetTransfersPanel asset={asset} onTotalChange={setTotal} tickerInfo={tickerInfo}/>
     </div>
   );
 }

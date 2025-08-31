@@ -150,7 +150,7 @@ const TranscendPage = () => {
   };
 
   const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['transcendList', currentPage, pageSize],
+    queryKey: ['transcendList', currentPage, pageSize, network],
     queryFn: () => getTranscendList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,

@@ -173,7 +173,7 @@ export default function LaunchPoolProgressSortTest() {
     };
 
     const { data: poolListData, isLoading } = useQuery({
-        queryKey: ['launchpoolList'],
+        queryKey: ['launchpoolList', network],
         queryFn: getLaunchpoolList,
         enabled: !!contractURLsData,
         gcTime: 0,

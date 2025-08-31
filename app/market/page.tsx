@@ -133,7 +133,7 @@ const MarketPage = () => {
   };
 
   const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['swapList', currentPage, pageSize],
+    queryKey: ['swapList', currentPage, pageSize, network],
     queryFn: () => getSwapList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,

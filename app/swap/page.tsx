@@ -76,7 +76,7 @@ const Swap = () => {
   const PAGE_SIZES = [10, 20, 50, 100];
   // 获取所有合约URL列表
   const { data: contractURLsData } = useQuery({
-    queryKey: ['swapContractURLs', network],
+    queryKey: ['ammContractURLs', network],
     queryFn: async () => {
       const deployed = await getDeployedContractInfo();
       const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
@@ -125,7 +125,7 @@ const Swap = () => {
   };
 
   const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['swapList', currentPage, pageSize],
+    queryKey: ['ammList', currentPage, pageSize, network],
     queryFn: () => getSwapList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,

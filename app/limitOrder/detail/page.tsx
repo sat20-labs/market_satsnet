@@ -119,14 +119,7 @@ function OrderPageContent() {
         <Tabs defaultValue="myOrders">
           <div className="flex justify-between items-center mt-2 mb-4 border-b border-gray-800">
             <TabsList className="flex justify-start w-full bg-transparent">
-              <TabsTrigger
-                value="myOrders"
-                className={cn(
-                  "w-28 rounded-none px-4 py-3 text-sm font-medium text-gray-400 hover:text-white focus:text-white border-b-3 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent data-[state=active]:text-white"
-                )}
-              >
-                {t('common.my_activities')}
-              </TabsTrigger>
+
               <TabsTrigger
                 value="history"
                 className={cn(
@@ -135,7 +128,14 @@ function OrderPageContent() {
               >
                 {t('common.activities')}
               </TabsTrigger>
-
+              <TabsTrigger
+                value="myOrders"
+                className={cn(
+                  "w-28 rounded-none px-4 py-3 text-sm font-medium text-gray-400 hover:text-white focus:text-white border-b-3 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent data-[state=active]:text-white"
+                )}
+              >
+                {t('common.my_activities')}
+              </TabsTrigger>
             </TabsList>
             <div className="flex justify-between items-center gap-2">
               <Button
