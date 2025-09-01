@@ -18,7 +18,7 @@ interface MyOrdersProps {
 
 export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
   const pageSize = 20;
-  const { btcFeeRate } = useCommonStore((state) => state);
+  const { btcFeeRate, network } = useCommonStore((state) => state);
   const { t } = useTranslation();
   const { address } = useReactWalletStore();
 
@@ -43,7 +43,7 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
     isLoading,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['myOrders', type, contractURL, address],
+    queryKey: ['myOrders', type, contractURL, address, network],
     queryFn: ({ pageParam = 0 }) => contractService.getUserHistoryInContract(contractURL, address, pageParam * pageSize, pageSize),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.data.length || lastPage.data.length < pageSize) return undefined;

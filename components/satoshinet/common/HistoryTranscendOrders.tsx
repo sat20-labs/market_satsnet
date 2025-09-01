@@ -5,7 +5,8 @@ import { contractService } from "@/domain/services/contract";
 import { Chain } from "@/types";
 import HistorySwapTable from "./HistorySwapTable";
 import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
-
+import { useCommonStore } from "@/store/common";
+    
 interface HistoryTranscendOrdersProps {
   contractURL: string;
   type: 'transcend' | 'trade';
@@ -15,7 +16,7 @@ interface HistoryTranscendOrdersProps {
 export default function HistoryTranscendOrders({ contractURL, type, ticker }: HistoryTranscendOrdersProps) {
   const pageSize = 20;
   const { t } = useTranslation();
-
+  const { network } = useCommonStore();
   const ORDER_TYPE_LABELS: Record<number, string> = {
     1: t("common.sell"),
     2: t("common.buy"),
@@ -37,7 +38,7 @@ export default function HistoryTranscendOrders({ contractURL, type, ticker }: Hi
     isLoading,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['historyTranscendOrders', contractURL],
+    queryKey: ['historyTranscendOrders', contractURL, network],
     queryFn: ({ pageParam = 0 }) => contractService.getContractHistory(contractURL, pageParam * pageSize, pageSize),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.data.length || lastPage.data.length < pageSize) return undefined;

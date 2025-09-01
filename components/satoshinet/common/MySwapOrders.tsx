@@ -6,7 +6,7 @@ import { contractService } from "@/domain/services/contract";
 import { Chain } from "@/types";
 import HistorySwapTable from "./HistorySwapTable";
 import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
-
+import { useCommonStore } from "@/store/common";
 interface MyOrdersProps {
   contractURL: string;
   type: 'swap' | 'trade';
@@ -17,7 +17,7 @@ export default function MyOrders({ contractURL, type, ticker }: MyOrdersProps) {
   const pageSize = 20;
   const { t } = useTranslation();
   const { address } = useReactWalletStore();
-
+  const { network } = useCommonStore();
   const ORDER_TYPE_LABELS: Record<number, string> = {
     1: t("common.sell"),
     2: t("common.buy"),
@@ -39,7 +39,7 @@ export default function MyOrders({ contractURL, type, ticker }: MyOrdersProps) {
     isLoading,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['mySwapOrders', contractURL, address],
+    queryKey: ['mySwapOrders', contractURL, address, network],
     queryFn: ({ pageParam = 0 }) => contractService.getUserHistoryInContract(contractURL, address, pageParam * pageSize, pageSize),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.data.length || lastPage.data.length < pageSize) return undefined;
