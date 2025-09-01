@@ -116,7 +116,7 @@ function OrderPageContent() {
       </div>
       {/* 我的订单和所有订单 */}
       <div className="bg-zinc-900 rounded-2xl p-4 mt-4 mb-4">
-        <Tabs defaultValue="myOrders">
+        <Tabs defaultValue="history">
           <div className="flex justify-between items-center mt-2 mb-4 border-b border-gray-800">
             <TabsList className="flex justify-start w-full bg-transparent">
 

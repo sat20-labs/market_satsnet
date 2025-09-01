@@ -173,7 +173,7 @@ function OrderPageContent() {
         </div>
       </div>
       <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
-        <Tabs defaultValue="myOrders">
+        <Tabs defaultValue="history">
           <TabsList className="mb-2">
             <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
             <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
