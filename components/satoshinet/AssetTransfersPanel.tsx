@@ -6,6 +6,8 @@ import Link from "next/link";
 import { CustomPagination } from "@/components/ui/CustomPagination";
 import { useCommonStore } from "@/store/common";
 import clientApi from "@/api/clientApi";
+import { Chain } from "@/types";
+import { generateMempoolUrl } from "@/utils/url";
 
 interface AssetTransfersPanelProps {
   asset: string;
@@ -79,7 +81,7 @@ export function AssetTransfersPanel({ asset, onTotalChange, tickerInfo }: AssetT
                 <TableRow className="h-14" key={item.wallet || idx}>
                     <TableCell className="text-left">&nbsp;&nbsp;{(page - 1) * pageSize + idx + 1}</TableCell>                  
                   <TableCell>
-                    <Link href={`https://mempool.test.sat20.org/testnet/address/${item.wallet}`} target="_blank" className="text-blue-500/80 underline break-all">{item.wallet}</Link>
+                    <Link href={generateMempoolUrl({ network: network, path: `address/${item.wallet}`, chain: Chain.SATNET, env: 'dev' })} target="_blank" className="text-blue-500/80 underline break-all">{item.wallet}</Link>
                   </TableCell>
                   <TableCell className="text-left">
                     {/* {((item.total_balance / totalBalance) * 100).toFixed(2)}% */}
