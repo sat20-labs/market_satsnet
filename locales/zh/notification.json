@@ -27,5 +27,8 @@
   "transaction_spilt_success": "拆分及转账成功",
   "transaction_spilt_fail": "拆分及转账失败",
   "search_sats_title": "搜索聪",
+  "ticker_not_exist": "代币 \"{{ticker}}\" 不存在或无效",
+  "contract_deployment_failed": "合约部署失败",
+  "white_sats_creation_failed": "白聪创建失败",
   "website_notice": "市场将于 2024 年 8 月 18 日 14:00 至 20:00 进行系统升级维护。期间，市场交易可能会受到影响，由此带来的不便敬请谅解。恢复时间将通过官方推特第一时间通知，感谢您的理解与支持。"
 }

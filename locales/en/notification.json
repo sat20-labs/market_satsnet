@@ -27,5 +27,8 @@
   "transaction_spilt_success": "Split & Send success",
   "transaction_spilt_fail": "Split & Send failed",
   "search_sats_title": "Search sats",
+  "ticker_not_exist": "Ticker \"{{ticker}}\" does not exist or is invalid",
+  "contract_deployment_failed": "Contract deployment failed",
+  "white_sats_creation_failed": "White sats creation failed",
   "website_notice": "The market will undergo system upgrade maintenance from 14:00 to 20:00 on August 18, 2024. During this period, market transactions may be affected. We apologize for the inconvenience. The recovery time will be notified via the official Twitter account as soon as possible. Thank you for your understanding and support."
 }

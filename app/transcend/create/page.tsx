@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import { Modal } from '@/components/ui/modal';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -60,6 +61,29 @@ const CreateTranscend = () => {
       toast.error(t('End Block must be 0 or greater than current block height'));
       return;
     }
+
+    // 验证ticker是否存在
+    try {
+      const tickerAsset = `${formData.protocol}:f:${formData.ticker}`;
+      const tickerInfo = await clientApi.getTickerInfo(tickerAsset);
+      console.log('tickerInfo', tickerInfo);
+      
+      // 检查返回的数据结构，code为-1表示ticker不存在
+      if (tickerInfo && tickerInfo.code === -1) {
+        toast.error(t('notification.ticker_not_exist', { ticker: formData.ticker }));
+        return;
+      }
+      
+      // 检查data是否为null
+      if (!tickerInfo || !tickerInfo.data) {
+        toast.error(t('notification.ticker_not_exist', { ticker: formData.ticker }));
+        return;
+      }
+    } catch (error) {
+      toast.error(t('notification.ticker_not_exist', { ticker: formData.ticker }));
+      return;
+    }
+
     setShowConfirmModal(false);
     const assetName = {
       Protocol: formData.protocol,
@@ -75,7 +99,7 @@ const CreateTranscend = () => {
     try {
       const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
     } catch (error) {
-      toast.error('Contract deployment failed');
+      toast.error(t('notification.contract_deployment_failed'));
     }
 
   }
@@ -98,7 +122,7 @@ const CreateTranscend = () => {
       console.log('result:', result);
       router.back();
     } catch (error) {
-      toast.error('白聪创建失败');
+      toast.error(t('notification.white_sats_creation_failed'));
     }
   }
 
@@ -163,23 +187,18 @@ const CreateTranscend = () => {
             </Select>
           </div>
           <label className="block text-sm font-medium text-gray-300 mt-4 mb-1">{t('pages.createPool.ticker')}</label>
-          <Select
-            onValueChange={(value) => handleInputChange('ticker', value)}
+          <Combobox
             value={formData.ticker}
-
-            disabled={filteredTickerOptions.length === 0}
-          >
-            <SelectTrigger className="w-full py-4 h-12">
-              {formData.ticker || t('pages.createPool.selectTicker')}
-            </SelectTrigger>
-            <SelectContent className="max-h-60 overflow-y-auto">
-              {filteredTickerOptions.map((item) => (
-                <SelectItem key={item.Name.Ticker} value={item.Name.Ticker} className="h-9 py-2">
-                  {item.Name.Ticker}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onValueChange={(value) => handleInputChange('ticker', value)}
+            options={filteredTickerOptions.map((item) => ({
+              value: item.Name.Ticker,
+              label: item.Name.Ticker
+            }))}
+            placeholder={t('pages.createPool.selectTicker')}
+            searchPlaceholder="Search or type ticker..."
+            emptyText="No ticker found. You can type a custom ticker."
+            className="w-full"
+          />
           {formData.protocol === 'runes' && (
             <p className="mt-1 text-xs text-gray-400">
               {t('pages.createPool.runesTickerNote')}
