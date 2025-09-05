@@ -282,8 +282,8 @@ const Swap = () => {
                   </TableCell>
                   <TableCell className="px-4 py-2">
                     <div className="flex flex-col leading-tight gap-1">
-                      <span>{adaptedPool.satsValueInPool}</span>
-                      <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.satsValueInPool || 0)) / 1e8} /></span>
+                      <span>{Number(adaptedPool.satsValueInPool || 0) * 2}</span>
+                      <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.satsValueInPool || 0) * 2) / 1e8} /></span>
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-2">
