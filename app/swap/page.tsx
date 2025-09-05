@@ -52,6 +52,15 @@ function adaptPoolData(pool, satsnetHeight) {
     poolStatus = PoolStatus.NOT_STARTED;
   }
 
+  // derive price if missing: price = satsValueInPool / assetAmtInPool
+  const satsValueInPool = Number(pool.SatsValueInPool ?? 0);
+  const assetAmtInPool = pool.AssetAmtInPool?.Value
+    ? pool.AssetAmtInPool.Value / Math.pow(10, pool.AssetAmtInPool.Precision)
+    : 0;
+  const rawDealPrice = Number(pool.dealPrice ?? 0);
+  const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
+  const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : derivedDealPrice;
+
   return {
     ...pool,
     id: pool.contractURL ?? pool.id,
@@ -60,13 +69,12 @@ function adaptPoolData(pool, satsnetHeight) {
     poolStatus,
     deployTime: pool.deployTime ?? '',
     // 转为数值，便于排序
-    dealPrice: Number(pool.dealPrice ?? 0),
-    satsValueInPool: Number(pool.SatsValueInPool ?? 0),
+    dealPrice: Number(finalDealPrice || 0),
+    satsValueInPool,
     totalDealSats: Number(pool.TotalDealSats ?? 0),
     totalDealCount: Number(pool.TotalDealCount ?? 0),
   };
 }
-
 
 const Swap = () => {
   const { t } = useTranslation(); // Specify the namespace 
@@ -144,11 +152,13 @@ const Swap = () => {
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
+
+    { key: 'dealPrice', label: t('Price(Sats)') },
+
+    { key: 'totalDealSats', label: t('Volume(Sats)') },
+    { key: 'totalDealCount', label: t('Sales') },
+    { key: 'satsValueInPool', label: t('Pool Size(Sats)') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
-    { key: 'dealPrice', label: t('Price') },
-    { key: 'satsValueInPool', label: t('Sats In Pool') },
-    { key: 'totalDealSats', label: t('Total Deal Sats') },
-    { key: 'totalDealCount', label: t('Total Deal Count') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
   ];
 
@@ -181,7 +191,6 @@ const Swap = () => {
     });
   }, [adaptedPoolList, protocol]);
 
-
   // 处理分页变化
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -209,12 +218,14 @@ const Swap = () => {
       </div>
 
       {/* 加载状态 */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
-        </div>
-      )}
+      {
+        isLoading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
+          </div>
+        )
+      }
 
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
@@ -231,44 +242,61 @@ const Swap = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPoolList.map((adaptedPool, index) => (
-              <TableRow
-                key={adaptedPool.id ?? index}
-                className="border-b border-border hover:bg-accent transition-colors  whitespace-nowrap"
-              >
-                <TableCell className="flex items-center gap-2 px-4 py-2">
-                  <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                    <AvatarImage src={adaptedPool.logo} alt="Logo" />
-                    <AvatarFallback>
-                      {adaptedPool?.assetSymbol
-                        ? String.fromCodePoint(adaptedPool.assetSymbol)
-                        : adaptedPool.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Link
-                    href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
-                    className="cursor-pointer text-primary hover:underline"
-                    prefetch={true}
-                  >
-                    {adaptedPool.assetName}
-                  </Link>
-                </TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
-                <TableCell className="px-4 py-2">
-                  <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
-                    {statusTextMap[adaptedPool.poolStatus]}
-                  </Badge>
-                </TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.dealPrice}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.satsValueInPool}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.totalDealSats}</TableCell>
-                <TableCell className="px-4 py-2">{adaptedPool.totalDealCount}</TableCell>
-                <TableCell className="px-4 py-2">
-                  {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
-                </TableCell>
-              </TableRow>
+            {filteredPoolList.map((adaptedPool, index) => {
+              return (
+                <TableRow
+                  key={adaptedPool.id ?? index}
+                  className="border-b border-border hover:bg-accent transition-colors  whitespace-nowrap"
+                >
+                  <TableCell className="flex items-center gap-2 px-4 py-2">
+                    <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
+                      <AvatarImage src={adaptedPool.logo} alt="Logo" />
+                      <AvatarFallback>
+                        {adaptedPool?.assetSymbol
+                          ? String.fromCodePoint(adaptedPool.assetSymbol)
+                          : adaptedPool.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Link
+                      href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                      className="cursor-pointer text-primary hover:underline"
+                      prefetch={true}
+                    >
+                      {adaptedPool.assetName}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
 
-            ))}
+                  <TableCell className="px-4 py-2">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}</TableCell>
+
+                  <TableCell className="px-4 py-2">
+                    <div className="flex flex-col leading-tight gap-1">
+                      <span>{adaptedPool.totalDealSats}</span>
+                      <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.totalDealSats || 0)) / 1e8} /></span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-2">
+                    <div className="flex flex-col leading-tight">
+                      <span>{adaptedPool.totalDealCount}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-2">
+                    <div className="flex flex-col leading-tight gap-1">
+                      <span>{adaptedPool.satsValueInPool}</span>
+                      <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.satsValueInPool || 0)) / 1e8} /></span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-2">
+                    <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
+                      {statusTextMap[adaptedPool.poolStatus]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="px-4 py-2">
+                    {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

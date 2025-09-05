@@ -51,9 +51,9 @@ export default function RootLayout({
               {children}
             </main>
             <footer id="footer">
-            <ul className="flex flex-wrap justify-center h-auto min-h-16 gap-1 items-center border-t border-zinc-700/50 text-gray-500 px-2 py-2 mb-2">
+              <ul className="flex flex-wrap justify-center h-auto min-h-16 gap-1 items-center border-t border-zinc-700/50 text-gray-500 px-2 py-2 mb-2">
                 <li>
-                  <a href="https://x.com/SATSWAPMarket/" target="_blank" rel="noopener noreferrer">  
+                  <a href="https://x.com/SATSWAPMarket/" target="_blank" rel="noopener noreferrer">
                     <Avatar>
                       <AvatarFallback>
                         {/* <img src="/twitter.png" alt="sat20 twitter" className="w-full h-full object-cover" /> */}
@@ -62,43 +62,44 @@ export default function RootLayout({
                     </Avatar>
                   </a>
                 </li>
-                
-                <li className="text-sm">Copyrights&copy;2025</li>
-                <li>V1.0.{appVersion}</li>
-                
-                 {/* 一起换行显示 */}
-                <li className="flex w-full sm:w-auto sm:flex-row justify-center items-center gap-2 px-4 text-center">
-                <span>
-                  <a
-                    href={`https://app.ordx.market/privacy/${lang === 'en' ? 'en' : 'zh'}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-purple-500 transition-colors"
-                  >
-                    {t('footer.legal.privacy', { defaultValue: 'Privacy Policy' })}
-                  </a>
+
+
+
+                {/* 一起换行显示 */}
+                <li className="flex w-full sm:w-auto sm:flex-row justify-center text-xs sm:text-sm items-center gap-2 px-4 text-center">
+                  <span>
+                    <a
+                      href={`https://app.ordx.market/privacy/${lang === 'en' ? 'en' : 'zh'}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-purple-500 transition-colors"
+                    >
+                      {t('footer.legal.privacy', { defaultValue: 'Privacy Policy' })}
+                    </a>
                   </span>
                   <span className='border-l-2 border-zinc-600/80'>
-                  <a
-                    href={`/files/SAT20_Wallet_User_Guide_${lang}.pdf`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-purple-500 transition-colors ml-2"
-                  >
-                    {t('footer.help.title', { defaultValue: 'Wallet Guide' })}
-                  </a>
+                    <a
+                      href={`/files/SAT20_Wallet_User_Guide_${lang}.pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-purple-500 transition-colors ml-2"
+                    >
+                      {t('footer.help.title', { defaultValue: 'Wallet Guide' })}
+                    </a>
                   </span>
                   <span className='border-l-2 border-zinc-600/80'>
-                  <a
-                    href={`/files/LaunchPool_User_Guide_${lang}.pdf`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-purple-500 transition-colors ml-2"
-                  >
-                    {t('footer.help.title', { defaultValue: 'LaunchPool Guide' })}
-                  </a>
+                    <a
+                      href={`/files/LaunchPool_User_Guide_${lang}.pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-purple-500 transition-colors ml-2"
+                    >
+                      {t('footer.help.title', { defaultValue: 'LaunchPool Guide' })}
+                    </a>
                   </span>
                 </li>
+                <li className="text-xs sm: text-sm">Copyrights&copy;2025</li>
+                <li className='text-xs sm: text-sm'>V1.0.{appVersion}</li>
               </ul>
             </footer>
           </div>

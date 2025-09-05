@@ -39,21 +39,21 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
         {/* Volume */}
         <div className="border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.volume')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{formatLargeNumber(volumeBtc / 1e8)}<span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
+          <p className="text-zinc-200 text-lg font-bold gap-1">{formatLargeNumber(volumeBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs mb-3">${volumeUsd}</p>
         </div>
 
         {/* Total Deal Assets  */}
         <div className="border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.tx_total_volume')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{formatLargeNumber(totalVolumeBtc / 1e8)}<span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
+          <p className="text-zinc-200 text-lg font-bold gap-1">{formatLargeNumber(totalVolumeBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs mb-3">${totalVolumeUsd}</p>
         </div>
 
         {/* Market Cap */}
         <div className="sm:border-r-1 border-b-1 sm:border-b-0 sm:border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.marketCap')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{formatLargeNumber(marketCapBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
+          <p className="text-zinc-200 text-lg font-bold gap-1">{formatLargeNumber(marketCapBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs">${marketCapUsd}</p>
         </div>
 

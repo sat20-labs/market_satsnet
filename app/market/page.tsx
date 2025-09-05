@@ -29,7 +29,7 @@ function adaptPoolData(pool, satsnetHeight) {
   const ticker = assetNameObj.Ticker || '-';
   const protocol = assetNameObj.Protocol || '-';
   // 状态适配
-  
+
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
   const enableBlock = Number(pool.enableBlock);
@@ -52,6 +52,15 @@ function adaptPoolData(pool, satsnetHeight) {
     poolStatus = PoolStatus.NOT_STARTED;
   }
 
+  // derive deal price if missing: price = satsValueInPool / assetAmtInPool
+  const satsValueInPoolNum = Number(pool.SatsValueInPool ?? 0);
+  const assetAmtInPoolNum = pool.AssetAmtInPool?.Value
+    ? pool.AssetAmtInPool.Value / Math.pow(10, pool.AssetAmtInPool.Precision)
+    : 0;
+  const rawDealPriceNum = Number(pool.dealPrice ?? 0);
+  const derivedDealPriceNum = assetAmtInPoolNum > 0 ? satsValueInPoolNum / assetAmtInPoolNum : 0;
+  const finalDealPriceNum = rawDealPriceNum > 0 ? rawDealPriceNum : derivedDealPriceNum;
+
   return {
     ...pool,
     id: pool.contractURL ?? pool.id,
@@ -59,7 +68,7 @@ function adaptPoolData(pool, satsnetHeight) {
     protocol: protocol,
     poolStatus,
     deployTime: pool.deployTime ?? '',
-    dealPrice: pool.dealPrice ?? '-',
+    dealPrice: Number(finalDealPriceNum || 0),
     satsValueInPool: pool.SatsValueInPool ?? '-',
     totalDealSats: pool.TotalDealSats ?? '-',
     totalDealCount: pool.TotalDealCount ?? '-',
@@ -148,10 +157,10 @@ const MarketPage = () => {
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
   }, [poolList, satsnetHeight]);
-  
+
   console.log('adaptedPoolList', satsnetHeight);
   console.log('adaptedPoolList', poolList);
-  
+
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'protocol', label: t('Protocol') },
@@ -177,7 +186,7 @@ const MarketPage = () => {
     let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
     return list.slice().sort((a, b) => Number(b.deployTime) - Number(a.deployTime));
   }, [adaptedPoolList, protocol]);
-  
+
   console.log('filteredPoolList', filteredPoolList);
 
   // 处理分页变化
@@ -188,7 +197,7 @@ const MarketPage = () => {
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
     setCurrentPage(1);
-  };    
+  };
 
   return (
     <div className="p-4 relative">
@@ -210,7 +219,7 @@ const MarketPage = () => {
           <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
         </div>
       )}
-      
+
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
