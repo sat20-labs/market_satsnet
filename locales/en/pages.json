@@ -26,7 +26,7 @@
     }
   },
   "market": {
-    "title": "LimitOrder"
+    "title": "MarketPlace"
   },
   "launchpool": {
     "title": "LaunchPool",
@@ -54,7 +54,7 @@
     "range": "range"
   },
   "tools": {
-    "title": "Toolbox",
+    "title": "Tools",
     "transaction": {
       "title": "Split, Merge & Transfer",
       "description": "Batch Split and Transfer Tool",

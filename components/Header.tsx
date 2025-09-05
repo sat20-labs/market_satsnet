@@ -58,7 +58,7 @@ export const Header = () => {
     const menus = [
       // Replace Swap top-level with MarketPlace dropdown (default page is Swap)
       {
-        label: 'MarketPlace',
+        label: t('pages.market.title'),
         // href kept as default target for future use; current renderer uses children for dropdowns
         href: '/swap',
         children: [
@@ -75,7 +75,7 @@ export const Header = () => {
 
       // Merge Transcend, Explorer, Wallet into Tools group
       {
-        label: 'Tools',
+        label: t('pages.tools.title'),
         children: [
           {
             label: 'Transcend',

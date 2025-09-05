@@ -54,7 +54,7 @@
     "range": "范围"
   },
   "tools": {
-    "title": "工具箱",
+    "title": "工具",
     "transaction": {
       "title": "拆分、合并 & 转移",
       "description": "提供批量拆分、合并及转移功能。",
