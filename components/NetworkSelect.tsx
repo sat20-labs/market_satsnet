@@ -43,7 +43,7 @@ export const NetworkSelect = () => {
     setIsOpen((prev) => !prev); // 点击时切换菜单状态
   };
 
-  const handleSelectionChange = async(value: Network) => {
+  const handleSelectionChange = async (value: Network) => {
     setIsOpen(false); // 选择后关闭菜单
     const _v = value === 'mainnet' ? 'livenet' : 'testnet';
     if (connected && walletNetwork !== _v) {
@@ -66,7 +66,7 @@ export const NetworkSelect = () => {
     >
       {/* 按钮 */}
       <button
-        className="flex items-center px-4 py-2 bg-[#181819] text-gray-300 text-sm sm:text-base rounded-xl"
+        className="flex items-center px-4 py-2 bg-[#181819] text-gray-300 text-xs sm:text-sm rounded-xl"
         onClick={handleClick}
       >
         {network === ('mainnet' as Network) ? 'Mainnet' : 'Testnet'}

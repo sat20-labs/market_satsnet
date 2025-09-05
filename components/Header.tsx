@@ -45,11 +45,15 @@ export const Header = () => {
   }, [btcData, setBtcPrice]);
 
   const isActive = (href: string) => {
-    if (href.startsWith('http')) {
+    if (!href || href.startsWith('http')) {
       return false;
     }
-    return pathname === href;
+    if (href === '/') {
+      return pathname === '/';
+    }
+    return pathname === href || pathname.startsWith(href + '/');
   };
+
   const SWAP_WHITELIST = [
     'tb1pvcdrd5gumh8z2nkcuw9agmz7e6rm6mafz0h8f72dwp6erjqhevuqf2uhtv',
     'tb1pydmhr3ud7e28g6lq7xgmfrz2e3uzxvw0zatv0d8auhwnatzrqawshjhh34',
@@ -189,7 +193,7 @@ export const Header = () => {
                   )}
                   {/* Unified underline for both top-level link and dropdown, ensuring same distance */}
                   <span
-                    className={`pointer-events-none absolute left-0 bottom-0 h-[1.5px] w-full bg-gradient-to-r from-[#8000cc] to-[#a0076d] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${active ? 'scale-x-100' : ''}`}
+                    className={`pointer-events-none absolute left-0 bottom-0 h-[2px] w-full bg-gradient-to-r from-[#8000cc] to-[#a0076d] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${active ? 'scale-x-100' : ''}`}
                   />
                 </li>
               );

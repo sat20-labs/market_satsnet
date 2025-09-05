@@ -56,14 +56,14 @@ export const FeerateSelectButton = () => {
     <Button
       variant="ghost"
       disabled={isFeeRateLoading}
-      className="bg-transparent sm:px-2 px-8 sm:gap-2 gap-3 text-xs sm:text-base text-zinc-300 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
+      className="bg-transparent sm:px-2 px-1 sm:gap-2 gap-1 text-xs sm:text-sm text-zinc-400 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
     >
       {isFeeRateLoading ? (
         <Icon icon="eos-icons:loading" className="text-xl0" />
       ) : (
         <Icon icon="mdi:gas-station" className="text-xl0" />
       )}
-      <span className='mr-4 sm:mr-1'>10 sats/tx</span>
+      <span className='mr-2 sm:mr-1'>10 sats/tx</span>
     </Button>
   );
 };

@@ -3,10 +3,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { contractService } from "@/domain/services/contract";
 import { Chain } from "@/types";
-import HistorySwapTable from "./HistorySwapTable";
+import HistoryTranscendTable from "./HistoryTranscendTable";
 import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
 import { useCommonStore } from "@/store/common";
-    
+
 interface HistoryTranscendOrdersProps {
   contractURL: string;
   type: 'transcend' | 'trade';
@@ -57,11 +57,11 @@ export default function HistoryTranscendOrders({ contractURL, type, ticker }: Hi
       <div className="flex justify-end">
         <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
       </div>
-      <HistorySwapTable
+      <HistoryTranscendTable
         rawOrders={allOrders}
         orderTypeLabels={ORDER_TYPE_LABELS}
         isLoading={isLoading}
-        noDataMessage={type === 'transcend' 
+        noDataMessage={type === 'transcend'
           ? t("common.history_no_records")
           : t("common.history_no_records")
         }

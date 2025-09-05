@@ -237,7 +237,7 @@ export default function HistoryTable({
 
   return (
     <div className="max-w-full">
-      <div className="w-full max-h-80 rounded-md overflow-y-auto">
+      <div className="w-full max-h-120 rounded-md overflow-y-auto">
         <Table className="overflow-x-auto">
           <TableHeader>
             <TableRow className="bg-zinc-800 text-gray-500 text-xs">
@@ -249,9 +249,10 @@ export default function HistoryTable({
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
               {/* <TableHead className="text-center whitespace-nowrap">{t("common.service_fee")}</TableHead> */}
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_status")}</TableHead>
-              <TableHead className="text-center whitespace-nowrap">Reason</TableHead>
+
               <TableHead className="text-center whitespace-nowrap">{t("common.tx")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">UTXO</TableHead>
+              <TableHead className="text-center whitespace-nowrap">Reason</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -292,7 +293,7 @@ export default function HistoryTable({
                       {order.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center">{order.reason}</TableCell>
+
                   <TableCell className="text-center">
                     {order.rawData.OutTxId ? (
                       <a
@@ -321,7 +322,9 @@ export default function HistoryTable({
                       "-"
                     )}
                   </TableCell>
+                  <TableCell className="text-center">{order.reason}</TableCell>
                 </TableRow>
+
               ))}
           </TableBody>
         </Table>

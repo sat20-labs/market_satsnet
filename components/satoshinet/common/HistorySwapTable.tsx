@@ -184,7 +184,7 @@ export default function HistorySwapTable({
 
   return (
     <div className="max-w-full">
-      <div className="w-full max-h-80 rounded-md border overflow-y-auto">
+      <div className="w-full max-h-120 rounded-md border overflow-y-auto">
         <Table className="overflow-x-auto">
           <TableHeader>
             <TableRow className="bg-zinc-800 text-gray-500 text-xs sticky top-0 z-10">
@@ -197,9 +197,10 @@ export default function HistorySwapTable({
               <TableHead className="text-left whitespace-nowrap">{t("common.swap_trade_quantity")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_trade_amount_sats")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">{t("common.limitorder_history_status")}</TableHead>
-              <TableHead className="text-center whitespace-nowrap">Reason</TableHead>
+
               <TableHead className="text-center whitespace-nowrap">{t("common.tx")}</TableHead>
               <TableHead className="text-center whitespace-nowrap">UTXO</TableHead>
+              <TableHead className="text-center whitespace-nowrap">Reason</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -250,7 +251,7 @@ export default function HistorySwapTable({
                       {order.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-center">{order.reason}</TableCell>
+
                   <TableCell className="text-center">
                     {order.rawData.OutTxId ? (
                       <a
@@ -279,6 +280,7 @@ export default function HistorySwapTable({
                       "-"
                     )}
                   </TableCell>
+                  <TableCell className="text-center">{order.reason}</TableCell>
                 </TableRow>
               ))}
           </TableBody>

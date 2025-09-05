@@ -307,5 +307,7 @@
   "registering": "注册中...",
   "register_success": "成功注册为推荐人",
   "register_failed": "注册推荐人失败",
-  "please_input_name": "请输入名称"
+  "please_input_name": "请输入名称",
+  "volume_sats": "交易额(sats)",
+  "pool_size_sats": "池子规模(sats)"
 }

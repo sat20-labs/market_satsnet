@@ -151,13 +151,11 @@ const Swap = () => {
 
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
-    { key: 'protocol', label: t('Protocol') },
-
-    { key: 'dealPrice', label: t('Price(Sats)') },
-
-    { key: 'totalDealSats', label: t('Volume(Sats)') },
-    { key: 'totalDealCount', label: t('Sales') },
-    { key: 'satsValueInPool', label: t('Pool Size(Sats)') },
+    { key: 'protocol', label: t('common.protocol') },
+    { key: 'dealPrice', label: t('common.price') },
+    { key: 'totalDealSats', label: t('common.volume_sats') },
+    { key: 'totalDealCount', label: t('common.tx_order_count') },
+    { key: 'satsValueInPool', label: t('common.pool_size_sats') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
   ];
@@ -204,7 +202,7 @@ const Swap = () => {
   return (
     <div className="p-4 relative">
       <div className="mb-2 px-2 flex items-center">
-        <span className="text-base font-semibold mr-4">当前BTC价格：<BtcPrice btc={1} className="text-green-500 font-bold" /> USDT</span>
+        <span className="text-sm text-gray-400 mr-4">Current Bitcoin Price：<BtcPrice btc={1} className="text-green-500 font-bold" /> USDT</span>
       </div>
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
@@ -254,7 +252,7 @@ const Swap = () => {
                       <AvatarFallback>
                         {adaptedPool?.assetSymbol
                           ? String.fromCodePoint(adaptedPool.assetSymbol)
-                          : adaptedPool.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
+                          : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <Link

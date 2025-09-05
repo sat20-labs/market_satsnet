@@ -71,7 +71,7 @@ function OrderPageContent() {
     <div className="w-full">
       <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 p-2 sm:p-4 h-full w-ful">
         {/* Chart and Asset Info Container */}
-        <div className="sm:col-span-2 flex flex-col gap-4 mb-8 sm:mb-0">
+        <div className="sm:col-span-2 flex flex-col gap-1 mb-8 sm:mb-0">
           {/* Tradingview Chart */}
           <div className="flex items-center justify-center min-h-[320px] sm:min-h-[640px] sm:mb-0">
             <ChartModule
@@ -83,11 +83,11 @@ function OrderPageContent() {
               isRefreshing={isAnalyticsLoading}
             />
           </div>
-          <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
+          <div className="flex items-center justify-center w-full h-[320px] sm:h-[220px] sm:mt-1 sm:mb-0">
             <AssetInfo depthData={swapStatusData} tickerInfo={tickerInfo} holders={holders} />
           </div>
         </div>
-        <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
+        <div className="sm:col-span-1 flex items-center justify-center mb-1 mt-4 sm:mb-0 sm:mt-0">
           <div className="max-w-full mx-auto pb-4 sm:px-4 bg-transparent text-zinc-200 rounded-2xl shadow-lg w-full h-full">
             <AssetInfoCard
               asset={asset}
@@ -172,16 +172,16 @@ function OrderPageContent() {
           </div>
         </div>
       </div>
-      <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
+      <div className="bg-zinc-900 rounded-2xl p-4 mt-1">
         <Tabs defaultValue="history">
           <TabsList className="mb-2">
             <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
             <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
           </TabsList>
-          <TabsContent value="myOrders" className="-mt-10">
+          <TabsContent value="myOrders" className="-mt-8">
             <MySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
-          <TabsContent value="history" className="-mt-10">
+          <TabsContent value="history" className="-mt-8">
             <HistorySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
         </Tabs>

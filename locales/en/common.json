@@ -304,5 +304,7 @@
   "registering": "Registering...",
   "register_success": "Successfully registered as referrer",
   "register_failed": "Failed to register as referrer",
-  "please_input_name": "Please enter your name"
+  "please_input_name": "Please enter your name",
+  "volume_sats": "Volume(Sats)",
+  "pool_size_sats": "Pool Size(Sats)"
 }

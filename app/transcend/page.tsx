@@ -34,7 +34,7 @@ const generateTranscendDetailHref = (assetName: { Protocol?: string; Ticker?: st
   if (!assetName?.Protocol || !assetName?.Ticker) {
     return '/transcend/detail?asset=::';
   }
-  
+
   // 构建标准的资产标识符格式: Protocol:f:Ticker
   const assetIdentifier = `${assetName.Protocol}:f:${assetName.Ticker}`;
   return `/transcend/detail?asset=${encodeURIComponent(assetIdentifier)}`;
@@ -182,7 +182,7 @@ const TranscendPage = () => {
 
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
-    { key: 'protocol', label: t('Protocol') },
+    { key: 'protocol', label: t('common.protocol') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
     // { key: 'action', label: t('pages.launchpool.action') },
@@ -218,13 +218,13 @@ const TranscendPage = () => {
     <div className="p-4 relative">
       <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
-                  <div className="flex items-center gap-2 mr-4">
-            <WalletConnectBus asChild text="Create Transcend">
-              <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/transcend/create')}>
-                创建BTC穿越合约
-              </Button>
-            </WalletConnectBus>
-          </div>
+        <div className="flex items-center gap-2 mr-4">
+          <WalletConnectBus asChild text="Create Transcend">
+            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/transcend/create')}>
+              创建BTC穿越合约
+            </Button>
+          </WalletConnectBus>
+        </div>
       </div>
 
       {/* 加载状态 */}
@@ -259,9 +259,11 @@ const TranscendPage = () => {
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                     <AvatarImage src={adaptedPool.logo} alt="Logo" />
                     <AvatarFallback>
-                      {adaptedPool?.assetSymbol
-                        ? String.fromCodePoint(adaptedPool.assetSymbol)
-                        : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
+                      {adaptedPool?.Contract?.assetName?.Ticker
+                        ? adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()
+                        : (
+                          <img src="/tick-ico/btc.svg" alt="BTC" className="w-6 h-6" />
+                        )}
                     </AvatarFallback>
                   </Avatar>
                   <Link

@@ -163,7 +163,7 @@ const MarketPage = () => {
 
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
-    { key: 'protocol', label: t('Protocol') },
+    { key: 'protocol', label: t('common.protocol') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
     { key: 'dealPrice', label: t('Price') },
     { key: 'satsValueInPool', label: t('Sats In Pool') },
@@ -246,7 +246,7 @@ const MarketPage = () => {
                     <AvatarFallback>
                       {adaptedPool?.assetSymbol
                         ? String.fromCodePoint(adaptedPool.assetSymbol)
-                        : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
+                        : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <Link

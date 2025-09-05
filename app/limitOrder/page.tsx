@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { BtcPrice } from '@/components/BtcPrice';
 
 function adaptPoolData(pool: any, satsnetHeight: number) {
     const assetNameObj = pool.Contract.assetName || {};
@@ -49,6 +50,15 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
         poolStatus = PoolStatus.NOT_STARTED;
     }
 
+    // derive price if missing: price = satsValueInPool / assetAmtInPool
+    const satsValueInPool = Number(pool.SatsValueInPool ?? 0);
+    const assetAmtInPool = pool.AssetAmtInPool?.Value
+        ? pool.AssetAmtInPool.Value / Math.pow(10, pool.AssetAmtInPool.Precision)
+        : 0;
+    const rawDealPrice = Number(pool.dealPrice ?? 0);
+    const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
+    const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : derivedDealPrice;
+
     return {
         ...pool,
         id: pool.contractURL ?? pool.id,
@@ -56,10 +66,10 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
         protocol: protocol,
         poolStatus,
         deployTime: pool.deployTime ?? '',
-        dealPrice: pool.dealPrice ?? '-',
-        satsValueInPool: pool.SatsValueInPool ?? '-',
-        totalDealSats: pool.TotalDealSats ?? '-',
-        totalDealCount: pool.TotalDealCount ?? '-',
+        dealPrice: Number(finalDealPrice || 0),
+        satsValueInPool,
+        totalDealSats: Number(pool.TotalDealSats ?? 0),
+        totalDealCount: Number(pool.TotalDealCount ?? 0),
     };
 }
 
@@ -136,12 +146,12 @@ export default function LimitOrderPage() {
 
     const columns = [
         { key: 'assetName', label: t('pages.launchpool.asset_name') },
-        { key: 'protocol', label: t('Protocol') },
+        { key: 'protocol', label: t('common.protocol') },
+        { key: 'dealPrice', label: t('common.price') },
+        { key: 'totalDealSats', label: t('common.volume_sats') },
+        { key: 'totalDealCount', label: t('common.tx_order_count') },
+        // { key: 'satsValueInPool', label: t('common.pool_size_sats') },
         { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
-        { key: 'dealPrice', label: t('Price') },
-        { key: 'satsValueInPool', label: t('Sats In Pool') },
-        { key: 'totalDealSats', label: t('Total Deal Sats') },
-        { key: 'totalDealCount', label: t('Total Deal Count') },
         { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
     ];
 
@@ -211,7 +221,7 @@ export default function LimitOrderPage() {
                                         <AvatarFallback>
                                             {adaptedPool?.assetSymbol
                                                 ? String.fromCodePoint(adaptedPool.assetSymbol)
-                                                : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || ''}
+                                                : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
                                     <Link
@@ -223,15 +233,29 @@ export default function LimitOrderPage() {
                                     </Link>
                                 </TableCell>
                                 <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
+                                <TableCell className="px-4 py-2">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}</TableCell>
+                                <TableCell className="px-4 py-2">
+                                    <div className="flex flex-col leading-tight gap-1">
+                                        <span>{adaptedPool.totalDealSats}</span>
+                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.totalDealSats || 0)) / 1e8} /></span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="px-4 py-2">
+                                    <div className="flex flex-col leading-tight">
+                                        <span>{adaptedPool.totalDealCount}</span>
+                                    </div>
+                                </TableCell>
+                                {/* <TableCell className="px-4 py-2">
+                                    <div className="flex flex-col leading-tight gap-1">
+                                        <span>{adaptedPool.satsValueInPool}</span>
+                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.satsValueInPool || 0)) / 1e8} /></span>
+                                    </div>
+                                </TableCell> */}
                                 <TableCell className="px-4 py-2">
                                     <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
                                         {statusTextMap[adaptedPool.poolStatus]}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="px-4 py-2">{adaptedPool.dealPrice}</TableCell>
-                                <TableCell className="px-4 py-2">{adaptedPool.satsValueInPool}</TableCell>
-                                <TableCell className="px-4 py-2">{adaptedPool.totalDealSats}</TableCell>
-                                <TableCell className="px-4 py-2">{adaptedPool.totalDealCount}</TableCell>
                                 <TableCell className="px-4 py-2">
                                     {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                                 </TableCell>

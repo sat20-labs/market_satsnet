@@ -65,8 +65,6 @@ function OrderPageContent() {
   return (
     <div className="w-full">
       <div>
-
-
         <ChartModule
           asset={asset}
           ticker={ticker}
@@ -77,16 +75,17 @@ function OrderPageContent() {
         />
       </div>
       <div className="bg-zinc-900 rounded-2xl p-4 mt-4">
-        <Tabs defaultValue="myOrders">
+        <Tabs defaultValue="history">
           <TabsList className="mb-2">
-            <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
             <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
+            <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
           </TabsList>
-          <TabsContent value="myOrders" className="-mt-10">
-            <MyTranscendOrders ticker={ticker} contractURL={contractUrl} type="transcend" />
-          </TabsContent>
-          <TabsContent value="history" className="-mt-10">
+
+          <TabsContent value="history" className="-mt-8">
             <HistoryTranscendOrders ticker={ticker} contractURL={contractUrl} type="transcend" />
+          </TabsContent>
+          <TabsContent value="myOrders" className="-mt-8">
+            <MyTranscendOrders ticker={ticker} contractURL={contractUrl} type="transcend" />
           </TabsContent>
         </Tabs>
       </div>

@@ -52,21 +52,9 @@ export default function RootLayout({
             </main>
             <footer id="footer">
               <ul className="flex flex-wrap justify-center h-auto min-h-16 gap-1 items-center border-t border-zinc-700/50 text-gray-500 px-2 py-2 mb-2">
-                <li>
-                  <a href="https://x.com/SATSWAPMarket/" target="_blank" rel="noopener noreferrer">
-                    <Avatar>
-                      <AvatarFallback>
-                        {/* <img src="/twitter.png" alt="sat20 twitter" className="w-full h-full object-cover" /> */}
-                        <Icon icon="fa6-brands:x-twitter" className="text-base text-zinc-200/50 hover:text-purple-500" />
-                      </AvatarFallback>
-                    </Avatar>
-                  </a>
-                </li>
-
-
 
                 {/* 一起换行显示 */}
-                <li className="flex w-full sm:w-auto sm:flex-row justify-center text-xs sm:text-sm items-center gap-2 px-4 text-center">
+                <li className="flex w-full sm:w-auto sm:flex-row justify-center text-xs sm:text-sm items-center gap-2 px-4 mt-2 sm:mt-0 text-center">
                   <span>
                     <a
                       href={`https://app.ordx.market/privacy/${lang === 'en' ? 'en' : 'zh'}/`}
@@ -98,8 +86,19 @@ export default function RootLayout({
                     </a>
                   </span>
                 </li>
-                <li className="text-xs sm: text-sm">Copyrights&copy;2025</li>
-                <li className='text-xs sm: text-sm'>V1.0.{appVersion}</li>
+                <li className='flex text-xs sm:text-sm text-center'>
+                  <a href="https://x.com/SATSWAPMarket/" target="_blank" rel="noopener noreferrer">
+                    <Avatar>
+                      <AvatarFallback>
+                        {/* <img src="/twitter.png" alt="sat20 twitter" className="w-full h-full object-cover" /> */}
+                        <Icon icon="fa6-brands:x-twitter" className="text-sm sm:text-base text-zinc-200/50 hover:text-purple-500" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </a>
+                </li>
+                <li className="flex justify-center text-xs sm:text-sm text-center">Copyrights&copy;2025 V1.0.{appVersion}</li>
+
+
               </ul>
             </footer>
           </div>

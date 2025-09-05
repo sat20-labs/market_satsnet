@@ -84,7 +84,7 @@ function OrderPageContent() {
               analyticsData={analyticsData}
             />
           </div>
-          <div className="flex items-center justify-center w-full h-[210px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
+          <div className="flex items-center justify-center w-full h-[320px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
             <AssetInfo depthData={contractData} tickerInfo={tickerInfo} holders={holders} />
           </div>
         </div>
