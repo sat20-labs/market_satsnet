@@ -60,20 +60,17 @@ export const Header = () => {
   ];
   const navMenus = useMemo(() => {
     const menus = [
-      // Replace Swap top-level with MarketPlace dropdown (default page is Swap)
+      // 将原来的下拉菜单改为三个独立的菜单项
       {
-        label: t('pages.market.title'),
-        // href kept as default target for future use; current renderer uses children for dropdowns
+        label: 'SWAP',
         href: '/swap',
-        children: [
-          { label: 'SWAP', href: '/swap' },
-          { label: 'Limit Order', href: '/limitOrder' },
-        ],
       },
-
-
       {
-        label: t('pages.launchpool.title'), // 新增 LaunchPool 菜单
+        label: 'Limit Order',
+        href: '/limitOrder',
+      },
+      {
+        label: t('pages.launchpool.title'), // LaunchPool 菜单
         href: '/launchpool',
       },
 
