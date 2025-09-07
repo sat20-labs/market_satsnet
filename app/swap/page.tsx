@@ -28,7 +28,13 @@ import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
 const PAGE_SIZE = 10;
 
 function adaptPoolData(pool, satsnetHeight) {
-  const assetNameObj = pool.Contract.assetName || {};
+  // 添加数据验证，防止访问 undefined 对象的属性
+  if (!pool || typeof pool !== 'object') {
+    console.warn('Invalid pool data:', pool);
+    return null;
+  }
+  
+  const assetNameObj = pool.Contract?.assetName || {};
   const ticker = assetNameObj.Ticker || '-';
   const protocol = assetNameObj.Protocol || '-';
   let poolStatus = PoolStatus.NOT_STARTED;
@@ -83,16 +89,33 @@ const Swap = () => {
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const PAGE_SIZES = [10, 20, 50, 100];
   // 获取所有合约URL列表
-  const { data: contractURLsData } = useQuery({
+  const { data: contractURLsData, error: contractURLsError } = useQuery({
     queryKey: ['ammContractURLs', network],
     queryFn: async () => {
-      const deployed = await getDeployedContractInfo();
-      const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
-      return contractURLs.filter((c: string) => c.indexOf('amm.tc') > -1);
+      try {
+        const deployed = await getDeployedContractInfo();
+        const contractURLs = deployed?.url || (deployed?.data && deployed.data.url) || [];
+        
+        // 验证返回的数据是否为数组
+        if (!Array.isArray(contractURLs)) {
+          console.warn('Contract URLs data is not an array:', contractURLs);
+          return [];
+        }
+        
+        return contractURLs.filter((c: string) => {
+          // 确保 c 是字符串且包含 'amm.tc'
+          return typeof c === 'string' && c.indexOf('amm.tc') > -1;
+        });
+      } catch (error) {
+        console.error('Failed to get deployed contract info:', error);
+        throw error;
+      }
     },
     gcTime: 0,
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
+    retry: 2, // 失败重试2次
+    retryDelay: 1000, // 重试间隔1秒
   });
 
   // 分页获取合约状态
@@ -111,10 +134,16 @@ const Swap = () => {
         try {
           const { status } = await getContractStatus(item);
           if (status) {
-            return {
-              ...JSON.parse(status),
-              contractURL: item,
-            };
+            try {
+              const parsedStatus = JSON.parse(status);
+              return {
+                ...parsedStatus,
+                contractURL: item,
+              };
+            } catch (parseError) {
+              console.error(`Failed to parse status for ${item}:`, parseError, 'Raw status:', status);
+              return null;
+            }
           }
           return null;
         } catch (error) {
@@ -132,13 +161,15 @@ const Swap = () => {
     };
   };
 
-  const { data: poolListData, isLoading } = useQuery({
+  const { data: poolListData, isLoading, error } = useQuery({
     queryKey: ['ammList', currentPage, pageSize, network],
     queryFn: () => getSwapList({ pageParam: currentPage }),
     enabled: !!contractURLsData,
     gcTime: 0,
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
+    retry: 2, // 失败重试2次
+    retryDelay: 1000, // 重试间隔1秒
   });
   console.log('poolListData', poolListData);
   const poolList = poolListData?.pools || [];
@@ -146,7 +177,9 @@ const Swap = () => {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const adaptedPoolList = useMemo(() => {
-    return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
+    return poolList
+      .map(pool => adaptPoolData(pool, satsnetHeight))
+      .filter(Boolean); // 过滤掉 null 值
   }, [poolList, satsnetHeight]);
 
   const columns = [
@@ -215,15 +248,31 @@ const Swap = () => {
         </div>
       </div>
 
-      {/* 加载状态 */}
-      {
-        isLoading && (
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
+      {/* 错误状态 */}
+      {(error || contractURLsError) && (
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="text-red-500 mb-4">
+            <h3 className="text-lg font-semibold">加载失败</h3>
+            <p className="text-sm text-gray-400 mt-1">
+              {error?.message || contractURLsError?.message || '网络连接异常，请检查网络后重试'}
+            </p>
           </div>
-        )
-      }
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            重新加载
+          </button>
+        </div>
+      )}
+
+      {/* 加载状态 */}
+      {(isLoading || !contractURLsData) && !error && !contractURLsError && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
+        </div>
+      )}
 
       <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
@@ -240,29 +289,37 @@ const Swap = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPoolList.map((adaptedPool, index) => {
-              return (
-                <TableRow
-                  key={adaptedPool.id ?? index}
-                  className="border-b border-border hover:bg-accent transition-colors  whitespace-nowrap"
-                >
-                  <TableCell className="flex items-center gap-2 px-4 py-2">
-                    <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                      <AvatarImage src={adaptedPool.logo} alt="Logo" />
-                      <AvatarFallback>
-                        {adaptedPool?.assetSymbol
-                          ? String.fromCodePoint(adaptedPool.assetSymbol)
-                          : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Link
-                      href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
-                      className="cursor-pointer text-primary hover:underline"
-                      prefetch={true}
-                    >
-                      {adaptedPool.assetName}
-                    </Link>
-                  </TableCell>
+            {filteredPoolList.length === 0 && !isLoading && !error ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center py-8 text-gray-400">
+                  暂无数据
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredPoolList.map((adaptedPool, index) => {
+                if (!adaptedPool) return null; // 防止空数据
+                return (
+                  <TableRow
+                    key={adaptedPool.id ?? index}
+                    className="border-b border-border hover:bg-accent transition-colors  whitespace-nowrap"
+                  >
+                    <TableCell className="flex items-center gap-2 px-4 py-2">
+                      <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
+                        <AvatarImage src={adaptedPool.logo} alt="Logo" />
+                        <AvatarFallback>
+                          {adaptedPool?.assetSymbol
+                            ? String.fromCodePoint(adaptedPool.assetSymbol)
+                            : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Link
+                        href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                        className="cursor-pointer text-primary hover:underline"
+                        prefetch={true}
+                      >
+                        {adaptedPool.assetName}
+                      </Link>
+                    </TableCell>
                   <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
 
                   <TableCell className="px-4 py-2">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}</TableCell>
@@ -293,8 +350,9 @@ const Swap = () => {
                     {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                   </TableCell>
                 </TableRow>
-              );
-            })}
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>
