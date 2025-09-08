@@ -11,6 +11,7 @@ interface WalletState {
   balance: Balance;
   setBalance: (balance: Balance) => void;
   getBalance: () => Promise<void>;
+  resetBalance: () => void;
 }
 
 export const useWalletStore = create<WalletState>()(
@@ -59,6 +60,10 @@ export const useWalletStore = create<WalletState>()(
           }
           console.log('balance', get().balance);
 
+        },
+        // 清空余额，断开连接或未连接时避免显示历史余额
+        resetBalance: () => {
+          set({ balance: { availableAmt: 0, lockedAmt: 0 } });
         },
       }),
       {

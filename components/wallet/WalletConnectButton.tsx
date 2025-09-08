@@ -40,7 +40,7 @@ const WalletConnectButton = () => {
     btcWallet,
     network: walletNetwork,
   } = useReactWalletStore((state) => state);
-  const { getBalance, balance } = useWalletStore();
+  const { getBalance, balance, resetBalance } = useWalletStore();
   const { refreshAssets } = useAssetStore();
   const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
@@ -112,6 +112,8 @@ const WalletConnectButton = () => {
     console.log('disconnect success');
     setSignature('');
     await disconnect();
+    // 清空已持久化的余额，避免未连接时显示历史余额
+    resetBalance();
   };
   const networkChange = () => {
     initCheck()
@@ -192,6 +194,8 @@ const WalletConnectButton = () => {
     } else {
       btcWallet?.removeListener('accountsChanged', accountAndNetworkChange);
       btcWallet?.removeListener('networkChanged', networkChange);
+      // 未连接状态下重置余额，避免显示缓存中的余额
+      resetBalance();
     }
     return () => {
       btcWallet?.removeListener('accountsChanged', accountAndNetworkChange);
