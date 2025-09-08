@@ -76,7 +76,13 @@ const Swap = ({
     return { value: 0, formatted: '0' };
   }, [swapData?.LastDealPrice, satValue, assetAmtInPool.value]);
 
-  const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData?.Contract]);
+  //const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData?.Contract]);
+  // 使用一致单位计算常数乘积 K（sats * assetUnits），避免精度/单位不一致导致的异常结果
+  const contractK = useMemo(() => {
+    const a = Number(satValue) || 0; // sats
+    const b = Number(assetAmtInPool.value) || 0; // 已按精度还原的可读资产数量
+    return a > 0 && b > 0 ? a * b : 0;
+  }, [satValue, assetAmtInPool.value]);
   const displayAssetBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
   const displaySatsBalance = Number(satsBalance.availableAmt) + Number(satsBalance.lockedAmt);
 
