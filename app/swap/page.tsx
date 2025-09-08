@@ -33,7 +33,7 @@ function adaptPoolData(pool, satsnetHeight) {
     console.warn('Invalid pool data:', pool);
     return null;
   }
-  
+
   const assetNameObj = pool.Contract?.assetName || {};
   const ticker = assetNameObj.Ticker || '-';
   const protocol = assetNameObj.Protocol || '-';
@@ -66,6 +66,7 @@ function adaptPoolData(pool, satsnetHeight) {
   const rawDealPrice = Number(pool.dealPrice ?? 0);
   const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
   const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : derivedDealPrice;
+  const volume24hBtc = Number(pool?.['24hour']?.volume ?? 0);
 
   return {
     ...pool,
@@ -77,6 +78,7 @@ function adaptPoolData(pool, satsnetHeight) {
     // 转为数值，便于排序
     dealPrice: Number(finalDealPrice || 0),
     satsValueInPool,
+    volume24hBtc,
     totalDealSats: Number(pool.TotalDealSats ?? 0),
     totalDealCount: Number(pool.TotalDealCount ?? 0),
   };
@@ -95,13 +97,13 @@ const Swap = () => {
       try {
         const deployed = await getDeployedContractInfo();
         const contractURLs = deployed?.url || (deployed?.data && deployed.data.url) || [];
-        
+
         // 验证返回的数据是否为数组
         if (!Array.isArray(contractURLs)) {
           console.warn('Contract URLs data is not an array:', contractURLs);
           return [];
         }
-        
+
         return contractURLs.filter((c: string) => {
           // 确保 c 是字符串且包含 'amm.tc'
           return typeof c === 'string' && c.indexOf('amm.tc') > -1;
@@ -118,19 +120,14 @@ const Swap = () => {
     retryDelay: 1000, // 重试间隔1秒
   });
 
-  // 分页获取合约状态
-  const getSwapList = async ({ pageParam = 1 }) => {
+  // 全量获取合约状态（全局排序，前端分页）
+  const getSwapList = async () => {
     if (!contractURLsData || contractURLsData.length === 0) {
       return { pools: [], totalCount: 0 };
     }
 
-    const startIndex = (pageParam - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const pageURLs = contractURLsData.slice(startIndex, endIndex);
-
-    // 并发请求当前页的合约状态
     const statusList = await Promise.all(
-      pageURLs.map(async (item: string) => {
+      contractURLsData.map(async (item: string) => {
         try {
           const { status } = await getContractStatus(item);
           if (status) {
@@ -156,14 +153,13 @@ const Swap = () => {
     const validPools = statusList.filter(Boolean);
     return {
       pools: validPools,
-      totalCount: contractURLsData.length,
-      nextPage: endIndex < contractURLsData.length ? pageParam + 1 : undefined,
+      totalCount: validPools.length,
     };
   };
 
   const { data: poolListData, isLoading, error } = useQuery({
-    queryKey: ['ammList', currentPage, pageSize, network],
-    queryFn: () => getSwapList({ pageParam: currentPage }),
+    queryKey: ['ammList', network],
+    queryFn: () => getSwapList(),
     enabled: !!contractURLsData,
     gcTime: 0,
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
@@ -173,8 +169,6 @@ const Swap = () => {
   });
   console.log('poolListData', poolListData);
   const poolList = poolListData?.pools || [];
-  const totalCount = poolListData?.totalCount || 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const adaptedPoolList = useMemo(() => {
     return poolList
@@ -184,9 +178,10 @@ const Swap = () => {
 
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
-    { key: 'protocol', label: t('common.protocol') },
+    // { key: 'protocol', label: t('common.protocol') },
     { key: 'dealPrice', label: t('common.price') },
-    { key: 'totalDealSats', label: t('common.volume_sats') },
+    { key: '24h_volume', label: t('common.24h_volume_btc') },
+    { key: 'totalDealSats', label: t('common.volume_btc') },
     { key: 'totalDealCount', label: t('common.tx_order_count') },
     { key: 'satsValueInPool', label: t('common.pool_size_sats') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
@@ -202,13 +197,13 @@ const Swap = () => {
     { label: t('pages.launchpool.runes'), key: 'runes' },
   ];
 
-  // 默认按“交易量(总成交sats)”倒序；若相等再看成交笔数，然后按部署时间倒序
   const filteredPoolList = useMemo(() => {
     let list =
       protocol === 'all'
         ? adaptedPoolList
         : adaptedPoolList.filter(pool => pool.protocol === protocol);
 
+    // 全局（所有页）按总交易量倒序；若相等再看成交笔数，然后按部署时间倒序
     return list.slice().sort((a, b) => {
       const vA = Number(a.totalDealSats ?? 0);
       const vB = Number(b.totalDealSats ?? 0);
@@ -221,6 +216,15 @@ const Swap = () => {
       return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
     });
   }, [adaptedPoolList, protocol]);
+
+  // 前端分页切片
+  const pagedPoolList = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredPoolList.slice(start, start + pageSize);
+  }, [filteredPoolList, currentPage, pageSize]);
+
+  const totalCount = filteredPoolList.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // 处理分页变化
   const handlePageChange = (page: number) => {
@@ -296,12 +300,12 @@ const Swap = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredPoolList.map((adaptedPool, index) => {
+              pagedPoolList.map((adaptedPool, index) => {
                 if (!adaptedPool) return null; // 防止空数据
                 return (
                   <TableRow
                     key={adaptedPool.id ?? index}
-                    className="border-b border-border hover:bg-accent transition-colors  whitespace-nowrap"
+                    className="border-b border-border hover:bg-accent text-zinc-200/88 hover:text-zinc-100 transition-colors  whitespace-nowrap"
                   >
                     <TableCell className="flex items-center gap-2 px-4 py-2">
                       <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
@@ -318,38 +322,47 @@ const Swap = () => {
                         prefetch={true}
                       >
                         {adaptedPool.assetName}
+                        <span className='ml-1 text-zinc-500'>({adaptedPool.protocol})</span>
                       </Link>
                     </TableCell>
-                  <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
+                    {/* <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell> */}
 
-                  <TableCell className="px-4 py-2">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}</TableCell>
+                    <TableCell className="px-4 py-2">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}<span className='ml-1 text-xs text-zinc-500 font-medium'>sats</span></TableCell>
 
-                  <TableCell className="px-4 py-2">
-                    <div className="flex flex-col leading-tight gap-1">
-                      <span>{adaptedPool.totalDealSats}</span>
-                      <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.totalDealSats || 0)) / 1e8} /></span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-2">
-                    <div className="flex flex-col leading-tight">
-                      <span>{adaptedPool.totalDealCount}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-2">
-                    <div className="flex flex-col leading-tight gap-1">
-                      <span>{Number(adaptedPool.satsValueInPool || 0) * 2}</span>
-                      <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.satsValueInPool || 0) * 2) / 1e8} /></span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-2">
-                    <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
-                      {statusTextMap[adaptedPool.poolStatus]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-4 py-2">
-                    {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
-                  </TableCell>
-                </TableRow>
+                    <TableCell className="px-4 py-2">
+                      <div className="flex flex-col leading-tight gap-1">
+                        <span>{((Number(adaptedPool.volume24hBtc || 0) / 1e8).toFixed(4))} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
+                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.volume24hBtc || 0)) / 1e8} /></span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="px-4 py-2">
+                      <div className="flex flex-col leading-tight gap-1">
+                        <span>{((Number(adaptedPool.totalDealSats || 0)) / 1e8).toFixed(4)} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
+                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.totalDealSats || 0)) / 1e8} /></span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="px-4 py-2">
+                      <div className="flex flex-col leading-tight">
+                        <span>{adaptedPool.totalDealCount}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-2">
+                      <div className="flex flex-col leading-tight gap-1">
+                        <span>{Number(adaptedPool.satsValueInPool || 0) * 2}</span>
+                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.satsValueInPool || 0) * 2) / 1e8} /></span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-2">
+                      <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
+                        {statusTextMap[adaptedPool.poolStatus]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-2">
+                      {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}

@@ -31,6 +31,7 @@
   "repeat_mint": "Repeat Mint",
   "description": "Description",
   "price": "Price",
+  "price_btc": "Price(BTC)",
   "price_change": "Change",
   "tx_total_volume": "Volume",
   "total_amount": "Market cap",
@@ -283,7 +284,6 @@
   "refund": "Refund",
   "loading": "Loading...",
   "showing": "Showing",
-  "of": "of",
   "items": "items",
   "load_more": "Load More",
   "referrer": "Referrer",
@@ -306,5 +306,8 @@
   "register_failed": "Failed to register as referrer",
   "please_input_name": "Please enter your name",
   "volume_sats": "Volume(Sats)",
-  "pool_size_sats": "Pool Size(Sats)"
+  "volume_btc": "Volume(BTC)",
+  "24h_volume_btc": "24h Vol",
+  "pool_size_sats": "Pool Size(Sats)",
+  "pool_size_btc": "Pool Size(BTC)"
 }

@@ -58,6 +58,7 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
     const rawDealPrice = Number(pool.dealPrice ?? 0);
     const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
     const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : derivedDealPrice;
+    const volume24hBtc = Number(pool?.['24hour']?.volume ?? 0);
 
     return {
         ...pool,
@@ -68,6 +69,7 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
         deployTime: pool.deployTime ?? '',
         dealPrice: Number(finalDealPrice || 0),
         satsValueInPool,
+        volume24hBtc,
         totalDealSats: Number(pool.TotalDealSats ?? 0),
         totalDealCount: Number(pool.TotalDealCount ?? 0),
     };
@@ -92,17 +94,14 @@ export default function LimitOrderPage() {
         refetchIntervalInBackground: false,
     });
 
-    const getSwapList = async ({ pageParam = 1 }) => {
+    const getSwapList = async () => {
         if (!contractURLsData || contractURLsData.length === 0) {
             return { pools: [], totalCount: 0 };
         }
 
-        const startIndex = (pageParam - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const pageURLs = contractURLsData.slice(startIndex, endIndex);
-
+        // 全量获取，后续前端统一排序与分页
         const statusList = await Promise.all(
-            pageURLs.map(async (item: string) => {
+            contractURLsData.map(async (item: string) => {
                 try {
                     const { status } = await getContractStatus(item);
                     if (status) {
@@ -122,14 +121,13 @@ export default function LimitOrderPage() {
         const validPools = statusList.filter(Boolean) as any[];
         return {
             pools: validPools,
-            totalCount: contractURLsData.length,
-            nextPage: endIndex < contractURLsData.length ? pageParam + 1 : undefined,
+            totalCount: validPools.length,
         };
     };
 
     const { data: poolListData, isLoading } = useQuery({
-        queryKey: ['swapList', currentPage, pageSize, network],
-        queryFn: () => getSwapList({ pageParam: currentPage }),
+        queryKey: ['swapList', network],
+        queryFn: () => getSwapList(),
         enabled: !!contractURLsData,
         gcTime: 0,
         refetchInterval: 120000,
@@ -137,8 +135,6 @@ export default function LimitOrderPage() {
     });
 
     const poolList = poolListData?.pools || [];
-    const totalCount = poolListData?.totalCount || 0;
-    const totalPages = Math.ceil(totalCount / pageSize);
 
     const adaptedPoolList = useMemo(() => {
         return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
@@ -146,9 +142,10 @@ export default function LimitOrderPage() {
 
     const columns = [
         { key: 'assetName', label: t('pages.launchpool.asset_name') },
-        { key: 'protocol', label: t('common.protocol') },
+        // { key: 'protocol', label: t('common.protocol') },
         { key: 'dealPrice', label: t('common.price') },
-        { key: 'totalDealSats', label: t('common.volume_sats') },
+        { key: '24h_volume', label: t('common.24h_volume_btc') },
+        { key: 'totalDealSats', label: t('common.volume_btc') },
         { key: 'totalDealCount', label: t('common.tx_order_count') },
         // { key: 'satsValueInPool', label: t('common.pool_size_sats') },
         { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
@@ -166,8 +163,28 @@ export default function LimitOrderPage() {
 
     const filteredPoolList = useMemo(() => {
         let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter((p: any) => p.protocol === protocol);
-        return list.slice().sort((a: any, b: any) => Number(b.deployTime) - Number(a.deployTime));
+        // 全局（所有页）按总交易量倒序；若相等再按成交笔数与部署时间
+        return list.slice().sort((a: any, b: any) => {
+            const vA = Number(a.totalDealSats ?? 0);
+            const vB = Number(b.totalDealSats ?? 0);
+            if (vA !== vB) return vB - vA;
+
+            const cA = Number(a.totalDealCount ?? 0);
+            const cB = Number(b.totalDealCount ?? 0);
+            if (cA !== cB) return cB - cA;
+
+            return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
+        });
     }, [adaptedPoolList, protocol]);
+
+    // 前端分页切片
+    const pagedPoolList = useMemo(() => {
+        const start = (currentPage - 1) * pageSize;
+        return filteredPoolList.slice(start, start + pageSize);
+    }, [filteredPoolList, currentPage, pageSize]);
+
+    const totalCount = filteredPoolList.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     const handlePageChange = (page: number) => setCurrentPage(page);
     const handlePageSizeChange = (newSize: number) => {
@@ -210,10 +227,10 @@ export default function LimitOrderPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredPoolList.map((adaptedPool: any, index: number) => (
+                        {pagedPoolList.map((adaptedPool: any, index: number) => (
                             <TableRow
                                 key={adaptedPool.id ?? index}
-                                className="border-b border-border hover:bg-accent transition-colors  whitespace-nowrap"
+                                className="border-b border-border hover:bg-accent text-zinc-200/88 hover:text-zinc-100 transition-colors  whitespace-nowrap"
                             >
                                 <TableCell className="flex items-center gap-2 px-4 py-2">
                                     <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
@@ -229,14 +246,21 @@ export default function LimitOrderPage() {
                                         className="cursor-pointer text-primary hover:underline"
                                         prefetch={true}
                                     >
-                                        {adaptedPool.assetName}
+                                        {adaptedPool.assetName}<span className='ml-1 text-zinc-500'>({adaptedPool.protocol})</span>
                                     </Link>
                                 </TableCell>
-                                <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
+                                {/* <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell> */}
                                 <TableCell className="px-4 py-2">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}</TableCell>
                                 <TableCell className="px-4 py-2">
                                     <div className="flex flex-col leading-tight gap-1">
-                                        <span>{adaptedPool.totalDealSats}</span>
+                                        <span>{((Number(adaptedPool.volume24hBtc || 0) / 1e8).toFixed(4))} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
+                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.volume24hBtc || 0)) / 1e8} /></span>
+                                    </div>
+                                </TableCell>
+
+                                <TableCell className="px-4 py-2">
+                                    <div className="flex flex-col leading-tight gap-1">
+                                        <span>{((Number(adaptedPool.totalDealSats || 0)) / 1e8).toFixed(4)} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
                                         <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.totalDealSats || 0)) / 1e8} /></span>
                                     </div>
                                 </TableCell>

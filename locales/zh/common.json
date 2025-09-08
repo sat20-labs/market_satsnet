@@ -8,6 +8,7 @@
   "assets_type": "类型",
   "domain_name": "域名",
   "price": "价格",
+  "price_btc": "价格(BTC)",
   "transfer": "转移",
   "delete": "删除",
   "account": "账户",
@@ -309,5 +310,8 @@
   "register_failed": "注册推荐人失败",
   "please_input_name": "请输入名称",
   "volume_sats": "交易额(sats)",
-  "pool_size_sats": "池子规模(sats)"
+  "volume_btc": "交易额(BTC)",
+  "24h_volume_btc": "24h交易额",
+  "pool_size_sats": "池子规模(sats)",
+  "pool_size_btc": "池子规模(BTC)"
 }
