@@ -8,7 +8,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import { useCommonStore } from '@/store/common';
 import { generateMempoolUrl } from '@/utils/url';
-import { Chain } from '@/types';
+import { Chain, LptAmount } from '@/types';
 import { hideStr } from '@/utils';
 
 interface RemoveLiquidityProps {
@@ -28,7 +28,7 @@ interface RemoveLiquidityProps {
   isRefreshing: boolean;
   tickerInfo?: any;
   swapData?: any;
-  lptAmt?: any;
+  lptAmt?: LptAmount | null;
   operationHistory?: string[] | null;
 }
 
@@ -55,35 +55,54 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
   const { address } = useReactWalletStore();
   const divisibility = tickerInfo?.divisibility || 0;
   const { btcFeeRate, network } = useCommonStore((state) => state);
+  const [removeAmount, setRemoveAmount] = useState('');
   
   // 使用 lptAmt 作为可用的流动性代币余额
-  const displayLptBalance = lptAmt?.Value ? lptAmt.Value / Math.pow(10, lptAmt.Precision || 0) : 0;
+  const displayLptBalance = useMemo(() => {
+    if (!lptAmt?.Value) return 0;
+    const precision = lptAmt.Precision || 0;
+    return lptAmt.Value / Math.pow(10, precision);
+  }, [lptAmt]);
   
   // 检查用户是否有 LPT（是否加入了池子）
   const hasLpt = displayLptBalance > 0;
 
-  // 获取池子中的资产数量和聪数量
-  const assetAmtInPool = useMemo(() => {
-    if (!swapData?.AssetAmtInPool) return 0;
-    return swapData.AssetAmtInPool.Value / Math.pow(10, swapData.AssetAmtInPool.Precision);
-  }, [swapData?.AssetAmtInPool]);
-  const satValueInPool = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
+  // 处理输入变化
+  const handleAmountChange = (value: string) => {
+    if (!value) {
+      setRemoveAmount('');
+      return;
+    }
 
-  // 根据用户持有的所有 LPT 计算对应的资产和聪数量
-  const calculatedAmounts = useMemo(() => {
-    if (!hasLpt || !displayLptBalance) return { assetAmount: 0, satsAmount: 0 };
-    // 用户移除所有持有的 LPT，按照比例计算对应的资产和聪数量
-    const ratio = displayLptBalance / (displayLptBalance + (swapData?.TotalLptAmt?.Value ? swapData.TotalLptAmt.Value / Math.pow(10, swapData.TotalLptAmt.Precision || 0) : displayLptBalance));
-    return {
-      assetAmount: ratio * assetAmtInPool,
-      satsAmount: Math.round(ratio * satValueInPool)
-    };
-  }, [hasLpt, displayLptBalance, assetAmtInPool, satValueInPool, swapData]);
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue < 0) {
+      return;
+    }
+
+    // 限制最大值为用户持有的 LPT 数量
+    if (numValue > displayLptBalance) {
+      setRemoveAmount(displayLptBalance.toString());
+      return;
+    }
+
+    // 限制最小值为 1
+    if (numValue < 1) {
+      setRemoveAmount('1');
+      return;
+    }
+
+    setRemoveAmount(value);
+  };
+
+  // 处理最大按钮点击
+  const handleMaxClick = () => {
+    setRemoveAmount(displayLptBalance.toString());
+  };
 
   const removeLiquidityMutation = useMutation({
     mutationFn: async ({ assetName, contractUrl }: Omit<RemoveLiquidityParams, 'lptAmt'>) => {
-      // 使用用户实际持有的 LPT 数量
-      const userLptAmt = displayLptBalance.toString();
+      // 使用用户输入的 LPT 数量
+      const userLptAmt = removeAmount || displayLptBalance.toString();
       
       const params = {
         action: "removeliq",
@@ -113,6 +132,7 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
     },
     onSuccess: async (data) => {
       toast.success(`Remove Liquidity successful`);
+      setRemoveAmount('');
       onRemoveLiquiditySuccess();
     },
     onError: (error: Error) => {
@@ -131,6 +151,17 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
       return;
     }
 
+    const amountToRemove = parseFloat(removeAmount);
+    if (!removeAmount || isNaN(amountToRemove) || amountToRemove < 1) {
+      toast.error("Please enter a valid amount (minimum 1)");
+      return;
+    }
+
+    if (amountToRemove > displayLptBalance) {
+      toast.error("Amount exceeds your LPT balance");
+      return;
+    }
+
     removeLiquidityMutation.mutate({
       assetName: asset,
       contractUrl
@@ -143,8 +174,13 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
             <span className="py-2 uppercase">{t('common.unstake')}</span>
-
             <span className="flex items-center text-xs text-zinc-500">
+              <button
+                onClick={handleMaxClick}
+                className="mr-2 px-2 py-1 rounded-md bg-zinc-800 text-xs hover:bg-purple-500 hover:text-white"
+              >
+                {t('common.max')}
+              </button>
               <ButtonRefresh
                 onRefresh={refresh}
                 loading={isRefreshing}
@@ -161,26 +197,25 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
           ) : (
             <>
               <div className="relative w-full">
-                <div className="w-full input-swap bg-zinc-800/50 border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4">
-                  {displayLptBalance.toLocaleString()}
-                </div>
+                <input
+                  type="number"
+                  value={removeAmount}
+                  onChange={e => handleAmountChange(e.target.value)}
+                  className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4"
+                  placeholder="0"
+                  min={1}
+                  max={displayLptBalance}
+                  step="1"
+                  disabled={removeLiquidityMutation.isPending}
+                />
                 <span className="absolute top-1/3 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
                   LPT
                 </span>
                 <p className='text-xs font-medium text-zinc-500 mb-2'>
-                  Your liquidity position
+                  {t('common.balance')}: {displayLptBalance.toLocaleString()} LPT
                 </p>
               </div>
 
-              {/* Display calculated asset and sats amounts */}
-              <div className="relative w-full mt-4">
-                <div className="w-full input-swap border-none rounded-lg px-4 py-2 text-lg font-bold text-white pr-16 mb-2 bg-zinc-800/50">
-                  {calculatedAmounts.assetAmount.toFixed(4)} {ticker}
-                </div>
-                <div className="w-full input-swap border-none rounded-lg px-4 py-2 text-lg font-bold text-white pr-16 mb-4 bg-zinc-800/50">
-                  {calculatedAmounts.satsAmount.toLocaleString()} sats
-                </div>
-              </div>
             </>
           )}
 
@@ -191,7 +226,7 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
         size="lg"
         className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient"
         onClick={handleRemoveLiquidity}
-        disabled={!hasLpt || removeLiquidityMutation.isPending}
+        disabled={!hasLpt || removeLiquidityMutation.isPending || !removeAmount || parseFloat(removeAmount) < 1}
       >
         {removeLiquidityMutation.isPending ? t('common.unstaking') : t('common.unstake')}
       </Button>

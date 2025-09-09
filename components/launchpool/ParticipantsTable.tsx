@@ -108,11 +108,13 @@ const fetchParticipantsWithPagination = async (
         sats = v.invalid?.MintHistory?.reduce((acc: number, item: any) => acc + item.OutValue, 0) || 0;
       } else {
         // 正常情况，计算资产数量
-        const totalMint = v.valid?.TotalMint;
-        if (totalMint?.Value !== undefined && totalMint?.Precision !== undefined) {
-          amount = totalMint.Value / Math.pow(10, totalMint.Precision);
+        const totalAmt = v.valid?.TotalAmt;
+        console.log('Debug - totalAmt:', totalAmt, 'bindingSat:', bindingSat);
+        if (totalAmt?.Value !== undefined && totalAmt?.Precision !== undefined) {
+          amount = totalAmt.Value / Math.pow(10, totalAmt.Precision);
         }
         sats = Math.floor((amount + bindingSat - 1) / bindingSat);
+        console.log('Debug - calculated amount:', amount, 'sats:', sats);
       }
       
       return {
@@ -275,7 +277,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                         participant.sats ? `${participant.sats} 聪 (退款)` : '-'
                       ) : (
                         // 正常情况显示资产数量/聪
-                        participant.amount ? `${participant.amount}/${participant.sats}` : '-'
+                        (participant.amount > 0 || participant.sats > 0) ? `${participant.amount}/${participant.sats}` : '-'
                       )}
                     </TableCell>
                   </TableRow>

@@ -8,7 +8,7 @@ import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import { useCommonStore } from '@/store';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
-import { hideStr } from '@/utils';
+import { hideStr, getValueFromPrecision } from '@/utils';
 
 interface AddLiquidityProps {
   asset: string;
@@ -88,8 +88,7 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
 
   // 获取池子中的资产数量和聪数量
   const assetAmtInPool = useMemo(() => {
-    if (!swapData?.AssetAmtInPool) return 0;
-    return swapData.AssetAmtInPool.Value / Math.pow(10, swapData.AssetAmtInPool.Precision);
+    return getValueFromPrecision(swapData?.AssetAmtInPool).value;
   }, [swapData?.AssetAmtInPool]);
   const satValueInPool = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
 

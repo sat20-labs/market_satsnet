@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useCommonStore, useWalletStore } from "@/store";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
+import { LptAmount, UserContractStatus, ParsedContractStatus } from "@/types";
 
 interface TickerInfo {
   name: {
@@ -146,22 +147,31 @@ export const useSwapDetailData = (asset: string) => {
   };
 
   // 解析用户合约状态中的 lptAmt
-  const lptAmt = useMemo(() => {
+  const lptAmt = useMemo((): LptAmount | null => {
     if (!userContractStatus?.status) return null;
     try {
       const parsedStatus = JSON.parse(userContractStatus.status);
-      return parsedStatus?.LptAmt || null;
+      const lptData = parsedStatus?.status?.LptAmt;
+      
+      // 验证 lptAmt 数据结构
+      if (lptData && typeof lptData === 'object' && 
+          typeof lptData.Value === 'number' && 
+          typeof lptData.Precision === 'number') {
+        return lptData as LptAmount;
+      }
+      
+      return null;
     } catch (error) {
       console.error('Failed to parse user contract status:', error);
       return null;
     }
   }, [userContractStatus]);
-
+  
   // 解析用户合约状态中的操作历史记录
   const userOperationHistory = useMemo(() => {
     if (!userContractStatus?.status) return null;
     try {
-      const parsedStatus = JSON.parse(userContractStatus.status);
+      const parsedStatus: ParsedContractStatus = JSON.parse(userContractStatus.status);
       return {
         addLiq: parsedStatus?.addLiq || null,
         removeLiq: parsedStatus?.removeLiq || null,
