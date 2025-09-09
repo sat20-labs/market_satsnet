@@ -7,7 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import { useCommonStore } from '@/store';
 
-interface StakeProps {
+interface AddLiquidityProps {
   asset: string;
   ticker: string;
   contractUrl: string;
@@ -25,14 +25,14 @@ interface StakeProps {
   };
 }
 
-interface StakeParams {
+interface AddLiquidityParams {
   amount: string;
   asset: string;
   contractUrl: string;
   value: string;
 }
 
-const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo, swapData, assetBalance, satsBalance }) => {
+const Stack: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo, swapData, assetBalance, satsBalance }) => {
   const { t } = useTranslation();
   const { btcFeeRate } = useCommonStore();
   const [amount, setAmount] = useState('');
@@ -40,10 +40,10 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
   const { address } = useReactWalletStore();
   const divisibility = tickerInfo?.divisibility || 0;
 
-  const stakeMutation = useMutation({
-    mutationFn: async ({ amount, asset, contractUrl, value }: StakeParams) => {
+  const addLiquidityMutation = useMutation({
+    mutationFn: async ({ amount, asset, contractUrl, value }: AddLiquidityParams) => {
       const params = {
-        action: "stake",
+        action: "addliq",
         param: JSON.stringify({
           orderType: 9,
           assetName: asset,
@@ -59,7 +59,7 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
         amount,
         btcFeeRate.value.toString(),
         {
-          action: "stake",
+          action: "addliq",
           orderType: 9,
           assetName: asset,
           amt: amount,
@@ -71,12 +71,12 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
       return { success: true };
     },
     onSuccess: async (data) => {
-      toast.success(`Stake successful`);
+      toast.success(`Add Liquidity successful`);
       setAmount("");
       refresh();
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Stake failed");
+      toast.error(error.message || "Add Liquidity failed");
     }
   });
 
@@ -145,13 +145,13 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
 
 
 
-  const handleStake = () => {
+  const handleAddLiquidity = () => {
     if (!amount || !value || !asset || !contractUrl) {
       toast.error("Please enter a valid amount and value");
       return;
     }
 
-    stakeMutation.mutate({ amount, asset, contractUrl, value: value });
+    addLiquidityMutation.mutate({ amount, asset, contractUrl, value: value });
   };
 
   const handleMaxClick = () => {
@@ -196,7 +196,7 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
                   e.preventDefault();
                 }
               }}
-              disabled={stakeMutation.isPending}
+              disabled={addLiquidityMutation.isPending}
             />
             <span className="absolute top-1/3 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               {ticker}
@@ -215,7 +215,7 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
               className="w-full input-swap border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4 bg-zinc-800/50"
               placeholder="0"
               readOnly
-              disabled={stakeMutation.isPending}
+              disabled={addLiquidityMutation.isPending}
             />
             <span className="absolute top-1/3 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               sats
@@ -231,10 +231,10 @@ const Stack: React.FC<StakeProps> = ({ contractUrl, asset, ticker, refresh, isRe
         type="button"
         size="lg"
         className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient"
-        onClick={handleStake}
-        disabled={stakeMutation.isPending}
+        onClick={handleAddLiquidity}
+        disabled={addLiquidityMutation.isPending}
       >
-        {stakeMutation.isPending ? t('common.staking') : t('common.stake')}
+        {addLiquidityMutation.isPending ? t('common.staking') : t('common.stake')}
       </Button>
     </div>
   );

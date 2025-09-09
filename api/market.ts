@@ -692,3 +692,26 @@ export const getUserHistoryInContract = async (url: string, address: string, pag
   return requestContract(`/info/contract/userhistory/${url}/${address}?start=${pageStart}&limit=${pageLimit}`, {});
 };
 
+// 获取合约部署费用
+export const getContractDeployFee = async (templateName: string, content: string, feeRate: number) => {
+  return requestContract('/info/contract/deployfee', {
+    method: 'POST',
+    data: {
+      templateName,
+      content,
+      feeRate,
+    },
+  });
+};
+
+// 获取合约调用费用
+export const getContractInvokeFee = async (url: string, parameter: string) => {
+  return requestContract('/info/contract/invokefee', {
+    method: 'POST',
+    data: {
+      url,
+      parameter,
+    },
+  });
+};
+

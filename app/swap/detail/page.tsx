@@ -10,8 +10,8 @@ import Swap from '@/components/satoshinet/swap/Swap';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import WithDraw from '@/components/satoshinet/swap/WithDraw';
 import Deposit from '@/components/satoshinet/swap/Deposit';
-import Stake from '@/components/satoshinet/swap/Stack';
-import Unstake from '@/components/satoshinet/swap/Unstack';
+import AddLiquidity from '@/components/satoshinet/swap/AddLiquidity';
+import RemoveLiquidity from '@/components/satoshinet/swap/RemoveLiquidity';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import { AssetInfoCard } from '@/components/AssetInfoCard';
 import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
@@ -37,6 +37,9 @@ function OrderPageContent() {
     isSwapStatusLoading,
     isTickerLoading,
     holders,
+    lptAmt,
+    userContractStatus,
+    userOperationHistory,
     refreshSwapStatus,
     refreshAnalytics,
     refreshBalances,
@@ -104,8 +107,8 @@ function OrderPageContent() {
                 <TabsTrigger value="swap">{t('common.swap')}</TabsTrigger>
                 <TabsTrigger value="deposit">{t('common.deposit')}</TabsTrigger>
                 <TabsTrigger value="withdraw">{t('common.withdraw')}</TabsTrigger>
-                {/* <TabsTrigger value="stake">{t('common.stake')}</TabsTrigger>
-                <TabsTrigger value="unstake">{t('common.unstake')}</TabsTrigger> */}
+                <TabsTrigger value="addLiquidity">{t('common.addLiquidity')}</TabsTrigger>
+                <TabsTrigger value="removeLiquidity">{t('common.removeLiquidity')}</TabsTrigger>
               </TabsList>
               <TabsContent value="swap">
                 <Swap
@@ -141,8 +144,8 @@ function OrderPageContent() {
                   isRefreshing={isSwapStatusLoading}
                 />
               </TabsContent>
-              {/* <TabsContent value="stake">
-                <Stake
+              <TabsContent value="addLiquidity">
+                <AddLiquidity
                   asset={asset}
                   ticker={ticker}
                   contractUrl={contractUrl}
@@ -152,22 +155,25 @@ function OrderPageContent() {
                   swapData={swapStatusData}
                   assetBalance={assetBalance}
                   satsBalance={satsBalance}
+                  operationHistory={userOperationHistory?.addLiq}
                 />
               </TabsContent>
-              <TabsContent value="unstake">
-                <Unstake
+              <TabsContent value="removeLiquidity">
+                <RemoveLiquidity
                   contractUrl={contractUrl}
                   asset={asset}
                   ticker={ticker}
                   assetBalance={assetBalance}
                   satsBalance={satsBalance}
-                  onUnstakeSuccess={() => { refreshHandler() }}
+                  onRemoveLiquiditySuccess={() => { refreshHandler() }}
                   refresh={refreshBalances}
                   isRefreshing={isSwapStatusLoading}
                   tickerInfo={tickerInfo}
                   swapData={swapStatusData}
+                  lptAmt={lptAmt}
+                  operationHistory={userOperationHistory?.removeLiq}
                 />
-              </TabsContent> */}
+              </TabsContent>
             </Tabs>
           </div>
         </div>

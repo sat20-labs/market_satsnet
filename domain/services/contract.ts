@@ -53,7 +53,7 @@ export default class ContractService {
     };
   }
   async getFeeForInvokeContract(url: string, invoke: string) {
-    const res = await window.sat20.getFeeForInvokeContract(url, invoke);
+    const res = await this.client.getContractInvokeFee(url, invoke);
     return res?.fee ?? 0;
   }
 }
