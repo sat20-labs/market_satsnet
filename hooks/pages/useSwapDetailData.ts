@@ -76,13 +76,13 @@ export const useSwapDetailData = (asset: string) => {
     refetchOnWindowFocus: false,
   });
 
-  // 获取用户合约状态（包含 lptAmt）
+  // 获取用户合约状态（包含 lptAmt）- 只在测试网环境下启用
   const { data: userContractStatus, isPending: isUserContractStatusPending, isLoading: isUserContractStatusLoading, refetch: refetchUserContractStatus } = useQuery({
     queryKey: ["amm", 'userStatus', contractUrl, address, network],
     queryFn: () => getContractStatusByAddress(contractUrl, address),
     refetchInterval: 15000, // 15秒刷新一次
     refetchIntervalInBackground: false, // 禁止后台刷新
-    enabled: !!contractUrl && !!address,
+    enabled: !!contractUrl && !!address && network === 'testnet',
     refetchOnWindowFocus: false,
   });
 
@@ -92,8 +92,26 @@ export const useSwapDetailData = (asset: string) => {
   console.log('isAnalyticsPending', isAnalyticsPending);
   console.log('userContractStatus', userContractStatus);
   
-  // 只有在有 address 时才考虑 userContractStatus 的 loading 状态
-  const isLoading = tickerQuery.isPending || isSwapStatusPending || isAnalyticsPending || (address && isUserContractStatusPending);
+  // 只有在有 contractUrl 时才考虑 swapStatus 和 analytics 的 loading 状态
+  // 只有在有 address 且在测试网时才考虑 userContractStatus 的 loading 状态
+  const isLoading = tickerQuery.isPending || 
+    (!!contractUrl && isSwapStatusPending) || 
+    (!!contractUrl && isAnalyticsPending) || 
+    (address && network === 'testnet' && isUserContractStatusPending);
+  
+  // 调试信息
+  console.log('Loading states:', {
+    tickerQuery: tickerQuery.isPending,
+    isSwapStatusPending,
+    isAnalyticsPending,
+    isUserContractStatusPending,
+    address,
+    network,
+    ticker,
+    contractUrl,
+    contractUrlQueryData: contractUrlQuery.data,
+    finalIsLoading: isLoading
+  });
 
 
   const { balance: satsBalance, getBalance } = useWalletStore();
@@ -109,7 +127,7 @@ export const useSwapDetailData = (asset: string) => {
   };
 
   const refreshUserContractStatus = () => {
-    if (address) {
+    if (address && network === 'testnet') {
       refetchUserContractStatus();
     }
   };
