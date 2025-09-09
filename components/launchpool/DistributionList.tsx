@@ -74,7 +74,7 @@ const DistributionList = ({ contractURL, closeModal, bindingSat }: { contractURL
             bindingSat={bindingSat}
             showMintHistory={true}
             showIndex={true}
-            tableHeaders={['地址', '资产数量/聪']}
+            tableHeaders={['地址', '资产数量/聪', '退款聪数']}
           />
         </div>
       </div>

@@ -102,25 +102,23 @@ const fetchParticipantsWithPagination = async (
     const processedData = resultStatusList.map(v => {
       let amount = 0;
       let sats = 0;
+      let refundSats = 0;
       
-      if (isLaunchFailed) {
-        // 发射失败时，计算退款数量（只有聪，没有资产数量）
-        sats = v.invalid?.MintHistory?.reduce((acc: number, item: any) => acc + item.OutValue, 0) || 0;
-      } else {
-        // 正常情况，计算资产数量
-        const totalAmt = v.valid?.TotalAmt;
-        console.log('Debug - totalAmt:', totalAmt, 'bindingSat:', bindingSat);
-        if (totalAmt?.Value !== undefined && totalAmt?.Precision !== undefined) {
-          amount = totalAmt.Value / Math.pow(10, totalAmt.Precision);
-        }
-        sats = Math.floor((amount + bindingSat - 1) / bindingSat);
-        console.log('Debug - calculated amount:', amount, 'sats:', sats);
+      // 计算资产数量
+      const totalAmt = v.valid?.TotalAmt;
+      if (totalAmt?.Value !== undefined && totalAmt?.Precision !== undefined) {
+        amount = totalAmt.Value / Math.pow(10, totalAmt.Precision);
       }
+      sats = Math.floor((amount + bindingSat - 1) / bindingSat);
+      
+      // 计算退款数量
+      refundSats = v.invalid?.MintHistory?.reduce((acc: number, item: any) => acc + item.OutValue, 0) || 0;
       
       return {
         ...v,
         amount: amount,
         sats: sats,
+        refundSats: refundSats,
       };
     });
 
@@ -139,7 +137,7 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   bindingSat,
   showIndex = false,
   showMintHistory = false,
-  tableHeaders = ['地址', '资产数量/聪'],
+  tableHeaders = ['地址', '资产数量/聪', '退款聪数'],
   onClose,
   isLaunchFailed = false,
 }) => {
@@ -227,6 +225,9 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                   <TableCell className="p-3">
                     <div className="h-4 bg-zinc-700 rounded animate-pulse w-20"></div>
                   </TableCell>
+                  <TableCell className="p-3">
+                    <div className="h-4 bg-zinc-700 rounded animate-pulse w-20"></div>
+                  </TableCell>
                 </TableRow>
               ))}
             </>
@@ -272,18 +273,29 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                       )}
                     </TableCell>
                     <TableCell className="p-3">
-                      {isLaunchFailed ? (
-                        // 发射失败时只显示退款聪数量
-                        participant.sats ? `${participant.sats} 聪 (退款)` : '-'
+                      {/* 显示资产数量/聪 */}
+                      {(participant.amount > 0 || participant.sats > 0) ? (
+                        <div className="text-green-400">
+                          {participant.amount}/{participant.sats}
+                        </div>
                       ) : (
-                        // 正常情况显示资产数量/聪
-                        (participant.amount > 0 || participant.sats > 0) ? `${participant.amount}/${participant.sats}` : '-'
+                        <div className="text-zinc-400">-</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      {/* 显示退款聪数量 */}
+                      {participant.refundSats > 0 ? (
+                        <div className="text-red-400">
+                          {participant.refundSats} 聪
+                        </div>
+                      ) : (
+                        <div className="text-zinc-400">-</div>
                       )}
                     </TableCell>
                   </TableRow>
                   {showMintHistory && isExpanded && (
                     <TableRow>
-                      <TableCell colSpan={showIndex ? 3 : 2} className="bg-zinc-800 p-3 text-sm text-zinc-300">
+                      <TableCell colSpan={showIndex ? 4 : 3} className="bg-zinc-800 p-3 text-sm text-zinc-300">
                         <div className="mb-1 font-semibold">Valid Txids:</div>
                         {participant.valid?.MintHistory?.length === 0 || !participant.valid?.MintHistory ? (
                           <div className="text-zinc-400">No Valid MintHistory</div>

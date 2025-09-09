@@ -291,9 +291,8 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       showIndex={false}
                       tableHeaders={[
                         t('pages.poolDetail.address'), 
-                        !Array.isArray(poolDetails.LaunchTxIDs) || poolDetails.LaunchTxIDs.length === 0 
-                          ? '退款聪数' 
-                          : '资产数量/聪'
+                        '资产数量/聪',
+                        '退款聪数'
                       ]}
                       isLaunchFailed={!Array.isArray(poolDetails.LaunchTxIDs) || poolDetails.LaunchTxIDs.length === 0}
                     />
