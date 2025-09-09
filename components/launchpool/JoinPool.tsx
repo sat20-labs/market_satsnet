@@ -48,10 +48,18 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
         console.log('fetchMinted', poolData?.contractURL);
         const data = await contractService.getContractStatusByAddress(poolData.contractURL, address);
         console.log('fetchMinted', data);
-        const totalMinted = data?.valid?.MintHistory?.reduce((acc: number, item: any) => {
-          const amt = getValueFromPrecision(item.OutAmt);
-          return acc + amt.value;
-        }, 0) || 0;
+        // 优先使用 TotalAmt 字段，如果没有则回退到累加 History 数组
+        let totalMinted = 0;
+        if (data?.valid?.TotalAmt) {
+          const totalAmt = getValueFromPrecision(data.valid.TotalAmt);
+          totalMinted = totalAmt.value;
+        } else if (data?.valid?.History) {
+          // 回退方案：累加 History 数组中的 OutAmt
+          totalMinted = data.valid.History.reduce((acc: number, item: any) => {
+            const amt = getValueFromPrecision(item.OutAmt);
+            return acc + amt.value;
+          }, 0);
+        }
         setMinted(totalMinted);
         setMaxJoin(Math.max(limit - totalMinted, 0));
         setAmount(prev => {
