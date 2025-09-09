@@ -112,15 +112,14 @@ export default function LaunchPoolProgressSortTest() {
         { label: t('pages.launchpool.runes'), key: 'runes' },
     ];
 
-    // ===== 新增：状态筛选（全部 / 正在铸造 / 铸造已完成）=====
-    const [statusFilter, setStatusFilter] = useState<'all' | 'minting' | 'completed'>('minting');
+    // ===== 新增：状态筛选（正在铸造 / 铸造已完成）=====
+    const [statusFilter, setStatusFilter] = useState<'minting' | 'completed'>('minting');
     const statusTabs = [
-        { label: 'All', key: 'all' },
         { label: 'Minting', key: 'minting' },
         { label: 'Completed', key: 'completed' },
     ];
     const handleStatusChange = (val: string) => {
-        if (val === 'all' || val === 'minting' || val === 'completed') {
+        if (val === 'minting' || val === 'completed') {
             setStatusFilter(val);
             setCurrentPage(1);
         }
@@ -208,13 +207,11 @@ export default function LaunchPoolProgressSortTest() {
                 : adaptedPoolList.filter((p: any) => p.protocol === protocol);
 
         // ===== 新增：状态过滤 =====
-        if (statusFilter !== 'all') {
-            list = list.filter((p: any) =>
-                statusFilter === 'minting'
-                    ? p.poolStatus === PoolStatus.ACTIVE
-                    : p.poolStatus === PoolStatus.COMPLETED || p.poolStatus === PoolStatus.CLOSED
-            );
-        }
+        list = list.filter((p: any) =>
+            statusFilter === 'minting'
+                ? p.poolStatus === PoolStatus.ACTIVE
+                : p.poolStatus === PoolStatus.COMPLETED || p.poolStatus === PoolStatus.CLOSED
+        );
         // ===== 新增结束 =====
 
         // 排序
