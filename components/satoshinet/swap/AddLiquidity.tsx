@@ -55,7 +55,6 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
           value: parseInt(value)
         })
       };
-
       window.sat20.invokeContractV2_SatsNet(
         contractUrl,
         JSON.stringify(params),
@@ -77,6 +76,7 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
     onSuccess: async (data) => {
       toast.success(`Add Liquidity successful`);
       setAmount("");
+      setValue("");
       refresh();
     },
     onError: (error: Error) => {
@@ -86,12 +86,33 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
 
   const displayAssetBalance = assetBalance?.availableAmt ?? 0;
 
-  // 获取池子中的资产数量和聪数量
+  // 获取池子中的资产数量和聪数量，如果池子为空则使用Contract中的初始值
   const assetAmtInPool = useMemo(() => {
-    return getValueFromPrecision(swapData?.AssetAmtInPool).value;
-  }, [swapData?.AssetAmtInPool]);
-  const satValueInPool = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
+    // 如果池子中有资产，使用池子中的数量
+    if (swapData?.AssetAmtInPool) {
+      return getValueFromPrecision(swapData.AssetAmtInPool).value;
+    }
+    // 如果池子为空，使用Contract中的初始资产数量
+    if (swapData?.Contract?.assetAmt) {
+      return Number(swapData.Contract.assetAmt);
+    }
+    return 0;
+  }, [swapData?.AssetAmtInPool, swapData?.Contract?.assetAmt]);
 
+  const satValueInPool = useMemo(() => {
+    // 如果池子中有聪，使用池子中的数量
+    if (swapData?.SatsValueInPool && swapData.SatsValueInPool > 0) {
+      return swapData.SatsValueInPool;
+    }
+    // 如果池子为空，使用Contract中的初始聪数量
+    if (swapData?.Contract?.satValue) {
+      return swapData.Contract.satValue;
+    }
+    return 0;
+  }, [swapData?.SatsValueInPool, swapData?.Contract?.satValue]);
+  console.log('assetAmtInPool', assetAmtInPool);
+  console.log('satValueInPool', satValueInPool);
+  console.log('swapData', swapData);
   // 根据amt计算对应的value（按照池子中资产和聪的比例）
   const calculateValueFromAmount = (amt: number) => {
     if (!assetAmtInPool || !satValueInPool) return 0;
