@@ -113,7 +113,7 @@ export default function LaunchPoolProgressSortTest() {
     ];
 
     // ===== 新增：状态筛选（全部 / 正在铸造 / 铸造已完成）=====
-    const [statusFilter, setStatusFilter] = useState<'all' | 'minting' | 'completed'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'minting' | 'completed'>('minting');
     const statusTabs = [
         { label: 'All', key: 'all' },
         { label: 'Minting', key: 'minting' },
