@@ -117,12 +117,12 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
         contractUrl,
         JSON.stringify(params),
         assetName,
-        userLptAmt,
+        '0',
         btcFeeRate.value.toString(),
         {
           action: "removeliq",
           orderType: 10,
-          quantity: userLptAmt,
+          quantity: '0',
           assetName: assetName,
           lptAmt: userLptAmt,
         }
