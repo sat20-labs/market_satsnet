@@ -131,7 +131,7 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
       return { success: true };
     },
     onSuccess: async (data) => {
-      toast.success(`Remove Liquidity successful`);
+      // toast.success(`Remove Liquidity successful`);
       setRemoveAmount('');
       onRemoveLiquiditySuccess();
     },

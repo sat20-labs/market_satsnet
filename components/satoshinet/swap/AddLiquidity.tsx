@@ -74,7 +74,7 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
       return { success: true };
     },
     onSuccess: async (data) => {
-      toast.success(`Add Liquidity successful`);
+      // toast.success(`Add Liquidity successful`);
       setAmount("");
       setValue("");
       refresh();
