@@ -218,7 +218,7 @@ export default function HistorySwapTable({
                   <TableCell className="text-left">{order.rawData.OrderType === 2 ? <>{order.inValue} <span className="text-zinc-400"> sats </span></> : order.rawData.OrderType === 1 ? <> {order.inAmt} <span className="text-zinc-400">${ticker}</span></> : "-"}</TableCell>
                   {/* <TableCell className="text-center">{order.side === "Cancelled" ? "-" : (order.side === "Sell" ? order.inAmt : order.expectedAmt)}</TableCell>
                   <TableCell className="text-center">{order.side === "Cancelled" ? "-" : order.inValue}</TableCell> */}
-                  <TableCell className="text-left">{order.side === "Cancelled" ? "-" : order.side === "Buy" ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-400">${ticker}</span></TableCell>
+                  <TableCell className="text-left">{order.side === "Cancelled" ? "-" : order.rawData.OrderType === 10 ? <> {order.outAmt} </> : order.side === "Buy" ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-400">${ticker}</span></TableCell>
                   <TableCell className="text-center">
                     {/* {order.side === "Cancelled" ? "-" : (order.side === "Buy" && order.done !== 0) ? order.inValue - order.outValue : order.outValue} */}
                     {(() => {
