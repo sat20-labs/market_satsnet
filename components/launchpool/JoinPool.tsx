@@ -18,7 +18,22 @@ interface JoinPoolProps {
 const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   const { t } = useTranslation(); // Specify the namespace
   const { btcFeeRate } = useCommonStore((state) => state);
-  const limit = Number(poolData?.limit) || 1;
+  
+  // 计算铸造额度：当limit为null或0时，使用maxSupply减去TotalMinted
+  const calculateMintLimit = () => {
+    const limit = Number(poolData?.limit);
+    const maxSupply = Number(poolData?.maxSupply) || 0;
+    
+    // 如果limit为null或0，使用maxSupply减去TotalMinted（TotalMinted为null时当作0）
+    if (!limit || limit === 0) {
+      const totalMinted = Number(poolData?.TotalMinted) || 0;
+      return maxSupply - totalMinted;
+    }
+    
+    return limit;
+  };
+  
+  const limit = calculateMintLimit();
   const [amount, setAmount] = useState('');
   const [satsCost, setSatsCost] = useState(0);
   const { address } = useReactWalletStore();
@@ -61,22 +76,26 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
           }, 0);
         }
         setMinted(totalMinted);
-        setMaxJoin(Math.max(limit - totalMinted, 0));
+        
+        // 重新计算可铸造额度
+        const currentLimit = calculateMintLimit();
+        setMaxJoin(Math.max(currentLimit - totalMinted, 0));
         setAmount(prev => {
           const n = Number(prev);
-          if (n > limit - totalMinted) return String(Math.max(limit - totalMinted, 0));
+          if (n > currentLimit - totalMinted) return String(Math.max(currentLimit - totalMinted, 0));
           return prev;
         });
       } catch (e) {
         setMinted(0);
-        setMaxJoin(limit);
+        const currentLimit = calculateMintLimit();
+        setMaxJoin(currentLimit);
       } finally {
         setLoading(false);
       }
     };
     fetchMinted();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, poolData?.contractURL, limit]);
+  }, [address, poolData?.contractURL, poolData?.limit, poolData?.maxSupply, poolData?.TotalMinted]);
 
   useEffect(() => {
     const mintAmtPerSat = Number(poolData?.mintAmtPerSat);
