@@ -315,5 +315,6 @@
   "volume_btc": "交易额(BTC)",
   "24h_volume_btc": "24h交易额",
   "pool_size_sats": "池子规模(sats)",
-  "pool_size_btc": "池子规模(BTC)"
+  "pool_size_btc": "池子规模(BTC)",
+  "lptHolders": "LPT持有人"
 }
