@@ -311,5 +311,6 @@
   "volume_btc": "Volume(BTC)",
   "24h_volume_btc": "24h Vol",
   "pool_size_sats": "Pool Size(Sats)",
-  "pool_size_btc": "Pool Size(BTC)"
+  "pool_size_btc": "Pool Size(BTC)",
+  "lptHolders": "LPT Holders"
 }

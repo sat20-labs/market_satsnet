@@ -249,6 +249,19 @@ class ClientApi {
     const start = (page - 1) * pagesize;
     return this.request(`v3/tick/holders/${ticker}?start=${start}&limit=${pagesize}`);
   }
+
+  getLptHolders = async (contractUrl: string): Promise<any> => {
+    const { network } = useCommonStore.getState();
+    const baseUrl = 'https://apiprd.sat20.org/stp';
+    const networkPath = network === 'mainnet' ? 'mainnet' : 'testnet';
+    const url = `${baseUrl}/${networkPath}/info/contract/liqprovider/${contractUrl}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
 }
 
 const clientApi = new ClientApi();

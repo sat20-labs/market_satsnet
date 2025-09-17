@@ -12,6 +12,7 @@ import WithDraw from '@/components/satoshinet/swap/WithDraw';
 import Deposit from '@/components/satoshinet/swap/Deposit';
 import AddLiquidity from '@/components/satoshinet/swap/AddLiquidity';
 import RemoveLiquidity from '@/components/satoshinet/swap/RemoveLiquidity';
+import LptHoldersList from '@/components/satoshinet/swap/LptHoldersList';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import { AssetInfoCard } from '@/components/AssetInfoCard';
 import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
@@ -185,6 +186,18 @@ function OrderPageContent() {
                 </>
               )}
             </Tabs>
+            
+            {/* LPT Holders List - Only show in testnet */}
+            {network === 'testnet' && (
+              <LptHoldersList
+                asset={asset}
+                ticker={ticker}
+                contractUrl={contractUrl}
+                tickerInfo={tickerInfo}
+                refresh={refreshAll}
+                isRefreshing={isSwapStatusLoading}
+              />
+            )}
           </div>
         </div>
       </div>
