@@ -172,3 +172,14 @@ export const getValueFromPrecision = (input: PrecisionValue | null | undefined):
     formatted: formattedString
   };
 };
+
+export const getAssetEditWhitelist = (): string[] => {
+  const raw = (process.env.NEXT_PUBLIC_ASSET_EDIT_WHITELIST || '').trim();
+  if (!raw) return [];
+  return raw.split(/[\s,;]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+};
+export const isAddressInAssetEditWhitelist = (addr?: string | null): boolean => {
+  if (!addr) return false;
+  const list = getAssetEditWhitelist();
+  return list.includes(addr.trim().toLowerCase());
+};

@@ -23,9 +23,41 @@ import { BtcPrice } from '@/components/BtcPrice';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { Button } from '@/components/ui/button';
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
+import AssetLogo from '@/components/AssetLogo';
+import { getValueFromPrecision, formatLargeNumber } from '@/utils';
+import { clientApi } from '@/api';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
+
+function extractAmount(obj) {
+  if (!obj) return 0;
+  if (typeof obj === 'number') return obj;
+  if (typeof obj === 'string') {
+    const n = Number(obj);
+    return isNaN(n) ? 0 : n;
+  }
+  if (typeof obj === 'object') {
+    const v = obj.Value ?? obj.value;
+    if (v == null) return 0;
+    const p = obj.Precision ?? obj.precision ?? 0;
+    const numV = Number(v);
+    const numP = Number(p) || 0;
+    if (isNaN(numV)) return 0;
+    return numV / Math.pow(10, numP);
+  }
+  return 0;
+}
+
+function getMaxSupply(pool: any): number {
+  const raw = (pool && pool.maxSupply) ?? (pool?.Contract && pool.Contract.maxSupply);
+  if (raw == null) return 0;
+  if (typeof raw === 'object' && typeof raw.Value === 'number') {
+    return getValueFromPrecision(raw as any).value;
+  }
+  const n = Number(raw);
+  return isNaN(n) ? 0 : n;
+}
 
 function adaptPoolData(pool, satsnetHeight) {
   // 添加数据验证，防止访问 undefined 对象的属性
@@ -58,15 +90,26 @@ function adaptPoolData(pool, satsnetHeight) {
     poolStatus = PoolStatus.NOT_STARTED;
   }
 
-  // derive price if missing: price = satsValueInPool / assetAmtInPool
-  const satsValueInPool = Number(pool.SatsValueInPool ?? 0);
-  const assetAmtInPool = pool.AssetAmtInPool?.Value
-    ? pool.AssetAmtInPool.Value / Math.pow(10, pool.AssetAmtInPool.Precision)
-    : 0;
+  const satsValueInPool = Number(pool.SatsValueInPool ?? pool.SatsAmtInPool ?? 0);
+  const assetAmtInPool = extractAmount(pool.AssetAmtInPool) || extractAmount(pool.AssetAmt) || 0;
   const rawDealPrice = Number(pool.dealPrice ?? 0);
-  const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
-  const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : derivedDealPrice;
+  const lastDealPrice = Number(pool.LastDealPrice ?? pool.lastDealPrice ?? 0);
+  const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0; // latest pool price
+  let effectivePoolPrice = derivedDealPrice;
+  if (effectivePoolPrice === 0) {
+    if (rawDealPrice > 0) effectivePoolPrice = rawDealPrice; else if (lastDealPrice > 0) effectivePoolPrice = lastDealPrice;
+  }
+  const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : (derivedDealPrice > 0 ? derivedDealPrice : (lastDealPrice > 0 ? lastDealPrice : 0));
   const volume24hBtc = Number(pool?.['24hour']?.volume ?? 0);
+
+  const maxSupply = getMaxSupply(pool);
+  const marketCap = maxSupply > 0 ? effectivePoolPrice * maxSupply : 0;
+  if (marketCap === 0) {
+    console.debug('[Swap MarketCap Debug]', {
+      id: pool?.contractURL, maxSupply, effectivePoolPrice, satsValueInPool, assetAmtInPool,
+      rawDealPrice, lastDealPrice, derivedDealPrice, supplyKeys: Object.keys(pool || {}).filter(k => /supply/i.test(k))
+    });
+  }
 
   return {
     ...pool,
@@ -81,12 +124,15 @@ function adaptPoolData(pool, satsnetHeight) {
     volume24hBtc,
     totalDealSats: Number(pool.TotalDealSats ?? 0),
     totalDealCount: Number(pool.TotalDealCount ?? 0),
+    maxSupply,
+    marketCap,
   };
 }
 
 const Swap = () => {
   const { t } = useTranslation(); // Specify the namespace 
   const { satsnetHeight, network } = useCommonStore();
+  const { btcPrice } = useCommonStore();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const PAGE_SIZES = [10, 20, 50, 100];
@@ -176,13 +222,67 @@ const Swap = () => {
       .filter(Boolean); // 过滤掉 null 值
   }, [poolList, satsnetHeight]);
 
+  // 组装资产标识，用于获取 ticker 详情（参照 ticker/detail/page.tsx 使用的接口）
+  const assetKeys = useMemo(() => {
+    return Array.from(new Set(
+      (poolList || []).map((p: any) => {
+        const proto = p?.Contract?.assetName?.Protocol;
+        const ticker = p?.Contract?.assetName?.Ticker;
+        if (!proto || !ticker) return '';
+        return `${proto}:f:${ticker}`;
+      }).filter(Boolean)
+    ));
+  }, [poolList]);
+
+  // 获取各资产 ticker 信息（含 maxSupply）
+  const { data: tickerInfoMap } = useQuery({
+    queryKey: ['ammTickerInfos', network, assetKeys],
+    enabled: assetKeys.length > 0,
+    gcTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const results = await Promise.all(
+        assetKeys.map(async (asset) => {
+          try {
+            const res = await clientApi.getTickerInfo(asset);
+            return [asset, res?.data || null] as const;
+          } catch (e) {
+            console.warn('getTickerInfo failed for', asset, e);
+            return [asset, null] as const;
+          }
+        })
+      );
+      return Object.fromEntries(results);
+    }
+  });
+
+  // 将 ticker 的 maxSupply 应用到池子数据，优先使用 tickerInfo.maxSupply
+  const mergedPoolList = useMemo(() => {
+    if (!adaptedPoolList || adaptedPoolList.length === 0) return adaptedPoolList;
+    return adaptedPoolList.map((p: any) => {
+      const ak = `${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`;
+      const ti = tickerInfoMap?.[ak];
+      let maxSupply = p.maxSupply;
+      if (ti && ti.maxSupply != null) {
+        // 兼容对象或数字两种格式
+        if (typeof ti.maxSupply === 'object' && typeof ti.maxSupply.Value === 'number') {
+          maxSupply = getValueFromPrecision(ti.maxSupply as any).value;
+        } else {
+          const n = Number(ti.maxSupply);
+          maxSupply = isNaN(n) ? 0 : n;
+        }
+      }
+      const marketCap = maxSupply > 0 ? (Number(p.dealPrice || 0) > 0 ? Number(p.dealPrice) : 0) * maxSupply : 0;
+      return { ...p, maxSupply, marketCap };
+    });
+  }, [adaptedPoolList, tickerInfoMap]);
+
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
-    // { key: 'protocol', label: t('common.protocol') },
     { key: 'dealPrice', label: t('common.price') },
     { key: '24h_volume', label: t('common.24h_volume_btc') },
     { key: 'totalDealSats', label: t('common.volume_btc') },
     { key: 'totalDealCount', label: t('common.tx_order_count') },
+    { key: 'marketCap', label: t('pages.launchpool.market_cap') },
     { key: 'satsValueInPool', label: t('common.pool_size_sats') },
     { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
@@ -200,8 +300,8 @@ const Swap = () => {
   const filteredPoolList = useMemo(() => {
     let list =
       protocol === 'all'
-        ? adaptedPoolList
-        : adaptedPoolList.filter(pool => pool.protocol === protocol);
+        ? mergedPoolList
+        : mergedPoolList.filter(pool => pool.protocol === protocol);
 
     // 全局（所有页）按总交易量倒序；若相等再看成交笔数，然后按部署时间倒序
     return list.slice().sort((a, b) => {
@@ -215,7 +315,7 @@ const Swap = () => {
 
       return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
     });
-  }, [adaptedPoolList, protocol]);
+  }, [mergedPoolList, protocol]);
 
   // 前端分页切片
   const pagedPoolList = useMemo(() => {
@@ -309,11 +409,10 @@ const Swap = () => {
                   >
                     <TableCell className="flex items-center gap-2 px-4 py-2">
                       <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                        <AvatarImage src={adaptedPool.logo} alt="Logo" />
+                        {/* Try fetch logo from assets API; if absent, show fallback initial */}
+                        <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
                         <AvatarFallback>
-                          {adaptedPool?.assetSymbol
-                            ? String.fromCodePoint(adaptedPool.assetSymbol)
-                            : adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
+                          {adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <Link
@@ -332,14 +431,14 @@ const Swap = () => {
                     <TableCell className="px-4 py-2">
                       <div className="flex flex-col leading-tight gap-1">
                         <span>{((Number(adaptedPool.volume24hBtc || 0) / 1e8).toFixed(4))} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
-                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.volume24hBtc || 0)) / 1e8} /></span>
+                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.volume24hBtc || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
                       </div>
                     </TableCell>
 
                     <TableCell className="px-4 py-2">
                       <div className="flex flex-col leading-tight gap-1">
                         <span>{((Number(adaptedPool.totalDealSats || 0)) / 1e8).toFixed(4)} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
-                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.totalDealSats || 0)) / 1e8} /></span>
+                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.totalDealSats || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
                       </div>
                     </TableCell>
 
@@ -348,10 +447,18 @@ const Swap = () => {
                         <span>{adaptedPool.totalDealCount}</span>
                       </div>
                     </TableCell>
+
+                    <TableCell className="px-4 py-2">
+                      <div className="flex flex-col leading-tight gap-1">
+                        <span>{(Number(adaptedPool.marketCap || 0) / 1e8).toFixed(4)} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
+                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.marketCap || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
+                      </div>
+                    </TableCell>
+
                     <TableCell className="px-4 py-2">
                       <div className="flex flex-col leading-tight gap-1">
                         <span>{Number(adaptedPool.satsValueInPool || 0) * 2}</span>
-                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.satsValueInPool || 0) * 2) / 1e8} /></span>
+                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber((((Number(adaptedPool.satsValueInPool || 0) * 2) / 1e8) * (Number(btcPrice) || 0)))}</span>
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-2">

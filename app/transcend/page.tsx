@@ -15,12 +15,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import AssetLogo from '@/components/AssetLogo';
 import { CustomPagination } from '@/components/ui/CustomPagination';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import AssetMetadataEditModal from '@/components/AssetMetadataEditModal';
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import { isAddressInAssetEditWhitelist } from '@/utils';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
@@ -69,6 +73,9 @@ function adaptPoolData(pool, satsnetHeight) {
     poolStatus = PoolStatus.NOT_STARTED;
   }
 
+  // Only use maxSupply from the current contract status (no cross-field derivation)
+  const maxSupply = pool?.maxSupply ?? pool?.Contract?.maxSupply ?? undefined;
+
   return {
     ...pool,
     id: pool.contractURL ?? pool.id,
@@ -80,6 +87,7 @@ function adaptPoolData(pool, satsnetHeight) {
     satsValueInPool: pool.SatsValueInPool ?? '-',
     totalDealSats: pool.TotalDealSats ?? '-',
     totalDealCount: pool.TotalDealCount ?? '-',
+    maxSupply,
     // 其它字段可按需补充
   };
 }
@@ -87,6 +95,7 @@ function adaptPoolData(pool, satsnetHeight) {
 const TranscendPage = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
   const { satsnetHeight, network } = useCommonStore();
+  const { address } = useReactWalletStore();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const PAGE_SIZES = [10, 20, 50, 100];
@@ -188,14 +197,38 @@ const TranscendPage = () => {
     // { key: 'action', label: t('pages.launchpool.action') },
   ];
 
+  // 动态生成协议筛选 Tab（含“全部”）
+  const protocolTabs = useMemo(() => {
+    const protocols = Array.from(
+      new Set(
+        adaptedPoolList
+          .map(p => p.protocol)
+          .filter(p => p && p !== '-' && p !== 'all')
+      )
+    );
+    return [
+      { label: t('common.all') || 'All', key: 'all' },
+      ...protocols.map(p => ({ label: p, key: p })),
+    ];
+  }, [adaptedPoolList, t]);
+
   const [protocol, setProtocol] = useState('all');
   const protocolChange = (newProtocol) => setProtocol(newProtocol);
 
-  const protocolTabs = [
-    { label: t('pages.launchpool.all'), key: 'all' },
-    { label: t('pages.launchpool.ordx'), key: 'ordx' },
-    { label: t('pages.launchpool.runes'), key: 'runes' },
-  ];
+  // 编辑元数据弹窗
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingContractUrl, setEditingContractUrl] = useState('');
+  const handleOpenEdit = (pool: any, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingContractUrl(pool.contractURL || pool.id);
+    setShowEditModal(true);
+  };
+  const isOwner = (pool: any) => {
+    if (!address || !pool) return false;
+    const deployer = pool.deployer || pool.creator || pool.owner || pool.Contract?.deployer || pool.Contract?.Owner;
+    return deployer && deployer.toLowerCase?.() === address.toLowerCase?.();
+  };
 
   const filteredPoolList = useMemo(() => {
     // 由于数据已经在服务器端分页，这里只需要按协议过滤，不需要再次排序
@@ -257,7 +290,7 @@ const TranscendPage = () => {
               >
                 <TableCell className="flex items-center gap-2 px-4 py-2">
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                    <AvatarImage src={adaptedPool.logo} alt="Logo" />
+                    <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
                     <AvatarFallback>
                       {adaptedPool?.Contract?.assetName?.Ticker
                         ? adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()
@@ -273,6 +306,14 @@ const TranscendPage = () => {
                   >
                     {adaptedPool.assetName}
                   </Link>
+                  {/* TS removed as requested */}
+                  {isOwner(adaptedPool) || isAddressInAssetEditWhitelist(address) ? (
+                    <button
+                      onClick={(e) => handleOpenEdit(adaptedPool, e)}
+                      className="ml-2 text-xs text-blue-400 hover:text-blue-300 hover:underline"
+                      title="编辑资产信息"
+                    >编辑</button>
+                  ) : null}
                 </TableCell>
                 <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell>
                 <TableCell className="px-4 py-2">
@@ -301,6 +342,14 @@ const TranscendPage = () => {
           isLoading={isLoading}
         />
       </div>
+
+      {showEditModal && editingContractUrl && (
+        <AssetMetadataEditModal
+          contractURL={editingContractUrl}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={() => setShowEditModal(false)}
+        />
+      )}
     </div>
   );
 };

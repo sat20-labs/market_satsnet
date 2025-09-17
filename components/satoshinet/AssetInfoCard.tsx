@@ -1,3 +1,4 @@
+'use client';
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import React from "react";
@@ -5,10 +6,27 @@ import { useCommonStore } from "@/store/common";
 import { generateMempoolUrl, generateOrdUrl } from "@/utils/url";
 import { Chain } from '@/types';
 import { formatLargeNumber } from '@/utils';
+// NEW: imports for social icons and fetching asset metadata
+import { Icon } from '@iconify/react';
+import { useQuery } from '@tanstack/react-query';
+import { getAsset } from '@/api/market';
 
 export function AssetInfoCard({ asset, tickerInfo, holdersTotal }) {
   const { network } = useCommonStore();
   if (!tickerInfo) return null;
+
+  // NEW: fetch asset metadata for social links
+  const { data: assetMetaResp } = useQuery({
+    queryKey: ['assetMeta', asset],
+    queryFn: () => getAsset(asset),
+    enabled: !!asset,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+  const assetMeta = assetMetaResp?.data || assetMetaResp || {};
+  const twitter = assetMeta?.twitter as string | undefined;
+  const telegram = assetMeta?.telegram as string | undefined;
+  const discord = assetMeta?.discord as string | undefined;
 
   const deployTxLink = generateMempoolUrl({
     network,
@@ -51,6 +69,33 @@ export function AssetInfoCard({ asset, tickerInfo, holdersTotal }) {
           <InfoRow label="Deploy By" value={<Link href={deployAddressLink} target="_blank" className="text-bright-blue underline">{tickerInfo.deployAddress}</Link>} />
           <InfoRow label="Deploy Height" value={tickerInfo.deployHeight} />
           <InfoRow label="Deploy Time" value={formatTime(tickerInfo.deployBlockTime)} />
+
+          {/* NEW: Social links row - show only when at least one exists */}
+          {(twitter || telegram || discord) && (
+            <InfoRow
+              label="Links"
+              value={
+                <div className="flex items-center gap-3">
+                  {twitter && (
+                    <Link href={twitter} target="_blank" className="text-blue-400 hover:text-blue-300" title="Twitter">
+                      <Icon icon="mdi:twitter" width={20} height={20} />
+                    </Link>
+                  )}
+                  {telegram && (
+                    <Link href={telegram} target="_blank" className="text-sky-400 hover:text-sky-300" title="Telegram">
+                      <Icon icon="mdi:telegram" width={20} height={20} />
+                    </Link>
+                  )}
+                  {discord && (
+                    <Link href={discord} target="_blank" className="text-indigo-400 hover:text-indigo-300" title="Discord">
+                      <Icon icon="mdi:discord" width={20} height={20} />
+                    </Link>
+                  )}
+                </div>
+              }
+            />
+          )}
+
           <InfoRow label="Deploy Tx" value={<Link href={deployTxLink} target="_blank" className="text-bright-blue underline">{tickerInfo.deployTx}</Link>} />
           <InfoRow label="Start Block" value={tickerInfo.startBlock} />
           <InfoRow label="End Block" value={tickerInfo.endBlock} />
@@ -86,4 +131,4 @@ function formatTime(ts) {
   if (!ts) return "-";
   const d = new Date(ts * 1000);
   return d.toLocaleString();
-} 
+}

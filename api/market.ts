@@ -692,6 +692,27 @@ export const getUserHistoryInContract = async (url: string, address: string, pag
   return requestContract(`/info/contract/userhistory/${url}/${address}?start=${pageStart}&limit=${pageLimit}`, {});
 };
 
+// === Contract Metadata (Placeholder Endpoints – confirm with backend) ===
+// 获取合约自定义元数据（logo/links/description）
+export const getContractMetadata = async (url: string) => {
+  return requestContract(`/info/contract/metadata/${url}`, {});
+};
+// 更新合约自定义元数据
+export const updateContractMetadata = async (url: string, metadata: {
+  logo?: string;
+  website?: string;
+  twitter?: string;
+  telegram?: string;
+  discord?: string;
+  description?: string;
+}) => {
+  return requestContract('/info/contract/metadata/update', {
+    method: 'POST',
+    data: { url, ...metadata },
+  });
+};
+// === End Contract Metadata ===
+
 // 获取合约部署费用
 export const getContractDeployFee = async (templateName: string, content: string, feeRate: number) => {
   return requestContract('/info/contract/deployfee', {
@@ -714,4 +735,119 @@ export const getContractInvokeFee = async (url: string, parameter: string) => {
     },
   });
 };
+
+// === Points (Asset Metadata) Base & Helper ===
+const getPointsBaseUrl = (): string => {
+  const base = (process.env.NEXT_PUBLIC_POINTS_API_BASE || '').replace(/\/$/, '');
+  return base;
+};
+// Add: helper to retrieve api token (env / storage)
+const getPointsAuthToken = (): string => {
+  let token = '';
+  if (typeof window !== 'undefined') {
+    token =
+      localStorage.getItem('POINTS_API_TOKEN') ||
+      sessionStorage.getItem('POINTS_API_TOKEN') ||
+      '';
+  }
+  return token || (process.env.NEXT_PUBLIC_POINTS_API_TOKEN || '');
+};
+
+interface PointsRequestOptions {
+  method?: string;
+  data?: Record<string, any>;
+  formData?: FormData;
+  timeout?: number;
+  headers?: Record<string, string>;
+}
+
+const pointsRequest = async (path: string, options: PointsRequestOptions = {}) => {
+  const {
+    method = 'GET',
+    data,
+    formData,
+    timeout = 10000,
+    headers: customHeaders = {},
+  } = options;
+  const baseUrl = getPointsBaseUrl();
+  let url = `${baseUrl}${path}`;
+  const fetchOptions: RequestInit = { method, headers: { ...customHeaders } };
+  const apiToken = getPointsAuthToken();
+
+  if (method === 'GET' && data) {
+    const qsParams = removeObjectEmptyValue(data);
+    if (apiToken && !qsParams.api_token) qsParams.api_token = apiToken; // ensure token in query
+    const qs = new URLSearchParams(qsParams as Record<string, string>).toString();
+    if (qs) url += `?${qs}`;
+  } else if (method === 'GET' && apiToken) {
+    // no data but need token
+    url += (url.includes('?') ? '&' : '?') + `api_token=${encodeURIComponent(apiToken)}`;
+  } else if (formData) {
+    fetchOptions.body = formData; // let browser set multipart boundary
+    // append token via query to satisfy ?api_token=
+    if (apiToken) {
+      url += (url.includes('?') ? '&' : '?') + `api_token=${encodeURIComponent(apiToken)}`;
+    }
+  } else if (data) {
+    const bodyData = { ...data };
+    if (apiToken && !('api_token' in bodyData)) {
+      // Some backends require both header & body, but keep lean: rely on headers + query for GET only
+    }
+    fetchOptions.body = JSON.stringify(bodyData);
+    (fetchOptions.headers as Record<string, string>)['Content-Type'] = 'application/json';
+    if (apiToken) {
+      // Optionally still support ?api_token= for PATCH/POST if backend expects
+      url += (url.includes('?') ? '&' : '?') + `api_token=${encodeURIComponent(apiToken)}`;
+    }
+  }
+
+  if (apiToken) {
+    (fetchOptions.headers as Record<string, string>)['Authorization'] = `Bearer ${apiToken}`;
+    (fetchOptions.headers as Record<string, string>)['X-API-Token'] = apiToken;
+  }
+
+  const controller = new AbortController();
+  const to = setTimeout(() => controller.abort(), timeout);
+  fetchOptions.signal = controller.signal;
+  try {
+    const resp = await fetch(url, fetchOptions);
+    clearTimeout(to);
+    if (!resp.ok) {
+      let bodyText = '';
+      try { bodyText = await resp.text(); } catch {}
+      throw new Error(`Points API error ${resp.status} ${resp.statusText}: ${bodyText}`);
+    }
+    const ct = resp.headers.get('content-type') || '';
+    if (ct.includes('application/json')) return resp.json();
+    return resp.text();
+  } catch (e: any) {
+    clearTimeout(to);
+    console.error('pointsRequest failed', method, url, e);
+    throw e;
+  }
+};
+
+// === Asset Metadata APIs (UPDATED to use Points Service) ===
+export const upsertAsset = async ({ ticker, name, logo, description, website, twitter, telegram, discord }: { ticker: string; name: string; logo?: string; description?: string; website?: string; twitter?: string; telegram?: string; discord?: string }) => {
+  return pointsRequest('/api/v1/assets/upsert', {
+    method: 'POST',
+    data: { ticker, name, logo, description, website, twitter, telegram, discord },
+  });
+};
+export const getAsset = async (ticker: string) => {
+  return pointsRequest('/api/v1/assets/get', { data: { ticker } });
+};
+export const listAssets = async ({ limit, cursor }: { limit?: number; cursor?: string }) => {
+  return pointsRequest('/api/v1/assets/list', { data: { limit, cursor } });
+};
+export const patchAssetMeta = async (payload: { ticker: string; logo?: string; description?: string; name?: string; website?: string; twitter?: string; telegram?: string; discord?: string }) => {
+  return pointsRequest('/api/v1/assets/meta', { method: 'PATCH', data: payload });
+};
+export const uploadAssetLogo = async (ticker: string, file: File) => {
+  const formData = new FormData();
+  formData.append('ticker', ticker);
+  formData.append('file', file);
+  return pointsRequest('/api/v1/assets/logo/upload', { method: 'POST', formData });
+};
+// === End Asset Metadata APIs ===
 

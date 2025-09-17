@@ -37,6 +37,7 @@
     "asset_name": "资产名称",
     "pool_status": "池子状态",
     "total_supply": "总供应量",
+    "market_cap": "市值",
     "launch_ratio": "启动比例",
     "deploy_time": "部署时间",
     "enable_block": "启用区块",
@@ -365,10 +366,135 @@
       "error": "对不起，你需要继续完成任务！"
     }
   },
-  "pages": {
-    "joinPool": {
-      "success": ""
-    }
+  "points": {
+    "title": "SATSWAP 市场积分",
+    "unit": "SMP",
+    "beta": "beta",
+    "balance": "当前积分余额",
+    "composition": "构成：",
+    "trade": "交易",
+    "referral": "推荐",
+    "reward": "奖励",
+    "connect_to_view": "连接钱包以查看",
+    "monthly_added": "+{{value}} 本月新增",
+    "ratio": "积分比例 {{value}}%",
+    "ref_bound": "已绑定邀请 +2%",
+    "ref_unbound": "未绑定邀请，去绑定享 +2%",
+    "vip_title": "VIP 等级",
+    "vip_current": "VIP {{level}}",
+    "vip_to_next": "距离 VIP {{level}} 还差 {{value}} SMP",
+    "vip_max": "已达最高等级 VIP 5",
+    "tabs": {
+      "history": "积分记录",
+      "rewards": "获取方式",
+      "vip": "VIP 权益"
+    },
+    "history_trade_title": "交易积分",
+    "view_details": "查看明细",
+    "loading": "加载中…",
+    "none": "暂无",
+    "record_asset": "资产/合约",
+    "record_type": "类型",
+    "type_sell": "卖出",
+    "type_buy": "买入",
+    "mode": "模式",
+    "fee": "手续费",
+    "txid": "Txid",
+    "more": "加载更多",
+    "referral_title": "推荐积分",
+    "bind_block": "绑定区块",
+    "reward_title": "奖励积分",
+    "reason": "原因",
+    "operator": "操作人",
+    "ref_id": "关联ID",
+    "how_trade_title": "交易行为",
+    "how_trade_desc": "每消耗 10 聪手续费 = 1 SMP（实际到账按比例发放，买入/卖出35-37%）",
+    "how_stake_title": "质押行为",
+    "how_stake_desc": "每质押 10 万聪，每 10 天获得 xxx SMP（暂未实施）",
+    "how_launch_title": "发射池行为",
+    "how_launch_desc": "每铸造 10,000 聪获得 xxx SMP（暂未实施）",
+    "vip_current_badge": "当前等级",
+    "vip_locked": "未解锁",
+    "vip_to_unlock": "还需 {{value}} SMP 解锁",
+    "use_points_tip": "使用 SMP 积分抵扣交易手续费（暂未实施）",
+    "enable": "启用",
+    "vip_meta": {
+      "titles": [
+        "初始等级",
+        "新手会员",
+        "活跃会员",
+        "进阶会员",
+        "核心会员",
+        "尊享会员"
+      ],
+      "benefits": [
+        [
+          "仅可参与基础交易"
+        ],
+        [
+          "手续费 6% 折扣",
+          "积分兑换专属权益"
+        ],
+        [
+          "投优先权",
+          "手续费 12% 折扣",
+          "积分兑换优先资格",
+          "不定期空投白名单"
+        ],
+        [
+          "发射池高级优先权",
+          "手续费 15% 折扣",
+          "积分兑换限量 NFT",
+          "社区治理投票资格"
+        ],
+        [
+          "发射池顶级优先权",
+          "手续费 19% 折扣",
+          "积分兑换稀有资产",
+          "优先体验新功能内测"
+        ],
+        [
+          "发射池至尊优先权",
+          "手续费 38% 折扣",
+          "积分兑换稀有资产 / 实物奖励",
+          "DAO 治理权 + 专属荣誉徽章",
+          "官方活动特邀资格"
+        ]
+      ]
+    },
+    "tab": "积分"
+  },
+  "assetMeta": {
+    "title": "修改资产信息",
+    "asset_info": "资产信息",
+    "ticker": "Ticker",
+    "protocol": "协议",
+    "name": "名称",
+    "status": "状态",
+    "refresh": "刷新",
+    "pending_title": "待审核修改",
+    "logo": "Logo 地址 / 上传",
+    "logo_hint": "支持 png/jpeg/gif/webp ≤512KB，服务器统一转为PNG。",
+    "preview": "预览",
+    "website": "网站",
+    "twitter": "Twitter",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "description": "项目介绍",
+    "desc_limit_reached": "已达到最大长度限制",
+    "cancel": "取消",
+    "submit": "提交修改",
+    "create": "创建资产",
+    "saving": "保存中...",
+    "saved": "已保存成功",
+    "loading": "加载中...",
+    "connect_wallet": "请先连接钱包",
+    "noticker": "未获取到资产 Ticker，无法提交",
+    "invalid": "资产标识无效",
+    "logo_size_limit": "Logo图片大小需小于512KB",
+    "logo_upload_failed": "Logo上传失败",
+    "upload": "选择文件",
+    "no_file": "未选择任何文件"
   },
   "mintAmtPerSat": "每聪分发数量",
   "mintAmtPerSatTip": "每一聪分发的资产数量。通常比绑定聪数小10-1000倍。例如绑定聪为1000时，分发数量一般为1-100。",

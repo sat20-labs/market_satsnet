@@ -14,14 +14,45 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { CustomPagination } from '@/components/ui/CustomPagination';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { BtcPrice } from '@/components/BtcPrice';
+import { getValueFromPrecision, formatLargeNumber } from '@/utils';
+import AssetLogo from '@/components/AssetLogo';
+import { clientApi } from '@/api';
+
+function extractAmount(obj: any): number {
+    if (!obj) return 0;
+    if (typeof obj === 'number') return obj;
+    if (typeof obj === 'string') {
+        const n = Number(obj);
+        return isNaN(n) ? 0 : n;
+    }
+    if (typeof obj === 'object') {
+        const v = obj.Value ?? obj.value;
+        if (v == null) return 0;
+        const p = obj.Precision ?? obj.precision ?? 0;
+        const numV = Number(v);
+        const numP = Number(p) || 0;
+        if (isNaN(numV)) return 0;
+        return numV / Math.pow(10, numP);
+    }
+    return 0;
+}
+
+function getMaxSupply(pool: any): number {
+    const raw = (pool && pool.maxSupply) ?? (pool?.Contract && pool.Contract.maxSupply);
+    if (raw == null) return 0;
+    if (typeof raw === 'object' && typeof raw.Value === 'number') {
+        return getValueFromPrecision(raw as any).value;
+    }
+    const n = Number(raw);
+    return isNaN(n) ? 0 : n;
+}
 
 function adaptPoolData(pool: any, satsnetHeight: number) {
     const assetNameObj = pool.Contract.assetName || {};
@@ -52,13 +83,18 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
 
     // derive price if missing: price = satsValueInPool / assetAmtInPool
     const satsValueInPool = Number(pool.SatsValueInPool ?? 0);
-    const assetAmtInPool = pool.AssetAmtInPool?.Value
-        ? pool.AssetAmtInPool.Value / Math.pow(10, pool.AssetAmtInPool.Precision)
-        : 0;
+    const assetAmtInPool = extractAmount(pool.AssetAmtInPool) || extractAmount(pool.AssetAmt) || 0;
     const rawDealPrice = Number(pool.dealPrice ?? 0);
-    const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
-    const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : derivedDealPrice;
+    const lastDealPrice = Number(pool.LastDealPrice ?? pool.lastDealPrice ?? 0);
+    const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0; // latest pool price
+    let effectivePoolPrice = derivedDealPrice;
+    if (effectivePoolPrice === 0) {
+        if (rawDealPrice > 0) effectivePoolPrice = rawDealPrice; else if (lastDealPrice > 0) effectivePoolPrice = lastDealPrice;
+    }
+    const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : (derivedDealPrice > 0 ? derivedDealPrice : (lastDealPrice > 0 ? lastDealPrice : 0));
     const volume24hBtc = Number(pool?.['24hour']?.volume ?? 0);
+    const maxSupply = getMaxSupply(pool);
+    const marketCap = maxSupply > 0 ? effectivePoolPrice * maxSupply : 0;
 
     return {
         ...pool,
@@ -72,12 +108,14 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
         volume24hBtc,
         totalDealSats: Number(pool.TotalDealSats ?? 0),
         totalDealCount: Number(pool.TotalDealCount ?? 0),
+        maxSupply,
+        marketCap,
     };
 }
 
 export default function LimitOrderPage() {
     const { t } = useTranslation();
-    const { satsnetHeight, network } = useCommonStore();
+    const { satsnetHeight, network, btcPrice } = useCommonStore();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const PAGE_SIZES = [10, 20, 50, 100];
@@ -140,14 +178,64 @@ export default function LimitOrderPage() {
         return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
     }, [poolList, satsnetHeight]);
 
+    // 资产键集合，用于批量获取 ticker 信息（与 ticker/detail 相同接口）
+    const assetKeys = useMemo(() => {
+        return Array.from(new Set(
+            (poolList || []).map((p: any) => {
+                const proto = p?.Contract?.assetName?.Protocol;
+                const ticker = p?.Contract?.assetName?.Ticker;
+                if (!proto || !ticker) return '';
+                return `${proto}:f:${ticker}`;
+            }).filter(Boolean)
+        ));
+    }, [poolList]);
+
+    const { data: tickerInfoMap } = useQuery({
+        queryKey: ['limitOrderTickerInfos', network, assetKeys],
+        enabled: assetKeys.length > 0,
+        gcTime: 10 * 60 * 1000,
+        queryFn: async () => {
+            const results = await Promise.all(
+                assetKeys.map(async (asset) => {
+                    try {
+                        const res = await clientApi.getTickerInfo(asset);
+                        return [asset, res?.data || null] as const;
+                    } catch (e) {
+                        console.warn('getTickerInfo failed for', asset, e);
+                        return [asset, null] as const;
+                    }
+                })
+            );
+            return Object.fromEntries(results);
+        }
+    });
+
+    const mergedPoolList = useMemo(() => {
+        if (!adaptedPoolList || adaptedPoolList.length === 0) return adaptedPoolList;
+        return adaptedPoolList.map((p: any) => {
+            const ak = `${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`;
+            const ti = tickerInfoMap?.[ak];
+            let maxSupply = p.maxSupply;
+            if (ti && ti.maxSupply != null) {
+                if (typeof ti.maxSupply === 'object' && typeof ti.maxSupply.Value === 'number') {
+                    maxSupply = getValueFromPrecision(ti.maxSupply as any).value;
+                } else {
+                    const n = Number(ti.maxSupply);
+                    maxSupply = isNaN(n) ? 0 : n;
+                }
+            }
+            const marketCap = maxSupply > 0 ? (Number(p.dealPrice || 0) > 0 ? Number(p.dealPrice) : 0) * maxSupply : 0;
+            return { ...p, maxSupply, marketCap };
+        });
+    }, [adaptedPoolList, tickerInfoMap]);
+
     const columns = [
         { key: 'assetName', label: t('pages.launchpool.asset_name') },
-        // { key: 'protocol', label: t('common.protocol') },
         { key: 'dealPrice', label: t('common.price') },
         { key: '24h_volume', label: t('common.24h_volume_btc') },
         { key: 'totalDealSats', label: t('common.volume_btc') },
         { key: 'totalDealCount', label: t('common.tx_order_count') },
-        // { key: 'satsValueInPool', label: t('common.pool_size_sats') },
+        { key: 'marketCap', label: t('pages.launchpool.market_cap') },
         { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
         { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
     ];
@@ -162,7 +250,7 @@ export default function LimitOrderPage() {
     ];
 
     const filteredPoolList = useMemo(() => {
-        let list = protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter((p: any) => p.protocol === protocol);
+        let list = protocol === 'all' ? mergedPoolList : mergedPoolList.filter((p: any) => p.protocol === protocol);
         // 全局（所有页）按总交易量倒序；若相等再按成交笔数与部署时间
         return list.slice().sort((a: any, b: any) => {
             const vA = Number(a.totalDealSats ?? 0);
@@ -175,7 +263,7 @@ export default function LimitOrderPage() {
 
             return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
         });
-    }, [adaptedPoolList, protocol]);
+    }, [mergedPoolList, protocol]);
 
     // 前端分页切片
     const pagedPoolList = useMemo(() => {
@@ -234,7 +322,8 @@ export default function LimitOrderPage() {
                             >
                                 <TableCell className="flex items-center gap-2 px-4 py-2">
                                     <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                                        <AvatarImage src={adaptedPool.logo} alt="Logo" />
+                                        {/* Fetch logo from assets API; if absent, show fallback initial */}
+                                        <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
                                         <AvatarFallback>
                                             {adaptedPool?.assetSymbol
                                                 ? String.fromCodePoint(adaptedPool.assetSymbol)
@@ -251,30 +340,40 @@ export default function LimitOrderPage() {
                                 </TableCell>
                                 {/* <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell> */}
                                 <TableCell className="px-4 py-2">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}</TableCell>
+
                                 <TableCell className="px-4 py-2">
                                     <div className="flex flex-col leading-tight gap-1">
                                         <span>{((Number(adaptedPool.volume24hBtc || 0) / 1e8).toFixed(4))} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
-                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.volume24hBtc || 0)) / 1e8} /></span>
+                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.volume24hBtc || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
                                     </div>
                                 </TableCell>
 
                                 <TableCell className="px-4 py-2">
                                     <div className="flex flex-col leading-tight gap-1">
                                         <span>{((Number(adaptedPool.totalDealSats || 0)) / 1e8).toFixed(4)} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
-                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.totalDealSats || 0)) / 1e8} /></span>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="px-4 py-2">
-                                    <div className="flex flex-col leading-tight">
-                                        <span>{adaptedPool.totalDealCount}</span>
+                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.totalDealSats || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
                                     </div>
                                 </TableCell>
                                 {/* <TableCell className="px-4 py-2">
                                     <div className="flex flex-col leading-tight gap-1">
                                         <span>{adaptedPool.satsValueInPool}</span>
-                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}<BtcPrice btc={(Number(adaptedPool.satsValueInPool || 0)) / 1e8} /></span>
+                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.satsValueInPool || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
                                     </div>
                                 </TableCell> */}
+                                <TableCell className="px-4 py-2">
+                                    <div className="flex flex-col leading-tight">
+                                        <span>{adaptedPool.totalDealCount}</span>
+                                    </div>
+                                </TableCell>
+
+                                <TableCell className="px-4 py-2">
+                                    <div className="flex flex-col leading-tight gap-1">
+                                        <span>{(Number(adaptedPool.marketCap || 0) / 1e8).toFixed(4)} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
+                                        <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.marketCap || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
+                                    </div>
+                                    {/* TS removed as requested */}
+                                </TableCell>
+
                                 <TableCell className="px-4 py-2">
                                     <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
                                         {statusTextMap[adaptedPool.poolStatus]}

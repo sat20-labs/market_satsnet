@@ -98,6 +98,7 @@ interface AssetState {
   // 业务方法
   loadSummaryData: () => Promise<any>;
   loadUtxoData: (assetKeys?: string[]) => Promise<AssetUtxoItem[][]>;
+  loadPlainUtxoData: () => Promise<AssetUtxoItem[]>; // 新增：加载BTC普通UTXO
   refreshAssets: (options?: RefreshOptions) => Promise<boolean>;
   reset: () => void;
 }
@@ -198,7 +199,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
             const protocol = item.Name.Protocol || 'plain';
             const key = protocol !== 'plain'
               ? `${item.Name.Protocol}:${item.Name.Type}:${item.Name.Ticker}`
-              : '::'; // Use specific key for plain BTC
+              : 'plain::'; // 统一plain BTC的key
 
             // Check if asset with this key already exists in the current rawAssetList
             if (!state.rawAssetList.find((v) => v?.key === key)) {
@@ -249,7 +250,8 @@ export const useAssetStore = create<AssetState>((set, get) => {
               ...(updatedRawAssetList.some(item => !item.protocol) ? [{ label: 'BTC', value: 'btc' }] : []), // Check for empty protocol
               ...(updatedRawAssetList.some(item => item.protocol === 'ordx') ? [{ label: 'SAT20', value: 'ordx' }] : []),
               ...(updatedRawAssetList.some(item => item.protocol === 'runes') ? [{ label: 'Runes', value: 'runes' }] : []),
-              // Add other protocols like brc20, ord if needed
+              ...(updatedRawAssetList.some(item => item.protocol === 'brc20') ? [{ label: 'BRC-20', value: 'brc20' }] : []),
+              ...(updatedRawAssetList.some(item => item.protocol === 'ord') ? [{ label: 'Ordinals', value: 'ord' }] : []),
             ];
 
             // Update state once with all changes
@@ -286,16 +288,13 @@ export const useAssetStore = create<AssetState>((set, get) => {
           return [];
         }
         state.setLoading(true);
-        // Use provided keys or keys from the *current* rawAssetList
-        const keysToFetch = assetKeys || state.rawAssetList.map(item => item.key).filter(key => key !== 'plain::'); // Exclude plain BTC key if needed
+        // Use provided keys or keys from the *current* rawAssetList, exclude plain BTC
+        const keysToFetch = assetKeys || state.rawAssetList
+          .filter(item => !!item.protocol) // 仅为非plain资产获取UTXO
+          .map(item => item.key);
 
         if (keysToFetch.length === 0) {
-          console.log("No asset keys found to fetch UTXOs for.");
-          // If only plain BTC exists, maybe fetch plain UTXOs separately?
-          // Or handle plain UTXOs differently as they don't have a specific 'key' in the same sense.
-          // Current `processAllUtxos` might fail if passed 'plain::'.
-          // Let's assume plain UTXOs are handled elsewhere or need specific logic.
-          // For now, return early if only plain BTC or no keys.
+          console.log("No non-plain asset keys found to fetch UTXOs for.");
           state.setLoading(false);
           return [];
         }
@@ -327,15 +326,9 @@ export const useAssetStore = create<AssetState>((set, get) => {
           }
         });
 
-        // Find plain UTXOs if they are part of the result (unlikely with current key structure)
-        // This part needs clarification: How are plain BTC UTXOs fetched and identified?
-        // Assuming plain UTXOs might be handled by a different API call or logic.
-        // const plainUtxos = updatedRawAssetList.find(item => item.key === 'plain::')?.utxos || [];
-
         set({
           rawAssetList: updatedRawAssetList,
           assets: updatedAssets,
-          // plainUtxos: plainUtxos, // Update plainUtxos if logic is added
         });
         // --- End: Update UTXOs ---
 
@@ -344,6 +337,29 @@ export const useAssetStore = create<AssetState>((set, get) => {
       } catch (err) {
         console.error('Failed to load UTXO data:', err);
         state.setError(err instanceof Error ? err : new Error('Failed to load UTXO data'));
+        return [];
+      } finally {
+        state.setLoading(false);
+      }
+    },
+
+    // 新增：加载普通BTC UTXO
+    loadPlainUtxoData: async () => {
+      const { address } = useReactWalletStore.getState();
+      const state = get();
+      try {
+        if (!address) {
+          console.warn('loadPlainUtxoData: No address found.');
+          return [];
+        }
+        state.setLoading(true);
+        const res = await clientApi.getPlainUtxos(address);
+        const plainList: AssetUtxoItem[] = res?.data || [];
+        set({ plainUtxos: plainList });
+        return plainList;
+      } catch (err) {
+        console.error('Failed to load plain UTXO data:', err);
+        state.setError(err instanceof Error ? err : new Error('Failed to load plain UTXO data'));
         return [];
       } finally {
         state.setLoading(false);
@@ -378,6 +394,12 @@ export const useAssetStore = create<AssetState>((set, get) => {
         if (refreshSummary) {
           await state.loadSummaryData();
         }
+
+        // 并行加载非plain资产UTXO与plain BTC UTXO
+        await Promise.all([
+          state.loadUtxoData().catch(() => []),
+          state.loadPlainUtxoData().catch(() => []),
+        ]);
 
         return true;
       } catch (err) {

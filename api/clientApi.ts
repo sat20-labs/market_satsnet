@@ -23,6 +23,11 @@ class ClientApi {
   // 新增：ticker 信息缓存，key 为 ticker，value 为接口返回数据
   private tickerInfoCache: Map<string, any> = new Map();
 
+  // Add: holders cache and inflight maps to dedupe
+  private holdersCache: Map<string, { timestamp: number; data: any } > = new Map();
+  private holdersInflight: Map<string, Promise<any>> = new Map();
+  private readonly HOLDERS_CACHE_TTL_MS = 60000; // 60s ttl
+
   private generatePath = (path: string, chain: string, network: string): string => {
     if (chain === 'SatoshiNet') {
       return `${this.BASE_URL}/satsnet${network === 'testnet' ? '/testnet' : '/mainnet'
@@ -174,9 +179,45 @@ class ClientApi {
     start: number = 0,
     limit: number = 10,
   ): Promise<any> => {
-    return this.request(
+    // cache + inflight dedupe by chain/network, address, ticker, start, limit
+    const { chain, network } = useCommonStore.getState();
+    const cacheKey = `holders:${chain}:${network}:${address}:${ticker}:${start}:${limit}`;
+    const now = Date.now();
+
+    const cached = this.holdersCache.get(cacheKey);
+    if (cached && now - cached.timestamp < this.HOLDERS_CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    // keep a reference to return stale on error even if expired
+    const expiredCached = cached;
+
+    const inflight = this.holdersInflight.get(cacheKey);
+    if (inflight) return inflight;
+
+    const promise = this.request(
       `v3/address/asset/${address}/${ticker}?start=${start}&limit=${limit}`,
-    );
+    ).then((data) => {
+      this.holdersCache.set(cacheKey, { timestamp: Date.now(), data });
+      return data;
+    }).catch((err) => {
+      if (expiredCached) {
+        // Serve stale data on error as a fallback
+        return expiredCached.data;
+      }
+      throw err;
+    }).finally(() => {
+      this.holdersInflight.delete(cacheKey);
+    });
+
+    this.holdersInflight.set(cacheKey, promise);
+    return promise;
+  }
+
+  // Expose a manual way to clear holders cache, e.g., on logout/network switch if desired
+  clearHoldersCache = (): void => {
+    this.holdersCache.clear();
+    this.holdersInflight.clear();
   }
 
   getOrdxNsUxtos = async (

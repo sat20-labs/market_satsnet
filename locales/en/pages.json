@@ -37,6 +37,7 @@
     "asset_name": "Asset Name",
     "pool_status": "Pool Status",
     "total_supply": "Total Supply",
+    "market_cap": "Market Cap",
     "launch_ratio": "Launch Ratio",
     "deploy_time": "Deploy Time",
     "enable_block": "Enable Block",
@@ -367,5 +368,133 @@
       "ready": "READY",
       "closing": "CLOSING"
     }
+  },
+  "points": {
+    "title": "SATSWAP Market Points",
+    "unit": "SMP",
+    "beta": "beta",
+    "balance": "Current Points",
+    "composition": "Composition:",
+    "trade": "Trade",
+    "referral": "Referral",
+    "reward": "Reward",
+    "connect_to_view": "Connect wallet to view",
+    "monthly_added": "+{{value}} this month",
+    "ratio": "Points rate {{value}}%",
+    "ref_bound": "Referral bound +2%",
+    "ref_unbound": "Not bound, bind to get +2%",
+    "vip_title": "VIP Level",
+    "vip_current": "VIP {{level}}",
+    "vip_to_next": "{{value}} SMP to VIP {{level}}",
+    "vip_max": "Reached top level VIP 5",
+    "tabs": {
+      "history": "History",
+      "rewards": "How to earn",
+      "vip": "VIP Benefits"
+    },
+    "tab": "Points",
+    "history_trade_title": "Trade Points",
+    "view_details": "View Details",
+    "loading": "Loading…",
+    "none": "None",
+    "record_asset": "Asset/Contract",
+    "record_type": "Type",
+    "type_sell": "Sell",
+    "type_buy": "Buy",
+    "mode": "Mode",
+    "fee": "Fee",
+    "txid": "Txid",
+    "more": "Load More",
+    "referral_title": "Referral Points",
+    "bind_block": "Bind Block",
+    "reward_title": "Reward Points",
+    "reason": "Reason",
+    "operator": "Operator",
+    "ref_id": "Ref ID",
+    "how_trade_title": "Trade",
+    "how_trade_desc": "Every 10 sats fee = 1 SMP (distributed proportionally, buy/sell 35-37%)",
+    "how_stake_title": "Stake",
+    "how_stake_desc": "Stake 100,000 sats for 10 days to get xxx SMP (TBD)",
+    "how_launch_title": "Launchpool",
+    "how_launch_desc": "Mint 10,000 sats to get xxx SMP (TBD)",
+    "vip_current_badge": "Current",
+    "vip_locked": "Locked",
+    "vip_to_unlock": "Need {{value}} SMP to unlock",
+    "use_points_tip": "Use SMP to offset trading fees (TBD)",
+    "enable": "Enable",
+    "vip_meta": {
+      "titles": [
+        "Starter",
+        "New Member",
+        "Active Member",
+        "Pro Member",
+        "Core Member",
+        "Elite Member"
+      ],
+      "benefits": [
+        [
+          "Basic trading only"
+        ],
+        [
+          "6% fee discount",
+          "Exclusive perks redemption"
+        ],
+        [
+          "Priority access",
+          "12% fee discount",
+          "Priority redemption",
+          "Occasional airdrop allowlist"
+        ],
+        [
+          "Advanced launchpool priority",
+          "15% fee discount",
+          "Limited NFT redemption",
+          "Community governance voting"
+        ],
+        [
+          "Top launchpool priority",
+          "19% fee discount",
+          "Redeem rare assets",
+          "Early access to beta features"
+        ],
+        [
+          "Supreme launchpool priority",
+          "38% fee discount",
+          "Redeem rare assets / physical rewards",
+          "DAO governance + honor badge",
+          "Official event invitations"
+        ]
+      ]
+    }
+  },
+  "assetMeta": {
+    "title": "Edit Asset Info",
+    "asset_info": "Asset Info",
+    "ticker": "Ticker",
+    "protocol": "Protocol",
+    "name": "Name",
+    "status": "Status",
+    "refresh": "Refresh",
+    "pending_title": "Pending Changes",
+    "logo": "Logo URL / Upload",
+    "logo_hint": "Supports png/jpeg/gif/webp ≤512KB. Server converts to PNG.",
+    "preview": "Preview",
+    "website": "Website",
+    "twitter": "Twitter",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "description": "Description",
+    "desc_limit_reached": "Max length reached",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "create": "Create Asset",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "loading": "Loading...",
+    "connect_wallet": "Please connect wallet",
+    "noticker": "Ticker not found",
+    "invalid": "Invalid asset identifier",
+    "upload": "Choose File",
+    "no_file": "No file chosen"
   }
 }

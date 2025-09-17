@@ -18,7 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { CustomPagination } from '@/components/ui/CustomPagination';
 import { useTranslation } from 'react-i18next';
 import DistributionList from '@/components/launchpool/DistributionList';
@@ -28,6 +28,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Icon } from '@iconify/react';
 import { useRouter } from 'next/navigation';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
+import AssetMetadataEditModal from '@/components/AssetMetadataEditModal';
+import AssetLogo from '@/components/AssetLogo';
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import { isAddressInAssetEditWhitelist } from '@/utils';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
@@ -93,6 +97,7 @@ export default function LaunchPoolProgressSortTest() {
     const { t } = useTranslation();
     const { satsnetHeight, network } = useCommonStore();
     const router = useRouter();
+    const { address } = useReactWalletStore();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE);
@@ -250,7 +255,6 @@ export default function LaunchPoolProgressSortTest() {
         { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
         { key: 'totalSupply', label: t('pages.launchpool.total_supply') },
         { key: 'launchRation', label: t('pages.launchpool.launch_ratio') },
-
         { key: 'enableBlock', label: t('pages.launchpool.enable_block') },
         { key: 'startBlock', label: t('pages.launchpool.start_block') },
         { key: 'endBlock', label: t('pages.launchpool.end_block') },
@@ -258,6 +262,20 @@ export default function LaunchPoolProgressSortTest() {
         { key: 'progress', label: t('pages.launchpool.progress') },
         { key: 'action', label: t('pages.launchpool.action') },
     ];
+
+    // Metadata edit modal state
+    const [showEditMetadata, setShowEditMetadata] = useState(false);
+    const [editingContractUrl, setEditingContractUrl] = useState('');
+    const openEditMetadata = (pool: any) => {
+        setEditingContractUrl(pool.contractURL || pool.id);
+        setShowEditMetadata(true);
+    };
+    const closeEditMetadata = () => { setShowEditMetadata(false); setEditingContractUrl(''); };
+    const isOwner = (pool: any) => {
+        if (!address || !pool) return false;
+        const deployer = pool.deployer || pool.creator || pool.owner || pool.Contract?.deployer || pool.Contract?.Owner;
+        return deployer && deployer.toLowerCase?.() === address.toLowerCase?.();
+    };
 
     // 模态框
     const [modalType, setModalType] = useState<string | null>(null);
@@ -353,7 +371,13 @@ export default function LaunchPoolProgressSortTest() {
                             >
                                 <TableCell className="flex items-center gap-2 px-4 py-2">
                                     <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                                        <AvatarImage src={adaptedPool.logo} alt="Logo" />
+                                        {/* Prefer API logo; fetch only for completed/closed to avoid noisy errors */}
+                                        <AssetLogo
+                                            protocol={adaptedPool?.assetName?.Protocol}
+                                            ticker={adaptedPool?.assetName?.Ticker}
+                                            className="w-10 h-10"
+                                            enabled={adaptedPool.poolStatus === PoolStatus.COMPLETED || adaptedPool.poolStatus === PoolStatus.CLOSED}
+                                        />
                                         <AvatarFallback>
                                             {adaptedPool?.assetSymbol
                                                 ? String.fromCodePoint(adaptedPool.assetSymbol)
@@ -377,7 +401,6 @@ export default function LaunchPoolProgressSortTest() {
                                 <TableCell className="px-4 py-2">{adaptedPool.totalSupply}</TableCell>
                                 <TableCell className="px-4 py-2">{parseInt(adaptedPool.launchRation, 10)}%</TableCell>
 
-
                                 <TableCell className="px-4 py-2">{adaptedPool.enableBlock > 0 ? adaptedPool.enableBlock : '-'}</TableCell>
                                 <TableCell className="px-4 py-2">{adaptedPool.startTime}</TableCell>
                                 <TableCell className="px-4 py-2">{adaptedPool.endTime}</TableCell>
@@ -396,6 +419,14 @@ export default function LaunchPoolProgressSortTest() {
                                 <TableCell className="px-4 py-2 text-center">
                                     <div className="flex justify-start items-center h-full gap-4">
                                         <ActionButtons pool={adaptedPool} openModal={openModal} />
+                                        {/* Metadata edit button only for completed/closed and owner or whitelisted */}
+                                        {((isOwner(adaptedPool) || isAddressInAssetEditWhitelist(address)) && (adaptedPool.poolStatus === PoolStatus.COMPLETED || adaptedPool.poolStatus === PoolStatus.CLOSED)) && (
+                                            <button
+                                                onClick={() => openEditMetadata(adaptedPool)}
+                                                className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-blue-400 hover:text-blue-300 hover:border-blue-400 transition-colors"
+                                                title="编辑资产信息 (仅部署者或白名单且已完成/已关闭池可编辑)"
+                                            >编辑</button>
+                                        )}
                                         {adaptedPool.progress >= 100 && (
                                             <button
                                                 className="rounded-md border border-zinc-700 p-2 text-zinc-400 hover:text-indigo-500 transition-colors"
@@ -447,6 +478,13 @@ export default function LaunchPoolProgressSortTest() {
                         )}
                     </div>
                 </div>
+            )}
+            {showEditMetadata && editingContractUrl && (
+                <AssetMetadataEditModal
+                    contractURL={editingContractUrl}
+                    onClose={closeEditMetadata}
+                    onSuccess={closeEditMetadata}
+                />
             )}
         </div>
     );
