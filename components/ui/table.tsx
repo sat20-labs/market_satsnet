@@ -2,11 +2,23 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+// Added optional rounded + wrapperClassName support so we can easily have rounded corner tables.
+interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+  rounded?: boolean
+  wrapperClassName?: string
+}
+
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
+  TableProps
+>(({ className, rounded, wrapperClassName, ...props }, ref) => (
+  <div
+    className={cn(
+      "relative w-full overflow-auto", // existing
+      rounded && "rounded-lg border border-zinc-800 overflow-hidden shadow", // apply rounding when requested
+      wrapperClassName
+    )}
+  >
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}

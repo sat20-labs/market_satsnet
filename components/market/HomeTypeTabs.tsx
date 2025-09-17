@@ -36,7 +36,7 @@ export const HomeTypeTabs = ({ value, onChange, tabs }: HomeTypeTabsProps) => {
           <TabsTrigger
             key={item.key}
             value={item.key}
-            className="px-4 h-9"
+            className="px-4 h-10"
           >
             {item.label}
           </TabsTrigger>

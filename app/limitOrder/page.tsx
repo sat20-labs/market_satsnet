@@ -282,7 +282,7 @@ export default function LimitOrderPage() {
 
     return (
         <div className="p-4 relative">
-            <div className="my-2 px-2 sm:px-1 flex justify-between items-center gap-1">
+            <div className="my-4 px-2 sm:px-1 flex justify-between items-center gap-1">
                 <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
                 <div className="flex items-center gap-2 mr-4">
                     <WalletConnectBus asChild text="Create LimitOrder">
@@ -300,8 +300,8 @@ export default function LimitOrderPage() {
                 </div>
             )}
 
-            <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-950/50 rounded-lg">
-                <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
+            <div className="relative overflow-x-auto w-full px-3 py-4 bg-zinc-900/80 rounded-lg">
+                <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-900/80">
                     <TableHeader>
                         <TableRow>
                             {columns.map((column) => (
@@ -318,9 +318,9 @@ export default function LimitOrderPage() {
                         {pagedPoolList.map((adaptedPool: any, index: number) => (
                             <TableRow
                                 key={adaptedPool.id ?? index}
-                                className="border-b border-border hover:bg-accent text-zinc-200/88 hover:text-zinc-100 transition-colors  whitespace-nowrap"
+                                className="border-b border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200/88 hover:text-zinc-100 transition-colors whitespace-nowrap"
                             >
-                                <TableCell className="flex items-center gap-2 px-4 py-2">
+                                <TableCell className="flex items-center gap-2 px-4 py-4">
                                     <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                                         {/* Fetch logo from assets API; if absent, show fallback initial */}
                                         <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
@@ -338,35 +338,35 @@ export default function LimitOrderPage() {
                                         {adaptedPool.assetName}<span className='ml-1 text-zinc-500'>({adaptedPool.protocol})</span>
                                     </Link>
                                 </TableCell>
-                                {/* <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell> */}
-                                <TableCell className="px-4 py-2">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}</TableCell>
+                                {/* <TableCell className="px-4 py-4">{adaptedPool.protocol}</TableCell> */}
+                                <TableCell className="px-4 py-4">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}</TableCell>
 
-                                <TableCell className="px-4 py-2">
+                                <TableCell className="px-4 py-4">
                                     <div className="flex flex-col leading-tight gap-1">
                                         <span>{((Number(adaptedPool.volume24hBtc || 0) / 1e8).toFixed(4))} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
                                         <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.volume24hBtc || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
                                     </div>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2">
+                                <TableCell className="px-4 py-4">
                                     <div className="flex flex-col leading-tight gap-1">
                                         <span>{((Number(adaptedPool.totalDealSats || 0)) / 1e8).toFixed(4)} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
                                         <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.totalDealSats || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
                                     </div>
                                 </TableCell>
-                                {/* <TableCell className="px-4 py-2">
+                                {/* <TableCell className="px-4 py-4">
                                     <div className="flex flex-col leading-tight gap-1">
                                         <span>{adaptedPool.satsValueInPool}</span>
                                         <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.satsValueInPool || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
                                     </div>
                                 </TableCell> */}
-                                <TableCell className="px-4 py-2">
+                                <TableCell className="px-4 py-4">
                                     <div className="flex flex-col leading-tight">
                                         <span>{adaptedPool.totalDealCount}</span>
                                     </div>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2">
+                                <TableCell className="px-4 py-4">
                                     <div className="flex flex-col leading-tight gap-1">
                                         <span>{(Number(adaptedPool.marketCap || 0) / 1e8).toFixed(4)} <span className='text-xs text-zinc-500 font-medium'>BTC</span></span>
                                         <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber(((Number(adaptedPool.marketCap || 0) / 1e8) * (Number(btcPrice) || 0)))}</span>
@@ -374,12 +374,12 @@ export default function LimitOrderPage() {
                                     {/* TS removed as requested */}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2">
+                                <TableCell className="px-4 py-4">
                                     <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
                                         {statusTextMap[adaptedPool.poolStatus]}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="px-4 py-2">
+                                <TableCell className="px-4 py-4">
                                     {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                                 </TableCell>
                             </TableRow>
@@ -388,7 +388,7 @@ export default function LimitOrderPage() {
                 </Table>
             </div>
 
-            <div className="mt-6">
+            <div className="bg-zinc-900/80 px-4 py-0 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-zinc-800">
                 <CustomPagination
                     currentPage={currentPage}
                     totalPages={totalPages}

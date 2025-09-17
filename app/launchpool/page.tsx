@@ -328,8 +328,8 @@ export default function LaunchPoolProgressSortTest() {
                 </div>
             )}
 
-            <div className="relative overflow-x-auto w-full px-1 py-4 bg-zinc-950/50 rounded-lg">
-                <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
+            <div className="relative overflow-x-auto w-full px-3 py-3 bg-zinc-900/80 rounded-lg">
+                <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-900/50">
                     <TableHeader>
                         <TableRow>
                             {columns.map((column) => {
@@ -369,7 +369,7 @@ export default function LaunchPoolProgressSortTest() {
                                 key={adaptedPool.id ?? index}
                                 className="border-b border-border hover:bg-accent transition-colors whitespace-nowrap"
                             >
-                                <TableCell className="flex items-center gap-2 px-4 py-2">
+                                <TableCell className="flex items-center gap-2 px-4 py-4">
                                     <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                                         {/* Prefer API logo; fetch only for completed/closed to avoid noisy errors */}
                                         <AssetLogo
@@ -392,20 +392,20 @@ export default function LaunchPoolProgressSortTest() {
                                     </span>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2">
+                                <TableCell className="px-4 py-4">
                                     <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
                                         {statusTextMap[adaptedPool.poolStatus]}
                                     </Badge>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2">{adaptedPool.totalSupply}</TableCell>
-                                <TableCell className="px-4 py-2">{parseInt(adaptedPool.launchRation, 10)}%</TableCell>
+                                <TableCell className="px-4 py-4">{adaptedPool.totalSupply}</TableCell>
+                                <TableCell className="px-4 py-4">{parseInt(adaptedPool.launchRation, 10)}%</TableCell>
 
-                                <TableCell className="px-4 py-2">{adaptedPool.enableBlock > 0 ? adaptedPool.enableBlock : '-'}</TableCell>
-                                <TableCell className="px-4 py-2">{adaptedPool.startTime}</TableCell>
-                                <TableCell className="px-4 py-2">{adaptedPool.endTime}</TableCell>
+                                <TableCell className="px-4 py-4">{adaptedPool.enableBlock > 0 ? adaptedPool.enableBlock : '-'}</TableCell>
+                                <TableCell className="px-4 py-4">{adaptedPool.startTime}</TableCell>
+                                <TableCell className="px-4 py-4">{adaptedPool.endTime}</TableCell>
 
-                                <TableCell className="px-4 py-2">
+                                <TableCell className="px-4 py-4">
                                     {adaptedPool.deployTime ? new Date(Number(adaptedPool.deployTime) * 1000).toLocaleString() : '-'}
                                 </TableCell>
 
@@ -448,7 +448,7 @@ export default function LaunchPoolProgressSortTest() {
             </div>
 
             {/* 分页组件 */}
-            <div className="mt-6">
+            <div className="bg-zinc-900/80 px-4 py-0 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-zinc-800">
                 <CustomPagination
                     currentPage={currentPage}
                     totalPages={totalPages}
