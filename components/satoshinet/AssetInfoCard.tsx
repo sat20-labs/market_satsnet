@@ -14,20 +14,6 @@ import { getAsset } from '@/api/market';
 export function AssetInfoCard({ asset, tickerInfo, holdersTotal }) {
   const { network } = useCommonStore();
 
-  // NEW: fetch asset metadata for social links
-  const { data: assetMetaResp } = useQuery({
-    queryKey: ['assetMeta', asset],
-    queryFn: () => getAsset(asset),
-    enabled: !!asset && !!tickerInfo,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  if (!tickerInfo) return null;
-  const assetMeta = assetMetaResp?.data || assetMetaResp || {};
-  const twitter = assetMeta?.twitter as string | undefined;
-  const telegram = assetMeta?.telegram as string | undefined;
-  const discord = assetMeta?.discord as string | undefined;
 
   const deployTxLink = generateMempoolUrl({
     network,
@@ -72,30 +58,6 @@ export function AssetInfoCard({ asset, tickerInfo, holdersTotal }) {
           <InfoRow label="Deploy Time" value={formatTime(tickerInfo.deployBlockTime)} />
 
           {/* NEW: Social links row - show only when at least one exists */}
-          {(twitter || telegram || discord) && (
-            <InfoRow
-              label="Links"
-              value={
-                <div className="flex items-center gap-3">
-                  {twitter && (
-                    <Link href={twitter} target="_blank" className="text-blue-400 hover:text-blue-300" title="Twitter">
-                      <Icon icon="mdi:twitter" width={20} height={20} />
-                    </Link>
-                  )}
-                  {telegram && (
-                    <Link href={telegram} target="_blank" className="text-sky-400 hover:text-sky-300" title="Telegram">
-                      <Icon icon="mdi:telegram" width={20} height={20} />
-                    </Link>
-                  )}
-                  {discord && (
-                    <Link href={discord} target="_blank" className="text-indigo-400 hover:text-indigo-300" title="Discord">
-                      <Icon icon="mdi:discord" width={20} height={20} />
-                    </Link>
-                  )}
-                </div>
-              }
-            />
-          )}
 
           <InfoRow label="Deploy Tx" value={<Link href={deployTxLink} target="_blank" className="text-bright-blue underline">{tickerInfo.deployTx}</Link>} />
           <InfoRow label="Start Block" value={tickerInfo.startBlock} />

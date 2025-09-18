@@ -188,7 +188,7 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
         setLoading(true);
         try {
             let res: any;
-            const uploadFn = getUploadFn();
+            const uploadFn = await getUploadFn();
             const norm = getNormalizedTicker();
             if (!norm) throw new Error(t('pages.assetMeta.invalid'));
             if (uploadFn) {
