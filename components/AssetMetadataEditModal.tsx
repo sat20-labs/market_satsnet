@@ -151,18 +151,16 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
         setForm(prev => ({ ...prev, [key]: value }));
     };
 
-    // Resolve uploadAssetLogo safely (handle hot-reload or export mismatch)
-    const getUploadFn = () => {
+    // Resolve uploadAssetLogo safely (async, remove require fallback per instruction)
+    const getUploadFn = async () => {
         const fn: any = uploadAssetLogoImported;
         if (typeof fn === 'function') return fn;
-        // try dynamic import fallback
         try {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const mod = require('@/api/market');
-            const alt = (mod as any).uploadAssetLogo;
+            const mod: any = await import('@/api/market');
+            const alt = mod.uploadAssetLogo;
             if (typeof alt === 'function') return alt;
         } catch (e) {
-            console.warn('dynamic require fallback failed', e);
+            console.warn('dynamic import fallback failed', e);
         }
         return null;
     };
@@ -199,7 +197,7 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
         setLoading(true);
         try {
             let res: any;
-            const uploadFn = getUploadFn();
+            const uploadFn = await getUploadFn();
             const norm = getNormalizedTicker();
             if (!norm) throw new Error(t('pages.assetMeta.invalid'));
             if (uploadFn) {
