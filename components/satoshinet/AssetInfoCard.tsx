@@ -13,7 +13,6 @@ import { getAsset } from '@/api/market';
 
 export function AssetInfoCard({ asset, tickerInfo, holdersTotal }) {
   const { network } = useCommonStore();
-  if (!tickerInfo) return null;
 
 
   const deployTxLink = generateMempoolUrl({

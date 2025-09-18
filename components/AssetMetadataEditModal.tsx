@@ -151,18 +151,9 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
         setForm(prev => ({ ...prev, [key]: value }));
     };
 
-    // Resolve uploadAssetLogo safely (async, remove require fallback per instruction)
-    const getUploadFn = async () => {
-        const fn: any = uploadAssetLogoImported;
-        if (typeof fn === 'function') return fn;
-        try {
-            const mod: any = await import('@/api/market');
-            const alt = mod.uploadAssetLogo;
-            if (typeof alt === 'function') return alt;
-        } catch (e) {
-            console.warn('dynamic import fallback failed', e);
-        }
-        return null;
+    // Use the imported uploadAssetLogo function directly
+    const getUploadFn = () => {
+        return uploadAssetLogoImported;
     };
 
     // Normalize logo URL to configured points base
