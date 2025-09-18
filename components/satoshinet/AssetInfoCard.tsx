@@ -13,16 +13,17 @@ import { getAsset } from '@/api/market';
 
 export function AssetInfoCard({ asset, tickerInfo, holdersTotal }) {
   const { network } = useCommonStore();
-  if (!tickerInfo) return null;
 
   // NEW: fetch asset metadata for social links
   const { data: assetMetaResp } = useQuery({
     queryKey: ['assetMeta', asset],
     queryFn: () => getAsset(asset),
-    enabled: !!asset,
+    enabled: !!asset && !!tickerInfo,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+
+  if (!tickerInfo) return null;
   const assetMeta = assetMetaResp?.data || assetMetaResp || {};
   const twitter = assetMeta?.twitter as string | undefined;
   const telegram = assetMeta?.telegram as string | undefined;
