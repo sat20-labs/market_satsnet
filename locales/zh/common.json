@@ -312,9 +312,10 @@
   "register_failed": "注册推荐人失败",
   "please_input_name": "请输入名称",
   "volume_sats": "交易额(sats)",
-  "volume_btc": "交易额(BTC)",
+  "volume_btc": "交易额",
   "24h_volume_btc": "24h交易额",
   "pool_size_sats": "池子规模(sats)",
   "pool_size_btc": "池子规模(BTC)",
-  "lptHolders": "LPT持有人"
+  "lptHolders": "LPT持有人",
+  "trade": "交易"
 }

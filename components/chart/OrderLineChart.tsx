@@ -9,7 +9,7 @@ interface Props {
 }
 export const OrderLineChart = ({ data = [] }: Props) => {
   console.log('data', data);
-  
+
   const container = useRef(null);
   const chart = useRef<any>(null);
 
@@ -33,14 +33,14 @@ export const OrderLineChart = ({ data = [] }: Props) => {
       .scale('x', {
         nice: true,
       })
-      .scale('y', { 
+      .scale('y', {
         nice: true,
         tickCount: 5,
         formatter: (value) => `${value} sats`
       })
       .axis('x', {
         labelAutoRotate: false,
-        title: null,       
+        title: null,
       })
       .axis('y', {
         title: null,
@@ -100,17 +100,17 @@ export const OrderLineChart = ({ data = [] }: Props) => {
         lineWidth: 2,
         stroke: '#22c55e',
       })
-      .scale('y', { 
-        independent: true, 
+      .scale('y', {
+        independent: true,
         domainMin: 0,
-        formatter: (value: any) => `${value} sats` 
+        formatter: (value: any) => `${value} sats`
       })
       .axis('y', {
         position: 'left',
         label: {
           formatter: (value: any) => `${value} sats`,
           style: {
-            fill: '#ffffff', 
+            fill: '#ffffff',
             fontSize: 11
           },
           autoHide: false,

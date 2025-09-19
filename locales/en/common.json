@@ -307,10 +307,11 @@
   "register_success": "Successfully registered as referrer",
   "register_failed": "Failed to register as referrer",
   "please_input_name": "Please enter your name",
-  "volume_sats": "Volume(Sats)",
-  "volume_btc": "Volume(BTC)",
+  "volume_sats": "Volume",
+  "volume_btc": "Volume",
   "24h_volume_btc": "24h Vol",
   "pool_size_sats": "Pool Size(Sats)",
   "pool_size_btc": "Pool Size(BTC)",
-  "lptHolders": "LPT Holders"
+  "lptHolders": "LPT Holders",
+  "trade": "Trade"
 }

@@ -373,6 +373,7 @@
     "title": "SATSWAP Market Points",
     "unit": "SMP",
     "beta": "beta",
+    "notice": "( Current points statistics are for reference only, not final results )",
     "balance": "Current Points",
     "composition": "Composition:",
     "trade": "Trade",
@@ -436,33 +437,19 @@
           "Basic trading only"
         ],
         [
-          "6% fee discount",
           "Exclusive perks redemption"
         ],
         [
-          "Priority access",
-          "12% fee discount",
-          "Priority redemption",
-          "Occasional airdrop allowlist"
+          "Exclusive perks redemption"
         ],
         [
-          "Advanced launchpool priority",
-          "15% fee discount",
-          "Limited NFT redemption",
-          "Community governance voting"
+          "Exclusive perks redemption"
         ],
         [
-          "Top launchpool priority",
-          "19% fee discount",
-          "Redeem rare assets",
-          "Early access to beta features"
+          "Exclusive perks redemption"
         ],
         [
-          "Supreme launchpool priority",
-          "38% fee discount",
-          "Redeem rare assets / physical rewards",
-          "DAO governance + honor badge",
-          "Official event invitations"
+          "Exclusive perks redemption"
         ]
       ]
     }

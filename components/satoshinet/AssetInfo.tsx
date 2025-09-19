@@ -34,8 +34,8 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
   const marketCapUsd = marketCapBtc ? <BtcPrice btc={marketCapBtc / 1e8} /> : 0;
 
   return (
-    <div className="bg-zinc-900 p-5 rounded-lg w-full h-64 sm:h-52">
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 sm:mt-4 text-left">
+    <div className="bg-zinc-900 p-5 rounded-lg w-full h-64 sm:h-68">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-4 text-left">
         {/* Volume */}
         <div className="border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.volume')}</span>
@@ -53,14 +53,14 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
         {/* Market Cap */}
         <div className="sm:border-r-1 border-b-1 sm:border-b-0 sm:border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.marketCap')}</span>
-          <p className="text-zinc-200 text-lg font-bold gap-1">{formatLargeNumber(marketCapBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
+          <p className="text-zinc-200 text-xs sm:text-lg font-bold gap-1">{formatLargeNumber(marketCapBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs">${marketCapUsd}</p>
         </div>
 
         {/* Max Supply */}
         <div className="border-r-1 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.max_supply')}</span>
-          <p className="text-zinc-200 text-lg font-bold">{tickerInfo.maxSupply}</p>
+          <p className="text-zinc-200 text-xs sm:text-lg font-bold">{formatLargeNumber(tickerInfo.maxSupply)}</p>
         </div>
 
         {/* Transactions */}

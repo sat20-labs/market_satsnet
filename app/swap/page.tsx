@@ -24,8 +24,11 @@ import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { Button } from '@/components/ui/button';
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
 import AssetLogo from '@/components/AssetLogo';
+import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
 import { getValueFromPrecision, formatLargeNumber } from '@/utils';
 import { clientApi } from '@/api';
+// import { Icon } from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
@@ -127,6 +130,17 @@ function adaptPoolData(pool, satsnetHeight) {
     maxSupply,
     marketCap,
   };
+}
+
+// 新增：名称缩写函数（移动端显示优化）
+function abbreviateTicker(name: string): string {
+  if (!name) return '';
+  if (name.length <= 12) return name;
+  if (/[._-]/.test(name)) {
+    const parts = name.split(/[._-]/).filter(Boolean);
+    if (parts.length >= 3) return `${parts[0]}-${parts[1]}…-${parts[parts.length - 1]}`.slice(0, 18);
+  }
+  return `${name.slice(0, 6)}…${name.slice(-4)}`;
 }
 
 const Swap = () => {
@@ -255,6 +269,29 @@ const Swap = () => {
     }
   });
 
+  // NEW: 获取各资产 holders 总数（使用 holders 接口 total，避免使用 tickerInfo.holdersCount 可能不准确）
+  const { data: holdersTotalsMap } = useQuery({
+    queryKey: ['holdersTotals', network, assetKeys],
+    enabled: assetKeys.length > 0,
+    gcTime: 60 * 1000,
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const results = await Promise.all(
+        assetKeys.map(async (asset) => {
+          try {
+            const res = await clientApi.getTickerHolders(asset, 1, 1); // limit=1 取 total 即可
+            const total = res?.data?.total ?? 0;
+            return [asset, total] as const;
+          } catch (e) {
+            console.warn('getTickerHolders failed for', asset, e);
+            return [asset, 0] as const;
+          }
+        })
+      );
+      return Object.fromEntries(results);
+    }
+  });
+
   // 将 ticker 的 maxSupply 应用到池子数据，优先使用 tickerInfo.maxSupply
   const mergedPoolList = useMemo(() => {
     if (!adaptedPoolList || adaptedPoolList.length === 0) return adaptedPoolList;
@@ -263,7 +300,6 @@ const Swap = () => {
       const ti = tickerInfoMap?.[ak];
       let maxSupply = p.maxSupply;
       if (ti && ti.maxSupply != null) {
-        // 兼容对象或数字两种格式
         if (typeof ti.maxSupply === 'object' && typeof ti.maxSupply.Value === 'number') {
           maxSupply = getValueFromPrecision(ti.maxSupply as any).value;
         } else {
@@ -271,10 +307,16 @@ const Swap = () => {
           maxSupply = isNaN(n) ? 0 : n;
         }
       }
+
       const marketCap = maxSupply > 0 ? (Number(p.dealPrice || 0) > 0 ? Number(p.dealPrice) : 0) * maxSupply : 0;
-      return { ...p, maxSupply, marketCap };
+      // NEW: 优先使用 holdersTotalsMap 的准确 total
+      const holders = holdersTotalsMap?.[ak] ?? ti?.holdersCount ?? p.holders ?? 0;
+
+      return { ...p, maxSupply, marketCap, holders };
     });
-  }, [adaptedPoolList, tickerInfoMap]);
+  }, [adaptedPoolList, tickerInfoMap, holdersTotalsMap]);
+
+
 
   const columns = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
@@ -283,8 +325,9 @@ const Swap = () => {
     { key: 'totalDealSats', label: t('common.volume_btc') },
     { key: 'totalDealCount', label: t('common.tx_order_count') },
     { key: 'marketCap', label: t('pages.launchpool.market_cap') },
+    { key: 'holder', label: t('common.holder') },
     { key: 'satsValueInPool', label: t('common.pool_size_sats') },
-    { key: 'poolStatus', label: t('pages.launchpool.pool_status') },
+    { key: 'trade', label: t('common.trade') },
     { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
   ];
 
@@ -345,7 +388,7 @@ const Swap = () => {
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2 mr-4">
           <WalletConnectBus asChild>
-            <Button className="h-10 btn-gradient" onClick={() => (window.location.href = '/swap/create')}>
+            <Button className="h-9 btn-gradient" onClick={() => (window.location.href = '/swap/create')}>
               Create Amm
             </Button>
           </WalletConnectBus>
@@ -356,16 +399,16 @@ const Swap = () => {
       {(error || contractURLsError) && (
         <div className="flex flex-col items-center justify-center py-8">
           <div className="text-red-500 mb-4">
-            <h3 className="text-lg font-semibold">加载失败</h3>
+            <h3 className="text-lg font-semibold">Loading failed</h3>
             <p className="text-sm text-gray-400 mt-1">
-              {error?.message || contractURLsError?.message || '网络连接异常，请检查网络后重试'}
+              {error?.message || contractURLsError?.message || 'Network connection error, please check your network and try again.'}
             </p>
           </div>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           >
-            重新加载
+            Reload...
           </button>
         </div>
       )}
@@ -378,30 +421,103 @@ const Swap = () => {
         </div>
       )}
 
-      <div className="relative overflow-x-auto w-full px-3 py-3 bg-zinc-900/80 rounded-lg">
+      {/* 移动端卡片列表视图 */}
+      <div className="sm:hidden space-y-3 mt-2">
+        {pagedPoolList.map((p: any, idx: number) => (
+          <div key={p.id || idx} className="rounded-lg bg-zinc-900/70 border border-zinc-800 p-3 flex gap-3">
+            <div className="flex-shrink-0">
+              <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
+                <AssetLogo
+                  protocol={p?.Contract?.assetName?.Protocol}
+                  ticker={p?.Contract?.assetName?.Ticker}
+                  className="w-10 h-10"
+                />
+                <AvatarFallback>
+                  {p?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || '₿'}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col gap-1">
+              <div className="flex items-start justify-between gap-2">
+                <Link
+                  href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
+                  className="text-primary text-sm font-medium text-left leading-tight max-w-[150px]"
+                  title={p?.assetName}
+                  style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {abbreviateTicker(p?.assetName || '')}
+                  <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
+                </Link>
+
+                <Link
+                  href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
+                  className={`${statusColorMap[p.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
+                >
+                  <Icon icon="lucide:zap" width={18} height={18} className="text-white mr-1" />{t('common.buy')}
+                </Link>
+
+              </div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[11px] text-zinc-400">
+                <span className="truncate">{t('common.price')}: <span className='ml-0.5 text-[11px] font-bold'>{Number(p.dealPrice || 0).toFixed(4)}</span><span className='ml-0.5 text-[10px] text-zinc-500'>sats</span></span>
+                <span className="truncate">{t('common.tx_order_count')}: {p.totalDealCount}</span>
+
+                <span className="truncate">24h Vol:<span className='ml-0.5 text-[11px] font-bold'> {((Number(p.volume24hBtc || 0) / 1e8)).toFixed(4)}</span><span className='ml-0.5 text-[10px] text-zinc-500 font-medium'>BTC</span></span>
+                <span className="truncate">{t('common.volume_btc')}: {((Number(p.totalDealSats || 0) / 1e8)).toFixed(4)}<span className='ml-0.5 text-[10px] text-zinc-500'>BTC</span></span>
+
+                <span className="truncate">MC: {(Number(p.marketCap || 0) / 1e8).toFixed(4)}<span className='ml-0.5 text-[10px] text-zinc-500'>BTC</span></span>
+                <span className="truncate">{t('common.holder')}: {p.holders}</span>
+                {/* <span className="truncate">Pool: {Number(p.satsValueInPool || 0) * 2}</span> */}
+                <span className="truncate  col-span-2 text-zinc-500">{t('pages.launchpool.deploy_time')}: {p.deployTime ? new Date(p.deployTime * 1000).toLocaleString() : '-'}
+                  {p.poolStatus === PoolStatus.ACTIVE ? (
+                    <span className="text-zinc-400 ml-1 text-[9px] bg-zinc-700 px-2 py-1 rounded-lg">{statusTextMap[p.poolStatus]}</span>
+                  ) : (
+                    <></>
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+        {pagedPoolList.length === 0 && !isLoading && !error && (
+          <div className="text-center py-8 text-sm text-zinc-500">{t('common.no_data') || 'No Data'}</div>
+        )}
+      </div>
+
+      {/* 桌面端表格视图 */}
+      <div className="relative overflow-x-auto w-full px-3 py-3 bg-zinc-900/80 rounded-lg hidden sm:block">
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
             <TableRow>
-              {columns.map((column) => (
-                <TableHead
-                  key={column.key}
-                  className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap"
-                >
-                  {column.label}
-                </TableHead>
-              ))}
+              {columns.map((column) => {
+                // 隐藏部分列在较小的桌面宽度上
+                const hiddenOnMedium = ['totalDealCount', 'deployTime'];
+                const headExtraClass = hiddenOnMedium.includes(column.key) ? 'hidden lg:table-cell' : '';
+                return (
+                  <TableHead
+                    key={column.key}
+                    className={`px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap ${headExtraClass}`}
+                  >
+                    {column.label}
+                  </TableHead>
+                );
+              })}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPoolList.length === 0 && !isLoading && !error ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center py-8 text-gray-400">
-                  暂无数据
+                  No data available.
                 </TableCell>
               </TableRow>
             ) : (
               pagedPoolList.map((adaptedPool, index) => {
-                if (!adaptedPool) return null; // 防止空数据
+                if (!adaptedPool) return null;
                 return (
                   <TableRow
                     key={adaptedPool.id ?? index}
@@ -409,7 +525,6 @@ const Swap = () => {
                   >
                     <TableCell className="flex items-center gap-2 px-4 py-4">
                       <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                        {/* Try fetch logo from assets API; if absent, show fallback initial */}
                         <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
                         <AvatarFallback>
                           {adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
@@ -417,14 +532,20 @@ const Swap = () => {
                       </Avatar>
                       <Link
                         href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
-                        className="cursor-pointer text-primary hover:underline"
+                        className="cursor-pointer text-primary hover:underline max-w-[160px] leading-snug"
                         prefetch={true}
+                        title={adaptedPool.assetName}
+                        style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}
                       >
-                        {adaptedPool.assetName}
+                        {abbreviateTicker(adaptedPool.assetName)}
                         <span className='ml-1 text-zinc-500'>({adaptedPool.protocol})</span>
                       </Link>
                     </TableCell>
-                    {/* <TableCell className="px-4 py-2">{adaptedPool.protocol}</TableCell> */}
 
                     <TableCell className="px-4 py-4">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}<span className='ml-1 text-xs text-zinc-500 font-medium'>sats</span></TableCell>
 
@@ -442,7 +563,7 @@ const Swap = () => {
                       </div>
                     </TableCell>
 
-                    <TableCell className="px-4 py-4">
+                    <TableCell className="px-4 py-4 hidden lg:table-cell">
                       <div className="flex flex-col leading-tight">
                         <span>{adaptedPool.totalDealCount}</span>
                       </div>
@@ -456,17 +577,32 @@ const Swap = () => {
                     </TableCell>
 
                     <TableCell className="px-4 py-4">
+                      <div className="flex flex-col leading-tight">
+                        <span>{adaptedPool.holders}</span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="px-4 py-4">
                       <div className="flex flex-col leading-tight gap-1">
                         <span>{Number(adaptedPool.satsValueInPool || 0) * 2}</span>
                         <span className="text-xs text-zinc-500 whitespace-nowrap">{'$'}{formatLargeNumber((((Number(adaptedPool.satsValueInPool || 0) * 2) / 1e8) * (Number(btcPrice) || 0)))}</span>
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-4">
-                      <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}>
-                        {statusTextMap[adaptedPool.poolStatus]}
-                      </Badge>
+                      {adaptedPool.poolStatus === PoolStatus.ACTIVE ? (
+                        <Link
+                          href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                          className={`${statusColorMap[adaptedPool.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity inline-block`}
+                        >
+                          <Icon icon="lucide:zap" width={16} height={16} className="text-white mr-1" /> {t('common.buy')}
+                        </Link>
+                      ) : (
+                        <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white/80 !bg-opacity-30 !text-white/70`}>
+                          {statusTextMap[adaptedPool.poolStatus]}
+                        </Badge>
+                      )}
                     </TableCell>
-                    <TableCell className="px-4 py-4">
+                    <TableCell className="px-4 py-4 hidden lg:table-cell text-zinc-400">
                       {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
                     </TableCell>
                   </TableRow>
@@ -478,7 +614,7 @@ const Swap = () => {
       </div>
 
       {/* 分页组件 */}
-      <div className="bg-zinc-900/80 px-4 py-0 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-zinc-800">
+      <div className="bg-zinc-900/80 px-4 py-0 rounded-b-lg flex flex-row items-center justify-between gap-3 border-t border-zinc-800">
         <CustomPagination
           currentPage={currentPage}
           totalPages={totalPages}
