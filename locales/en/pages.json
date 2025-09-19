@@ -290,7 +290,8 @@
     "protocol": {
       "title": "Protocol",
       "ordx": "ORDX",
-      "runes": "Runes"
+      "runes": "Runes",
+      "btc": "BTC"
     },
     "currentBlockHeight": "Current Block Height",
     "ticker": "Ticker",

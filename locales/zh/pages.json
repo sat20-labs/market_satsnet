@@ -276,7 +276,8 @@
     "protocol": {
       "title": "协议",
       "ordx": "ORDX",
-      "runes": "Runes"
+      "runes": "Runes",
+      "btc": "BTC"
     },
     "ticker": "资产名称",
     "selectTicker": "请选择资产名称",

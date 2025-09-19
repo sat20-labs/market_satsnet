@@ -44,11 +44,21 @@ const BatchSendPage = () => {
 
   // 根据协议过滤资产选项
   const filteredAssetOptions = assetList.filter(
-    (item) =>
-      item.Name &&
-      item.Name.Protocol === formData.protocol &&
-      item.Name.Type === 'f' &&
-      item.Name.Ticker
+    (item) => {
+      if (formData.protocol === 'btc') {
+        // BTC资产：Protocol为空，Type为"*"，Ticker为空
+        return item.Name &&
+               item.Name.Protocol === "" &&
+               item.Name.Type === "*" &&
+               item.Name.Ticker === "";
+      } else {
+        // 其他协议资产
+        return item.Name &&
+               item.Name.Protocol === formData.protocol &&
+               item.Name.Type === 'f' &&
+               item.Name.Ticker;
+      }
+    }
   );
 
 
@@ -66,7 +76,13 @@ const BatchSendPage = () => {
 
   const handleInputChange = (key: string, value: string) => {
     if (key === 'protocol') {
-      setFormData((prev) => ({ ...prev, protocol: value, ticker: '' }));
+      if (value === 'btc') {
+        // 选择BTC协议时，自动选择btc资产
+        setFormData((prev) => ({ ...prev, protocol: value, ticker: 'btc' }));
+      } else {
+        // 选择其他协议时，清空资产选择
+        setFormData((prev) => ({ ...prev, protocol: value, ticker: '' }));
+      }
     } else {
       setFormData((prev) => ({ ...prev, [key]: value }));
     }
@@ -93,8 +109,8 @@ const BatchSendPage = () => {
     setIsLoading(true);
 
     try {
-      // 构建资产名称字符串 (Protocol:Type:Ticker)
-      const assetName = `${formData.protocol}:f:${formData.ticker}`;
+      // 构建资产名称字符串
+      const assetName = formData.protocol === 'btc' ? '::' : `${formData.protocol}:f:${formData.ticker}`;
 
       // 构建资产数量列表，与地址列表一一对应
       const amountList = parsedAddresses.map(() => formData.amount);
@@ -179,11 +195,13 @@ const BatchSendPage = () => {
                   value={formData.protocol}
                 >
                   <SelectTrigger className="w-full">
-                    {formData.protocol === 'ordx' ? 'SAT20 (ordx)' : 'Runes'}
+                    {formData.protocol === 'ordx' ? 'SAT20 (ordx)' : 
+                     formData.protocol === 'runes' ? 'Runes' : 'BTC'}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ordx">SAT20 (ordx)</SelectItem>
                     <SelectItem value="runes">Runes</SelectItem>
+                    <SelectItem value="btc">BTC</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -205,14 +223,33 @@ const BatchSendPage = () => {
                       disabled={filteredAssetOptions.length === 0}
                     >
                       <SelectTrigger className="w-full">
-                        {formData.ticker || t('pages.tools.batch_send.select_asset_placeholder')}
+                        {formData.ticker ? (() => {
+                          const selectedAsset = filteredAssetOptions.find(item => {
+                            const key = formData.protocol === 'btc' ? 'btc' : item.Name.Ticker;
+                            return key === formData.ticker;
+                          });
+                          if (selectedAsset) {
+                            const displayName = formData.protocol === 'btc' ? 'BTC' : selectedAsset.Name.Ticker;
+                            const balance = selectedAsset.Amount || '0';
+                            return `${displayName} (余额: ${balance})`;
+                          }
+                          return formData.ticker;
+                        })() : t('pages.tools.batch_send.select_asset_placeholder')}
                       </SelectTrigger>
                       <SelectContent>
-                        {filteredAssetOptions.map((item) => (
-                          <SelectItem key={item.Name.Ticker} value={item.Name.Ticker}>
-                            {item.Name.Ticker} ({item.Amount})
-                          </SelectItem>
-                        ))}
+                        {filteredAssetOptions.map((item) => {
+                          const displayName = formData.protocol === 'btc' ? 'BTC' : item.Name.Ticker;
+                          const key = formData.protocol === 'btc' ? 'btc' : item.Name.Ticker;
+                          const balance = item.Amount || '0';
+                          return (
+                            <SelectItem key={key} value={key}>
+                              <div className="flex justify-between items-center w-full">
+                                <span>{displayName}</span>
+                                <span className="text-zinc-400 ml-2">余额: {balance}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     {filteredAssetOptions.length === 0 && (
