@@ -5,7 +5,6 @@ import { OrdxProtocolTab } from './OrdxProtocolTab';
 import { useRouter } from 'next/navigation';
 import { useAssetStore } from '@/store/asset';
 import { AssetsList } from './AssetsList';
-import PointsDashboard from './PointsDashboard';
 
 export const Assets = () => {
   const [protocol, setProtocol] = useState<string>('ordx');
@@ -26,15 +25,10 @@ export const Assets = () => {
       <div className="mb-4">
         <OrdxProtocolTab onChange={onProtocolChange} />
       </div>
-      {!!protocol && protocol === 'points' ? (
-        // 显示 PointsDashboard 页面内容
-        <PointsDashboard />
-      ) : (
-        !!currentAssets?.length && (
-          <AssetsList
-            assets={currentAssets}
-          />
-        )
+      {!!currentAssets?.length && (
+        <AssetsList
+          assets={currentAssets}
+        />
       )}
     </div>
   );

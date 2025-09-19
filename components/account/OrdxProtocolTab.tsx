@@ -4,7 +4,6 @@ import { Icon } from '@iconify/react';
 import { useAssetStore } from '@/store/asset';
 import { cn } from '@/lib/utils';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-import { useMarketPoints } from '@/application/usePointsService';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
@@ -18,12 +17,9 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
   const isFirstRender = useRef(true);
   const { t } = useTranslation();
   const { address, connected } = useReactWalletStore((s) => s);
-  const { data: pointsData, isLoading: pointsLoading } = useMarketPoints(undefined as any, address);
   const { network } = useCommonStore();
 
   const { assets } = useAssetStore();
-  const pointsTotalRaw = (pointsData?.total ?? ((pointsData?.trade?.totalPoints || 0) + Number(pointsData?.referral || 0) + Number(pointsData?.reward || 0))) || 0;
-  const pointsValue = pointsLoading && connected ? '…' : String(Number(pointsTotalRaw.toFixed(2)));
 
   // Fetch AMM and LimitOrder contract URLs
   const { data: deployedUrls } = useQuery({
@@ -142,13 +138,8 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
         key: 'runes',
         value: fmtBtc(runesBtc),
       },
-      {
-        label: t('pages.points.tab'),
-        key: 'points',
-        value: pointsValue,
-      },
     ];
-  }, [ordxBtc, runesBtc, pointsValue, t]);
+  }, [ordxBtc, runesBtc, t]);
 
   const [selected, setSelected] = useState(list[0].key);
 
@@ -163,7 +154,6 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
     <div className="grid grid-cols-2 max-w-4xl md:grid-cols-4 gap-2 md:gap-4">
       {list.map((item) => {
         const iconSpec = (() => {
-          if (item.key === 'points') return { icon: 'mdi:diamond-stone', grad: 'from-amber-400 to-orange-500' };
           if (item.key === 'runes') return { icon: 'pajamas:status-waiting', grad: 'from-cyan-400 to-blue-500' };
           return { icon: 'pajamas:status-health', grad: 'from-pink-500 to-violet-600' }; // ordx
         })();
@@ -193,17 +183,10 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
             </CardHeader>
             <CardContent className="p-3 pt-1 leading-8">
               <div className="flex items-center text-base sm:text-md">
-                {item.key === 'points' ? (
-                  <>
-                    <Icon icon="mdi:medal-outline" className="mr-1 custom-medal-icon" />
-                    <span className='font-extrabold text-zinc-200'>{item.value}</span><span className='text-zinc-400 ml-1'>{t('pages.points.unit')}</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon icon="cryptocurrency:btc" className="mr-1 custom-btc-small-icon" />
-                    <span className='font-extrabold text-zinc-200'>{item.value}</span>
-                  </>
-                )}
+                <>
+                  <Icon icon="cryptocurrency:btc" className="mr-1 custom-btc-small-icon" />
+                  <span className='font-extrabold text-zinc-200'>{item.value}</span>
+                </>
               </div>
               <div className="flex text-xs sm:font-bold">
                 <span className="text-gray-400 h-5">

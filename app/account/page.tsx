@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import {
   Tabs,
   TabsContent,
@@ -10,16 +10,11 @@ import {
 } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { Assets } from '@/components/account/Assets';
-import { OrdxOrderList } from '@/components/account/OrdxOrderList';
-import { MyActivitiesLog } from '@/components/satoshinet/MyActivitiesLog';
 import { useSearchParams } from 'next/navigation';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useTranslation } from 'react-i18next';
-import { OrdxBillList } from '@/components/account/OrdxBillList';
 import { marketApi } from '@/api';
 import { useCommonStore } from '@/store';
-import ReferrerBind from '@/components/account/ReferrerBind';
-import ReferrerRegister from '@/components/account/ReferrerRegister';
 import PointsDashboard from '@/components/account/PointsDashboard';
 
 function AccountContent() {
@@ -63,13 +58,15 @@ function AccountContent() {
       >
         <TabsList>
           <TabsTrigger value="utxo">{t('buttons.my_assets')}</TabsTrigger>
+          <TabsTrigger value="points">{t('pages.points.tab')}</TabsTrigger>
           {/* <TabsTrigger value="history">{t('common.tx_history')}</TabsTrigger> */}
           {/* <TabsTrigger value="order">{t('common.my_listings')}</TabsTrigger> */}
-          <TabsTrigger value="points">{t('pages.points.tab')}</TabsTrigger>
-          <TabsTrigger value="referrer">{t('common.referrer')}</TabsTrigger>
         </TabsList>
         <TabsContent value="utxo">
           <Assets />
+        </TabsContent>
+        <TabsContent value="points">
+          <PointsDashboard />
         </TabsContent>
         {/* <TabsContent value="history">
           <MyActivitiesLog address={address} />
@@ -77,23 +74,6 @@ function AccountContent() {
         {/* <TabsContent value="order">
           <OrdxOrderList address={address} />
         </TabsContent> */}
-        <TabsContent value="points">
-          <PointsDashboard />
-        </TabsContent>
-        <TabsContent value="referrer">
-          <Tabs defaultValue="register" className="w-full">
-            <TabsList>
-              <TabsTrigger value="register">{t('common.become_referrer')}</TabsTrigger>
-              <TabsTrigger value="bind">{t('common.bind_referrer')}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="register">
-              <ReferrerRegister />
-            </TabsContent>
-            <TabsContent value="bind">
-              <ReferrerBind />
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
       </Tabs>
     </div>
   );
