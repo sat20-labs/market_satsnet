@@ -1,6 +1,6 @@
 'use client';
 
-import { satsToBitcoin } from '@/utils';
+import { satsToBitcoin, formatLargeNumber } from '@/utils';
 import { useMemo, useEffect, useRef, useState, use } from 'react';
 import { Chart } from '@antv/g2';
 
@@ -18,6 +18,23 @@ export const OrderLineChart = ({ data = [] }: Props) => {
       container: container,
       autoFit: true,
     });
+
+    // 计算volume数据的动态Y轴范围
+    const volumeData = data.map(d => d.volume || 0).filter(v => v > 0);
+    const maxVolume = Math.max(...volumeData);
+    const minVolume = Math.min(...volumeData);
+    
+    // 如果数据差异很大，调整Y轴范围让较小的值更明显
+    let volumeYScale: any = { independent: true, domainMin: 0 };
+    if (maxVolume > 0 && minVolume > 0 && maxVolume / minVolume > 100) {
+      // 当最大值是最小值的100倍以上时，调整范围
+      volumeYScale = { 
+        independent: true, 
+        domainMin: 0,
+        domain: [0, maxVolume * 1.1], // 使用domain属性设置范围
+        nice: true
+      };
+    }
 
     chart
       .theme({
@@ -72,7 +89,7 @@ export const OrderLineChart = ({ data = [] }: Props) => {
       .style('inset', 2)
       .style('maxWidth', 15)
       .style('fill', '#555555') // Add this line to set the volume bar color
-      .scale('y', { independent: true, domainMin: 0 })
+      .scale('y', volumeYScale)
       .axis('y', {
         position: 'right',
         line: false,
@@ -83,8 +100,8 @@ export const OrderLineChart = ({ data = [] }: Props) => {
       .tooltip((d) => {
         return {
           title: d.label,
-          name: 'Vloume',
-          value: d.volume ? `${satsToBitcoin(d.volume)} btc` : '-',
+          name: 'Volume',
+          value: d.volume ? `${formatLargeNumber(d.volume)} sats` : '-',
         };
       })
       .tooltip((d) => ({
@@ -137,7 +154,29 @@ export const OrderLineChart = ({ data = [] }: Props) => {
   function updateLineChart(chart) {
     if (!data.length) return;
 
+    // 重新计算volume数据的动态Y轴范围
+    const volumeData = data.map(d => d.volume || 0).filter(v => v > 0);
+    const maxVolume = Math.max(...volumeData);
+    const minVolume = Math.min(...volumeData);
+    
+    // 如果数据差异很大，调整Y轴范围让较小的值更明显
+    let volumeYScale: any = { independent: true, domainMin: 0 };
+    if (maxVolume > 0 && minVolume > 0 && maxVolume / minVolume > 100) {
+      volumeYScale = { 
+        independent: true, 
+        domainMin: 0,
+        domain: [0, maxVolume * 1.1], // 使用domain属性设置范围
+        nice: true
+      };
+    }
+
     chart.data(data);
+
+    // 更新volume柱状图的Y轴比例
+    const volumeInterval = chart.getNodesByType('interval')[0];
+    if (volumeInterval) {
+      volumeInterval.scale('y', volumeYScale);
+    }
 
     // 重新渲染
     chart.render();

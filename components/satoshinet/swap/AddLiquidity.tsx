@@ -179,11 +179,12 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
   };
 
   const handleMaxClick = () => {
-    if (divisibility === 0) {
-      setAmount(Math.floor(displayAssetBalance).toString());
-    } else {
-      setAmount(displayAssetBalance.toFixed(divisibility));
-    }
+    const maxAmount = divisibility === 0 
+      ? Math.floor(displayAssetBalance).toString()
+      : displayAssetBalance.toFixed(divisibility);
+    
+    // 使用 handleAmountChange 来确保 value 也被正确计算
+    handleAmountChange(maxAmount);
   };
 
   return (
