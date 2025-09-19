@@ -256,8 +256,11 @@ export const ChartModule = ({
               ))}
             </div>
           </div>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-2 bg-no-repeat bg-center bg-[url('/bg_satswap.png')]">
-            <OrderLineChart data={lineChartData || []} />
+          {/* Wrapped chart area with mb-6 and changed items-center -> items-stretch */}
+          <div className="mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-stretch gap-1 bg-no-repeat bg-center bg-[url('/bg_satswap.png')]">
+              <OrderLineChart data={lineChartData || []} />
+            </div>
           </div>
         </ContentLoading>
       </div>

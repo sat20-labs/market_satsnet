@@ -28,7 +28,7 @@ interface TickerInfo {
   holdersCount: number;
 }
 
-export const useSwapDetailData = (asset: string) => {
+export const useSwapDetailData = (asset: string, initialContractUrl?: string) => {
   console.log('asset', asset);
   const { network } = useCommonStore();
 
@@ -50,14 +50,16 @@ export const useSwapDetailData = (asset: string) => {
     refetchOnWindowFocus: false,
   });
 
+  // 当外部已经提供 contractUrl 时，不再发起获取全量合约列表的请求
   const contractUrlQuery = useQuery({
     queryKey: ['contractUrl', network],
     queryFn: () => contractService.getDeployedContractInfo(),
-    enabled: !!ticker,
+    enabled: !initialContractUrl && !!ticker,
   });
   const contractUrl = useMemo(() => {
+    if (initialContractUrl) return initialContractUrl; // 直接复用外部传入的合约 URL
     return contractUrlQuery.data?.filter((url: string) => url.indexOf(`${ticker}_amm.tc`) > -1)[0];
-  }, [contractUrlQuery.data, ticker]);
+  }, [contractUrlQuery.data, ticker, initialContractUrl]);
 
   const { data: swapStatus, isPending: isSwapStatusPending, isLoading: isSwapStatusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ["amm", 'status', contractUrl, network],
@@ -111,7 +113,8 @@ export const useSwapDetailData = (asset: string) => {
     ticker,
     contractUrl,
     contractUrlQueryData: contractUrlQuery.data,
-    finalIsLoading: isLoading
+    finalIsLoading: isLoading,
+    initialContractUrl
   });
 
 

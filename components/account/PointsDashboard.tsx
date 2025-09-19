@@ -16,7 +16,7 @@ function formatPoints(v: number): number { return Number(v.toFixed(2)); }
 const VIP_THRESHOLDS = [0, 50000, 200000, 800000, 3000000, 10000000]; // VIP0..VIP5 起始所需累计积分
 
 export default function PointsDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { address, connected } = useReactWalletStore((s) => s);
   const { data, isLoading } = useMarketPoints(undefined as any, address);
   const { data: tradeAssets = [], isLoading: assetsLoading } = useTradeAssets(connected ? address : undefined);
@@ -61,13 +61,18 @@ export default function PointsDashboard() {
 
   return (
     <div className="p-4 mx-auto space-y-6">
-      <h1 className="relative text-xl sm:text-3xl font-semibold text-zinc-300 inline-block">
-        {t('pages.points.title')}<span className="text-zinc-500 text-lg sm:text-2xl">（{t('pages.points.unit')}）</span>
-        <span className="absolute -top-2 -right-8 px-1.5 py-0.5 text-xs rounded bg-indigo-500/20 text-indigo-400">
-          {t('pages.points.beta')}
-        </span>
-      </h1>
-
+      <div className="flex flex-col gap-3">
+        <h1 className="relative text-xl sm:text-3xl font-semibold text-zinc-300 inline-block">
+          {t('pages.points.title')}<span className="text-zinc-500 text-lg sm:text-2xl">（{t('pages.points.unit')}）</span>
+          <span className="relative -top-2 right-2 px-1.5 py-0.5 text-xs rounded bg-indigo-500/20 text-indigo-400">
+            {t('pages.points.beta')}
+          </span>
+        </h1>
+        {/* Bilingual notice (Chinese + English) */}
+        <div className="text-zinc-400 text-xs leading-snug">
+          <div>{t('pages.points.notice')}</div>
+        </div>
+      </div>
       <Card className="rounded-2xl shadow-xl p-6 bg-white/5 border border-gradient-to-r from-purple-500 to-pink-500">
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -104,7 +109,7 @@ export default function PointsDashboard() {
         <TabsList className="grid grid-cols-3 bg-zinc-800">
           <TabsTrigger value="history">{t('pages.points.tabs.history')}</TabsTrigger>
           <TabsTrigger value="rewards">{t('pages.points.tabs.rewards')}</TabsTrigger>
-          <TabsTrigger value="vip">{t('pages.points.tabs.vip')}</TabsTrigger>
+          {/* <TabsTrigger value="vip">{t('pages.points.tabs.vip')}</TabsTrigger> */}
         </TabsList>
         <TabsContent value="history" className="mt-4 space-y-2">
           <Card className="p-4 text-sm bg-zinc-900 border border-zinc-700">
@@ -160,7 +165,7 @@ export default function PointsDashboard() {
                     })}
                     {ordersHasMore ? (
                       <div className="flex justify-center pt-2">
-                        <Button disabled={ordersLoading} variant="outline" className="text-xs border-zinc-600" onClick={() => ordersLoadMore()}>{ordersLoading ? t('pages.points.loading') : t('pages.points.more')}</Button>
+                        <Button disabled={ordersLoading} variant="outline" className="text-xs border-zinc-600 text-zinc-300" onClick={() => ordersLoadMore()}>{ordersLoading ? t('pages.points.loading') : t('pages.points.more')}</Button>
                       </div>
                     ) : null}
                   </div>
@@ -177,7 +182,7 @@ export default function PointsDashboard() {
               </div>
               <Dialog open={refOpen} onOpenChange={setRefOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" disabled={!connected} className="text-sm border-zinc-600">{t('pages.points.view_details')}</Button>
+                  <Button variant="outline" disabled={!connected} className="text-sm border-zinc-600 text-zinc-300 ">{t('pages.points.view_details')}</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-2xl bg-zinc-900 border-zinc-700">
                   <DialogHeader><DialogTitle>{t('pages.points.referral_title')}</DialogTitle></DialogHeader>
@@ -217,7 +222,7 @@ export default function PointsDashboard() {
               </div>
               <Dialog open={rewardOpen} onOpenChange={setRewardOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" disabled={!connected} className="text-sm border-zinc-600">{t('pages.points.view_details')}</Button>
+                  <Button variant="outline" disabled={!connected} className="text-sm border-zinc-600 text-zinc-300 ">{t('pages.points.view_details')}</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-2xl bg-zinc-900 border-zinc-700">
                   <DialogHeader><DialogTitle>{t('pages.points.reward_title')}</DialogTitle></DialogHeader>
@@ -281,7 +286,7 @@ export default function PointsDashboard() {
                   {benefits.map((b, i) => <li key={i} className={`${isLocked ? 'opacity-60' : ''}`}>✅ {b}</li>)}
                 </ul>
                 {upgradeTip && <p className="text-xs mt-3 text-amber-400">{upgradeTip}</p>}
-                {!upgradeTip && isLocked && <p className="text-xs mt-3 text-zinc-500">{t('pages.points.vip_locked')}</p>}
+                {!upgradeTip && isLocked && <p className="text-xs mt-3 text-zinc-400 border border-zinc-600 py-1 px-2 rounded-md w-16 bg-zinc-800">{t('pages.points.vip_locked')}</p>}
               </Card>
             );
           })}

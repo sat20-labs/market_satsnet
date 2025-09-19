@@ -93,6 +93,17 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
     };
 }
 
+// 新增：名称缩写函数（移动端）
+function abbreviateTicker(name: string): string {
+    if (!name) return '';
+    if (name.length <= 12) return name;
+    if (/[._-]/.test(name)) {
+        const parts = name.split(/[._-]/).filter(Boolean);
+        if (parts.length >= 3) return `${parts[0]}-${parts[1]}…-${parts[parts.length - 1]}`.slice(0, 18);
+    }
+    return `${name.slice(0, 6)}…${name.slice(-4)}`;
+}
+
 export default function LaunchPoolProgressSortTest() {
     const { t } = useTranslation();
     const { satsnetHeight, network } = useCommonStore();
@@ -312,7 +323,7 @@ export default function LaunchPoolProgressSortTest() {
                     />
                     <WalletConnectBus asChild>
                         <Button
-                            className="h-10 btn-gradient w-auto sm:w-auto md:w-auto"
+                            className="h-9 btn-gradient w-auto sm:w-auto md:w-auto"
                             onClick={() => (window.location.href = '/launchpool/create')}
                         >
                             {t('pages.launchpool.create_pool')}
@@ -328,7 +339,88 @@ export default function LaunchPoolProgressSortTest() {
                 </div>
             )}
 
-            <div className="relative overflow-x-auto w-full px-3 py-3 bg-zinc-900/80 rounded-lg">
+            {/* 移动端卡片列表视图 */}
+            <div className="sm:hidden space-y-3 mt-2">
+                {pagedPoolList.map((p: any, idx: number) => (
+                    <div
+                        key={p.id || idx}
+                        className="rounded-lg bg-zinc-900/70 border border-zinc-800 p-3 flex gap-3"
+                    >
+                        <div className="flex-shrink-0">
+                            <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
+                                <AssetLogo
+                                    protocol={p?.assetName?.Protocol}
+                                    ticker={p?.assetName?.Ticker}
+                                    className="w-10 h-10"
+                                    enabled={p.poolStatus === PoolStatus.COMPLETED || p.poolStatus === PoolStatus.CLOSED}
+                                />
+                                <AvatarFallback>
+                                    {p?.assetSymbol
+                                        ? String.fromCodePoint(p.assetSymbol)
+                                        : p.assetName?.Ticker?.charAt(0)?.toUpperCase() || '₿'}
+                                </AvatarFallback>
+                            </Avatar>
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col gap-1">
+                            <div className="flex items-start justify-between gap-2">
+                                <button
+                                    onClick={() => openModal('details', p)}
+                                    className="text-primary text-sm font-medium text-left leading-tight max-w-[150px]"
+                                    title={p.assetName?.Ticker}
+                                    data-full={p.assetName?.Ticker}
+                                    style={{
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    {abbreviateTicker(p.assetName?.Ticker || '')}
+                                </button>
+                                <Badge className={`${statusColorMap[p.poolStatus]} text-white flex-shrink-0`}>{statusTextMap[p.poolStatus]}</Badge>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                                <span>{t('pages.launchpool.total_supply')}: {p.totalSupply}</span>
+                                <span>· {t('pages.launchpool.launch_ratio')}: {parseInt(p.launchRation, 10)}%</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                                <span>{t('pages.launchpool.enable_block')}: {p.enableBlock > 0 ? p.enableBlock : '-'}</span>
+                                <span>· {t('pages.launchpool.end_block')}: {p.endTime}</span>
+                            </div>
+                            <div className="mt-1">
+                                <div className="w-full bg-gray-600/40 h-2 rounded">
+                                    <div className="bg-purple-500 h-2 rounded" style={{ width: `${p.progress}%` }}></div>
+                                </div>
+                                <div className="flex justify-between items-center mt-2">
+                                    <span className="text-xs text-muted-foreground">{p.progress}%</span>
+                                    <div className="flex items-center gap-1">
+                                        <ActionButtons pool={p} openModal={openModal} />
+                                        {p.progress >= 100 && (
+                                            <button
+                                                className="rounded-md border border-zinc-700 p-1.5 text-zinc-400 hover:text-indigo-500 transition-colors"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/swap/detail?asset=${p.assetName.Protocol}:f:${p.assetName.Ticker}`
+                                                    )
+                                                }
+                                                title="Swap"
+                                            >
+                                                <Icon icon="lucide:arrow-left-right" className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                {pagedPoolList.length === 0 && !isLoading && (
+                    <div className="text-center py-8 text-sm text-zinc-500">{t('common.no_data') || 'No Data'}</div>
+                )}
+            </div>
+
+            {/* 桌面端表格视图 */}
+            <div className="relative overflow-x-auto w-full px-3 py-3 bg-zinc-900/80 rounded-lg hidden sm:block">
                 <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-900/50">
                     <TableHeader>
                         <TableRow>
@@ -343,6 +435,10 @@ export default function LaunchPoolProgressSortTest() {
                                             ? 'mdi:arrow-up'
                                             : 'mdi:arrow-down';
 
+                                // 隐藏部分列（移动端），这里保留桌面列显示逻辑
+                                const hiddenOnSmall = ['enableBlock', 'startBlock', 'endBlock', 'deployTime'];
+                                const headExtraClass = hiddenOnSmall.includes(column.key) ? 'hidden lg:table-cell' : '';
+
                                 return (
                                     <TableHead
                                         key={column.key}
@@ -351,8 +447,7 @@ export default function LaunchPoolProgressSortTest() {
                                                 ? () => handleSort(column.key as 'progress' | 'deployTime')
                                                 : undefined
                                         }
-                                        className={`px-4 py-2 text-left font-semibold bg-zinc-900 whitespace-nowrap ${isSortable ? 'cursor-pointer select-none' : ''
-                                            } ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                                        className={`px-4 py-2 text-left font-semibold bg-zinc-900 whitespace-nowrap ${isSortable ? 'cursor-pointer select-none' : ''} ${isActive ? 'text-primary' : 'text-muted-foreground'} ${headExtraClass}`}
                                     >
                                         <span className="inline-flex items-center gap-1">
                                             {column.label}
@@ -371,7 +466,6 @@ export default function LaunchPoolProgressSortTest() {
                             >
                                 <TableCell className="flex items-center gap-2 px-4 py-4">
                                     <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                                        {/* Prefer API logo; fetch only for completed/closed to avoid noisy errors */}
                                         <AssetLogo
                                             protocol={adaptedPool?.assetName?.Protocol}
                                             ticker={adaptedPool?.assetName?.Ticker}
@@ -385,10 +479,18 @@ export default function LaunchPoolProgressSortTest() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <span
-                                        className="cursor-pointer text-primary hover:underline"
+                                        className="cursor-pointer text-primary hover:underline max-w-[160px] leading-snug"
                                         onClick={() => openModal('details', adaptedPool)}
+                                        title={adaptedPool.assetName?.Ticker}
+                                        data-full={adaptedPool.assetName?.Ticker}
+                                        style={{
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden'
+                                        }}
                                     >
-                                        {adaptedPool.assetName?.Ticker}
+                                        {abbreviateTicker(adaptedPool.assetName?.Ticker || '')}
                                     </span>
                                 </TableCell>
 
@@ -401,11 +503,11 @@ export default function LaunchPoolProgressSortTest() {
                                 <TableCell className="px-4 py-4">{adaptedPool.totalSupply}</TableCell>
                                 <TableCell className="px-4 py-4">{parseInt(adaptedPool.launchRation, 10)}%</TableCell>
 
-                                <TableCell className="px-4 py-4">{adaptedPool.enableBlock > 0 ? adaptedPool.enableBlock : '-'}</TableCell>
-                                <TableCell className="px-4 py-4">{adaptedPool.startTime}</TableCell>
-                                <TableCell className="px-4 py-4">{adaptedPool.endTime}</TableCell>
+                                <TableCell className="px-4 py-4 hidden lg:table-cell">{adaptedPool.enableBlock > 0 ? adaptedPool.enableBlock : '-'}</TableCell>
+                                <TableCell className="px-4 py-4 hidden lg:table-cell">{adaptedPool.startTime}</TableCell>
+                                <TableCell className="px-4 py-4 hidden lg:table-cell">{adaptedPool.endTime}</TableCell>
 
-                                <TableCell className="px-4 py-4">
+                                <TableCell className="px-4 py-4 hidden lg:table-cell">
                                     {adaptedPool.deployTime ? new Date(Number(adaptedPool.deployTime) * 1000).toLocaleString() : '-'}
                                 </TableCell>
 
@@ -419,13 +521,12 @@ export default function LaunchPoolProgressSortTest() {
                                 <TableCell className="px-4 py-2 text-center">
                                     <div className="flex justify-start items-center h-full gap-4">
                                         <ActionButtons pool={adaptedPool} openModal={openModal} />
-                                        {/* Metadata edit button only for completed/closed and owner or whitelisted */}
                                         {((isOwner(adaptedPool) || isAddressInAssetEditWhitelist(address)) && (adaptedPool.poolStatus === PoolStatus.COMPLETED || adaptedPool.poolStatus === PoolStatus.CLOSED)) && (
                                             <button
                                                 onClick={() => openEditMetadata(adaptedPool)}
                                                 className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-blue-400 hover:text-blue-300 hover:border-blue-400 transition-colors"
-                                                title="编辑资产信息 (仅部署者或白名单且已完成/已关闭池可编辑)"
-                                            >编辑</button>
+                                                title="Edit asset information (only deployer or whitelisted and completed/closed pools can edit)"
+                                            >Edit</button>
                                         )}
                                         {adaptedPool.progress >= 100 && (
                                             <button
@@ -448,7 +549,7 @@ export default function LaunchPoolProgressSortTest() {
             </div>
 
             {/* 分页组件 */}
-            <div className="bg-zinc-900/80 px-4 py-0 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-zinc-800">
+            <div className="bg-zinc-900/80 px-4 py-0 rounded-lg flex flex-row items-center justify-between gap-3 border-t border-zinc-800">
                 <CustomPagination
                     currentPage={currentPage}
                     totalPages={totalPages}

@@ -390,6 +390,7 @@
     "title": "SATSWAP 市场积分",
     "unit": "SMP",
     "beta": "beta",
+    "notice": "（ 目前统计积分仅供参考，非正式结果 ）",
     "balance": "当前积分余额",
     "composition": "构成：",
     "trade": "交易",

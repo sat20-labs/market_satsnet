@@ -21,7 +21,7 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
     case PoolStatus.ACTIVE:
       mainAction = (
         <WalletConnectBus asChild>
-          <Button variant="outline" className="btn-gradient w-36 text-base text-zinc-400" onClick={() => openModal('join', pool)}>
+          <Button variant="outline" className="btn-gradient w-24 text-zinc-400" onClick={() => openModal('join', pool)}>
             {t('pages.launchpool.join_pool')}
           </Button>
         </WalletConnectBus>

@@ -110,7 +110,8 @@ export const AssetsList = ({ assets }: AssetListProps) => {
       }));
       return list.filter(Boolean) as any[];
     },
-    gcTime: 0,
+    gcTime: 300000,
+    placeholderData: (prev) => prev,
     refetchInterval: 120000,
     refetchIntervalInBackground: false,
   });
@@ -127,7 +128,8 @@ export const AssetsList = ({ assets }: AssetListProps) => {
       }));
       return list.filter(Boolean) as any[];
     },
-    gcTime: 0,
+    gcTime: 300000,
+    placeholderData: (prev) => prev,
     refetchInterval: 120000,
     refetchIntervalInBackground: false,
   });
@@ -181,17 +183,18 @@ export const AssetsList = ({ assets }: AssetListProps) => {
   return (
     <div className="relative overflow-x-auto w-full px-3 py-3 bg-zinc-900/80 rounded-lg">
       <Table aria-label="Assets List Table" cellPadding={0} cellSpacing={0} className="w-full  bg-zinc-900/50 rounded-lg shadow-md border-collapse">
-        <TableHeader columns={columns} className='bg-zinc-900/50 border-1 border-zinc-800/80'>
+        <TableHeader columns={columns} className='bg-zinc-900 '>
           {(column) => (
             <TableColumn
               key={column.key}
               align={['action', 'price', 'balance'].includes(String(column.key)) ? 'end' : 'start'}
-              className={['action', 'price', 'balance'].includes(String(column.key)) ? 'h-12 px-11 text-right bg-zinc-900' : 'text-left pl-6 bg-zinc-900'}
+              className={['action', 'price', 'balance'].includes(String(column.key)) ? 'h-12 px-11 text-right border-b-1 border-zinc-800 bg-transparent' : 'bg-transparent border-b-1 border-zinc-800/80 text-left pl-6'}
             >
               {column.label}
             </TableColumn>
           )}
         </TableHeader>
+
         <TableBody items={assetsWithTranscendInfo} emptyContent={'No assets found.'}>
           {(asset: any) => {
             const proto = (asset.protocol || 'plain').toLowerCase();
@@ -207,7 +210,7 @@ export const AssetsList = ({ assets }: AssetListProps) => {
                 className="hover:bg-accent/50 cursor-pointer border-b-1 border-zinc-800"
               >
                 <TableCell>
-                  <div className="flex items-center text-sm md:text-base border-t border-zinc-800 pt-4">
+                  <div className="flex items-center text-sm md:text-base pt-4">
                     <Avatar className="w-9 h-9 flex-shrink-0">
                       <AssetLogo protocol={asset.protocol} ticker={asset.ticker || asset.label} className="w-9 h-9" />
                       <AvatarFallback className="text-xl text-gray-300 font-medium bg-zinc-800">
@@ -217,9 +220,11 @@ export const AssetsList = ({ assets }: AssetListProps) => {
                     <span className="font-medium text-zinc-300 ml-1">{asset.label}</span>
                   </div>
                 </TableCell>
+
                 <TableCell>
                   <span className="text-zinc-300 text-sm py-4">{asset.amount}</span>
                 </TableCell>
+
                 <TableCell className="text-right py-4">
                   {priceSats > 0 ? (
                     <span className="text-sm text-zinc-300">{priceSats.toFixed(4)}<span className='ml-1 text-xs text-zinc-500'>sats</span></span>
@@ -227,6 +232,7 @@ export const AssetsList = ({ assets }: AssetListProps) => {
                     <span className="text-sm text-gray-400">-</span>
                   )}
                 </TableCell>
+
                 <TableCell className="text-right py-4">
                   {proto === 'plain' || hasTokenPrice ? (
                     <div className="flex flex-col leading-tight items-end">
@@ -237,6 +243,7 @@ export const AssetsList = ({ assets }: AssetListProps) => {
                     <span className="text-sm text-gray-400">-</span>
                   )}
                 </TableCell>
+
                 <TableCell className="text-right py-4">
                   {asset.hasTranscendContract ? (
                     <Link href={generateTranscendDetailHref(asset.label)}>

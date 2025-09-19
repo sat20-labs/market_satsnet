@@ -186,7 +186,7 @@ function OrderPageContent() {
                 </>
               )}
             </Tabs>
-            
+
             {/* LPT Holders List - Only show in testnet */}
             {network === 'testnet' && (
               <LptHoldersList

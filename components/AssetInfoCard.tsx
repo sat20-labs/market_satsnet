@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { getValueFromPrecision } from '@/utils';
 import { useTranslation } from 'react-i18next';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import AssetLogo from '@/components/AssetLogo';
 
 interface AssetInfoCardProps {
   asset: string;
@@ -14,11 +16,11 @@ interface AssetInfoCardProps {
   isRefreshing: boolean;
 }
 
-export function AssetInfoCard({ 
-  asset, 
-  ticker, 
-  contractUrl, 
-  tickerInfo, 
+export function AssetInfoCard({
+  asset,
+  ticker,
+  contractUrl,
+  tickerInfo,
   protocol,
   swapData,
   refresh,
@@ -40,8 +42,15 @@ export function AssetInfoCard({
           />
         </div>
         <div className="flex items-center mb-2 gap-4">
-          <div className="w-12 h-12 rounded-full bg-purple-700 flex items-center justify-center text-zinc-300 text-xl font-bold">
-            {ticker.charAt(0).toUpperCase()}
+          <div className="w-11 h-11 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-300 text-xl font-bold">
+            {/* {ticker.charAt(0).toUpperCase()} */}
+            <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
+              <AssetLogo protocol={protocol} ticker={ticker} className="w-10 h-10" />
+              <AvatarFallback>
+                {ticker?.charAt(0)?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+
           </div>
           <div>
             <p className="text-zinc-400 font-semibold text-lg">{ticker}</p>
