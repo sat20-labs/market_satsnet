@@ -128,14 +128,16 @@ export default function LaunchPoolProgressSortTest() {
         { label: t('pages.launchpool.runes'), key: 'runes' },
     ];
 
-    // ===== 新增：状态筛选（正在铸造 / 铸造已完成）=====
-    const [statusFilter, setStatusFilter] = useState<'minting' | 'completed'>('minting');
+    // ===== 新增：状态筛选（全部 / 未激活 / 正在铸造 / 铸造已完成）=====
+    const [statusFilter, setStatusFilter] = useState<'all' | 'inactive' | 'minting' | 'completed'>('minting');
     const statusTabs = [
+        { label: 'All', key: 'all' },
+        { label: 'Inactive', key: 'inactive' },
         { label: 'Minting', key: 'minting' },
         { label: 'Completed', key: 'completed' },
     ];
     const handleStatusChange = (val: string) => {
-        if (val === 'minting' || val === 'completed') {
+        if (val === 'all' || val === 'inactive' || val === 'minting' || val === 'completed') {
             setStatusFilter(val);
             setCurrentPage(1);
         }
@@ -223,11 +225,20 @@ export default function LaunchPoolProgressSortTest() {
                 : adaptedPoolList.filter((p: any) => p.protocol === protocol);
 
         // ===== 新增：状态过滤 =====
-        list = list.filter((p: any) =>
-            statusFilter === 'minting'
-                ? p.poolStatus === PoolStatus.ACTIVE
-                : p.poolStatus === PoolStatus.COMPLETED || p.poolStatus === PoolStatus.CLOSED
-        );
+        if (statusFilter !== 'all') {
+            list = list.filter((p: any) => {
+                switch (statusFilter) {
+                    case 'inactive':
+                        return p.poolStatus === PoolStatus.NOT_STARTED;
+                    case 'minting':
+                        return p.poolStatus === PoolStatus.ACTIVE;
+                    case 'completed':
+                        return p.poolStatus === PoolStatus.COMPLETED || p.poolStatus === PoolStatus.CLOSED;
+                    default:
+                        return true;
+                }
+            });
+        }
         // ===== 新增结束 =====
 
         // 排序
