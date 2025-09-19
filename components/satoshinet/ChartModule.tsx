@@ -71,12 +71,16 @@ export const ChartModule = ({
     for (let i = 0; i < dataSource.length; i++) {
       const item = dataSource[i];
       let label;
+      
+      // Format labels based on time period
       if (type === '15m') {
-        // 对于15分钟数据，显示时间格式为 HH:MM
+        // For 15-minute data, show time format as HH:MM
         label = item.time || item.date;
       } else if (type === '24h') {
-        label = item.time;
-      } else {
+        // For 24-hour data, show time format as HH:MM
+        label = item.time || item.date;
+      } else if (type === '7d' || type === '30d') {
+        // For daily data, show date format as MM/DD
         label = item.date?.replace(/^[0-9]{4}-/, '').replace('-', '/');
       }
 
@@ -85,9 +89,12 @@ export const ChartModule = ({
         : 0;
       const volume = item.volume;
       let realValue = value;
+      
+      // Handle null/zero values by using previous value
       if (i > 0 && (value === undefined || value <= 0)) {
         value = lineArr[i - 1]?.value;
       }
+      
       const count = item.order_count;
       // Add a formatted value with the "sats" suffix
       const valueFormatted = value ? `${value} sats` : '-';
@@ -100,9 +107,6 @@ export const ChartModule = ({
         volume
       });
     }
-
-
-    // console.log('lineArr', lineArr);
 
     return lineArr;
   }, [dataSource, type]);
