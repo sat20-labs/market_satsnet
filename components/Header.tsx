@@ -83,6 +83,10 @@ export const Header = () => {
             href: '/transcend',
           },
           {
+            label: 'Batch Send',
+            href: '/tools/batch-send',
+          },
+          {
             label: t('pages.explorer.title'),
             href: network === 'testnet'
               ? 'https://testnet.sat20.org/browser/app/'
