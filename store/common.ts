@@ -21,6 +21,9 @@ interface CommonState {
   appVersion: number;
   signature?: string;
   runtimeEnv: string;
+  // 服务暂停状态
+  isServicePaused: boolean;
+  servicePauseMessage: string;
   setNetwork: (network: Network) => void; // 修改参数类型为 Network
   setChain: (chain: Chain) => void;
   setAppVersion: (version: number) => void;
@@ -31,6 +34,8 @@ interface CommonState {
   setSignature: (signature: string) => void;
   setFeeRate: (feeRate: any) => void;
   setBtcFeeRate: (btcFeeRate: any) => void;
+  // 服务暂停相关方法
+  setServicePaused: (paused: boolean, message?: string) => void;
   reset: () => void;
 }
 
@@ -54,6 +59,9 @@ export const useCommonStore = create<CommonState>()(
         btcPrice: 0,
         appVersion: 0,
         signature: '',
+        // 服务暂停状态初始值
+        isServicePaused: true,
+        servicePauseMessage: '服务暂时维护中，请稍后再试',
         setEnv: (env) => {
           set({
             runtimeEnv: env,
@@ -104,6 +112,12 @@ export const useCommonStore = create<CommonState>()(
             satsnetHeight: height,
           });
         },
+        setServicePaused: (paused, message) => {
+          set({
+            isServicePaused: paused,
+            servicePauseMessage: message || '服务暂时维护中，请稍后再试',
+          });
+        },
         reset: () => {
           set({
             btcHeight: 0,
@@ -117,12 +131,12 @@ export const useCommonStore = create<CommonState>()(
       }),
       {
         name: 'common-store',
-        // partialize: (state) =>
-        //   Object.fromEntries(
-        //     Object.entries(state).filter(([key]) =>
-        //       ['signature'].includes(key),
-        //     ),
-        //   ),
+        partialize: (state) =>
+          Object.fromEntries(
+            Object.entries(state).filter(([key]) =>
+              !['isServicePaused', 'servicePauseMessage'].includes(key),
+            ),
+          ),
       },
     ),
   ),

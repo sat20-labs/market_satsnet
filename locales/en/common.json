@@ -313,5 +313,9 @@
   "pool_size_sats": "Pool Size(Sats)",
   "pool_size_btc": "Pool Size(BTC)",
   "lptHolders": "LPT Holders",
-  "trade": "Trade"
+  "trade": "Trade",
+  "servicePause": {
+    "title": "Service Maintenance",
+    "tip": "All operations will be suspended during maintenance"
+  }
 }

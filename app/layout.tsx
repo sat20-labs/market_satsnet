@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import '@/locales';
 import { useCommonStore } from '@/store';
 import { SystemNoticeModal } from '@/components/SystemNoticeModal';
+import { ServicePauseOverlay } from '@/components/ServicePauseOverlay';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
@@ -50,6 +51,8 @@ export default function RootLayout({
             <main className="mx-auto w-full px-0 sm:px-4 flex-grow">
               {children}
             </main>
+            {/* 服务暂停覆盖层 */}
+            <ServicePauseOverlay />
             <footer id="footer">
               <ul className="flex flex-wrap justify-center h-auto min-h-16 gap-1 items-center border-t border-zinc-700/50 text-gray-500 px-2 py-2 mb-2">
 
