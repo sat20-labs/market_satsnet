@@ -160,7 +160,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
               type="number"
               placeholder={t('pages.joinPool.amount_placeholder')}
               value={amount}
-              min={1}
+              min={0}
               max={maxJoin}
               onChange={e => setAmount(e.target.value)}
               className="mb-2 w-full"
