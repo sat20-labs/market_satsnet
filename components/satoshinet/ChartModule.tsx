@@ -39,114 +39,48 @@ export const ChartModule = ({
     const items_30days = analyticsData?.items_30days?.filter(Boolean) || [];
     const items_15hours = analyticsData?.items_15hours?.filter(Boolean) || [];
 
-    const parseDate = (d?: string) => {
-      if (!d) return null as any;
-      // prefer YYYY-MM-DD; fallback to MM/DD of current year
-      if (/^\d{4}-\d{2}-\d{2}/.test(d)) return new Date(d + 'T00:00:00Z');
-      if (/^\d{2}[-\/]\d{2}$/.test(d)) {
-        const y = new Date().getUTCFullYear();
-        const norm = d.replace('-', '/');
-        return new Date(`${y}-${norm.replace('/', '-')}T00:00:00Z`);
-      }
-      const dt = new Date(d);
-      return isNaN(dt.getTime()) ? null : dt;
-    };
-
+    // 排序函数：先按 date 升序，再按 time 升序
     const sortAsc = (a: any, b: any) => {
-      const da = parseDate(a.date);
-      const db = parseDate(b.date);
-      if (da && db) return da.getTime() - db.getTime();
-      if (a.date && b.date) return String(a.date).localeCompare(String(b.date));
+      if (a.date && b.date) {
+        if (a.date < b.date) return -1;
+        if (a.date > b.date) return 1;
+        // date 相同，比较 time
+        if (a.time && b.time) {
+          if (a.time < b.time) return -1;
+          if (a.time > b.time) return 1;
+        }
+      }
       return 0;
     };
 
-    let arr: any[] = [];
-    if (type === '15m') arr = [...items_15hours];
-    else if (type === '24h') arr = [...items_24hours];
-    else if (type === '7d') {
-      const sorted = [...items_30days].sort(sortAsc);
-      const last = sorted[sorted.length - 1];
-      if (last?.date) {
-        const lastDt = parseDate(last.date);
-        if (lastDt) {
-          const start = new Date(lastDt);
-          start.setUTCDate(start.getUTCDate() - 6);
-          arr = sorted.filter(it => {
-            const dt = parseDate(it.date);
-            return dt && dt >= start && dt <= lastDt;
-          });
-          // fallback if filter returned empty
-          if (!arr.length) arr = sorted.slice(-7);
-        } else {
-          arr = sorted.slice(-7);
-        }
-      } else {
-        arr = sorted.slice(-7);
-      }
+    if (type === '15m') {
+      return [...items_15hours].sort(sortAsc);
+    } else if (type === '24h') {
+      return [...items_24hours].sort(sortAsc);
+    } else if (type === '7d') {
+      return [...items_30days].sort(sortAsc).slice(-7);
+    } else if (type === '30d') {
+      return [...items_30days].sort(sortAsc);
     }
-    else if (type === '30d') arr = [...items_30days];
-
-    if (!arr.length) {
-      if (items_24hours.length) arr = [...items_24hours];
-      else if (items_15hours.length) arr = [...items_15hours];
-      else if (items_30days.length) arr = [...items_30days];
-    }
-
-    return arr.sort(sortAsc);
+    return [];
   }, [analyticsData, type]);
 
   const lineChartData = useMemo(() => {
     const lineArr: any[] = [];
     if (!dataSource) return [];
-
-    const parseDate = (d?: string) => {
-      if (!d) return null as any;
-      if (/^\d{4}-\d{2}-\d{2}/.test(d)) return new Date(d + 'T00:00:00Z');
-      if (/^\d{2}[-\/]\d{2}$/.test(d)) {
-        const y = new Date().getUTCFullYear();
-        const norm = d.replace('-', '/');
-        return new Date(`${y}-${norm.replace('/', '-')}T00:00:00Z`);
-      }
-      const dt = new Date(d);
-      return isNaN(dt.getTime()) ? null : dt;
-    };
-    const parseDateTime = (date?: string, time?: string) => {
-      const base = parseDate(date);
-      if (!base) return null as any;
-      if (!time) return base;
-      // expect HH:mm; build ISO in UTC
-      const m = time.match(/^(\d{1,2}):(\d{2})/);
-      if (m) {
-        const h = Number(m[1]);
-        const mm = Number(m[2]);
-        const dt = new Date(base);
-        dt.setUTCHours(h, mm, 0, 0);
-        return dt;
-      }
-      return base;
-    };
-
     for (let i = 0; i < dataSource.length; i++) {
       const item = dataSource[i];
-      // ts from date/time depending on current type
-      let tsDate: Date | null = null;
-      if (type === '15m' || type === '24h') {
-        tsDate = parseDateTime(item.date, item.time);
-      } else {
-        tsDate = parseDate(item.date);
-      }
-      // fallback: use increasing index with today base
-      if (!tsDate) {
-        const base = new Date();
-        base.setUTCHours(0, 0, 0, 0);
-        base.setUTCDate(base.getUTCDate() - (dataSource.length - i));
-        tsDate = base;
-      }
-
       let label;
-      if (type === '15m' || type === '24h') {
+
+      // Format labels based on time period
+      if (type === '15m') {
+        // For 15-minute data, show time format as HH:MM
+        label = item.time || item.date;
+      } else if (type === '24h') {
+        // For 24-hour data, show time format as HH:MM
         label = item.time || item.date;
       } else if (type === '7d' || type === '30d') {
+        // For daily data, show date format as MM/DD
         label = item.date?.replace(/^[0-9]{4}-/, '').replace('-', '/');
       }
 
@@ -155,23 +89,26 @@ export const ChartModule = ({
         : 0;
       const volume = item.volume;
       let realValue = value;
+
+      // Handle null/zero values by using previous value
       if (i > 0 && (value === undefined || value <= 0)) {
         value = lineArr[i - 1]?.value;
       }
+
       const count = item.order_count;
+      // Add a formatted value with the "sats" suffix
       const valueFormatted = value ? `${value} sats` : '-';
       lineArr.push({
-        ts: tsDate, // time scale key
         label,
         value,
         valueFormatted,
         count,
         realValue,
-        volume,
+        volume
       });
     }
 
-    return lineArr.sort((a, b) => (a.ts as Date).getTime() - (b.ts as Date).getTime());
+    return lineArr;
   }, [dataSource, type]);
 
   const types = [
@@ -215,7 +152,7 @@ export const ChartModule = ({
   }, [description]);
 
   return (
-    <div className="w-full h-full bg-zinc-900/50 border-1 border-zinc-700/50 rounded-lg flex flex-col">
+    <div className="w-full h-full bg-zinc-900/50 border-1 border-zinc-700/50 rounded-lg">
       <div className="flex justify-between items-center">
         <div className="flex flex-col">
           <div className="flex items-center">
@@ -302,29 +239,27 @@ export const ChartModule = ({
           />
         </div>
       </div>
-      <div className="p-2 max-w-[100rem] flex-1 min-h-0">
+      <div className="p-2 max-w-[100rem]">
         <ContentLoading loading={isLoading}>
-          <div className="flex flex-col h-full">
-            <div className="flex justify-end items-center mb-2">
-              <div className="flex items-center mr-6 gap-2">
-                {types.map((item) => (
-                  <Button
-                    key={item.value}
-                    variant={type === item.value ? 'default' : 'outline'}
-                    className={type === item.value ? 'btn-gradient' : 'bg-zinc-700 hover:text-zinc-200'}
-                    onClick={() => setType(item.value)}
-                    size="sm"
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
+          <div className="flex justify-end items-center mb-4">
+            <div className="flex items-center mr-6 gap-2">
+              {types.map((item) => (
+                <Button
+                  key={item.value}
+                  variant={type === item.value ? 'default' : 'outline'}
+                  className={type === item.value ? 'btn-gradient' : 'bg-zinc-700 hover:text-zinc-200'}
+                  onClick={() => setType(item.value)}
+                  size="sm"
+                >
+                  {item.label}
+                </Button>
+              ))}
             </div>
-            {/* Chart takes the remaining height */}
-            <div className="flex-1 min-h-0">
-              <div className="h-full flex flex-col md:flex-row justify-between items-stretch gap-1 bg-no-repeat bg-center bg-[url('/bg_satswap.png')]">
-                <OrderLineChart data={lineChartData || []} mode={type as any} />
-              </div>
+          </div>
+          {/* Wrapped chart area with mb-6 and changed items-center -> items-stretch */}
+          <div className="mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-stretch gap-1 bg-no-repeat bg-center bg-[url('/bg_satswap.png')]">
+              <OrderLineChart data={lineChartData || []} />
             </div>
           </div>
         </ContentLoading>
