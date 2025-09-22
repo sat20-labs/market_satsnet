@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   const { appVersion } = useCommonStore();
   const { t, i18n } = useTranslation();
-  const lang = i18n.language?.startsWith('en') ? 'en' : 'cn';
+  const lang = i18n.language?.startsWith('en') ? 'en' : 'zh';
   // const lang = i18nConfig.defaultLocale;
   return (
     <html lang={lang} suppressHydrationWarning className="dark">

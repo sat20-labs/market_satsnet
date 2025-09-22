@@ -32,7 +32,7 @@ interface ApiEnvelope<T> { code: number; msg?: string; data?: T }
 
 interface SummaryV2Resp {
   // legacy snake_case (still supported)
-  trade?: { total_fee?: number; monthly_fee?: number; total_points_x100?: number; monthly_points_x100?: number; trade_count?: number };
+  trade?: { total_fee?: number; monthly_fee?: number; total_points_x100?: number; monthly_points_x100?: number; trade_count?: number; effective_rate_percent?: number; has_referral?: boolean };
   referral?: { total_points_x100?: number; monthly_points_x100?: number };
   total_points_x100?: number;
   monthly_points_x100?: number;
@@ -40,12 +40,12 @@ interface SummaryV2Resp {
   vip_progress?: number;
   calc_version?: number;
   updated_at?: number;
-  effective_rate?: number;
-  has_referrer?: boolean;
+  effective_rate?: number; // legacy top-level decimal (e.g. 0.37)
+  has_referrer?: boolean; // legacy top-level flag
   // new PascalCase fields
   Address?: string;
   CalcVersion?: number;
-  Trade?: { TotalFee?: number; MonthlyFee?: number; TotalPointsX100?: number; MonthlyPointsX100?: number; TradeCount?: number };
+  Trade?: { TotalFee?: number; MonthlyFee?: number; TotalPointsX100?: number; MonthlyPointsX100?: number; TradeCount?: number; EffectiveRatePercent?: number; HasReferral?: boolean };
   Referral?: { TotalPointsX100?: number; MonthlyPointsX100?: number };
   TotalPointsX100?: number;
   MonthlyPointsX100?: number;
@@ -63,6 +63,7 @@ interface ReferralDetailsResp { referrer: string; details: Array<{ referree: str
 
 const DEFAULT_RATE_BASE = 0.35; // base 35%
 const REFERRAL_BONUS = 0.02; // +2% when has referrer (fallback)
+const MIN_RATE_WITH_REF = DEFAULT_RATE_BASE + REFERRAL_BONUS; // 0.37
 
 // Resolve backend base path (relative by default -> same origin proxy)
 const POINTS_API_BASE = process.env.NEXT_PUBLIC_POINTS_API_BASE || '';
@@ -127,23 +128,36 @@ function mapSummaryV2(data: SummaryV2Resp | undefined, hasReferrer: boolean): Po
     } as PointsSummary;
   }
   // Support both styles
-  const tradeBlock = data.Trade || data.trade || {} as any;
-  const referralBlock = data.Referral || data.referral || {} as any;
-  const manualBlock = data.Manual || (data as any).manual || {} as any;
+  const tradeBlock = (data as any).Trade || (data as any).trade || {};
+  const referralBlock = (data as any).Referral || (data as any).referral || {};
+  const manualBlock = (data as any).Manual || (data as any).manual || {};
   const tradeFee = tradeBlock.TotalFee ?? tradeBlock.total_fee ?? 0;
   const tradeMonthlyFee = tradeBlock.MonthlyFee ?? tradeBlock.monthly_fee ?? 0;
   const tradeTotalPts = (tradeBlock.TotalPointsX100 ?? tradeBlock.total_points_x100 ?? 0) / 100;
   const tradeMonthlyPts = (tradeBlock.MonthlyPointsX100 ?? tradeBlock.monthly_points_x100 ?? 0) / 100;
   const referralPts = (referralBlock.TotalPointsX100 ?? referralBlock.total_points_x100 ?? 0) / 100;
   const referralMonthly = (referralBlock.MonthlyPointsX100 ?? referralBlock.monthly_points_x100 ?? 0) / 100;
-  const rewardPts = (manualBlock.TotalPointsX100 ?? manualBlock.total_points_x100 ?? manualBlock.total_points_x100 ?? 0) / 100;
+  const rewardPts = (manualBlock.TotalPointsX100 ?? manualBlock.total_points_x100 ?? 0) / 100;
   const rewardMonthly = (manualBlock.MonthlyPointsX100 ?? manualBlock.monthly_points_x100 ?? 0) / 100;
-  const total = (data.TotalPointsX100 ?? data.total_points_x100 ?? (tradeTotalPts * 100 + referralPts * 100 + rewardPts * 100)) / 100;
-  const effectiveRate = data.effective_rate || (DEFAULT_RATE_BASE + (hasReferrer ? REFERRAL_BONUS : 0));
-  const vipLevel = data.VIPLevel ?? data.vip_level ?? 0;
-  const vipProgress = data.VIPProgress ?? data.vip_progress ?? 0;
-  const calcVersion = data.CalcVersion ?? data.calc_version;
-  const updatedAt = data.UpdatedAt ?? data.updated_at;
+  // Recompute total to include all parts (some backends may not include Manual in TotalPointsX100)
+  const total = Number((tradeTotalPts + referralPts + rewardPts).toFixed(2));
+  // Prefer new trade-scoped fields
+  const apiRatePercent = tradeBlock.EffectiveRatePercent ?? tradeBlock.effective_rate_percent;
+  const apiHasReferral = tradeBlock.HasReferral ?? tradeBlock.has_referral;
+  // Legacy top-level
+  const legacyEffectiveRate = (data as any).effective_rate;
+  const legacyHasReferrer = (data as any).has_referrer;
+  // Final flags
+  const hasReferralFinal = (apiHasReferral !== undefined ? apiHasReferral : (legacyHasReferrer !== undefined ? legacyHasReferrer : hasReferrer)) as boolean;
+  const effectiveRate = (apiRatePercent !== undefined && apiRatePercent !== null)
+    ? Number(apiRatePercent) / 100
+    : (legacyEffectiveRate !== undefined && legacyEffectiveRate !== null)
+      ? Number(legacyEffectiveRate)
+      : (DEFAULT_RATE_BASE + (hasReferralFinal ? REFERRAL_BONUS : 0));
+  const vipLevel = (data as any).VIPLevel ?? (data as any).vip_level ?? 0;
+  const vipProgress = (data as any).VIPProgress ?? (data as any).vip_progress ?? 0;
+  const calcVersion = (data as any).CalcVersion ?? (data as any).calc_version;
+  const updatedAt = (data as any).UpdatedAt ?? (data as any).updated_at;
   return {
     trade: {
       totalFee: tradeFee,
@@ -161,7 +175,7 @@ function mapSummaryV2(data: SummaryV2Resp | undefined, hasReferrer: boolean): Po
     vipLevel,
     vipProgress,
     effectiveRate,
-    hasReferrer: data.has_referrer ?? hasReferrer,
+    hasReferrer: hasReferralFinal,
     calcVersion,
     updatedAt,
   };
@@ -217,28 +231,32 @@ export function useMarketPoints(_contractUrl?: string, address?: string) {
       ]);
 
       if (summaryV2) {
-        const base = mapSummaryV2(summaryV2 as any, !!(summaryV2 as any)?.has_referrer);
-        // 2. fetch referral details (optional, light) only if referral points > 0 (directly from summary_v2)
-        if (base.referral > 0) {
-          const detailsResp = await fetchReferralDetails(address, 200);
-          if (detailsResp?.details?.length) {
-            base.referralDetails = detailsResp.details.map(d => ({ address: (d as any).referree || (d as any).Referree, points: (d as any).points ?? (d as any).Points, bindBlock: (d as any).bind_block ?? (d as any).BindBlock }));
-          }
-        } else {
-          // fallback: maybe user is a referrer but referral part zero because backend summary_v2 omitted it
+        const base = mapSummaryV2(summaryV2 as any, false);
+
+        // Determine if API provided binding and/or rate explicitly
+        const tradeRaw: any = (summaryV2 as any).Trade || (summaryV2 as any).trade || {};
+        const apiHasBinding = ('has_referral' in tradeRaw) || ('HasReferral' in tradeRaw) || ('has_referrer' in (summaryV2 as any));
+        const apiHasRate = ('effective_rate_percent' in tradeRaw) || ('EffectiveRatePercent' in tradeRaw) || ('effective_rate' in (summaryV2 as any));
+
+        // Only fallback to referral summary when API didn't provide binding or rate
+        if (!apiHasBinding || !apiHasRate) {
           const refSum = await fetchReferralSummary(address);
-          if (refSum) {
-            base.referral = Number(refSum.total_points || 0);
-            base.referralMonthly = Number(refSum.monthly_points || 0);
-            // NEW: fetch details now that we know referral > 0
-            if (base.referral > 0) {
-              const detailsResp = await fetchReferralDetails(address, 200);
-              if (detailsResp?.details?.length) {
-                base.referralDetails = detailsResp.details.map(d => ({ address: (d as any).referree || (d as any).Referree, points: (d as any).points ?? (d as any).Points, bindBlock: (d as any).bind_block ?? (d as any).BindBlock }));
-              }
+          if (refSum && refSum.referrer) {
+            base.hasReferrer = true;
+            // Only set rate if API didn't provide one
+            if (!apiHasRate) {
+              base.effectiveRate = Math.max(base.effectiveRate, MIN_RATE_WITH_REF);
+            }
+          }
+          if (!apiHasBinding) {
+            // enrich totals if API omitted referral section
+            if (base.referral === 0 && (refSum?.total_points ?? 0) > 0) {
+              base.referral = Number(refSum!.total_points || 0);
+              base.referralMonthly = Number(refSum!.monthly_points || 0);
             }
           }
         }
+
         base.total = Number((base.trade.totalPoints + base.referral + base.reward + base.community).toFixed(2));
         return base;
       }
@@ -251,6 +269,10 @@ export function useMarketPoints(_contractUrl?: string, address?: string) {
       if (refSum) {
         baseV1.referral = Number(refSum.total_points || 0);
         baseV1.referralMonthly = Number(refSum.monthly_points || 0);
+        if (refSum.referrer) {
+          baseV1.hasReferrer = true;
+          baseV1.effectiveRate = Math.max(baseV1.effectiveRate, MIN_RATE_WITH_REF);
+        }
       }
       // details only if referral total > 0
       if (baseV1.referral > 0) {

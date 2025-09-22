@@ -5,7 +5,7 @@ import { OrdxProtocolTab } from './OrdxProtocolTab';
 import { useRouter } from 'next/navigation';
 import { useAssetStore } from '@/store/asset';
 import { AssetsList } from './AssetsList';
-import PointsDashboard from './PointsDashboard';
+import PointsDashboard from './../points/PointsDashboard';
 
 export const Assets = () => {
   const [protocol, setProtocol] = useState<string>('ordx');

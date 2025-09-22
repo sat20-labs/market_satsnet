@@ -142,11 +142,11 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
         key: 'runes',
         value: fmtBtc(runesBtc),
       },
-      {
-        label: t('pages.points.tab'),
-        key: 'points',
-        value: pointsValue,
-      },
+      // {
+      //   label: t('pages.points.tab'),
+      //   key: 'points',
+      //   value: pointsValue,
+      // },
     ];
   }, [ordxBtc, runesBtc, pointsValue, t]);
 

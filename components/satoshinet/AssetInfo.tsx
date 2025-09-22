@@ -51,7 +51,7 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
         </div>
 
         {/* Market Cap */}
-        <div className="sm:border-r-1 border-b-1 sm:border-b-0 sm:border-zinc-800 pr-4">
+        <div className="pr-4">
           <span className="text-gray-400 text-sm">{t('common.marketCap')}</span>
           <p className="text-zinc-200 text-lg font-bold gap-1">{formatLargeNumber(marketCapBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs">${marketCapUsd}</p>

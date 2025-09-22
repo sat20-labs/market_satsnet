@@ -20,16 +20,29 @@ import { marketApi } from '@/api';
 import { useCommonStore } from '@/store';
 import ReferrerBind from '@/components/account/ReferrerBind';
 import ReferrerRegister from '@/components/account/ReferrerRegister';
-import PointsDashboard from '@/components/account/PointsDashboard';
+import PointsDashboard from '@/components/points/PointsDashboard';
+import ManualPointsAdmin from '@/components/points/ManualPointsAdmin';
+import EmissionAndRankPage from '@/components/points/EmissionAndRankPage';
 
 function AccountContent() {
   const { t } = useTranslation();
   const params = useSearchParams();
   const paramTab = params.get('source') || 'utxo';
-  const { address, balance } = useReactWalletStore((state) => state);
+  const { address, balance, connected } = useReactWalletStore((state) => state);
+  // Admin allowlist via env: NEXT_PUBLIC_POINTS_ADMINS (comma/space separated) or '*' for all
+  const ADMIN_ADDRS = (process.env.NEXT_PUBLIC_POINTS_ADMINS || '').toLowerCase();
+  const isAdmin = !!(connected && address && (ADMIN_ADDRS === '*' || ADMIN_ADDRS.split(/[\s,]+/).filter(Boolean).includes(address.toLowerCase())));
   const { chain, network } = useCommonStore();
   const [tabKey, setTabKey] = useState(paramTab);
   const [totalSatValue, setTotalSatValue] = useState(0);
+
+  // If non-admin deep-links to manualPoints, redirect to points tab
+  useEffect(() => {
+    if (tabKey === 'manualPoints' && !isAdmin) {
+      setTabKey('points');
+      history.replaceState(null, '', `?source=points`);
+    }
+  }, [tabKey, isAdmin]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['addressAssetsValue', address, chain, network],
@@ -63,24 +76,29 @@ function AccountContent() {
       >
         <TabsList>
           <TabsTrigger value="utxo">{t('buttons.my_assets')}</TabsTrigger>
-          {/* <TabsTrigger value="history">{t('common.tx_history')}</TabsTrigger> */}
-          {/* <TabsTrigger value="order">{t('common.my_listings')}</TabsTrigger> */}
           <TabsTrigger value="points">{t('pages.points.tab')}</TabsTrigger>
-          <TabsTrigger value="referrer">{t('common.referrer')}</TabsTrigger>
+          {/* Use i18n for Emission & Rank tab */}
+          <TabsTrigger value="emission">{t('pages.points.emission_tab')}</TabsTrigger>
+          {/* Admin-only Manual Points tab with i18n */}
+          {isAdmin && (
+            <TabsTrigger value="manualPoints">{t('pages.points.manual_points_tab')}</TabsTrigger>
+          )}
         </TabsList>
         <TabsContent value="utxo">
           <Assets />
         </TabsContent>
-        {/* <TabsContent value="history">
-          <MyActivitiesLog address={address} />
-        </TabsContent> */}
-        {/* <TabsContent value="order">
-          <OrdxOrderList address={address} />
-        </TabsContent> */}
         <TabsContent value="points">
           <PointsDashboard />
         </TabsContent>
-        <TabsContent value="referrer">
+        <TabsContent value="emission">
+          <EmissionAndRankPage />
+        </TabsContent>
+        {isAdmin && (
+          <TabsContent value="manualPoints">
+            <ManualPointsAdmin initialAddress={address} />
+          </TabsContent>
+        )}
+        {/* <TabsContent value="referrer">
           <Tabs defaultValue="register" className="w-full">
             <TabsList>
               <TabsTrigger value="register">{t('common.become_referrer')}</TabsTrigger>
@@ -93,7 +111,7 @@ function AccountContent() {
               <ReferrerBind />
             </TabsContent>
           </Tabs>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );

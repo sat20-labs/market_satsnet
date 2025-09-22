@@ -317,5 +317,9 @@
   "pool_size_sats": "池子规模(sats)",
   "pool_size_btc": "池子规模(BTC)",
   "lptHolders": "LPT持有人",
-  "trade": "交易"
+  "trade": "交易",
+  "refresh": "刷新",
+  "copy": "复制",
+  "request_failed": "请求失败",
+  "error": "错误"
 }

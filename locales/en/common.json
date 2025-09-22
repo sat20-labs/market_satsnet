@@ -313,5 +313,9 @@
   "pool_size_sats": "Pool Size(Sats)",
   "pool_size_btc": "Pool Size(BTC)",
   "lptHolders": "LPT Holders",
-  "trade": "Trade"
+  "trade": "Trade",
+  "refresh": "Refresh",
+  "copy": "Copy",
+  "request_failed": "Request failed",
+  "error": "Error"
 }

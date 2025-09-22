@@ -41,6 +41,10 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
     const [pendingPatch, setPendingPatch] = useState<Record<string, any> | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+    const [manualEdit, setManualEdit] = useState(false);
+    const [manualProtocol, setManualProtocol] = useState('');
+    const [manualTicker, setManualTicker] = useState('');
+    const [manualFull, setManualFull] = useState('');
 
     const DESC_LIMIT = 1000;
 
@@ -53,14 +57,48 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
         return `https://${trimmed}`;
     };
 
-    // Normalize ticker to Protocol:f:Ticker format
-    const getNormalizedTicker = () => {
-        if (!assetTicker) return '';
-        // Already normalized
-        if (assetTicker.includes(':')) return assetTicker;
-        if (assetProtocol) return `${assetProtocol}:f:${assetTicker}`;
-        return assetTicker; // fallback
+    const normalizeParts = (protoRaw?: string, tickRaw?: string) => {
+        let p = (protoRaw || '').trim();
+        let t = (tickRaw || '').trim();
+        if (!p || p === '-' || p === '—') return '';
+        // protocol unify lower-case
+        p = p.toLowerCase();
+        // ordx tickers prefer uppercase
+        if (p === 'ordx') t = t.toUpperCase();
+        // reject empty ticker
+        if (!t) return '';
+        return `${p}:f:${t}`;
     };
+
+    // Normalize ticker to Protocol:f:Ticker format (strict)
+    const getNormalizedTicker = () => {
+        const tRaw = (assetTicker || '').trim();
+        const pRaw = (assetProtocol || '').trim();
+        if (manualEdit) {
+            const full = (manualFull || '').trim();
+            if (full) return full; // trust advanced override as-is
+            return normalizeParts(manualProtocol, manualTicker);
+        }
+        if (!tRaw && !pRaw) return '';
+        // Case 1: already looks like proto:f:ticker
+        const hasColon = tRaw.includes(':');
+        if (hasColon) {
+            // Try to coerce to proto:f:ticker
+            const s = tRaw.split(':');
+            if (s.length === 3 && s[1].toLowerCase() === 'f') {
+                return normalizeParts(s[0], s[2]);
+            }
+            if (s.length === 2) {
+                // Accept proto:ticker -> convert to proto:f:ticker
+                return normalizeParts(s[0], s[1]);
+            }
+            // fallback invalid
+            return '';
+        }
+        return normalizeParts(pRaw, tRaw);
+    };
+
+    const isValidTicker = (v: string) => /^[-a-z0-9_]+:f:.+$/i.test(v); // basic guard; backend will do deeper checks
 
     // Apply URL normalization on blur
     const handleUrlBlur = (key: 'website' | 'twitter' | 'telegram' | 'discord') => {
@@ -86,10 +124,10 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
                     const statusRes: any = await getContractStatus(contractURL);
                     if (mounted && statusRes?.status) {
                         const statusObj = JSON.parse(statusRes.status);
-                        const nameObj = statusObj?.Contract?.assetName || statusObj?.assetName || {};
-                        const tck = nameObj?.Ticker || '';
-                        const p = nameObj?.Protocol || '';
-                        const n = nameObj?.Name || nameObj?.Ticker || '';
+                        const nameObj = statusObj?.Contract?.assetName || statusObj?.Contract?.AssetName || statusObj?.assetName || statusObj?.AssetName || {};
+                        const tck = (nameObj?.Ticker || nameObj?.ticker || '').trim();
+                        const p = (nameObj?.Protocol || nameObj?.protocol || '').trim();
+                        const n = nameObj?.Name || nameObj?.name || nameObj?.Ticker || '';
                         setAssetTicker(tck);
                         setAssetProtocol(p);
                         setAssetName(n);
@@ -147,6 +185,12 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
         }
     }, [assetTicker, loadAsset]);
 
+    useEffect(() => {
+        // Also seed manual fields when we first know them
+        if (assetProtocol && !manualProtocol) setManualProtocol(assetProtocol);
+        if (assetTicker && !manualTicker) setManualTicker(assetTicker);
+    }, [assetProtocol, assetTicker]);
+
     const handleChange = (key: keyof typeof form, value: string) => {
         setForm(prev => ({ ...prev, [key]: value }));
     };
@@ -184,12 +228,16 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
             setError(t('pages.assetMeta.logo_size_limit'));
             return;
         }
+        const norm = getNormalizedTicker();
+        if (!isValidTicker(norm)) {
+            setError(t('pages.assetMeta.invalid'));
+            return;
+        }
         setError(null);
         setLoading(true);
         try {
             let res: any;
             const uploadFn = await getUploadFn();
-            const norm = getNormalizedTicker();
             if (!norm) throw new Error(t('pages.assetMeta.invalid'));
             if (uploadFn) {
                 res = await uploadFn(norm, file);
@@ -227,7 +275,7 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
             return;
         }
         const norm = getNormalizedTicker();
-        if (!norm) {
+        if (!isValidTicker(norm)) {
             setError(t('pages.assetMeta.invalid'));
             return;
         }
@@ -322,6 +370,36 @@ export const AssetMetadataEditModal: React.FC<AssetMetadataEditModalProps> = ({ 
                                     )}
                                 </div>
                             </div>
+                            {/* Show computed asset key for debug/confirmation */}
+                            <div className="mt-2 text-[11px] text-zinc-400">
+                                资产标识：<span className={`${isValidTicker(getNormalizedTicker()) ? 'text-emerald-400' : 'text-red-400'}`}>{getNormalizedTicker() || '无效（缺少协议或Ticker）'}</span>
+                                {!isValidTicker(getNormalizedTicker()) && (
+                                    <button className="ml-2 px-1.5 py-0.5 rounded border border-zinc-600 text-zinc-300 hover:bg-zinc-800" onClick={() => setManualEdit(v => !v)}>
+                                        {manualEdit ? '取消修正' : '修正资产标识'}
+                                    </button>
+                                )}
+                            </div>
+                            {manualEdit && (
+                                <div className="mt-2 grid grid-cols-1 gap-2 text-xs">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                        <div>
+                                            <div className="text-zinc-500">协议（如 ordx/runes）</div>
+                                            <input className="w-full rounded border border-zinc-600 bg-zinc-800 px-2 py-1" value={manualProtocol} onChange={e => setManualProtocol(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <div className="text-zinc-500">Ticker</div>
+                                            <input className="w-full rounded border border-zinc-600 bg-zinc-800 px-2 py-1" value={manualTicker} onChange={e => setManualTicker(e.target.value)} />
+                                        </div>
+                                        <div className="flex items-end">
+                                            <div className={`text-[11px] ${isValidTicker(getNormalizedTicker()) ? 'text-emerald-400' : 'text-red-400'}`}>{getNormalizedTicker() || '无效'}</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-zinc-500">或直接填写完整资产标识（优先使用）：</div>
+                                        <input className="w-full rounded border border-zinc-600 bg-zinc-800 px-2 py-1 font-mono" placeholder="例如：runes:f:DOG•GO•TO•THE•MOON" value={manualFull} onChange={e => setManualFull(e.target.value)} />
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
                                 <span>{t('pages.assetMeta.status')}: {reviewStatus ? <span className="text-zinc-300">{reviewStatus}</span> : '—'}</span>
                                 {refreshing && <span className="text-blue-400">{t('pages.assetMeta.refresh')}...</span>}
