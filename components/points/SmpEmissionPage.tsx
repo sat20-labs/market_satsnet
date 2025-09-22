@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useEmission } from '@/application/useEmissionService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-export default function SmpEmissionPage(): JSX.Element {
+export default function SmpEmissionPage(): React.ReactElement {
     const { t } = useTranslation();
     const { data, isLoading } = useEmission();
     const [policyOpen, setPolicyOpen] = React.useState(false);
@@ -83,7 +83,7 @@ export default function SmpEmissionPage(): JSX.Element {
 
     // helper to render halving steps
     function renderHalvingSteps() {
-        const steps: JSX.Element[] = [];
+        const steps: React.ReactElement[] = [];
         for (let i = 1; i <= halvingStages; i++) {
             const isReserve = i > halvingStages - reserveStages;
             const filled = i <= currentStage;

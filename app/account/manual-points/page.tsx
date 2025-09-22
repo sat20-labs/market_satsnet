@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import ManualPointsAdmin from '@/components/account/ManualPointsAdmin';
+import ManualPointsAdmin from '@/components/points/ManualPointsAdmin';
 
 export default function ManualPointsAdminPage() {
     return (
