@@ -317,6 +317,10 @@
   "pool_size_sats": "池子规模(sats)",
   "pool_size_btc": "池子规模(BTC)",
   "lptHolders": "LPT持有人",
+  "servicePause": {
+    "title": "服务维护中",
+    "tip": "维护期间所有操作将被暂停"
+  }
   "trade": "交易",
   "refresh": "刷新",
   "copy": "复制",

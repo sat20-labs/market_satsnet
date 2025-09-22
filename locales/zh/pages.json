@@ -56,6 +56,26 @@
   },
   "tools": {
     "title": "工具",
+    "batch_send": {
+      "title": "批量发送",
+      "description": "一次性向多个地址发送资产",
+      "protocol": "协议",
+      "asset": "资产",
+      "amount_per_address": "每个地址的金额",
+      "recipient_addresses": "接收地址",
+      "parsed_addresses": "解析的地址",
+      "send_to_addresses": "发送到 {{count}} 个地址",
+      "sending": "发送中...",
+      "success": "批量发送成功完成！",
+      "mempool_success": "交易已提交到 chain.satnet mempool",
+      "error": "批量发送失败",
+      "connect_wallet": "请先连接钱包",
+      "enter_addresses": "请输入至少一个有效地址",
+      "select_asset": "请选择资产并输入金额",
+      "no_assets": "所选协议没有可用资产",
+      "separator_info": "支持换行符、逗号和分号作为分隔符",
+      "select_asset_placeholder": "选择资产"
+    },
     "transaction": {
       "title": "拆分、合并 & 转移",
       "description": "提供批量拆分、合并及转移功能。",
@@ -256,7 +276,8 @@
     "protocol": {
       "title": "协议",
       "ordx": "ORDX",
-      "runes": "Runes"
+      "runes": "Runes",
+      "btc": "BTC"
     },
     "ticker": "资产名称",
     "selectTicker": "请选择资产名称",

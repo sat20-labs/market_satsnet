@@ -110,12 +110,9 @@ function OrderPageContent() {
                 <TabsTrigger value="swap">{t('common.swap')}</TabsTrigger>
                 <TabsTrigger value="deposit">{t('common.deposit')}</TabsTrigger>
                 <TabsTrigger value="withdraw">{t('common.withdraw')}</TabsTrigger>
-                {network === 'testnet' && (
-                  <>
-                    <TabsTrigger value="addLiquidity">{t('common.addLiquidity')}</TabsTrigger>
-                    <TabsTrigger value="removeLiquidity">{t('common.removeLiquidity')}</TabsTrigger>
-                  </>
-                )}
+                <TabsTrigger value="addLiquidity">{t('common.addLiquidity')}</TabsTrigger>
+                <TabsTrigger value="removeLiquidity">{t('common.removeLiquidity')}</TabsTrigger>
+
               </TabsList>
               <TabsContent value="swap">
                 <Swap
@@ -151,53 +148,47 @@ function OrderPageContent() {
                   isRefreshing={isSwapStatusLoading}
                 />
               </TabsContent>
-              {network === 'testnet' && (
-                <>
-                  <TabsContent value="addLiquidity">
-                    <AddLiquidity
-                      asset={asset}
-                      ticker={ticker}
-                      contractUrl={contractUrl}
-                      refresh={refreshBalances}
-                      isRefreshing={isSwapStatusLoading}
-                      tickerInfo={tickerInfo}
-                      swapData={swapStatusData}
-                      assetBalance={assetBalance}
-                      satsBalance={satsBalance}
-                      operationHistory={userOperationHistory?.addLiq}
-                    />
-                  </TabsContent>
-                  <TabsContent value="removeLiquidity">
-                    <RemoveLiquidity
-                      contractUrl={contractUrl}
-                      asset={asset}
-                      ticker={ticker}
-                      assetBalance={assetBalance}
-                      satsBalance={satsBalance}
-                      onRemoveLiquiditySuccess={() => { refreshHandler() }}
-                      refresh={refreshBalances}
-                      isRefreshing={isSwapStatusLoading}
-                      tickerInfo={tickerInfo}
-                      swapData={swapStatusData}
-                      lptAmt={lptAmt}
-                      operationHistory={userOperationHistory?.removeLiq}
-                    />
-                  </TabsContent>
-                </>
-              )}
+              <TabsContent value="addLiquidity">
+                <AddLiquidity
+                  asset={asset}
+                  ticker={ticker}
+                  contractUrl={contractUrl}
+                  refresh={refreshBalances}
+                  isRefreshing={isSwapStatusLoading}
+                  tickerInfo={tickerInfo}
+                  swapData={swapStatusData}
+                  assetBalance={assetBalance}
+                  satsBalance={satsBalance}
+                  operationHistory={userOperationHistory?.addLiq}
+                />
+              </TabsContent>
+              <TabsContent value="removeLiquidity">
+                <RemoveLiquidity
+                  contractUrl={contractUrl}
+                  asset={asset}
+                  ticker={ticker}
+                  assetBalance={assetBalance}
+                  satsBalance={satsBalance}
+                  onRemoveLiquiditySuccess={() => { refreshHandler() }}
+                  refresh={refreshBalances}
+                  isRefreshing={isSwapStatusLoading}
+                  tickerInfo={tickerInfo}
+                  swapData={swapStatusData}
+                  lptAmt={lptAmt}
+                  operationHistory={userOperationHistory?.removeLiq}
+                />
+              </TabsContent>
             </Tabs>
 
             {/* LPT Holders List - Only show in testnet */}
-            {network === 'testnet' && (
-              <LptHoldersList
-                asset={asset}
-                ticker={ticker}
-                contractUrl={contractUrl}
-                tickerInfo={tickerInfo}
-                refresh={refreshAll}
-                isRefreshing={isSwapStatusLoading}
-              />
-            )}
+            <LptHoldersList
+              asset={asset}
+              ticker={ticker}
+              contractUrl={contractUrl}
+              tickerInfo={tickerInfo}
+              refresh={refreshAll}
+              isRefreshing={isSwapStatusLoading}
+            />
           </div>
         </div>
       </div>

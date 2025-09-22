@@ -26,15 +26,10 @@ export const Assets = () => {
       <div className="mb-4">
         <OrdxProtocolTab onChange={onProtocolChange} />
       </div>
-      {!!protocol && protocol === 'points' ? (
-        // 显示 PointsDashboard 页面内容
-        <PointsDashboard />
-      ) : (
-        !!currentAssets?.length && (
-          <AssetsList
-            assets={currentAssets}
-          />
-        )
+      {!!currentAssets?.length && (
+        <AssetsList
+          assets={currentAssets}
+        />
       )}
     </div>
   );

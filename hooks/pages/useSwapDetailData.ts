@@ -85,7 +85,7 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
     queryFn: () => getContractStatusByAddress(contractUrl, address),
     refetchInterval: 15000, // 15秒刷新一次
     refetchIntervalInBackground: false, // 禁止后台刷新
-    enabled: !!contractUrl && !!address && network === 'testnet',
+    enabled: !!contractUrl && !!address,
     refetchOnWindowFocus: false,
   });
 
@@ -100,7 +100,7 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
   const isLoading = tickerQuery.isPending || 
     (!!contractUrl && isSwapStatusPending) || 
     (!!contractUrl && isAnalyticsPending) || 
-    (address && network === 'testnet' && isUserContractStatusPending);
+    (address && isUserContractStatusPending);
   
   // 调试信息
   console.log('Loading states:', {
@@ -131,7 +131,7 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
   };
 
   const refreshUserContractStatus = () => {
-    if (address && network === 'testnet') {
+    if (address) {
       refetchUserContractStatus();
     }
   };

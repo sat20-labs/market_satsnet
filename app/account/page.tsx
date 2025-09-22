@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import {
   Tabs,
   TabsContent,
@@ -10,12 +10,9 @@ import {
 } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { Assets } from '@/components/account/Assets';
-import { OrdxOrderList } from '@/components/account/OrdxOrderList';
-import { MyActivitiesLog } from '@/components/satoshinet/MyActivitiesLog';
 import { useSearchParams } from 'next/navigation';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useTranslation } from 'react-i18next';
-import { OrdxBillList } from '@/components/account/OrdxBillList';
 import { marketApi } from '@/api';
 import { useCommonStore } from '@/store';
 import ReferrerBind from '@/components/account/ReferrerBind';

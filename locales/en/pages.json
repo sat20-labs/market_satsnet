@@ -56,6 +56,26 @@
   },
   "tools": {
     "title": "Tools",
+    "batch_send": {
+      "title": "Batch Send",
+      "description": "Send assets to multiple addresses at once",
+      "protocol": "Protocol",
+      "asset": "Asset",
+      "amount_per_address": "Amount per Address",
+      "recipient_addresses": "Recipient Addresses",
+      "parsed_addresses": "Parsed Addresses",
+      "send_to_addresses": "Send to {{count}} Addresses",
+      "sending": "Sending...",
+      "success": "Batch send completed successfully!",
+      "mempool_success": "Transaction submitted to chain.satnet mempool",
+      "error": "Batch send failed",
+      "connect_wallet": "Please connect your wallet first",
+      "enter_addresses": "Please enter at least one valid address",
+      "select_asset": "Please select an asset and enter amount",
+      "no_assets": "No assets available for the selected protocol",
+      "separator_info": "Supports newlines, commas, and semicolons as separators",
+      "select_asset_placeholder": "Select an asset"
+    },
     "transaction": {
       "title": "Split, Merge & Transfer",
       "description": "Batch Split and Transfer Tool",
@@ -270,7 +290,8 @@
     "protocol": {
       "title": "Protocol",
       "ordx": "ORDX",
-      "runes": "Runes"
+      "runes": "Runes",
+      "btc": "BTC"
     },
     "currentBlockHeight": "Current Block Height",
     "ticker": "Ticker",
