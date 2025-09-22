@@ -316,7 +316,7 @@
   "servicePause": {
     "title": "Service Maintenance",
     "tip": "All operations will be suspended during maintenance"
-  }
+  },
   "trade": "Trade",
   "refresh": "Refresh",
   "copy": "Copy",
