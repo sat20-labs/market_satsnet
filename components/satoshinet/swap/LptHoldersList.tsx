@@ -198,8 +198,8 @@ const LptHoldersList: React.FC<LptHoldersListProps> = ({
 
         {/* Info bar */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-zinc-800 mb-2 bg-zinc-800 rounded-xl font-medium backdrop-blur">
-          <div className="text-sm text-zinc-300 uppercase">
-            {ticker} <span className='mr-2'>{t('common.lptHolders')}:</span>  {totalLptInfo.total.toLocaleString()}
+          <div className="text-sm text-zinc-300">
+            <span className='mr-2'>{t('common.lptHolders')}:</span>  {totalLptInfo.total.toLocaleString()}
           </div>
           {totalLptInfo.totalLptAmt > 0 && (
             <div className="text-sm text-zinc-400">
