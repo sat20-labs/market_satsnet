@@ -125,11 +125,11 @@ const UnderlineTabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "relative inline-flex items-center justify-center h-9 px-1 text-sm sm:text-lg font-medium",
+      "relative inline-flex items-center justify-center h-10 text-xs sm:text-base font-medium",
       "text-zinc-400 hover:text-zinc-200",
       // active color + underline bar
       "data-[state=active]:text-white",
-      "after:absolute after:inset-x-0 after:-bottom-[2px] after:h-[1.5px] after:rounded after:bg-purple-500 after:opacity-0 data-[state=active]:after:opacity-100",
+      "after:absolute after:inset-x-0 after:bottom-[1px] after:h-[2px] after:rounded after:bg-purple-500 after:opacity-0 data-[state=active]:after:opacity-100",
       // focus/disabled
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:pointer-events-none disabled:opacity-50",
       className

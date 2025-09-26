@@ -245,10 +245,10 @@ export default function HistorySwapTable({
           const usdVal = formatUsdFromSats(Number(sats));
           return (
             <div key={`${order.rawData.Id ?? `${order.OrderTime}-${order.rawData.InUtxo || order.rawData.OutTxId || i}`}-m`} className="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
-              <div className="flex items-start justify-between pb-2 border-b border-zinc-800 gap-3">
-                <div className="flex items-center gap-2">
+              <div className="flex items-start justify-between  border-b border-zinc-800 gap-3">
+                <div className="flex items-center gap-2 pb-3">
                   <span className={`px-2 py-0.5 rounded-sm text-[11px] first-letter:uppercase font-semibold ${order.rawData.OrderType === 2 ? 'bg-green-500/20 text-green-400 border border-green-500/40' : order.rawData.OrderType === 1 ? 'bg-red-500/20 text-red-400 border border-red-500/40' : 'bg-zinc-700/40 text-zinc-300 border border-zinc-600/60'}`}>{typeLabel}</span>
-                  <span className="text-[11px] text-zinc-400">{direction}</span>
+                  <span className="text-[9px] sm:text-[11px] text-zinc-400">{direction}</span>
                 </div>
                 <div className="text-[11px] text-zinc-400">{formatTimeToMonthDayHourMinute(order.OrderTime)}</div>
               </div>
@@ -259,7 +259,7 @@ export default function HistorySwapTable({
                 </div>
                 <div className="bg-zinc-900/50 rounded p-1">
                   <div className="text-zinc-400">Qty</div>
-                  <div className="font-semibold">{order.side === "Cancelled" ? "-" : order.rawData.OrderType === 10 ? <> {order.outAmt} </> : order.side === "Buy" ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-500">${ticker}</span></div>
+                  <div className="font-semibold">{order.side === "Cancelled" ? "-" : order.rawData.OrderType === 10 ? <> {order.outAmt} </> : order.side === "Buy" ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-500  text-[9px] sm:text-sm">${ticker}</span></div>
                 </div>
                 <div className="bg-zinc-900/50 rounded p-1">
                   <div className="text-zinc-400">Amount</div>
@@ -339,8 +339,8 @@ export default function HistorySwapTable({
                       <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
                       <TableCell className="text-center text-zinc-400 text-xs">{order.rawData.OrderType === 2 ? "SATS → " + ticker?.toUpperCase() : order.rawData.OrderType === 1 ? ticker?.toUpperCase() + " → SATS" : "-"}</TableCell>
                       <TableCell className="text-center">{order.price.toFixed(8)}</TableCell>
-                      <TableCell className="text-left">{order.rawData.OrderType === 2 ? <>{order.inValue} <span className="text-zinc-400"> sats </span></> : order.rawData.OrderType === 1 ? <> {order.inAmt} <span className="text-zinc-400">${ticker}</span></> : "-"}</TableCell>
-                      <TableCell className="text-left">{order.side === "Cancelled" ? "-" : order.rawData.OrderType === 10 ? <> {order.outAmt} </> : order.side === "Buy" ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-400">${ticker}</span></TableCell>
+                      <TableCell className="text-left">{order.rawData.OrderType === 2 ? <>{order.inValue} <span className="text-zinc-400"> sats </span></> : order.rawData.OrderType === 1 ? <> {order.inAmt} <span className="text-zinc-400 text-[11px]">${ticker}</span></> : "-"}</TableCell>
+                      <TableCell className="text-left">{order.side === "Cancelled" ? "-" : order.rawData.OrderType === 10 ? <> {order.outAmt} </> : order.side === "Buy" ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-400 text-[11px]">${ticker}</span></TableCell>
                       <TableCell className="text-center">
                         {order.side === "Cancelled" ? "-" : (
                           <div className="flex flex-col items-center leading-none gap-2">
@@ -417,7 +417,7 @@ export default function HistorySwapTable({
               components={{
                 Table: (props) => <Table {...props} className="overflow-x-auto" />,
                 TableHead: (props) => <thead {...props} />,
-                TableRow: (props) => <tr {...props} className="text-xs" />,
+                TableRow: (props) => <tr {...props} className="text-xs border-b border-zinc-800 hover:bg-zinc-800/50" />,
               }}
               fixedHeaderContent={() => (
                 <TableRow className="bg-zinc-800 text-gray-500 text-sm">
@@ -443,8 +443,8 @@ export default function HistorySwapTable({
                     <TableCell className="text-center">{formatTimeToMonthDayHourMinute(order.OrderTime)}</TableCell>
                     <TableCell className="text-center text-zinc-400 text-xs">{order.rawData.OrderType === 2 ? 'SATS → ' + ticker?.toUpperCase() : order.rawData.OrderType === 1 ? ticker?.toUpperCase() + ' → SATS' : '-'}</TableCell>
                     <TableCell className="text-center">{order.price.toFixed(8)}</TableCell>
-                    <TableCell className="text-left">{order.rawData.OrderType === 2 ? <>{order.inValue} <span className="text-zinc-400"> sats </span></> : order.rawData.OrderType === 1 ? <> {order.inAmt} <span className="text-zinc-400">${ticker}</span></> : '-'}</TableCell>
-                    <TableCell className="text-left">{order.side === 'Cancelled' ? '-' : order.rawData.OrderType === 10 ? <> {order.outAmt} </> : order.side === 'Buy' ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-400">${ticker}</span></TableCell>
+                    <TableCell className="text-left">{order.rawData.OrderType === 2 ? <>{order.inValue} <span className="text-zinc-400"> sats </span></> : order.rawData.OrderType === 1 ? <> {order.inAmt} <span className="text-zinc-400 text-[11px]">${ticker}</span></> : '-'}</TableCell>
+                    <TableCell className="text-left">{order.side === 'Cancelled' ? '-' : order.rawData.OrderType === 10 ? <> {order.outAmt} </> : order.side === 'Buy' ? <> {order.outAmt} </> : <> {order.inAmt} </>}<span className="text-zinc-400 text-[11px]">${ticker}</span></TableCell>
                     <TableCell className="text-center">
                       {order.side === 'Cancelled' ? '-' : (
                         <div className="flex flex-col items-center leading-none gap-2">
