@@ -128,6 +128,14 @@ function abbreviateTicker(name: string): string {
     return `${name.slice(0, 6)}…${name.slice(-4)}`;
 }
 
+// 仅格式化为日期（精确到日）
+function formatDeployDate(ts?: number) {
+    if (!ts) return '-';
+    const d = new Date(ts * 1000);
+    // 使用本地日期格式（不含时间）；若需要固定格式可改为 d.toISOString().slice(0,10)
+    return d.toLocaleDateString();
+}
+
 export default function LimitOrderPage() {
     const { t } = useTranslation();
     const { satsnetHeight, network, btcPrice } = useCommonStore();
@@ -400,7 +408,7 @@ export default function LimitOrderPage() {
                                 <span className="truncate">MC: {(Number(p.marketCap || 0) / 1e8).toFixed(4)}<span className='ml-0.5 text-[10px] text-zinc-500'>BTC</span></span>
 
                                 <span className="truncate">{t('common.holder')}: <span className='ml-0.5 text-[11px] font-bold'>{Number(p.holders || 0)}</span></span>
-                                <span className="truncate  col-span-2 text-zinc-500">{t('pages.launchpool.deploy_time')}: {p.deployTime ? new Date(p.deployTime * 1000).toLocaleString() : '-'}
+                                <span className="truncate  col-span-2 text-zinc-500">{t('pages.launchpool.deploy_time')}: {p.deployTime ? formatDeployDate(p.deployTime) : '-'}
                                     {p.poolStatus === PoolStatus.ACTIVE ? (
                                         <span className="text-zinc-400 ml-1 text-[9px] bg-zinc-700 px-2 py-1 rounded-lg">{statusTextMap[p.poolStatus]}</span>
                                     ) : (
@@ -450,26 +458,33 @@ export default function LimitOrderPage() {
                                         key={adaptedPool.id ?? index}
                                         className="border-b border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200/88 hover:text-zinc-100 transition-colors whitespace-nowrap"
                                     >
-                                        <TableCell className="flex items-center gap-2 px-4 py-4">
-                                            <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                                                <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
-                                                <AvatarFallback>
-                                                    {adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
-                                                </AvatarFallback>
-                                            </Avatar>
+                                        <TableCell className={`px-4 py-4 flex items-center ${adaptedPool.protocol === 'runes' ? 'gap-1' : 'gap-2'}`}>
+                                            {adaptedPool.protocol === 'runes' ? (
+                                                <Avatar className="w-10 h-10 bg-zinc-700 flex-shrink-0">
+                                                    <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
+                                                    <AvatarFallback>{adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                                                </Avatar>
+                                            ) : (
+                                                <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700 flex-shrink-0">
+                                                    <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
+                                                    <AvatarFallback>
+                                                        {adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                            )}
                                             <Link
                                                 href={`/limitOrder/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
-                                                className="cursor-pointer text-primary hover:underline max-w-[160px] leading-snug"
+                                                className={`cursor-pointer text-primary hover:underline leading-snug ${adaptedPool.protocol !== 'runes' ? 'max-w-[160px]' : 'max-w-[180px]'}`}
                                                 prefetch={true}
                                                 title={adaptedPool.assetName}
                                                 style={{
                                                     display: '-webkit-box',
                                                     WebkitLineClamp: 2,
                                                     WebkitBoxOrient: 'vertical',
-                                                    overflow: 'hidden'
+
                                                 }}
                                             >
-                                                {abbreviateTicker(adaptedPool.assetName)}
+                                                {adaptedPool.assetName}
                                                 <span className='ml-1 text-zinc-500'>({adaptedPool.protocol})</span>
                                             </Link>
                                         </TableCell>
@@ -523,7 +538,7 @@ export default function LimitOrderPage() {
                                         </TableCell>
 
                                         <TableCell className="px-4 py-4 hidden text-zinc-400 lg:table-cell">
-                                            {adaptedPool.deployTime ? new Date(adaptedPool.deployTime * 1000).toLocaleString() : '-'}
+                                            {adaptedPool.deployTime ? formatDeployDate(adaptedPool.deployTime) : '-'}
                                         </TableCell>
                                     </TableRow>
                                 );

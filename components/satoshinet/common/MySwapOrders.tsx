@@ -55,14 +55,14 @@ export default function MyOrders({ contractURL, type, ticker }: MyOrdersProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      {/* <div className="flex justify-end">
         <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
-      </div>
+      </div> */}
       <HistorySwapTable
         rawOrders={allOrders}
         orderTypeLabels={ORDER_TYPE_LABELS}
         isLoading={isLoading}
-        noDataMessage={type === 'swap' 
+        noDataMessage={type === 'swap'
           ? t("common.history_no_records")
           : t("common.history_no_records")
         }

@@ -66,7 +66,7 @@ export const Header = () => {
         href: '/swap',
       },
       {
-        label: 'Limit Order',
+        label: t('common.limitorder'),
         href: '/limitOrder',
       },
       {

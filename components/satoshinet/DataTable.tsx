@@ -38,22 +38,22 @@ export function DataTable<TData, TValue>({
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => {
-              return (
-                <TableHead
-                  key={header.id}
-                  className="bg-zinc-800 text-zinc-400 text-sm font-semibold"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead
+                    key={header.id}
+                    className="bg-zinc-800 text-zinc-400 text-sm font-semibold"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
                         header.column.columnDef.header,
                         header.getContext()
                       )}
-                </TableHead>
-              );
-            })}
-          </TableRow>
+                  </TableHead>
+                );
+              })}
+            </TableRow>
           ))}
         </TableHeader>
         <TableBody>
@@ -61,7 +61,7 @@ export function DataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <TableRow className=" whitespace-nowrap"
                 key={row.id}
-                data-state={row.getIsSelected() && "selected"}
+                data-state={row.getIsSelected() ? "selected" : undefined}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
@@ -81,4 +81,4 @@ export function DataTable<TData, TValue>({
       </Table>
     </div>
   )
-} 
+}

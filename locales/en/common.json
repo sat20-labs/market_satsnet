@@ -157,12 +157,16 @@
   "withdraw": "Withdraw",
   "stake": "AddLiq",
   "unstake": "RemoveLiq",
-  "addLiquidity": "AddLiq",
-  "removeLiquidity": "RemoveLiq",
+  "addLiquidity": "Add Liq",
+  "removeLiquidity": "Remove Liq",
+  "Liquidity": "Liquidity",
+  "add": "Add",
+  "remove": "Remove",
   "staking": "AddingLiq",
   "unstaking": "RemovingLiq",
   "contractAddress": "Contract Address",
   "poolAssetInfo": "Pool Balance",
+  "assetTradeInfo": "Asset Trade Info",
   "poolSatsAmount": "Pool Sats",
   "youPay": "You Pay",
   "youReceive": "You Receive",
@@ -183,7 +187,7 @@
   "quickInput": "Quick Input",
   "currentPrice": "Current Price",
   "protocol": "Protocol",
-  "limitorder": "Limit Order",
+  "limitorder": "Limit",
   "limitorder_sell": "Limit Sell",
   "limitorder_buy": "Limit Buy",
   "limitorder_depth": "Depth",
@@ -312,7 +316,7 @@
   "24h_volume_btc": "24h Vol",
   "pool_size_sats": "Pool Size(Sats)",
   "pool_size_btc": "Pool Size(BTC)",
-  "lptHolders": "LPT Holders",
+  "lptHolders": "LP Holder",
   "servicePause": {
     "title": "Service Maintenance",
     "tip": "All operations will be suspended during maintenance"
@@ -321,5 +325,6 @@
   "refresh": "Refresh",
   "copy": "Copy",
   "request_failed": "Request failed",
+  "noLiquidityTip": "No liquidity found. Add liquidity before removing.",
   "error": "Error"
 }

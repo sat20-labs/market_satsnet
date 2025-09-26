@@ -56,14 +56,14 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
   const divisibility = tickerInfo?.divisibility || 0;
   const { btcFeeRate, network } = useCommonStore((state) => state);
   const [removeAmount, setRemoveAmount] = useState('');
-  
+
   // 使用 lptAmt 作为可用的流动性代币余额
   const displayLptBalance = useMemo(() => {
     if (!lptAmt?.Value) return 0;
     const precision = lptAmt.Precision || 0;
     return lptAmt.Value / Math.pow(10, precision);
   }, [lptAmt]);
-  
+
   // 检查用户是否有 LPT（是否加入了池子）
   const hasLpt = displayLptBalance > 0;
 
@@ -103,7 +103,7 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
     mutationFn: async ({ assetName, contractUrl }: Omit<RemoveLiquidityParams, 'lptAmt'>) => {
       // 使用用户输入的 LPT 数量
       const userLptAmt = removeAmount || displayLptBalance.toString();
-      
+
       const params = {
         action: "removeliq",
         param: JSON.stringify({
@@ -170,7 +170,7 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
 
   return (
     <div className="w-full">
-      <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 relative">
+      <div className="mb-6 bg-zinc-900 sm:p-2  relative">
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
             <span className="py-2 uppercase">{t('common.unstake')}</span>
@@ -188,11 +188,11 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
               />
             </span>
           </div>
-          
+
           {!hasLpt ? (
             <div className="w-full p-4 text-center text-zinc-400">
-              <p>You haven&apos;t added liquidity to this pool yet.</p>
-              <p className="text-sm mt-2">Add liquidity first to be able to remove it.</p>
+              {/* <p>You haven&apos;t added liquidity to this pool yet.</p> */}
+              <p className="text-sm mt-6">{t('common.noLiquidityTip')}</p>
             </div>
           ) : (
             <>
@@ -239,11 +239,11 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
             {operationHistory.map((txId, index) => (
               <div key={index} className="flex items-center text-xs">
                 <a
-                  href={generateMempoolUrl({ 
-                    network: network, 
-                    path: `tx/${txId}`, 
-                    chain: Chain.SATNET, 
-                    env: 'dev' 
+                  href={generateMempoolUrl({
+                    network: network,
+                    path: `tx/${txId}`,
+                    chain: Chain.SATNET,
+                    env: 'dev'
                   })}
                   target="_blank"
                   rel="noopener noreferrer"

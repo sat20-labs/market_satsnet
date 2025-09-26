@@ -20,6 +20,7 @@ interface ChartModuleProps {
   isLoading?: boolean;
   refresh?: () => void;
   isRefreshing?: boolean;
+  chartHeight?: string; // NEW: optional height classes for chart container
 }
 
 export const ChartModule = ({
@@ -28,7 +29,8 @@ export const ChartModule = ({
   analyticsData,
   isLoading = false,
   refresh,
-  isRefreshing = false
+  isRefreshing = false,
+  chartHeight = '', // default empty so existing layouts unaffected
 }: ChartModuleProps) => {
   const [type, setType] = useState('15m');
   console.log('analyticsData', analyticsData);
@@ -68,45 +70,67 @@ export const ChartModule = ({
   const lineChartData = useMemo(() => {
     const lineArr: any[] = [];
     if (!dataSource) return [];
-    for (let i = 0; i < dataSource.length; i++) {
-      const item = dataSource[i];
-      let label;
 
-      // Format labels based on time period
-      if (type === '15m') {
-        // For 15-minute data, show time format as HH:MM
-        label = item.time || item.date;
-      } else if (type === '24h') {
-        // For 24-hour data, show time format as HH:MM
+    // 先抽取原始数据（不做填补）
+    const rawPoints = dataSource.map((item: any) => {
+      let label;
+      if (type === '15m' || type === '24h') {
         label = item.time || item.date;
       } else if (type === '7d' || type === '30d') {
-        // For daily data, show date format as MM/DD
         label = item.date?.replace(/^[0-9]{4}-/, '').replace('-', '/');
       }
-
-      let value = item.avg_price
+      const rawPrice = item.avg_price
         ? Number(item.avg_price.Value) / Math.pow(10, Number(item.avg_price.Precision))
         : 0;
-      const volume = item.volume;
-      let realValue = value;
+      const volume = item.volume || 0;
+      const count = item.order_count;
+      return { item, label, rawPrice, volume, count };
+    });
 
-      // Handle null/zero values by using previous value
-      if (i > 0 && (value === undefined || value <= 0)) {
-        value = lineArr[i - 1]?.value;
+    // 找到第一个有效价格（有成交量且价格>0，或者价格>0 任选其一）
+    const firstValid = rawPoints.find(p => (p.volume > 0 && p.rawPrice > 0) || p.rawPrice > 0);
+    if (!firstValid) {
+      // 全部无有效价格，直接返回原样（全部基线）
+      return rawPoints.map(p => ({
+        label: p.label,
+        value: 0,
+        valueFormatted: '- ',
+        count: p.count,
+        realValue: 0,
+        volume: p.volume,
+        filled: false,
+      }));
+    }
+
+    const firstPrice = firstValid.rawPrice; // 用于前置回填
+    let lastValidPrice = firstPrice;
+
+    rawPoints.forEach((p) => {
+      const realValue = p.rawPrice; // 真实原始价格
+      let displayPrice = p.rawPrice;
+      let filled = false;
+
+      if ((p.volume === 0 || !p.rawPrice || p.rawPrice <= 0)) {
+        // 当前点无有效成交 -> 使用最近一次有效价
+        displayPrice = lastValidPrice;
+        filled = true;
+      } else if (p.rawPrice > 0) {
+        lastValidPrice = p.rawPrice;
       }
 
-      const count = item.order_count;
-      // Add a formatted value with the "sats" suffix
-      const valueFormatted = value ? `${value} sats` : '-';
       lineArr.push({
-        label,
-        value,
-        valueFormatted,
-        count,
-        realValue,
-        volume
+        label: p.label,
+        value: displayPrice,
+        valueFormatted: displayPrice ? `${displayPrice} sats` : '- ',
+        count: p.count,
+        realValue, // 保留原始值
+        volume: p.volume,
+        filled, // 标记是否填补
       });
-    }
+    });
+
+    // 处理前部：如果最前面的若干点在第一次有效价之前且被填补逻辑保持为 firstPrice
+    // 上面逻辑已覆盖（因为我们将 lastValidPrice 初始化为 firstPrice），无需额外处理。
 
     return lineArr;
   }, [dataSource, type]);
@@ -163,10 +187,10 @@ export const ChartModule = ({
                   {ticker?.charAt(0)?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className='text-zinc-300 text-2xl'>{ticker}</span>
+              <span className='text-zinc-300 text-xs sm:text-xl uppercase'>{ticker}</span>
             </h2>
-            <Button variant="outline" className="ml-2">
-              <Link href={`/ticker/detail/?asset=${asset}`} prefetch className="text-zinc-400">
+            <Button variant="outline" size="sm" className="ml-2">
+              <Link href={`/ticker/detail/?asset=${asset}`} prefetch className="text-zinc-400 text-xs sm:text-sm">
                 Detail
               </Link>
             </Button>
@@ -180,9 +204,9 @@ export const ChartModule = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Website"
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
+                    className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
                   >
-                    <Icon icon="fa7-brands:weebly" className="w-6 h-6" />
+                    <Icon icon="fa7-brands:weebly" className="w-4 h-4 sm:w-6 sm:h-6" />
                   </Link>
                 )}
                 {twitter && (
@@ -191,9 +215,9 @@ export const ChartModule = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Twitter"
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
+                    className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
                   >
-                    <Icon icon="fa7-brands:x-twitter" className="w-5 h-5" />
+                    <Icon icon="fa7-brands:x-twitter" className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Link>
                 )}
                 {telegram && (
@@ -202,9 +226,9 @@ export const ChartModule = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Telegram"
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
+                    className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
                   >
-                    <Icon icon="mdi:telegram" className="w-6 h-6" />
+                    <Icon icon="mdi:telegram" className="w-5 h-5 sm:w-6 sm:h-6" />
                   </Link>
                 )}
 
@@ -214,9 +238,9 @@ export const ChartModule = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Discord"
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-zinc-700 text-indigo-400 hover:bg-indigo-400 hover:text-zinc-900 transition-colors"
+                    className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9  rounded-md border border-zinc-700 text-indigo-400 hover:bg-indigo-400 hover:text-zinc-900 transition-colors"
                   >
-                    <Icon icon="fa7-brands:discord" className="w-5 h-5" />
+                    <Icon icon="fa7-brands:discord" className="w-4 h-4 sm:w-6 sm:h-6" />
                   </Link>
                 )}
               </div>
@@ -225,24 +249,24 @@ export const ChartModule = ({
           </div>
           {/* second line: description (30 chars, ellipsis). Hover to show full */}
           {shortDesc && (
-            <div className="ml-4 -mt-2 mb-2 text-sm text-zinc-400" title={description}>
+            <div className="ml-4 -mt-2 mb-2 text-sm text-zinc-500" title={description}>
               {shortDesc}
             </div>
           )}
         </div>
 
-        <div className="mr-2">
+        {/* <div className="mr-2">
           <ButtonRefresh
             onRefresh={refresh}
             loading={isRefreshing}
             className="bg-zinc-800/50"
           />
-        </div>
+        </div> */}
       </div>
       <div className="p-2 max-w-[100rem]">
         <ContentLoading loading={isLoading}>
           <div className="flex justify-end items-center mb-4">
-            <div className="flex items-center mr-6 gap-2">
+            <div className="flex items-center mr-1 sm:mr-6 gap-2">
               {types.map((item) => (
                 <Button
                   key={item.value}
@@ -258,8 +282,8 @@ export const ChartModule = ({
           </div>
           {/* Wrapped chart area with mb-6 and changed items-center -> items-stretch */}
           <div className="mb-6">
-            <div className="flex flex-col md:flex-row justify-between items-stretch gap-1 bg-no-repeat bg-center bg-[url('/bg_satswap.png')]">
-              <OrderLineChart data={lineChartData || []} />
+            <div className={`flex flex-col md:flex-row justify-between items-stretch gap-1 bg-no-repeat bg-center bg-[url('/bg_satswap.png')] ${chartHeight}`}>
+              <OrderLineChart data={lineChartData || []} chartHeight={chartHeight} timeFrame={type} />
             </div>
           </div>
         </ContentLoading>

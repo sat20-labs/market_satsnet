@@ -67,7 +67,7 @@ export const BtcFeerateSelectButton = () => {
         <Button
           variant="ghost"
           disabled={isFeeRateLoading}
-          className="bg-transparent sm:px-2 px-8 sm:gap-2 gap-3 text-xs sm:text-sm text-zinc-400 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
+          className="bg-transparent sm:px-1 px-6 sm:gap-1 gap-3 text-xs sm:text-sm text-zinc-400 border border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
         >
           {isFeeRateLoading ? (
             <Icon icon="eos-icons:loading" className="text-xl0" />

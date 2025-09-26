@@ -29,7 +29,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-2 text-sm font-medium transition-all",
+      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-2 font-medium transition-all",
       // better dark contrast + hover
       "text-zinc-400 hover:text-white hover:bg-zinc-800/60",
       // focus-visible styles
@@ -102,11 +102,50 @@ const SegmentedTabsTrigger = React.forwardRef<
 ))
 SegmentedTabsTrigger.displayName = "SegmentedTabsTrigger"
 
+// Underline style variant for subtle inner tabs (Add/Remove)
+const UnderlineTabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={cn(
+      "flex items-center gap-6 border-b border-zinc-700 px-2 h-9",
+      className
+    )}
+    {...props}
+  />
+))
+UnderlineTabsList.displayName = "UnderlineTabsList"
+
+const UnderlineTabsTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "relative inline-flex items-center justify-center h-9 px-1 text-sm sm:text-lg font-medium",
+      "text-zinc-400 hover:text-zinc-200",
+      // active color + underline bar
+      "data-[state=active]:text-white",
+      "after:absolute after:inset-x-0 after:-bottom-[2px] after:h-[1.5px] after:rounded after:bg-purple-500 after:opacity-0 data-[state=active]:after:opacity-100",
+      // focus/disabled
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:pointer-events-none disabled:opacity-50",
+      className
+    )}
+    {...props}
+  />
+))
+UnderlineTabsTrigger.displayName = "UnderlineTabsTrigger"
+
 export {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
   SegmentedTabsList,
-  SegmentedTabsTrigger
+  SegmentedTabsTrigger,
+  UnderlineTabsList,
+  UnderlineTabsTrigger
 }

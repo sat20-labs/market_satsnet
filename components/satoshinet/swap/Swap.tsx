@@ -523,7 +523,7 @@ const Swap = ({
         <span>{t('common.estReceive')}: <span className="text-white">{minReceiveValue || '--'}</span> {swapType === 'sats-to-asset' ? ticker : 'sats'}</span>
       </div> */}
       {/* 服务费展示 */}
-      <div className="px-4 py-4 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-full mx-auto">
+      <div className="px-4 py-3 bg-zinc-900 text-zinc-200 rounded-lg shadow-lg border border-zinc-900/50 max-w-full mx-auto">
         {/* 总支付费用部分 */}
         <div className="flex justify-between items-center text-sm text-gray-400">
           {swapType === 'sats-to-asset' && (

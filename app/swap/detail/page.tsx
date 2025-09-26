@@ -1,13 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChartModule } from '@/components/satoshinet/ChartModule';
 import Swap from '@/components/satoshinet/swap/Swap';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent, UnderlineTabsList, UnderlineTabsTrigger } from '@/components/ui/tabs';
+import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import WithDraw from '@/components/satoshinet/swap/WithDraw';
 import Deposit from '@/components/satoshinet/swap/Deposit';
 import AddLiquidity from '@/components/satoshinet/swap/AddLiquidity';
@@ -17,9 +18,12 @@ import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import { AssetInfoCard } from '@/components/AssetInfoCard';
 import { useSwapDetailData } from '@/hooks/pages/useSwapDetailData';
 import { useCommonStore } from '@/store';
-import MySwapOrders from '@/components/satoshinet/common/MySwapOrders';
 import HistorySwapOrders from '@/components/satoshinet/common/HistorySwapOrders';
 import { Loading } from '@/components/Loading';
+import MyOrders from '@/components/satoshinet/common/MySwapOrders';
+import { TikcerHoldersList } from '@/components/satoshinet/swap/TickerHoldersList';
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+
 
 function OrderPageContent() {
   const params = useSearchParams();
@@ -49,7 +53,18 @@ function OrderPageContent() {
     refreshAll
   } = useSwapDetailData(asset ?? '');
   const protocol = useMemo(() => swapStatusData?.Contract?.assetName?.Protocol || '', [swapStatusData]);
+  const { address } = useReactWalletStore();
 
+  // Chart height classes (fixed)
+  const chartHeights_div = 'h-[33rem] sm:h-[35rem] md:h-[36rem]';
+  const chartHeights = 'h-[21rem] sm:h-[32rem] md:h-[26rem]';
+  // Skeleton flags
+  const showChartSkeleton = Boolean(isAnalyticsLoading && !analyticsData);
+  const showRightCardSkeleton = Boolean(isSwapStatusLoading && !swapStatusData);
+  // LPT ownership flag
+  const hasLpt = useMemo(() => (lptAmt?.Value ?? 0) > 0, [lptAmt]);
+
+  const [total, setTotal] = useState(0);
 
   const refreshHandler = () => {
     setTimeout(() => {
@@ -75,46 +90,71 @@ function OrderPageContent() {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 p-2 sm:p-4 h-full w-ful">
+      <div className="grid grid-cols-1 md:grid-cols-12 sm:gap-6 p-2 sm:p-4 h-full w-full">
         {/* Chart and Asset Info Container */}
-        <div className="sm:col-span-2 flex flex-col gap-1 mb-8 sm:mb-0">
-          {/* Tradingview Chart */}
-          <div className="flex items-center justify-center min-h-[320px] sm:min-h-[640px] sm:mb-0">
-            <ChartModule
-              asset={asset}
-              ticker={ticker}
-              isLoading={isAnalyticsLoading}
-              analyticsData={analyticsData}
-              refresh={refreshAnalytics}
-              isRefreshing={isAnalyticsLoading}
-            />
+        <div className="md:col-span-8 flex flex-col gap-3 order-last md:order-1">
+
+          {/* Tradingview Chart or skeleton */}
+          <div className={`relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 ${chartHeights_div}`}>
+            {showChartSkeleton ? (
+              <div className={`w-full ${chartHeights_div} animate-pulse`} />
+            ) : (
+              <div className={`w-full ${chartHeights_div}`}>
+                <ChartModule
+                  asset={asset}
+                  ticker={ticker}
+                  isLoading={isAnalyticsLoading}
+                  analyticsData={analyticsData}
+                  refresh={refreshAnalytics}
+                  isRefreshing={isAnalyticsLoading}
+                  chartHeight={chartHeights}
+
+                />
+              </div>
+            )}
           </div>
-          <div className="flex items-center justify-center w-full h-[320px] sm:h-[220px] sm:mt-1 sm:mb-0">
+
+          {/* Mobile accordion for Asset Info */}
+          <div className="md:hidden relative z-10">
+            <details className="rounded-xl border border-zinc-800 bg-zinc-900">
+              <summary className="px-3 py-2 cursor-pointer text-sm text-zinc-300 select-none">{t('common.assetTradeInfo')}</summary>
+              <div className="p-3">
+                <AssetInfo depthData={swapStatusData} tickerInfo={tickerInfo} holders={holders} />
+              </div>
+            </details>
+          </div>
+
+          {/* Desktop Asset Info */}
+          <div className={`hidden md:block w-full relative z-10`}>
             <AssetInfo depthData={swapStatusData} tickerInfo={tickerInfo} holders={holders} />
           </div>
         </div>
-        <div className="sm:col-span-1 flex items-center justify-center mb-1 mt-4 sm:mb-0 sm:mt-0">
-          <div className="max-w-full mx-auto pb-4 sm:px-4 bg-transparent text-zinc-200 rounded-2xl shadow-lg w-full h-full">
-            <AssetInfoCard
-              asset={asset}
-              ticker={ticker}
-              contractUrl={contractUrl}
-              tickerInfo={tickerInfo}
-              protocol={protocol}
-              swapData={swapStatusData}
-              refresh={refreshSwapStatus}
-              isRefreshing={isSwapStatusLoading}
-            />
-            <Tabs defaultValue="swap" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="swap">{t('common.swap')}</TabsTrigger>
-                <TabsTrigger value="deposit">{t('common.deposit')}</TabsTrigger>
-                <TabsTrigger value="withdraw">{t('common.withdraw')}</TabsTrigger>
-                <TabsTrigger value="addLiquidity">{t('common.addLiquidity')}</TabsTrigger>
-                <TabsTrigger value="removeLiquidity">{t('common.removeLiquidity')}</TabsTrigger>
+        {/* Right: Swap/Deposit/Withdraw panel */}
+        <div className="md:col-span-4 order-first md:order-2 lg:sticky lg:top-4 self-start">
+          <div className="max-w-full mx-auto pb-4 bg-transparent text-zinc-200 rounded-xl shadow-lg w-full">
 
+            <Tabs defaultValue="swap" className="w-full">
+              <TabsList className="mb-2 whitespace-nowrap">
+                <TabsTrigger value="swap" className="flex-1">{t('common.swap')}</TabsTrigger>
+                <TabsTrigger value="liquidity" className="flex-1">{t('common.Liquidity')}</TabsTrigger>
+                <TabsTrigger value="deposit" className="flex-1">{t('common.deposit')}</TabsTrigger>
+                <TabsTrigger value="withdraw" className="flex-1">{t('common.withdraw')}</TabsTrigger>
               </TabsList>
               <TabsContent value="swap">
+                {showRightCardSkeleton ? (
+                  <div className="h-28 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse mb-4" />
+                ) : (
+                  <AssetInfoCard
+                    asset={asset}
+                    ticker={ticker}
+                    contractUrl={contractUrl}
+                    tickerInfo={tickerInfo}
+                    protocol={protocol}
+                    swapData={swapStatusData}
+                    refresh={refreshSwapStatus}
+                    isRefreshing={isSwapStatusLoading}
+                  />
+                )}
                 <Swap
                   asset={asset}
                   ticker={ticker}
@@ -148,39 +188,102 @@ function OrderPageContent() {
                   isRefreshing={isSwapStatusLoading}
                 />
               </TabsContent>
-              <TabsContent value="addLiquidity">
-                <AddLiquidity
-                  asset={asset}
-                  ticker={ticker}
-                  contractUrl={contractUrl}
-                  refresh={refreshBalances}
-                  isRefreshing={isSwapStatusLoading}
-                  tickerInfo={tickerInfo}
-                  swapData={swapStatusData}
-                  assetBalance={assetBalance}
-                  satsBalance={satsBalance}
-                  operationHistory={userOperationHistory?.addLiq}
-                />
-              </TabsContent>
-              <TabsContent value="removeLiquidity">
-                <RemoveLiquidity
-                  contractUrl={contractUrl}
-                  asset={asset}
-                  ticker={ticker}
-                  assetBalance={assetBalance}
-                  satsBalance={satsBalance}
-                  onRemoveLiquiditySuccess={() => { refreshHandler() }}
-                  refresh={refreshBalances}
-                  isRefreshing={isSwapStatusLoading}
-                  tickerInfo={tickerInfo}
-                  swapData={swapStatusData}
-                  lptAmt={lptAmt}
-                  operationHistory={userOperationHistory?.removeLiq}
-                />
+              <TabsContent value="liquidity">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4  shadow-lg shadow-sky-500/50">
+                  <Tabs defaultValue={hasLpt ? 'remove' : 'add'} className="w-full">
+                    <div className="flex items-center justify-between">
+                      <UnderlineTabsList className="mb-0 flex-1 border-b border-zinc-800">
+                        <UnderlineTabsTrigger value="add">{t('common.add')}</UnderlineTabsTrigger>
+                        <UnderlineTabsTrigger value="remove">{t('common.remove')}</UnderlineTabsTrigger>
+                      </UnderlineTabsList>
+                      <ButtonRefresh onRefresh={refreshBalances} loading={isSwapStatusLoading} className="ml-2 bg-zinc-800/50" />
+                    </div>
+                    <TabsContent value="add">
+                      <AddLiquidity
+                        asset={asset}
+                        ticker={ticker}
+                        contractUrl={contractUrl}
+                        refresh={refreshBalances}
+                        isRefreshing={isSwapStatusLoading}
+                        tickerInfo={tickerInfo}
+                        swapData={swapStatusData}
+                        assetBalance={assetBalance}
+                        satsBalance={satsBalance}
+                        operationHistory={userOperationHistory?.addLiq}
+                      />
+                    </TabsContent>
+                    <TabsContent value="remove">
+                      <RemoveLiquidity
+                        contractUrl={contractUrl}
+                        asset={asset}
+                        ticker={ticker}
+                        assetBalance={assetBalance}
+                        satsBalance={satsBalance}
+                        onRemoveLiquiditySuccess={() => { refreshHandler() }}
+                        refresh={refreshBalances}
+                        isRefreshing={isSwapStatusLoading}
+                        tickerInfo={tickerInfo}
+                        swapData={swapStatusData}
+                        lptAmt={lptAmt}
+                        operationHistory={userOperationHistory?.removeLiq}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </div>
               </TabsContent>
             </Tabs>
 
-            {/* LPT Holders List - Only show in testnet */}
+            {/* <div className="mt-2">
+              <div className="md:hidden">
+                <details className="rounded-xl border border-zinc-800 bg-zinc-900">
+                  <summary className="px-3 py-2 cursor-pointer text-sm text-zinc-300 select-none">LPT Holders</summary>
+                  <div className="p-3">
+                    <LptHoldersList
+                      asset={asset}
+                      ticker={ticker}
+                      contractUrl={contractUrl}
+                      tickerInfo={tickerInfo}
+                      refresh={refreshAll}
+                      isRefreshing={isSwapStatusLoading}
+                    />
+                  </div>
+                </details>
+              </div>
+              <div className="hidden md:block">
+                <LptHoldersList
+                  asset={asset}
+                  ticker={ticker}
+                  contractUrl={contractUrl}
+                  tickerInfo={tickerInfo}
+                  refresh={refreshAll}
+                  isRefreshing={isSwapStatusLoading}
+                />
+              </div>
+            </div> */}
+
+          </div>
+        </div>
+      </div>
+
+      {/* Full-width bottom tabs section */}
+      <div className="w-full px-2 sm:px-2 mt-4 bg-transparent">
+        <Tabs defaultValue="activities" className="w-full">
+          <UnderlineTabsList className="mb-2 text-xs">
+            <UnderlineTabsTrigger value="activities">{t('common.activity') || 'Activities'}</UnderlineTabsTrigger>
+            <UnderlineTabsTrigger value="myactivities">{t('common.my_activities') || 'My Activities'}</UnderlineTabsTrigger>
+            <UnderlineTabsTrigger value="holders">{t('common.holder') || 'Holders'}</UnderlineTabsTrigger>
+            <UnderlineTabsTrigger value="lpholders">{t('common.lptHolders') || 'LP-Holders'}</UnderlineTabsTrigger>
+          </UnderlineTabsList>
+          <TabsContent value="activities" className="mt-4 bg-zinc-950/80">
+            <HistorySwapOrders contractURL={contractUrl} type="swap" ticker={ticker} />
+          </TabsContent>
+          <TabsContent value="myactivities" className="mt-4 bg-zinc-950/80">
+            <MyOrders contractURL={contractUrl} type="swap" ticker={ticker} />
+          </TabsContent>
+          <TabsContent value="holders" className="mt-4 bg-zinc-950/80">
+            <TikcerHoldersList asset={asset} onTotalChange={setTotal} tickerInfo={tickerInfo} />
+          </TabsContent>
+          <TabsContent value="lpholders" className="mt-4 bg-zinc-950/80">
             <LptHoldersList
               asset={asset}
               ticker={ticker}
@@ -189,23 +292,10 @@ function OrderPageContent() {
               refresh={refreshAll}
               isRefreshing={isSwapStatusLoading}
             />
-          </div>
-        </div>
-      </div>
-      <div className="bg-zinc-900 rounded-2xl p-4 mt-1">
-        <Tabs defaultValue="history">
-          <TabsList className="mb-2">
-            <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
-            <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="myOrders" className="-mt-8">
-            <MySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
-          </TabsContent>
-          <TabsContent value="history" className="-mt-8">
-            <HistorySwapOrders ticker={ticker} contractURL={contractUrl} type="swap" />
           </TabsContent>
         </Tabs>
       </div>
+
     </div>
   );
 }

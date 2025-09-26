@@ -2,31 +2,109 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
+
   /* Webkit 浏览器（Chrome, Edge, Safari）支持 */
   ::-webkit-scrollbar {
-    width: 8px; /* 垂直滚动条宽度 */
-    height: 8px; /* 水平滚动条高度 */
+    width: 8px;
+    /* 垂直滚动条宽度 */
+    height: 8px;
+    /* 水平滚动条高度 */
   }
 
   ::-webkit-scrollbar-track {
-    background: #3a3a3a; /* 滚动条轨道颜色 */
+    background: #3a3a3a;
+    /* 滚动条轨道颜色 */
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: #000000; /* 滚动条滑块颜色 */
+    background-color: #000000;
+    /* 滚动条滑块颜色 */
     border-radius: 6px;
-    border: 2px solid #303030; /* 滑块边缘留空心效果 */
+    border: 2px solid #303030;
+    /* 滑块边缘留空心效果 */
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: #424242; /* 滑块 hover 颜色 */
+    background-color: #424242;
+    /* 滑块 hover 颜色 */
   }
 
   /* Firefox 支持（需要设置 scrollbar-width） */
   * {
-    scrollbar-width: thin; /* "auto" | "thin" | "none" */
-    scrollbar-color: #1f1f1f #3d3d3d; /* thumb color + track color */
+    scrollbar-width: thin;
+    /* "auto" | "thin" | "none" */
+    scrollbar-color: #141414 #27272a;
+    /* thumb color + track color */
   }
+}
+
+/* Scrollbar utilities: hide by default, show on hover or while scrolling */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  /* Chrome, Safari */
+  display: none;
+}
+
+.scrollbar-hover {
+  /* Default: hidden */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  scrollbar-gutter: stable;
+  /* avoid layout shift when toggling */
+}
+
+.scrollbar-hover::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Show on hover */
+.scrollbar-hover:hover {
+  scrollbar-width: thin;
+  /* Firefox */
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar-thumb {
+  background-color: #000;
+  border-radius: 6px;
+  border: 2px solid #303030;
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar-track {
+  background: #3a3a3a;
+}
+
+/* Show briefly while scrolling (JS adds .scrollbar-show) */
+.scrollbar-hover.scrollbar-show {
+  scrollbar-width: thin;
+}
+
+.scrollbar-hover.scrollbar-show::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-hover.scrollbar-show::-webkit-scrollbar-thumb {
+  background-color: #000;
+  border-radius: 6px;
+  border: 2px solid #303030;
+}
+
+.scrollbar-hover.scrollbar-show::-webkit-scrollbar-track {
+  background: #3a3a3a;
 }
 
 @theme inline {
@@ -143,8 +221,8 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
-

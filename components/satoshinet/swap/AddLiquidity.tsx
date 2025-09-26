@@ -179,17 +179,17 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
   };
 
   const handleMaxClick = () => {
-    const maxAmount = divisibility === 0 
+    const maxAmount = divisibility === 0
       ? Math.floor(displayAssetBalance).toString()
       : displayAssetBalance.toFixed(divisibility);
-    
+
     // 使用 handleAmountChange 来确保 value 也被正确计算
     handleAmountChange(maxAmount);
   };
 
   return (
     <div className="w-full">
-      <div className="mb-6 bg-zinc-900 sm:p-2 rounded-xl shadow-lg shadow-sky-500/50 border border-zinc-700 relative">
+      <div className="bg-zinc-900 sm:p-2 rounded-xl relative">
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
             <span className="py-2 uppercase">{t('common.stake')}</span>
@@ -245,7 +245,7 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
             <span className="absolute top-1/3 right-4 sm:mr-10 transform -translate-y-1/2 text-zinc-600 text-sm">
               sats
             </span>
-            <p className='text-xs font-medium text-zinc-500 mb-2'>
+            <p className='text-xs font-medium text-zinc-500 mb-1'>
               <span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>BTC</span>
               {t('common.balance')}: {(satsBalance.availableAmt + satsBalance.lockedAmt).toLocaleString()} sats
             </p>
@@ -255,7 +255,7 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
       <Button
         type="button"
         size="lg"
-        className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient"
+        className="w-full my-2 text-sm font-semibold transition-all duration-200 btn-gradient"
         onClick={handleAddLiquidity}
         disabled={addLiquidityMutation.isPending}
       >
@@ -270,11 +270,11 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
             {operationHistory.map((txId, index) => (
               <div key={index} className="flex items-center text-xs">
                 <a
-                  href={generateMempoolUrl({ 
-                    network: network, 
-                    path: `tx/${txId}`, 
-                    chain: Chain.SATNET, 
-                    env: 'dev' 
+                  href={generateMempoolUrl({
+                    network: network,
+                    path: `tx/${txId}`,
+                    chain: Chain.SATNET,
+                    env: 'dev'
                   })}
                   target="_blank"
                   rel="noopener noreferrer"

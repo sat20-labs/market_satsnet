@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { contractService } from "@/domain/services/contract";
 import { Chain } from "@/types";
 import HistorySwapTable from "./HistorySwapTable";
-import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
+
 import { useCommonStore } from "@/store/common";
 
 interface HistoryOrdersProps {
@@ -54,14 +54,12 @@ export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrde
   console.log('allOrders', allOrders);
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <ButtonRefresh loading={isLoading} onRefresh={() => refetch()} />
-      </div>
+
       <HistorySwapTable
         rawOrders={allOrders}
         orderTypeLabels={ORDER_TYPE_LABELS}
         isLoading={isLoading}
-        noDataMessage={type === 'swap' 
+        noDataMessage={type === 'swap'
           ? t("common.history_no_records")
           : t("common.history_no_records")
         }

@@ -34,43 +34,43 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
   const marketCapUsd = marketCapBtc ? <BtcPrice btc={marketCapBtc / 1e8} /> : 0;
 
   return (
-    <div className="bg-zinc-900 p-5 rounded-lg w-full h-64 sm:h-68">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-4 text-left">
+    <div className="bg-zinc-900 mt-4 p-4 rounded-lg w-full h-90 sm:h-40 border-none sm:border-1 border-zinc-700">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 sm:mt-1 text-left">
         {/* Volume */}
-        <div className="border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
+        <div className="sm:border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.volume')}</span>
           <p className="text-zinc-200 text-lg font-bold gap-1">{formatLargeNumber(volumeBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs mb-3">${volumeUsd}</p>
         </div>
 
         {/* Total Deal Assets  */}
-        <div className="border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
+        <div className="sm:border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.tx_total_volume')}</span>
           <p className="text-zinc-200 text-lg font-bold gap-1">{formatLargeNumber(totalVolumeBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs mb-3">${totalVolumeUsd}</p>
         </div>
 
         {/* Market Cap */}
-        <div className="pr-4">
+        <div className="sm:border-r-1 border-b-1 sm:border-b-0 border-zinc-800  pb-2 sm:pb-0 pr-4">
           <span className="text-gray-400 text-sm">{t('common.marketCap')}</span>
           <p className="text-zinc-200 text-lg font-bold gap-1">{formatLargeNumber(marketCapBtc / 1e8)} <span className="text-zinc-400 text-sm">{t('common.btc')}</span></p>
           <p className="text-gray-400 text-xs">${marketCapUsd}</p>
         </div>
 
         {/* Max Supply */}
-        <div className="border-r-1 border-zinc-800 pr-4">
+        <div className="sm:border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pr-4">
           <span className="text-gray-400 text-sm">{t('common.max_supply')}</span>
-          <p className="text-zinc-200 text-xs sm:text-lg font-bold">{formatLargeNumber(tickerInfo.maxSupply)}</p>
+          <p className="text-zinc-200 text-lg font-bold">{formatLargeNumber(tickerInfo.maxSupply)}</p>
         </div>
 
         {/* Transactions */}
-        <div className="border-r-1 border-zinc-800 pr-4">
+        <div className="sm:border-r-1 border-b-1 sm:border-b-0 border-zinc-800 pb-4 sm:pb-0 pr-4">
           <span className="text-gray-400 text-sm">{t('common.transactions')}</span>
           <p className="text-zinc-200 text-lg font-bold">{transactions.toLocaleString()}</p>
         </div>
 
         {/* Holders */}
-        <div>
+        <div className="border-b-1 sm:border-b-0 border-zinc-800 pb-4 sm:pb-0 pr-4">
           <span className="text-gray-400 text-sm">{t('common.holder_count')}</span>
           <p className="text-zinc-200 text-lg font-bold">{holders.total}</p>
         </div>
@@ -78,7 +78,7 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
 
       {/* Mint Progress */}
 
-      <div className="mt-4 mb-2 text-center">
+      <div className="mt-3 sm:mt-0 mb-2 text-center">
         <span className="text-gray-400 text-sm">{t('common.mintProgress')} {mintProgress}</span>
         <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
           <div

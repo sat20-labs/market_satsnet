@@ -158,10 +158,14 @@
   "unstake": "移除流动性",
   "addLiquidity": "添加流动性",
   "removeLiquidity": "移除流动性",
+  "Liquidity": "流动性",
+  "add": "添加",
+  "remove": "移除",
   "staking": "添加流动性中",
   "unstaking": "移除流动性中",
   "contractAddress": "合约地址",
   "poolAssetInfo": "池子余额",
+  "assetTradeInfo": "资产交易信息",
   "poolSatsAmount": "池子sats",
   "youPay": "您将支付",
   "youReceive": "您将收到",
@@ -316,7 +320,7 @@
   "24h_volume_btc": "24h交易额",
   "pool_size_sats": "池子规模(sats)",
   "pool_size_btc": "池子规模(BTC)",
-  "lptHolders": "LPT持有人",
+  "lptHolders": "流动性提供者",
   "servicePause": {
     "title": "服务维护中",
     "tip": "维护期间所有操作将被暂停"
@@ -325,5 +329,6 @@
   "refresh": "刷新",
   "copy": "复制",
   "request_failed": "请求失败",
+  "noLiquidityTip": "未找到流动性，请先添加后再移除。",
   "error": "错误"
 }

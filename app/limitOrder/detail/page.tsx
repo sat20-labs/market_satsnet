@@ -140,11 +140,11 @@ function OrderPageContent() {
             <div className="flex justify-between items-center gap-2">
               <Button
                 variant="outline"
-                className="px-4 mb-2 h-9 text-zinc-400"
+                className="px-4 mb-2 h-8 text-zinc-400"
                 size="sm"
                 onClick={cancelOrder}
               >
-                Cancel  Orders
+                Cancel
               </Button>
               <ButtonRefresh className="mx-4 mb-2" loading={isLoading} onRefresh={() => refresh()} />
             </div>

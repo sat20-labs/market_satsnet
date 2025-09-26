@@ -11,11 +11,12 @@ import { ServicePauseOverlay } from '@/components/ServicePauseOverlay';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const { appVersion } = useCommonStore();
   const { t, i18n } = useTranslation();
