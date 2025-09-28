@@ -34,7 +34,7 @@ export function AssetInfoCard({
   return (
     <div className="flex items-center gap-3 mb-4 pb-2">
       <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-700 shadow-lg relative">
-        <div className="absolute top-5 right-4 z-10">
+        <div className="absolute top-2 sm:top-5 right-2 sm:right-4 z-10">
           <ButtonRefresh
             onRefresh={refresh}
             loading={isRefreshing}
@@ -53,14 +53,14 @@ export function AssetInfoCard({
 
           </div>
           <div>
-            <p className="text-zinc-400 font-semibold text-lg">{ticker}</p>
+            <p className="text-zinc-400 font-semibold text-sm sm:text-lg">{ticker}</p>
             <p className="text-zinc-500 text-xs gap-2">
               {t('common.contractAddress')}：<span className="text-blue-400 mr-2">{contractUrl.slice(0, 8)}...{contractUrl.slice(-4)}</span>
-              {t('common.protocol')}：{protocol}
+              {/* {t('common.protocol')}：{protocol} */}
             </p>
           </div>
         </div>
-        <div className="text-sm pt-2 text-zinc-500 border-t border-zinc-800 space-y-2">
+        <div className="text-xs sm:text-sm pt-2 text-zinc-500 border-t border-zinc-800 space-y-2">
           <div className="flex justify-start items-start">
             <span className="text-zinc-500">{t('common.poolAssetInfo')}：</span>
             <div className="text-left text-zinc-500 space-y-1">
