@@ -160,6 +160,7 @@
   "addLiquidity": "Add Liq",
   "removeLiquidity": "Remove Liq",
   "Liquidity": "Liquidity",
+  "liquidityOpen": "Liquidity Open",
   "add": "Add",
   "remove": "Remove",
   "staking": "AddingLiq",

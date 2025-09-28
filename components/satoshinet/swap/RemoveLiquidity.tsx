@@ -146,6 +146,12 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
 
 
   const handleRemoveLiquidity = () => {
+    // 检查是否为流动性开放状态
+    if (swapData?.status === 101) {
+      toast.error(t('common.liquidityOpen'));
+      return;
+    }
+    
     if (!hasLpt || !asset || !contractUrl) {
       toast.error("No liquidity to remove");
       return;

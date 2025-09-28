@@ -15,6 +15,7 @@ interface DepositProps {
   refresh: () => void;
   isRefreshing: boolean;
   tickerInfo?: any;
+  swapData?: any;
 }
 
 interface DepositParams {
@@ -23,7 +24,7 @@ interface DepositParams {
   contractUrl: string;
 }
 
-const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo }) => {
+const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo, swapData }) => {
   const { t } = useTranslation();
   const { btcFeeRate } = useCommonStore();
   const [amount, setAmount] = useState('');
@@ -114,6 +115,12 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
   };
 
   const handleDeposit = () => {
+    // 检查是否为流动性开放状态
+    if (swapData?.status === 101) {
+      toast.error(t('common.liquidityOpen'));
+      return;
+    }
+    
     if (!amount || !asset || !contractUrl) {
       toast.error("Please enter a valid amount");
       return;
