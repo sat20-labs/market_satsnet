@@ -83,6 +83,8 @@ function adaptPoolData(pool, satsnetHeight) {
         poolStatus = PoolStatus.ACTIVE;
       }
     }
+  } else if (status === 101) {
+    poolStatus = PoolStatus.LIQUIDITY_OPEN;
   } else if (status === 200) {
     poolStatus = PoolStatus.COMPLETED;
   } else if (status === -1) {
@@ -477,12 +479,18 @@ const Swap = () => {
                   <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
                 </Link>
 
-                <Link
-                  href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
-                  className={`${statusColorMap[p.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
-                >
-                  <Icon icon="lucide:zap" width={18} height={18} className="text-white mr-1" />{t('common.buy')}
-                </Link>
+                {p.poolStatus === PoolStatus.ACTIVE ? (
+                  <Link
+                    href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
+                    className={`${statusColorMap[p.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
+                  >
+                    <Icon icon="lucide:zap" width={18} height={18} className="text-white mr-1" />{t('common.buy')}
+                  </Link>
+                ) : (
+                  <span className={`${statusColorMap[p.poolStatus]} !bg-opacity-30 !text-white/70 inline-flex items-center text-xs px-2 py-1 rounded font-medium`}>
+                    {t(statusTextMap[p.poolStatus])}
+                  </span>
+                )}
 
               </div>
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[11px] text-zinc-400">
@@ -496,7 +504,7 @@ const Swap = () => {
                 <span className="truncate">{t('common.holder')}: {p.holders}</span>
                 <span className="truncate  col-span-2 text-zinc-500">{t('pages.launchpool.deploy_time')}: {p.deployTime ? formatDeployDate(p.deployTime) : '-'}
                   {p.poolStatus === PoolStatus.ACTIVE ? (
-                    <span className="text-zinc-400 ml-1 text-[9px] bg-zinc-700 px-2 py-1 rounded-lg">{statusTextMap[p.poolStatus]}</span>
+                    <span className="text-zinc-400 ml-1 text-[9px] bg-zinc-700 px-2 py-1 rounded-lg">{t(statusTextMap[p.poolStatus])}</span>
                   ) : (
                     <></>
                   )}
@@ -622,13 +630,13 @@ const Swap = () => {
                       {adaptedPool.poolStatus === PoolStatus.ACTIVE ? (
                         <Link
                           href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
-                          className={`${statusColorMap[adaptedPool.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity inline-block`}
+                          className={`${statusColorMap[adaptedPool.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
                         >
                           <Icon icon="lucide:zap" width={16} height={16} className="text-white mr-1" /> {t('common.buy')}
                         </Link>
                       ) : (
-                        <Badge className={`${statusColorMap[adaptedPool.poolStatus]} text-white/80 !bg-opacity-30 !text-white/70`}>
-                          {statusTextMap[adaptedPool.poolStatus]}
+                        <Badge className={`${statusColorMap[adaptedPool.poolStatus]} !bg-opacity-30 !text-white/70`}>
+                          {t(statusTextMap[adaptedPool.poolStatus])}
                         </Badge>
                       )}
                     </TableCell>

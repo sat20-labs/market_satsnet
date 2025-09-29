@@ -338,6 +338,11 @@ const Swap = ({
 
   // Replace handleSwap with new mutation-based function
   const handleSwap = () => {
+    // 检查是否为流动性开放状态
+    if (swapData?.status === 101) {
+      toast.error(t('common.liquidityOpen'));
+      return;
+    }
     swapMutation.mutate();
   };
 

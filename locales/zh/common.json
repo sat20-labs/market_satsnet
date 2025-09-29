@@ -159,6 +159,7 @@
   "addLiquidity": "添加流动性",
   "removeLiquidity": "移除流动性",
   "Liquidity": "流动性",
+  "liquidityOpen": "流动性开放",
   "add": "添加",
   "remove": "移除",
   "staking": "添加流动性中",

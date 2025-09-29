@@ -219,6 +219,7 @@ function OrderPageContent() {
                   contractUrl={contractUrl}
                   refresh={refreshBalances}
                   isRefreshing={isSwapStatusLoading}
+                  swapData={swapStatusData}
                 />
               </TabsContent>
               <TabsContent value="withdraw">
@@ -230,6 +231,7 @@ function OrderPageContent() {
                   onWithdrawSuccess={() => { refreshHandler() }}
                   refresh={refreshBalances}
                   isRefreshing={isSwapStatusLoading}
+                  swapData={swapStatusData}
                 />
               </TabsContent>
               <TabsContent value="liquidity">
