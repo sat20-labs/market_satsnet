@@ -7,7 +7,7 @@ import { ContentLoading } from '@/components/ContentLoading';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AssetLogo from '@/components/AssetLogo';
-import { getAsset } from '@/api/market';
+import { getAsset, getContractPriceChange } from '@/api/market';
 import Link from 'next/link';
 import { t } from 'i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -21,6 +21,8 @@ interface ChartModuleProps {
   refresh?: () => void;
   isRefreshing?: boolean;
   chartHeight?: string; // NEW: optional height classes for chart container
+  contractUrl?: string; // NEW: contract url for price change API
+  onSwitchToKline?: () => void; // NEW: callback to switch to TradingView Kline mode
 }
 
 export const ChartModule = ({
@@ -31,9 +33,15 @@ export const ChartModule = ({
   refresh,
   isRefreshing = false,
   chartHeight = '', // default empty so existing layouts unaffected
+  contractUrl,
+  onSwitchToKline,
 }: ChartModuleProps) => {
   const [type, setType] = useState('15m');
-  console.log('analyticsData', analyticsData);
+  //console.log('analyticsData', analyticsData);
+
+  // 统一高度：如果 chartHeight 为空，自动 fallback 到默认和 LightweightKline 一致的高度
+  // 推荐传递如 chartHeight="h-[320px] sm:h-[680px]"
+  const effectiveChartHeight = chartHeight || "h-[320px] sm:h-[680px]";
 
   const dataSource = useMemo(() => {
     if (!analyticsData) return [];
@@ -155,104 +163,55 @@ export const ChartModule = ({
   ];
   const protocol = asset?.split(':')[0] || '';
 
-  // NEW: fetch asset metadata for social links in header
-  const { data: assetMetaResp } = useQuery({
-    queryKey: ['assetMeta', asset],
-    queryFn: () => getAsset(asset),
-    enabled: !!asset,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+  const { data: priceChangeData } = useQuery({
+    queryKey: ['chartPriceChange', contractUrl],
+    enabled: !!contractUrl,
+    queryFn: async () => {
+      if (!contractUrl) return null;
+      const d = await getContractPriceChange(contractUrl);
+      return d;
+    },
+    gcTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
   });
-  const assetMeta: any = assetMetaResp?.data || assetMetaResp || {};
-  const website = assetMeta?.website as string | undefined;
-  const twitter = assetMeta?.twitter as string | undefined;
-  const telegram = assetMeta?.telegram as string | undefined;
-  const discord = assetMeta?.discord as string | undefined;
-  const description = assetMeta?.description as string | undefined;
-  const shortDesc = useMemo(() => {
-    if (!description) return '';
-    const s = description.trim();
-    return s.length > 120 ? s.slice(0, 120) + '...' : s;
-  }, [description]);
+
+  const lastPrice = priceChangeData?.last_price;
+  const pctMap: Record<string, number | undefined> = {
+    '15m': priceChangeData?.pct_24h, // 默认用24h
+    '24h': priceChangeData?.pct_24h,
+    '7d': priceChangeData?.pct_7d,
+    '30d': priceChangeData?.pct_30d,
+  };
+  const currentPctRaw = pctMap[type];
+  const pctSign = currentPctRaw && currentPctRaw > 0 ? '+' : '';
+  const pctColor = currentPctRaw == null ? 'text-zinc-500' : currentPctRaw > 0 ? 'text-green-500' : currentPctRaw < 0 ? 'text-red-500' : 'text-zinc-400';
+  const currentPrice = Number(pctMap['15m']);
+  const pctClass = pctMap == null ? 'text-zinc-400' : currentPrice > 0 ? 'text-green-500' : currentPrice < 0 ? 'text-red-500' : 'text-zinc-400';
+  const ptcPrice = currentPrice && currentPrice > 0 ? '+' + (currentPrice * 100).toFixed(2) : currentPrice < 0 ? '-' + (currentPrice * 100).toFixed(2) : '--';
 
   return (
     <div className="w-full h-full bg-zinc-900/50 border-1 border-zinc-700/50 rounded-lg">
       <div className="flex justify-between items-center">
-        <div className="flex flex-col">
-          <div className="flex items-center">
-            <h2 className="flex justify-center items-center text-lg font-bold text-zinc-400 ml-4 py-4 gap-2">
-              <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                <AssetLogo protocol={protocol} ticker={ticker} className="w-10 h-10" />
-                <AvatarFallback>
-                  {ticker?.charAt(0)?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className='text-zinc-300 text-xs sm:text-xl uppercase'>{ticker}</span>
-            </h2>
-            <Button variant="outline" size="sm" className="ml-2">
-              <Link href={`/ticker/detail/?asset=${asset}`} prefetch className="text-zinc-400 text-xs sm:text-sm">
-                Detail
-              </Link>
-            </Button>
 
-            {/* NEW: social icons next to View Info */}
-            {(twitter || telegram || discord) && (
-              <div className="ml-2 flex items-center gap-2">
-                {website && (
-                  <Link
-                    href={website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Website"
-                    className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
-                  >
-                    <Icon icon="fa7-brands:weebly" className="w-4 h-4 sm:w-6 sm:h-6" />
-                  </Link>
-                )}
-                {twitter && (
-                  <Link
-                    href={twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Twitter"
-                    className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
-                  >
-                    <Icon icon="fa7-brands:x-twitter" className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </Link>
-                )}
-                {telegram && (
-                  <Link
-                    href={telegram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Telegram"
-                    className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-md border border-zinc-700 text-zinc-400 hover:bg-purple-500 hover:text-zinc-900 transition-colors"
-                  >
-                    <Icon icon="mdi:telegram" className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </Link>
-                )}
-
-                {discord && (
-                  <Link
-                    href={discord}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Discord"
-                    className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9  rounded-md border border-zinc-700 text-indigo-400 hover:bg-indigo-400 hover:text-zinc-900 transition-colors"
-                  >
-                    <Icon icon="fa7-brands:discord" className="w-4 h-4 sm:w-6 sm:h-6" />
-                  </Link>
-                )}
-              </div>
-            )}
-            <span></span>
+        <div className="flex justify-start items-center">
+          <h2 className="flex justify-center items-center text-lg font-bold text-zinc-400 ml-4 py-4 gap-2">
+            <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
+              <AssetLogo protocol={protocol} ticker={ticker} className="w-10 h-10" />
+              <AvatarFallback>
+                {ticker?.charAt(0)?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className='text-zinc-400 text-xs sm:text-base uppercase'>{ticker}--SATSWAP</span>
+          </h2>
+          <div className="flex justify-start items-center ml-4 mr-4 min-w-[100px]">
+            <span className="text-sm sm:text-lg font-semibold text-green-500 leading-tight">
+              {lastPrice != null ? Number(lastPrice).toFixed(4) : '--'}<span className="ml-2 text-[11px] sm:text-[14px] md:text-sm text-zinc-400 font-normal">sats</span>
+            </span>
+            <span className={`text-[11px] ml-2 mt-1 sm:text-xs font-medium leading-none text-green-400`}>
+              <span className={`text-[11px] ${pctClass}`}>{ptcPrice}%</span>
+            </span>
           </div>
-          {/* second line: description (30 chars, ellipsis). Hover to show full */}
-          {shortDesc && (
-            <div className="ml-4 -mt-2 mb-2 text-sm text-zinc-500" title={description}>
-              {shortDesc}
-            </div>
-          )}
+
         </div>
 
         {/* <div className="mr-2">
@@ -265,25 +224,29 @@ export const ChartModule = ({
       </div>
       <div className="p-2 max-w-[100rem]">
         <ContentLoading loading={isLoading}>
-          <div className="flex justify-end items-center mb-4">
-            <div className="flex items-center mr-1 sm:mr-6 gap-2">
+          <div className="flex justify-between items-center mb-4">
+
+            <div className="flex items-center text-zinc-400 mr-1 sm:mr-6 gap-2">
               {types.map((item) => (
-                <Button
+                <button
                   key={item.value}
-                  variant={type === item.value ? 'default' : 'outline'}
-                  className={type === item.value ? 'btn-gradient' : 'bg-zinc-700 hover:text-zinc-200'}
+                  // variant={type === item.value ? 'default' : 'outline'}
+                  className={type === item.value ? 'px-2 h-6 rounded text-[13px] border transition-colors btn-gradient' : 'px-2 h-6 rounded text-[13px] border transition-colors bg-zinc-700 hover:text-zinc-200'}
                   onClick={() => setType(item.value)}
-                  size="sm"
+                // size="sm"
                 >
                   {item.label}
-                </Button>
+                </button>
               ))}
             </div>
+            <span className={`text-[11px] mt-1 sm:text-xs font-medium leading-none ${pctColor}`}>
+              {currentPctRaw == null ? '--' : `${pctSign}${(currentPctRaw * 100).toFixed(2)}%`}
+            </span>
           </div>
           {/* Wrapped chart area with mb-6 and changed items-center -> items-stretch */}
           <div className="mb-6">
-            <div className={`flex flex-col md:flex-row justify-between items-stretch gap-1 bg-no-repeat bg-center bg-[url('/bg_satswap.png')] ${chartHeight}`}>
-              <OrderLineChart data={lineChartData || []} chartHeight={chartHeight} timeFrame={type} />
+            <div className={`flex flex-col md:flex-row justify-between items-stretch gap-1 bg-no-repeat bg-center bg-[url('/bg_satswap.png')] ${effectiveChartHeight}`}>
+              <OrderLineChart data={lineChartData || []} chartHeight={effectiveChartHeight} timeFrame={type} />
             </div>
           </div>
         </ContentLoading>

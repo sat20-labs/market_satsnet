@@ -893,3 +893,50 @@ export const uploadAssetLogo = async (ticker: string, file: File) => {
 };
 // === End Asset Metadata APIs ===
 
+// === Market Price Changes ===
+export const getContractPriceChange = async (contract: string) => {
+  if (!contract) return null;
+  try {
+    const res = await pointsRequest('/api/v1/market/price_changes', { data: { contract } });
+    return res?.data || null;
+  } catch (e) {
+    console.warn('getContractPriceChange failed', contract, e);
+    return null;
+  }
+};
+// === End Market Price Changes ===
+
+// === Unified Market (points-based) Endpoints ===
+// NOTE: These reuse NEXT_PUBLIC_POINTS_API_BASE via pointsRequest so market + points share base + auth.
+export const getMarketPriceChanges = async (contract: string) => {
+  if (!contract) return null;
+  try {
+    const res: any = await pointsRequest('/api/v1/market/price_changes', { data: { contract } });
+    return res?.data || res?.result || null;
+  } catch (e) {
+    console.warn('getMarketPriceChanges failed', contract, e);
+    return null;
+  }
+};
+
+interface GetMarketKlineParams {
+  contract: string;
+  interval: string; // 1m|5m|15m|1h|4h|1d
+  start?: number;   // unix seconds
+  end?: number;     // unix seconds
+  limit?: number;   // max bars
+}
+export const getMarketKline = async ({ contract, interval, start, end, limit }: GetMarketKlineParams) => {
+  if (!contract) return { bars: [] };
+  try {
+    const res: any = await pointsRequest('/api/v1/market/kline', { data: { contract, interval, start, end, limit } });
+    return res?.data || res || { bars: [] };
+  } catch (e) {
+    console.warn('getMarketKline failed', contract, interval, e);
+    return { bars: [] };
+  }
+};
+// Backwards compatibility alias
+export const getContractKline = getMarketKline;
+// === End Unified Market Endpoints ===
+

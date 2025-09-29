@@ -50,6 +50,7 @@
     "framer-motion": "^11.18.2",
     "i18next": "^23.16.8",
     "i18next-browser-languagedetector": "^7.2.2",
+    "lightweight-charts": "4.2.0",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.488.0",

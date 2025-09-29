@@ -139,6 +139,7 @@ export const OrderLineChart = ({
       container: container.current,
       autoFit: true,
       ...(explicitHeight ? { height: explicitHeight } : {}),
+      padding: 'auto', // 类型安全
     });
     c.theme({ type: 'classicDark' })
       .data(originalData, { value: { min: 0 } })
@@ -158,6 +159,12 @@ export const OrderLineChart = ({
     let volumeYScale: any = { independent: true, domainMin: 0 };
     if (maxVolume > 0) volumeYScale = { independent: true, domainMin: 0, domain: [0, maxVolume * 1.1], nice: true };
 
+    // 计算主y轴最大值，避免内容只占上半部分
+    const valueData = originalData.map(d => d.value || 0).filter(v => v > 0);
+    const maxValue = valueData.length ? Math.max(...valueData) : 0;
+    let mainYScale: any = { nice: true, tickCount: 5, formatter: (v: any) => `${v} sats` };
+    if (maxValue > 0) mainYScale = { domain: [0, maxValue * 1.1], nice: true, tickCount: 5, formatter: (v: any) => `${v} sats` };
+
     c.interval()
       .encode('x', 'label')
       .encode('y', 'volume')
@@ -175,7 +182,7 @@ export const OrderLineChart = ({
       .encode('y', 'value')
       .encode('shape', 'smooth')
       .style({ lineWidth: 2, stroke: '#22c55e' })
-      .scale('y', { independent: true, domainMin: 0, formatter: (v: any) => `${v} sats` })
+      .scale('y', mainYScale)
       .axis('y', { position: 'left', label: { formatter: (v: any) => `${v} sats`, style: { fill: '#ffffff', fontSize: 11 }, autoHide: false, offset: 8 }, grid: { line: { style: { stroke: '#303030', lineDash: [4, 4], opacity: 0.5 } } } })
       .tooltip(d => ({ name: 'Avg Price', value: d.valueFormatted || (d.realValue ? `${d.realValue} sats` : '-') }));
 
@@ -209,5 +216,6 @@ export const OrderLineChart = ({
     return () => clearTimeout(timer);
   }, [originalData]);
 
-  return <div className={`flex-1 max-w-full ${chartHeight}`} ref={container}></div>;
+  // 强制容器高度和传入 chartHeight 类名一致，保证和 LightweightKline 一致
+  return <div className={`w-full ${chartHeight || 'h-[320px] sm:h-[680px]'}`} ref={container}></div>;
 };

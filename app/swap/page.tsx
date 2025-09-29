@@ -20,7 +20,7 @@ import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { BtcPrice } from '@/components/BtcPrice';
-import { getDeployedContractInfo, getContractStatus } from '@/api/market';
+import { getDeployedContractInfo, getContractStatus, getContractPriceChange } from '@/api/market';
 import { Button } from '@/components/ui/button';
 import { WalletConnectBus } from '@/components/wallet/WalletConnectBus';
 import AssetLogo from '@/components/AssetLogo';
@@ -243,6 +243,21 @@ const Swap = () => {
       .filter(Boolean); // 过滤掉 null 值
   }, [poolList, satsnetHeight]);
 
+  // 获取价格涨跌幅
+  const priceChangeContracts = useMemo(() => adaptedPoolList.map(p => p.contractURL).filter(Boolean), [adaptedPoolList]);
+  const { data: priceChangeMap } = useQuery({
+    queryKey: ['swapPriceChanges', network, priceChangeContracts],
+    enabled: priceChangeContracts.length > 0,
+    gcTime: 60 * 1000,
+    queryFn: async () => {
+      const entries = await Promise.all(priceChangeContracts.map(async (c: string) => {
+        const d = await getContractPriceChange(c);
+        return [c, d] as const;
+      }));
+      return Object.fromEntries(entries);
+    }
+  });
+
   // 组装资产标识，用于获取 ticker 详情（参照 ticker/detail/page.tsx 使用的接口）
   const assetKeys = useMemo(() => {
     return Array.from(new Set(
@@ -432,7 +447,7 @@ const Swap = () => {
       <div className="sm:hidden space-y-3 mt-2">
         {pagedPoolList.map((p: any, idx: number) => (
           <div key={p.id || idx} className="rounded-lg bg-zinc-900/70 border border-zinc-800 p-3 flex gap-3">
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex flex-col items-center justify-start w-12">
               <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                 <AssetLogo
                   protocol={p?.Contract?.assetName?.Protocol}
@@ -443,6 +458,7 @@ const Swap = () => {
                   {p?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || '₿'}
                 </AvatarFallback>
               </Avatar>
+              {(() => { const pc = priceChangeMap?.[p.contractURL]?.pct_24h; if (typeof pc === 'number') { const pct = pc * 100; const up = pct > 0; const cls = up ? 'text-green-500' : (pct < 0 ? 'text-red-500' : 'text-zinc-500'); return <span className={`mt-8 text-[11px] font-medium leading-none ${cls}`}>{up ? '+' : ''}{pct.toFixed(2)}%</span>; } return <span className='mt-1 text-[11px] text-zinc-600 leading-none'>--</span>; })()}
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-1">
               <div className="flex items-start justify-between gap-2">
@@ -478,7 +494,6 @@ const Swap = () => {
 
                 <span className="truncate">MC: {(Number(p.marketCap || 0) / 1e8).toFixed(4)}<span className='ml-0.5 text-[10px] text-zinc-500'>BTC</span></span>
                 <span className="truncate">{t('common.holder')}: {p.holders}</span>
-                {/* <span className="truncate">Pool: {Number(p.satsValueInPool || 0) * 2}</span> */}
                 <span className="truncate  col-span-2 text-zinc-500">{t('pages.launchpool.deploy_time')}: {p.deployTime ? formatDeployDate(p.deployTime) : '-'}
                   {p.poolStatus === PoolStatus.ACTIVE ? (
                     <span className="text-zinc-400 ml-1 text-[9px] bg-zinc-700 px-2 py-1 rounded-lg">{statusTextMap[p.poolStatus]}</span>
@@ -560,7 +575,9 @@ const Swap = () => {
                       </Link>
                     </TableCell>
 
-                    <TableCell className="px-4 py-4">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}<span className='ml-1 text-xs text-zinc-500 font-medium'>sats</span></TableCell>
+                    <TableCell className="px-4 py-4">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}<span className='ml-1 text-xs text-zinc-500 font-medium'>sats</span>
+                      {(() => { const pc = priceChangeMap?.[adaptedPool.contractURL]?.pct_24h; if (typeof pc === 'number') { const pct = pc * 100; const up = pct > 0; const cls = up ? 'text-green-500' : (pct < 0 ? 'text-red-500' : 'text-zinc-400'); return <div className={`text-[11px] mt-1 font-medium ${cls}`}>{up ? '+' : ''}{pct.toFixed(2)}%</div>; } return <div className='text-[11px] mt-1 text-zinc-600'>--</div>; })()}
+                    </TableCell>
 
                     <TableCell className="px-4 py-4">
                       <div className="flex flex-col leading-tight gap-1">

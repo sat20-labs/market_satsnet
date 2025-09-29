@@ -28,6 +28,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export const Header = () => {
+  const [mounted, setMounted] = useState(false); // hydration guard
+  useEffect(() => { setMounted(true); }, []);
   const { address, network } = useReactWalletStore();
   const { setHeight, setBtcPrice, runtimeEnv, setEnv, chain } = useCommonStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -59,6 +61,16 @@ export const Header = () => {
     'tb1pydmhr3ud7e28g6lq7xgmfrz2e3uzxvw0zatv0d8auhwnatzrqawshjhh34',
   ];
   const navMenus = useMemo(() => {
+    // Before mounted, return minimal stable labels to avoid mismatch
+    if (!mounted) {
+      return [
+        { label: 'SWAP', href: '/swap' },
+        { label: '...', href: '/limitOrder' },
+        { label: '...', href: '/launchpool' },
+        { label: '...', children: [] },
+        { label: '...', href: '/account' },
+      ];
+    }
     const menus = [
       // 将原来的下拉菜单改为三个独立的菜单项
       {
@@ -113,7 +125,7 @@ export const Header = () => {
       },
     ];
     return menus as any;
-  }, [i18n.language, network, t, address]);
+  }, [i18n.language, network, t, address, mounted]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -126,7 +138,7 @@ export const Header = () => {
   }, [setEnv]);
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" suppressHydrationWarning>
       <div className="mx-auto flex h-16 items-center space-x-2 px-2 sm:px-4 sm:justify-between sm:space-x-0">
         <div className="flex gap-2 sm:gap-4 items-center">
           <div className="flex items-center gap-[2px] sm:gap-2">
@@ -168,7 +180,7 @@ export const Header = () => {
                       className={`flex items-center text-base font-medium transition-colors ${active ? 'text-foreground' : 'text-muted-foreground'
                         } hover:text-foreground/80`}
                     >
-                      {item.label}
+                      <span suppressHydrationWarning>{item.label}</span>
                     </NextLink>
                   ) : (
                     <DropdownMenu>
@@ -177,7 +189,7 @@ export const Header = () => {
                           className={`relative flex items-center text-base font-medium transition-colors ${active ? 'text-foreground' : 'text-muted-foreground'
                             } hover:text-foreground/80`}
                         >
-                          {item.label}
+                          <span suppressHydrationWarning>{item.label}</span>
                           <Icon icon="mdi:chevron-down" className="ml-1 text-base" />
                         </button>
                       </DropdownMenuTrigger>
@@ -185,7 +197,7 @@ export const Header = () => {
                         {item.children.map((child: any) => (
                           <DropdownMenuItem key={child.href} asChild>
                             <NextLink href={child.href} target={child.target}>
-                              <span className="flex items-center">{child.label}</span>
+                              <span className="flex items-center" suppressHydrationWarning>{child.label}</span>
                             </NextLink>
                           </DropdownMenuItem>
                         ))}
@@ -259,7 +271,7 @@ export const Header = () => {
                               icon="mdi:chevron-right-circle-outline"
                               className="text-base text-zinc-500 mr-2"
                             />
-                            {item.label}
+                            <span suppressHydrationWarning>{item.label}</span>
                           </NextLink>
                         );
                       }
@@ -285,7 +297,7 @@ export const Header = () => {
                                 icon="mdi:toolbox-outline"
                                 className="text-base text-zinc-500 mr-2"
                               />
-                              {item.label}
+                              <span suppressHydrationWarning>{item.label}</span>
                             </span>
                             <Icon icon="mdi:chevron-down" className="text-base" />
                           </button>
@@ -302,7 +314,7 @@ export const Header = () => {
                                   icon="mdi:chevron-right-circle-outline"
                                   className="text-base text-zinc-500 mr-2"
                                 />
-                                {child.label}
+                                <span suppressHydrationWarning>{child.label}</span>
                               </NextLink>
                             ))}
                           </div>

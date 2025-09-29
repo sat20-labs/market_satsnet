@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function RootLayout({
   children,
@@ -21,7 +22,8 @@ export default function RootLayout({
   const { appVersion } = useCommonStore();
   const { t, i18n } = useTranslation();
   const lang = i18n.language?.startsWith('en') ? 'en' : 'zh';
-  // const lang = i18nConfig.defaultLocale;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   return (
     <html lang={lang} suppressHydrationWarning className="dark">
       <head>
@@ -55,39 +57,45 @@ export default function RootLayout({
             {/* 服务暂停覆盖层 */}
             <ServicePauseOverlay />
             <footer id="footer">
-              <ul className="flex flex-wrap justify-center h-auto min-h-16 gap-1 items-center border-t border-zinc-700/50 text-gray-500 px-2 py-2 mb-2">
+              <ul className="flex flex-wrap justify-center h-auto min-h-16 gap-1 items-center border-t border-zinc-700/50 text-gray-500 px-2 py-2 mb-2" suppressHydrationWarning>
 
                 {/* 一起换行显示 */}
                 <li className="flex w-full sm:w-auto sm:flex-row justify-center text-xs sm:text-sm items-center gap-2 px-4 mt-2 sm:mt-0 text-center">
                   <span>
-                    <a
-                      href={`https://app.ordx.market/privacy/${lang === 'en' ? 'en' : 'zh'}/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-purple-500 transition-colors"
-                    >
-                      {t('footer.legal.privacy', { defaultValue: 'Privacy Policy' })}
-                    </a>
+                    {mounted && (
+                      <a
+                        href={`https://app.ordx.market/privacy/${lang === 'en' ? 'en' : 'zh'}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-purple-500 transition-colors"
+                      >
+                        {t('footer.legal.privacy', { defaultValue: 'Privacy Policy' })}
+                      </a>
+                    )}
                   </span>
                   <span className='border-l-2 border-zinc-600/80'>
-                    <a
-                      href={`/files/SAT20_Wallet_User_Guide_${lang}.pdf`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-purple-500 transition-colors ml-2"
-                    >
-                      {t('footer.help.title', { defaultValue: 'Wallet Guide' })}
-                    </a>
+                    {mounted && (
+                      <a
+                        href={`/files/SAT20_Wallet_User_Guide_${lang}.pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-purple-500 transition-colors ml-2"
+                      >
+                        {t('footer.help.title', { defaultValue: 'Wallet Guide' })}
+                      </a>
+                    )}
                   </span>
                   <span className='border-l-2 border-zinc-600/80'>
-                    <a
-                      href={`/files/LaunchPool_User_Guide_${lang}.pdf`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-purple-500 transition-colors ml-2"
-                    >
-                      {t('footer.help.title', { defaultValue: 'LaunchPool Guide' })}
-                    </a>
+                    {mounted && (
+                      <a
+                        href={`/files/LaunchPool_User_Guide_${lang}.pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-purple-500 transition-colors ml-2"
+                      >
+                        {t('footer.help.title', { defaultValue: 'LaunchPool Guide' })}
+                      </a>
+                    )}
                   </span>
                 </li>
                 <li className='flex text-xs sm:text-sm text-center'>
@@ -100,7 +108,9 @@ export default function RootLayout({
                     </Avatar>
                   </a>
                 </li>
-                <li className="flex justify-center text-xs sm:text-sm text-center">Copyrights&copy;2025 V1.0.{appVersion}</li>
+                <li className="flex justify-center text-xs sm:text-sm text-center" suppressHydrationWarning>
+                  {mounted ? `Copyrights©2025 V1.0.${appVersion}` : ''}
+                </li>
 
 
               </ul>

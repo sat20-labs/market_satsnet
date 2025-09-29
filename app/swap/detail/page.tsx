@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { Suspense } from 'react';
@@ -24,6 +24,10 @@ import MyOrders from '@/components/satoshinet/common/MySwapOrders';
 import { TikcerHoldersList } from '@/components/satoshinet/swap/TickerHoldersList';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
+import dynamic from 'next/dynamic';
+import { Icon } from '@iconify/react';
+
+const LightweightKline = dynamic(() => import('@/components/satoshinet/LightweightKline').then(m => m.LightweightKline), { ssr: false });
 
 function OrderPageContent() {
   const params = useSearchParams();
@@ -56,8 +60,8 @@ function OrderPageContent() {
   const { address } = useReactWalletStore();
 
   // Chart height classes (fixed)
-  const chartHeights_div = 'h-[33rem] sm:h-[35rem] md:h-[36rem]';
-  const chartHeights = 'h-[21rem] sm:h-[32rem] md:h-[26rem]';
+  const chartHeights_div = 'h-[37rem] sm:h-[38.5rem]';
+  const cHeights = 'h-[14rem] sm:h-[22rem]';
   // Skeleton flags
   const showChartSkeleton = Boolean(isAnalyticsLoading && !analyticsData);
   const showRightCardSkeleton = Boolean(isSwapStatusLoading && !swapStatusData);
@@ -71,6 +75,20 @@ function OrderPageContent() {
       refreshAll();
     }, 2000);
   }
+
+  // Hydration-safe chart mode (avoid SSR/CSR text mismatch)
+  const [chartMode, setChartMode] = useState<'line' | 'lw'>('lw');
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+    try {
+      const saved = window.localStorage.getItem('chartMode');
+      if (saved === 'line' || saved === 'lw') setChartMode(saved);
+      else if (saved === 'simple') setChartMode('line');
+      else if (saved === 'kline') setChartMode('lw');
+    } catch { }
+  }, []);
+  const setChartModeAndStore = (m: 'line' | 'lw') => { setChartMode(m); try { window.localStorage.setItem('chartMode', m); } catch { } };
 
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
@@ -88,28 +106,54 @@ function OrderPageContent() {
     );
   }
 
+  // Global hydration guard: avoid SSR/CSR text mismatch (translations, store-derived text, wallet state)
+  if (!hydrated) {
+    return <div className="w-full flex items-center justify-center py-10" suppressHydrationWarning><Loading /></div>;
+  }
+
   return (
-    <div className="w-full">
+    <div className="w-full" suppressHydrationWarning>
       <div className="grid grid-cols-1 md:grid-cols-12 sm:gap-6 p-2 sm:p-4 h-full w-full">
         {/* Chart and Asset Info Container */}
         <div className="md:col-span-8 flex flex-col gap-3 order-last md:order-1">
 
           {/* Tradingview Chart or skeleton */}
           <div className={`relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 ${chartHeights_div}`}>
-            {showChartSkeleton ? (
+            <div className="absolute top-3 right-2 z-20 flex gap-2">
+              <button onClick={() => setChartModeAndStore('line')} className={`px-2 py-1 rounded text-[11px] border transition-colors ${chartMode === 'line' ? 'btn-gradient text-white border-purple-500' : 'bg-zinc-800/70 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>
+                <Icon icon="lucide:chart-spline" className="w-4 h-4" />
+              </button>
+              <button onClick={() => setChartModeAndStore('lw')} className={`px-2 py-1 rounded text-[11px] border transition-colors ${chartMode === 'lw' ? 'btn-gradient text-white border-purple-500' : 'bg-zinc-800/70 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>
+                <Icon icon="lucide:align-horizontal-distribute-center" className="w-3 h-3 sm:w-4 sm:h-4" />
+              </button>
+            </div>
+            {showChartSkeleton && chartMode === 'line' ? (
               <div className={`w-full ${chartHeights_div} animate-pulse`} />
             ) : (
               <div className={`w-full ${chartHeights_div}`}>
-                <ChartModule
-                  asset={asset}
-                  ticker={ticker}
-                  isLoading={isAnalyticsLoading}
-                  analyticsData={analyticsData}
-                  refresh={refreshAnalytics}
-                  isRefreshing={isAnalyticsLoading}
-                  chartHeight={chartHeights}
-
-                />
+                {hydrated && chartMode === 'line' && (
+                  <ChartModule
+                    asset={asset}
+                    ticker={ticker}
+                    isLoading={isAnalyticsLoading}
+                    analyticsData={analyticsData}
+                    refresh={refreshAnalytics}
+                    isRefreshing={isAnalyticsLoading}
+                    chartHeight={cHeights}
+                    contractUrl={contractUrl}
+                    onSwitchToKline={() => setChartModeAndStore('lw')}
+                  />
+                )}
+                {/* {chartMode === 'tv' && (
+                  <div className="w-full h-full">
+                    <TVChart contractUrl={contractUrl} interval="15" />
+                  </div>
+                )} */}
+                {hydrated && chartMode === 'lw' && (
+                  <div className="w-full h-full">
+                    <LightweightKline symbol={contractUrl} initialResolution="4H" chartHeights={{ volumeRatio: 0.3, height: cHeights }} />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -134,11 +178,11 @@ function OrderPageContent() {
           <div className="max-w-full mx-auto pb-4 bg-transparent text-zinc-200 rounded-xl shadow-lg w-full">
 
             <Tabs defaultValue="swap" className="w-full">
-              <TabsList className="mb-2 whitespace-nowrap">
-                <TabsTrigger value="swap" className="flex-1">{t('common.swap')}</TabsTrigger>
-                <TabsTrigger value="liquidity" className="flex-1">{t('common.Liquidity')}</TabsTrigger>
-                <TabsTrigger value="deposit" className="flex-1">{t('common.deposit')}</TabsTrigger>
-                <TabsTrigger value="withdraw" className="flex-1">{t('common.withdraw')}</TabsTrigger>
+              <TabsList className="mb-2 whitespace-nowrap" suppressHydrationWarning>
+                <TabsTrigger value="swap" className="flex-1" suppressHydrationWarning>{t('common.swap')}</TabsTrigger>
+                <TabsTrigger value="liquidity" className="flex-1" suppressHydrationWarning>{t('common.Liquidity')}</TabsTrigger>
+                <TabsTrigger value="deposit" className="flex-1" suppressHydrationWarning>{t('common.deposit')}</TabsTrigger>
+                <TabsTrigger value="withdraw" className="flex-1" suppressHydrationWarning>{t('common.withdraw')}</TabsTrigger>
               </TabsList>
               <TabsContent value="swap">
                 {showRightCardSkeleton ? (
@@ -267,12 +311,12 @@ function OrderPageContent() {
 
       {/* Full-width bottom tabs section */}
       <div className="w-full px-2 sm:px-2 mt-4 bg-transparent">
-        <Tabs defaultValue="activities" className="w-full">
-          <UnderlineTabsList className="mb-2 text-xs">
-            <UnderlineTabsTrigger value="activities">{t('common.activity') || 'Activities'}</UnderlineTabsTrigger>
-            <UnderlineTabsTrigger value="myactivities">{t('common.my_activities') || 'My Activities'}</UnderlineTabsTrigger>
-            <UnderlineTabsTrigger value="holders">{t('common.holder') || 'Holders'}</UnderlineTabsTrigger>
-            <UnderlineTabsTrigger value="lpholders">{t('common.lptHolders') || 'LP-Holders'}</UnderlineTabsTrigger>
+        <Tabs defaultValue="activities" className="w-full" suppressHydrationWarning>
+          <UnderlineTabsList className="mb-2 text-xs" suppressHydrationWarning>
+            <UnderlineTabsTrigger value="activities" suppressHydrationWarning>{t('common.activity') || 'Activities'}</UnderlineTabsTrigger>
+            <UnderlineTabsTrigger value="myactivities" suppressHydrationWarning>{t('common.my_activities') || 'My Activities'}</UnderlineTabsTrigger>
+            <UnderlineTabsTrigger value="holders" suppressHydrationWarning>{t('common.holder') || 'Holders'}</UnderlineTabsTrigger>
+            <UnderlineTabsTrigger value="lpholders" suppressHydrationWarning>{t('common.lptHolders') || 'LP-Holders'}</UnderlineTabsTrigger>
           </UnderlineTabsList>
           <TabsContent value="activities" className="mt-4 bg-zinc-950/80">
             <HistorySwapOrders contractURL={contractUrl} type="swap" ticker={ticker} />

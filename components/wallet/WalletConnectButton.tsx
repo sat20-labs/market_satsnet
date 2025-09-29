@@ -44,6 +44,8 @@ const WalletConnectButton = () => {
   const { refreshAssets } = useAssetStore();
   const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
 
   const { data: balanceData } = useQuery({
@@ -211,6 +213,10 @@ const WalletConnectButton = () => {
     }
   };
 
+  if (!mounted) {
+    return <Button variant="outline" className="px-4 h-9 btn-gradient opacity-0 pointer-events-none" aria-hidden>...</Button>;
+  }
+
   return (
     <WalletConnectReact
 
@@ -229,7 +235,7 @@ const WalletConnectButton = () => {
         {connected && address ? (
           <Popover>
             <div className="relative">
-              <PopoverTrigger>
+              <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className="px-0 bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-gray-200 focus:ring-0 focus-visible:ring-0"
