@@ -60,13 +60,13 @@ export function AssetInfoCard({
   return (
     <div className="flex items-center gap-3 mb-4 pb-2">
       <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-700 shadow-lg relative">
-        <div className="absolute top-2 sm:top-5 right-2 sm:right-4 z-10">
+        {/* <div className="absolute top-2 sm:top-5 right-2 sm:right-4 z-10">
           <ButtonRefresh
             onRefresh={refresh}
             loading={isRefreshing}
             className="bg-zinc-800/50"
           />
-        </div>
+        </div> */}
         <div className="flex items-center mb-2 gap-4">
           <div className="w-11 h-11 rounded-full bg-zinc-700 flex items-center justify-start text-zinc-300 text-xl font-bold">
             {/* {ticker.charAt(0).toUpperCase()} */}
@@ -131,11 +131,7 @@ export function AssetInfoCard({
                       <Icon icon="fa7-brands:discord" className="w-4 h-4" />
                     </Link>
                   )}
-                  <Button variant="outline" size="sm" className="ml-2">
-                    <Link href={`/ticker/detail/?asset=${asset}`} prefetch className="text-zinc-400  text-xs sm:text-sm">
-                      Detail
-                    </Link>
-                  </Button>
+
                 </div>
               )}
             </div>
@@ -150,6 +146,11 @@ export function AssetInfoCard({
         {shortDesc && (
           <div className="ml-2 mb-2 text-sm text-zinc-500" title={description}>
             {shortDesc}
+            <Button variant="outline" size="sm" className="ml-2">
+              <Link href={`/ticker/detail/?asset=${asset}`} prefetch className="text-zinc-400  text-xs sm:text-sm">
+                Detail
+              </Link>
+            </Button>
           </div>
         )}
         <div className="text-xs sm:text-sm pt-2 text-zinc-500 border-t border-zinc-800 space-y-2">

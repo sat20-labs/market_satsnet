@@ -575,7 +575,7 @@ const Swap = ({
         <Button
           type="button"
           onClick={handleSwap}
-          className={`w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient`}
+          className={`w-[98%] sm:w-full px-2 my-4 text-sm font-semibold transition-all duration-200 btn-gradient`}
           size="lg"
           disabled={swapMutation.isPending}
         >

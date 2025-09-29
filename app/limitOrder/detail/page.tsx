@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { marketApi } from '@/api';
@@ -18,8 +19,9 @@ import { Button } from "@/components/ui/button";
 import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
 import { toast } from "sonner";
 import { useCommonStore } from '@/store/common';
-import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import { Icon } from '@iconify/react';
+import { AssetInfoCardLimitOrder } from '@/components/satoshinet/AssetInfoCardLimitOrder';
 
 const LightweightKline = dynamic(() => import('@/components/satoshinet/LightweightKline').then(m => m.LightweightKline), { ssr: false });
 
@@ -43,23 +45,27 @@ function OrderPageContent() {
     }, 2000);
   }
 
-  const [chartMode, setChartMode] = useState<'line' | 'tv' | 'lw'>(() => {
-    if (typeof window !== 'undefined') {
+  // Chart height classes (fixed)
+  const chartHeights_div = 'h-[37.5rem] sm:h-[39rem]';
+  const cHeights = 'h-[27rem] sm:h-[30rem]';
+  // Skeleton flags
+  const showChartSkeleton = Boolean(isAnalyticsLoading && !analyticsData);
+  // LPT ownership flag
+
+
+
+  const [chartMode, setChartMode] = useState<'line' | 'lw'>('lw');
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+    try {
       const saved = window.localStorage.getItem('chartMode');
-      if (saved === 'line' || saved === 'tv' || saved === 'lw') return saved;
-      // backward compatibility with old values
-      if (saved === 'simple') return 'line';
-      if (saved === 'kline') return 'tv';
-    }
-    return 'tv'; // 默认 TV K 线
-  });
-
-  const [wideChart, setWideChart] = useState(false); // NEW: full-width chart toggle
-
-  const setChartModeAndStore = (mode: 'line' | 'tv' | 'lw') => {
-    setChartMode(mode);
-    try { window.localStorage.setItem('chartMode', mode); } catch { }
-  };
+      if (saved === 'line' || saved === 'lw') setChartMode(saved);
+      else if (saved === 'simple') setChartMode('line');
+      else if (saved === 'kline') setChartMode('lw');
+    } catch { }
+  }, []);
+  const setChartModeAndStore = (m: 'line' | 'lw') => { setChartMode(m); try { window.localStorage.setItem('chartMode', m); } catch { } };
 
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
@@ -93,117 +99,112 @@ function OrderPageContent() {
   };
 
   return (
-    <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-3 sm:gap-6 p-2 sm:p-4 h-full w-ful">
-        {/* Chart and Asset Info Container */}
-        <div className={`${wideChart ? 'sm:col-span-3' : 'sm:col-span-2'} flex flex-col gap-4 mb-8 sm:mb-0`}>
-          {/* Chart Mode Switch */}
-          <div className="flex items-center justify-end gap-2 mb-2 pr-1">
-            {/* Wide toggle */}
-            <button
-              onClick={() => setWideChart(v => !v)}
-              className={`px-3 py-1 rounded text-xs font-medium border transition-colors ${wideChart ? 'bg-purple-600/80 text-white border-purple-500' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}
-            >{wideChart ? 'Normal' : 'Wide'}</button>
-            <button
-              onClick={() => setChartModeAndStore('line')}
-              className={`px-3 py-1 rounded text-xs font-medium border transition-colors ${chartMode === 'line' ? 'bg-purple-600/80 text-white border-purple-500' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}
-            >Line</button>
-            <button
-              onClick={() => setChartModeAndStore('lw')}
-              className={`px-3 py-1 rounded text-xs font-medium border transition-colors ${chartMode === 'lw' ? 'bg-purple-600/80 text-white border-purple-500' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}
-            >LW</button>
-          </div>
-          {/* Tradingview / Simple / Lightweight Chart */}
-          <div className="flex items-stretch justify-center min-h-[300px] sm:min-h-[680px] sm:mb-0">
-            {chartMode === 'line' && (
-              <ChartModule
-                asset={asset}
-                ticker={ticker}
-                isLoading={isAnalyticsLoading}
-                analyticsData={analyticsData}
-                contractUrl={contractUrl}
-                onSwitchToKline={() => setChartModeAndStore('tv')}
-              />
-            )}
+    <div className="w-full" suppressHydrationWarning>
+      <div className="grid grid-cols-1 md:grid-cols-12 sm:gap-6 p-2 sm:pt-4 h-full w-full">
+        {/* 左侧：图表、资产信息 */}
+        <div className="md:col-span-8 flex flex-col gap-3 order-last md:order-1">
+          {/* 桌面端资产信息卡片，图表上方 */}
+          <div className="hidden md:block">
+            <AssetInfoCardLimitOrder
+              asset={asset}
+              ticker={ticker}
+              contractUrl={contractUrl}
 
-            {chartMode === 'lw' && (
-              <div className="w-full h-full bg-zinc-900/50 border border-zinc-700/50 rounded-lg overflow-hidden">
-                <LightweightKline symbol={contractUrl} initialResolution="15" />
+              refresh={refresh}
+              isRefreshing={isAnalyticsLoading}
+            />
+          </div>
+
+          <div className={`relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 ${chartHeights_div}`}>
+            {/* Chart Mode Switch */}
+            <div className="absolute top-5 sm:top-3 right-2 z-20 flex gap-2">
+              <button onClick={() => setChartModeAndStore('line')} className={`px-2 py-1 rounded text-[11px] border transition-colors ${chartMode === 'line' ? 'btn-gradient text-white border-purple-500' : 'bg-zinc-800/70 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>
+                <Icon icon="lucide:chart-spline" className="w-4 h-4" />
+              </button>
+              <button onClick={() => setChartModeAndStore('lw')} className={`px-2 py-1 rounded text-[11px] border transition-colors ${chartMode === 'lw' ? 'btn-gradient text-white border-purple-500' : 'bg-zinc-800/70 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>
+                <Icon icon="lucide:align-horizontal-distribute-center" className="w-3 h-3 sm:w-4 sm:h-4" />
+              </button>
+            </div>
+            {showChartSkeleton && chartMode === 'line' ? (
+              <div className={`w-full ${chartHeights_div} animate-pulse`} />
+            ) : (
+              <div className={`relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 ${chartHeights_div}`}>
+                {hydrated && chartMode === 'line' && (
+                  <ChartModule
+                    asset={asset}
+                    ticker={ticker}
+                    isLoading={isAnalyticsLoading}
+                    analyticsData={analyticsData}
+                    refresh={refresh}
+                    isRefreshing={isAnalyticsLoading}
+                    chartHeight={cHeights}
+                    contractUrl={contractUrl}
+                    onSwitchToKline={() => setChartModeAndStore('lw')}
+                  />
+                )}
+                {hydrated && chartMode === 'lw' && (
+                  <div className="w-full h-full">
+                    <LightweightKline symbol={contractUrl} initialResolution="4H" chartHeights={{ volumeRatio: 0.3, height: cHeights }} />
+                  </div>
+                )}
               </div>
             )}
           </div>
-          <div className="flex items-center justify-center w-full h-[320px] sm:h-[220px] mt-7 sm:mt-1 sm:mb-0">
+
+          {/* 移动端资产信息折叠 */}
+          <div className="md:hidden relative z-10">
+            <details className="rounded-xl border border-zinc-800 bg-zinc-900">
+              <summary className="px-3 py-2 cursor-pointer text-sm text-zinc-300 select-none">{t('common.assetTradeInfo')}</summary>
+              <div className="p-3">
+                <AssetInfo depthData={contractData} tickerInfo={tickerInfo} holders={holders} />
+              </div>
+            </details>
+          </div>
+          {/* 桌面端资产信息 */}
+          <div className="hidden md:block w-full relative z-10">
             <AssetInfo depthData={contractData} tickerInfo={tickerInfo} holders={holders} />
           </div>
         </div>
-        {!wideChart && (
-          <div className="sm:col-span-1 flex items-center justify-center mb-4 mt-3 sm:mb-0 sm:mt-0">
-            <div className="max-w-full mx-auto px-4 bg-transparent text-zinc-200 rounded-2xl shadow-lg  w-full h-full">
-              {/* DepthPanel 盘口 */}
-              {isContractStatusLoading ? (
-                <div className="w-full mt-4 text-center text-gray-400">Loading...</div>
-              ) : !contractUrl ? (
-                <div className="w-full mt-4">
-                  <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
-                    {t('common.swap_notice')}
-                  </div>
-                </div>
-              ) : (
-                <DepthPanel
-                  contractURL={contractUrl}
-                  asset={asset}
-                  ticker={ticker}
-                  tickerInfo={tickerInfo}
-                  assetBalance={assetBalance}
-                  balanceLoading={isContractStatusLoading}
-                  onOrderSuccess={refreshHandler}
-                  depthData={contractData}
-                />
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      {/* 我的订单和所有订单 */}
-      <div className="bg-zinc-900 rounded-2xl p-4 mt-4 mb-4">
-        <Tabs defaultValue="history">
-          <div className="flex justify-between items-center mt-2 mb-4 border-b border-gray-800">
-            <TabsList className="flex justify-start w-full bg-transparent">
 
-              <TabsTrigger
-                value="history"
-                className={cn(
-                  "w-28 rounded-none px-4 py-3 text-sm font-medium text-gray-400 hover:text-white focus:text-white border-b-3 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent data-[state=active]:text-white"
-                )}
-              >
-                {t('common.activities')}
-              </TabsTrigger>
-              <TabsTrigger
-                value="myOrders"
-                className={cn(
-                  "w-28 rounded-none px-4 py-3 text-sm font-medium text-gray-400 hover:text-white focus:text-white border-b-3 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent data-[state=active]:text-white"
-                )}
-              >
-                {t('common.my_activities')}
-              </TabsTrigger>
-            </TabsList>
-            <div className="flex justify-between items-center gap-2">
-              <Button
-                variant="outline"
-                className="px-4 mb-2 h-8 text-zinc-400"
-                size="sm"
-                onClick={cancelOrder}
-              >
-                Cancel
-              </Button>
-              <ButtonRefresh className="mx-4 mb-2" loading={isLoading} onRefresh={() => refresh()} />
-            </div>
+        {/* 右侧：下单面板，sticky 效果 */}
+        <div className="md:col-span-4 order-first md:order-2 lg:sticky lg:top-4 self-start">
+          {/* 手机端资产信息卡片最上方显示 */}
+          <div className="block md:hidden">
+            <AssetInfoCardLimitOrder
+              asset={asset}
+              ticker={ticker}
+              contractUrl={contractUrl}
+              refresh={refresh}
+              isRefreshing={isAnalyticsLoading}
+            />
           </div>
-          <TabsContent value="myOrders">
-            <MyOrders contractURL={contractUrl} type="trade" asset={asset} />
-          </TabsContent>
-          <TabsContent value="history" className="">
+          <div className="max-w-full mx-auto pb-4 bg-transparent text-zinc-200 rounded-xl shadow-lg w-full">
+            <DepthPanel
+              contractURL={contractUrl}
+              asset={asset}
+              ticker={ticker}
+              tickerInfo={tickerInfo}
+              assetBalance={assetBalance}
+              balanceLoading={isContractStatusLoading}
+              onOrderSuccess={refreshHandler}
+              depthData={contractData}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 全宽底部 Tabs 区域 */}
+      <div className="w-full px-2 sm:px-2 mt-4 sm:m-1 bg-transparent">
+        <Tabs defaultValue="history" className="w-full" suppressHydrationWarning>
+          <TabsList className="mb-2 text-xs" suppressHydrationWarning>
+            <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
+            <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="history" className="mt-4 bg-zinc-950/80">
             <HistoryOrders contractURL={contractUrl} type="trade" />
+          </TabsContent>
+          <TabsContent value="myOrders" className="mt-4 bg-zinc-950/80">
+            <MyOrders contractURL={contractUrl} type="trade" asset={asset} />
           </TabsContent>
         </Tabs>
       </div>

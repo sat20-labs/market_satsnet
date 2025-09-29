@@ -176,43 +176,40 @@ export const ChartModule = ({
   });
 
   const lastPrice = priceChangeData?.last_price;
-  const pctMap: Record<string, number | undefined> = {
-    '15m': priceChangeData?.pct_24h, // 默认用24h
-    '24h': priceChangeData?.pct_24h,
-    '7d': priceChangeData?.pct_7d,
-    '30d': priceChangeData?.pct_30d,
-  };
-  const currentPctRaw = pctMap[type];
-  const pctSign = currentPctRaw && currentPctRaw > 0 ? '+' : '';
-  const pctColor = currentPctRaw == null ? 'text-zinc-500' : currentPctRaw > 0 ? 'text-green-500' : currentPctRaw < 0 ? 'text-red-500' : 'text-zinc-400';
-  const currentPrice = Number(pctMap['15m']);
-  const pctClass = pctMap == null ? 'text-zinc-400' : currentPrice > 0 ? 'text-green-500' : currentPrice < 0 ? 'text-red-500' : 'text-zinc-400';
-  const ptcPrice = currentPrice && currentPrice > 0 ? '+' + (currentPrice * 100).toFixed(2) : currentPrice < 0 ? '-' + (currentPrice * 100).toFixed(2) : '--';
+  // 价格涨跌幅始终显示24h
+  const pct24h = priceChangeData?.pct_24h;
+  const pctSign = pct24h && pct24h > 0 ? '+' : '';
+  const ptcPrice = pct24h != null ? `${pctSign}${(pct24h * 100).toFixed(2)}%` : '--';
+  const pctClass = pct24h == null ? 'text-zinc-400' : pct24h > 0 ? 'text-green-500' : pct24h < 0 ? 'text-red-500' : 'text-zinc-400';
+
+  // 只在合约地址包含 _amm 时显示资产头部信息
+  const showAssetHeader = (contractUrl || '').includes('_amm');
 
   return (
     <div className="w-full h-full bg-zinc-900/50 border-1 border-zinc-700/50 rounded-lg">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center py-2">
 
-        <div className="flex justify-start items-center">
-          <h2 className="flex justify-center items-center text-lg font-bold text-zinc-400 ml-4 py-4 gap-2">
-            <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-              <AssetLogo protocol={protocol} ticker={ticker} className="w-10 h-10" />
-              <AvatarFallback>
-                {ticker?.charAt(0)?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className='text-zinc-400 text-xs sm:text-base uppercase'>{ticker}--SATSWAP</span>
-          </h2>
-          <div className="flex justify-start items-center ml-4 mr-4 min-w-[100px]">
-            <span className="text-sm sm:text-lg font-semibold text-green-500 leading-tight">
-              {lastPrice != null ? Number(lastPrice).toFixed(4) : '--'}<span className="ml-2 text-[11px] sm:text-[14px] md:text-sm text-zinc-400 font-normal">sats</span>
-            </span>
-            <span className={`text-[11px] ml-2 mt-1 sm:text-xs font-medium leading-none text-green-400`}>
-              <span className={`text-[11px] ${pctClass}`}>{ptcPrice}%</span>
-            </span>
+        {showAssetHeader && (
+          <div className="flex justify-start items-center">
+            <h2 className="flex justify-center items-center text-lg font-bold text-zinc-400 ml-4 py-4 gap-2">
+              <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
+                <AssetLogo protocol={protocol} ticker={ticker} className="w-10 h-10" />
+                <AvatarFallback>
+                  {ticker?.charAt(0)?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className='text-zinc-400 text-[11px] sm:text-base uppercase'>{ticker}</span>
+            </h2>
+            <div className="flex justify-start items-center ml-2 mr-4 max-w-[100px]">
+              <span className="text-xs sm:text-lg font-semibold text-green-500 leading-tight">
+                {lastPrice != null ? Number(lastPrice).toFixed(4) : '--'}<span className="ml-2 text-[11px] sm:text-[14px] md:text-sm text-zinc-400 font-normal">sats</span>
+              </span>
+              <span className={`text-[11px] sm:text-[14px] ml-2 mt-1 font-medium leading-none ${pctClass}`}>
+                {ptcPrice}
+              </span>
+            </div>
           </div>
-
-        </div>
+        )}
 
         {/* <div className="mr-2">
           <ButtonRefresh
@@ -222,11 +219,18 @@ export const ChartModule = ({
           />
         </div> */}
       </div>
-      <div className="p-2 max-w-[100rem]">
+      <div className="px-2 max-w-[100rem]">
         <ContentLoading loading={isLoading}>
-          <div className="flex justify-between items-center mb-4">
-
-            <div className="flex items-center text-zinc-400 mr-1 sm:mr-6 gap-2">
+          <div className="flex justify-start items-center mb-4">
+            {!showAssetHeader && (
+              <div className="flex flex-col items-start text-green-400 gap-1">
+                <span>
+                  {lastPrice != null ? Number(lastPrice).toFixed(4) : '--'}<span className="ml-2 text-[11px] sm:text-[14px] md:text-sm text-zinc-400 font-normal">sats</span>
+                </span>
+                <span className={`text-[11px] sm:text-[14px] ${pctClass}`}>{ptcPrice}</span>
+              </div>
+            )}
+            <div className="flex items-center text-zinc-400 pl-2 mr-1 sm:mr-6 gap-2">
               {types.map((item) => (
                 <button
                   key={item.value}
@@ -239,9 +243,7 @@ export const ChartModule = ({
                 </button>
               ))}
             </div>
-            <span className={`text-[11px] mt-1 sm:text-xs font-medium leading-none ${pctColor}`}>
-              {currentPctRaw == null ? '--' : `${pctSign}${(currentPctRaw * 100).toFixed(2)}%`}
-            </span>
+
           </div>
           {/* Wrapped chart area with mb-6 and changed items-center -> items-stretch */}
           <div className="mb-6">

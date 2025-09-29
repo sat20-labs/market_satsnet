@@ -217,5 +217,5 @@ export const OrderLineChart = ({
   }, [originalData]);
 
   // 强制容器高度和传入 chartHeight 类名一致，保证和 LightweightKline 一致
-  return <div className={`w-full ${chartHeight || 'h-[320px] sm:h-[680px]'}`} ref={container}></div>;
+  return <div className={`w-full bg-zinc-950/50 ${chartHeight || 'h-[320px] sm:h-[680px]'}`} ref={container}></div>;
 };

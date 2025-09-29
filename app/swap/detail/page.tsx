@@ -60,8 +60,8 @@ function OrderPageContent() {
   const { address } = useReactWalletStore();
 
   // Chart height classes (fixed)
-  const chartHeights_div = 'h-[37rem] sm:h-[38.5rem]';
-  const cHeights = 'h-[14rem] sm:h-[22rem]';
+  const chartHeights_div = 'h-[37.5rem] sm:h-[39rem]';
+  const cHeights = 'h-[27rem] sm:h-[30rem]';
   // Skeleton flags
   const showChartSkeleton = Boolean(isAnalyticsLoading && !analyticsData);
   const showRightCardSkeleton = Boolean(isSwapStatusLoading && !swapStatusData);
@@ -113,13 +113,13 @@ function OrderPageContent() {
 
   return (
     <div className="w-full" suppressHydrationWarning>
-      <div className="grid grid-cols-1 md:grid-cols-12 sm:gap-6 p-2 sm:p-4 h-full w-full">
+      <div className="grid grid-cols-1 md:grid-cols-12 sm:gap-6 p-2 sm:pt-4 h-full w-full">
         {/* Chart and Asset Info Container */}
         <div className="md:col-span-8 flex flex-col gap-3 order-last md:order-1">
 
           {/* Tradingview Chart or skeleton */}
           <div className={`relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 ${chartHeights_div}`}>
-            <div className="absolute top-3 right-2 z-20 flex gap-2">
+            <div className="absolute top-5 sm:top-3 right-2 z-20 flex gap-2">
               <button onClick={() => setChartModeAndStore('line')} className={`px-2 py-1 rounded text-[11px] border transition-colors ${chartMode === 'line' ? 'btn-gradient text-white border-purple-500' : 'bg-zinc-800/70 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>
                 <Icon icon="lucide:chart-spline" className="w-4 h-4" />
               </button>
@@ -176,7 +176,6 @@ function OrderPageContent() {
         {/* Right: Swap/Deposit/Withdraw panel */}
         <div className="md:col-span-4 order-first md:order-2 lg:sticky lg:top-4 self-start">
           <div className="max-w-full mx-auto pb-4 bg-transparent text-zinc-200 rounded-xl shadow-lg w-full">
-
             <Tabs defaultValue="swap" className="w-full">
               <TabsList className="mb-2 whitespace-nowrap" suppressHydrationWarning>
                 <TabsTrigger value="swap" className="flex-1" suppressHydrationWarning>{t('common.swap')}</TabsTrigger>
@@ -312,7 +311,7 @@ function OrderPageContent() {
       </div>
 
       {/* Full-width bottom tabs section */}
-      <div className="w-full px-2 sm:px-2 mt-4 bg-transparent">
+      <div className="w-full px-2 sm:px-2 mt-4 sm:m-1 bg-transparent">
         <Tabs defaultValue="activities" className="w-full" suppressHydrationWarning>
           <UnderlineTabsList className="mb-2 text-xs" suppressHydrationWarning>
             <UnderlineTabsTrigger value="activities" suppressHydrationWarning>{t('common.activity') || 'Activities'}</UnderlineTabsTrigger>

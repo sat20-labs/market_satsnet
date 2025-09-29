@@ -6,6 +6,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getMarketKline, getMarketPriceChanges } from '@/api/market';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import AssetLogo from '@/components/AssetLogo';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface LightweightKlineProps {
     symbol?: string; // contractUrl
@@ -115,6 +117,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, heig
     const ma20SeriesRef = useRef<any>(null);
     const firstDataLoadedRef = useRef(false);
     const candleSeriesModeRef = useRef<'candle' | 'area'>('candle');
+
 
     const [resolution, setResolution] = useState(initialResolution);
     const [chartReady, setChartReady] = useState(false);
@@ -843,7 +846,7 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
     const priceStr = (hoverInfo?.close != null ? hoverInfo.close : (priceInfo.last != null ? Number(priceInfo.last) : undefined))?.toFixed(priceDecimals) || '--';
     // 绿色涨 红色跌
     const pctClass = priceInfo.pct24h == null ? 'text-zinc-400' : priceInfo.pct24h > 0 ? 'text-green-500' : priceInfo.pct24h < 0 ? 'text-red-500' : 'text-zinc-400';
-    const maFmt = (v?: number) => v == null ? '--' : v.toFixed(4);
+
     const formatTs = (ts?: number) => ts ? new Date(ts * 1000).toISOString().slice(5, 16).replace('T', ' ') : '--';
 
     useEffect(() => {
@@ -852,16 +855,19 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
     }, [showMA5, showMA10, showMA20, applyMAs]);
 
     // 格式化 symbol 显示为 satdog(ordx)
-    function formatSymbol(symbol?: string) {
-        if (!symbol) return '';
+    function parseSymbol(symbol?: string) {
+        if (!symbol) return { assetName: '', protocol: '' };
         const parts = symbol.split('_');
         const assetInfo = parts[1] || '';
         const asset = assetInfo.split(':');
         const protocol = asset[0] || '';
-        const assetName = asset[2];
-
-        return `${assetName}(${protocol})`;
+        const assetName = asset[2] || '';
+        return { assetName, protocol };
     }
+
+    const { assetName, protocol } = parseSymbol(symbol);
+
+    const showAssetHeader = (symbol || '').includes('_amm');
 
     return (
         <div className={`flex flex-col w-full h-full ${className}`}>
@@ -871,16 +877,26 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
                 </div>
             )}
             <div className="flex items-center gap-4 px-3 py-3 sm:py-1 border-b border-zinc-700/40 bg-zinc-900/60 text-xs relative">
-
+                {showAssetHeader && (
+                    <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
+                        <AssetLogo protocol={protocol} ticker={assetName} className="w-10 h-10" />
+                        <AvatarFallback>
+                            {assetName?.charAt(0)?.toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                )}
                 {isMobile ? (
                     <>
+
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-zinc-200">{priceStr}</span>
+                            <span className="text-sm font-semibold text-green-500">{priceStr}</span>
                             <span className={`text-[11px] ${pctClass}`}>{pct24h}</span>
                         </div>
+
+
                         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
                             {RESOLUTIONS.map(r => (
-                                <button key={r} onClick={() => setResolution(r)} className={`px-2 h-6 rounded text-[11px] border ${r === resolution ? 'bg-purple-600/80 text-white border-purple-500' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>{r === 'D' ? '1D' : (r === '240' ? '4H' : r)}</button>
+                                <button key={r} onClick={() => setResolution(r)} className={`px-2 h-6 rounded-sm font-medium  text-[12px] sm:text-[11px] border ${r === resolution ? 'bg-purple-600/80 text-white border-purple-500' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>{r === '60' ? '1H' : r === 'D' ? '1D' : (r === '240' ? '4H' : r)}</button>
                             ))}
                         </div>
                         {/* Mobile removed VOL/LIVE from header; now bottom toolbar */}
@@ -888,25 +904,28 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
                 ) : (
                     <>
                         <div className="flex flex-col">
-                            <span className="mt-1 text-base text-zinc-200 font-semibold">{priceStr}<span className="ml-1 text-[14px] text-zinc-500">sats</span></span>
+                            <span className="mt-1 text-base text-green-500 font-semibold">{priceStr}<span className="ml-1 text-[14px] text-zinc-500">sats</span></span>
                             <span className={`mt-1 text-[12px] sm:text-[14px] ${pctClass}`}>{pct24h}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-zinc-400">Res:</span>
                             {RESOLUTIONS.map(r => (
-                                <button key={r} onClick={() => setResolution(r)} className={`px-2 h-6 rounded text-[13px] border transition-colors ${r === resolution ? 'bg-purple-600/80 text-white border-purple-500' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>{r === 'D' ? '1D' : (r === '240' ? '4H' : r)}</button>
+                                <button key={r} onClick={() => setResolution(r)} className={`px-2 h-6 rounded-sm font-medium text-[13px] border transition-colors ${r === resolution ? 'bg-purple-600/80 text-white border-purple-500' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>{r === '60' ? '1H' : r === 'D' ? '1D' : (r === '240' ? '4H' : r)}</button>
                             ))}
                         </div>
-                        {/* Removed MA / FillGaps / VOL / LIVE from header (moved to bottom toolbar) */}
+
                         <div className="ml-auto mt-9 flex items-center gap-3 text-[10px] text-zinc-500">
                             <span>{formatTs(rangeInfo.start)} → {formatTs(rangeInfo.end)}</span>
                         </div>
                     </>
                 )}
                 {/* 左上角资产信息和条件 */}
-                <div className="absolute left-2 top-13 sm:top-16 z-20 flex justify-start items-center min-w-[320px]">
+                <div className="absolute left-2 top-18 sm:top-16 z-20 flex justify-start items-center min-w-[320px]">
                     <span className="text-sm font-medium text-zinc-500">
-                        {formatSymbol(symbol)} -- SATSWAP
+                        <span className={assetName && assetName.length > 10 ? 'text-[11px]' : 'text-sm'}>
+                            {assetName}
+                        </span>
+                        ({protocol}) -- <span className='text-[11px]'>SATSWAP</span>
                     </span>
                     <span className="text-xs text-zinc-500 ml-2">
                         Res: {resolution === 'D' ? '1D' : (resolution === '240' ? '4H' : resolution)}
@@ -931,13 +950,13 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
                 {/* React tooltip removed; now native DOM (lwk-tooltip) */}
             </div>
             {/* Bottom toolbar: MA / FillGaps / VOL / LIVE */}
-            <div className="w-full px-3 py-2 border-t border-zinc-700/40 bg-zinc-900/60 flex flex-wrap items-center gap-3 text-[10px] md:text-[11px]">
+            <div className="w-full px-3 py-4 border-t border-zinc-700/40 flex justify-between items-center gap-3 text-[12px] sm:text-[13px]">
                 {candleSeriesModeRef.current === 'candle' && (
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex justify-center items-center gap-2 ">
                         <span className="text-zinc-400">MA:</span>
-                        <label className="flex items-center gap-1"><input type="checkbox" checked={showMA5} onChange={e => setShowMA5(e.target.checked)} className="accent-[#ffc04d]" /><span className="text-[10px] text-[#ffc04d]">5 {showMA5}</span></label>
-                        <label className="flex items-center gap-1"><input type="checkbox" checked={showMA10} onChange={e => setShowMA10(e.target.checked)} className="accent-[#4da6ff]" /><span className="text-[10px] text-[#4da6ff]">10 {showMA10}</span></label>
-                        <label className="flex items-center gap-1"><input type="checkbox" checked={showMA20} onChange={e => setShowMA20(e.target.checked)} className="accent-[#b28cff]" /><span className="text-[10px] text-[#b28cff]">20 {showMA20}</span></label>
+                        <label className="flex items-center gap-1"><input type="checkbox" checked={showMA5} onChange={e => setShowMA5(e.target.checked)} className="accent-[#ffc04d]" /><span className="text-[12px] text-[#ffc04d]">5 {showMA5}</span></label>
+                        <label className="flex items-center gap-1"><input type="checkbox" checked={showMA10} onChange={e => setShowMA10(e.target.checked)} className="accent-[#4da6ff]" /><span className="text-[12px] text-[#4da6ff]">10 {showMA10}</span></label>
+                        <label className="flex items-center gap-1"><input type="checkbox" checked={showMA20} onChange={e => setShowMA20(e.target.checked)} className="accent-[#b28cff]" /><span className="text-[12px] text-[#b28cff]">20 {showMA20}</span></label>
                     </div>
                 )}
                 <div className="flex items-center gap-3 flex-wrap">
@@ -947,9 +966,9 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
                         } else {
                             barsRef.current = []; earliestTimeRef.current = null; if (symbol) loadHistory(symbol, resolution, 'init');
                         }
-                    }} className="accent-purple-500" /><span className="text-[10px] text-zinc-400">FillGaps</span></label>
-                    <button onClick={() => { setShowVolume(v => !v); setTimeout(() => { try { chartRef.current?.timeScale().fitContent(); } catch { } }, 0); }} className={`px-2 h-6 rounded border text-[10px] ${showVolume ? 'border-zinc-600 text-zinc-300' : 'border-zinc-700 text-zinc-500'}`}>VOL</button>
-                    <button onClick={() => { setFollowLatest(f => !f); if (!followLatest) { try { chartRef.current?.timeScale().scrollToRealTime(); } catch { } } }} className={`px-2 h-6 rounded border text-[10px] ${followLatest ? 'border-green-600 text-green-400' : 'border-zinc-700 text-zinc-500'}`}>LIVE</button>
+                    }} className="accent-purple-500" /><span className="text-[12px] text-zinc-400">FillGaps</span></label>
+                    <button onClick={() => { setShowVolume(v => !v); setTimeout(() => { try { chartRef.current?.timeScale().fitContent(); } catch { } }, 0); }} className={`px-2 h-6 rounded-sm border text-[11px] ${showVolume ? 'border-zinc-600 text-zinc-300' : 'border-zinc-700 text-zinc-500'}`}>VOL</button>
+                    <button onClick={() => { setFollowLatest(f => !f); if (!followLatest) { try { chartRef.current?.timeScale().scrollToRealTime(); } catch { } } }} className={`px-2 h-6 rounded-sm border text-[11px] ${followLatest ? 'border-green-600 text-green-400' : 'border-zinc-700 text-zinc-500'}`}>LIVE</button>
                 </div>
             </div>
         </div>
