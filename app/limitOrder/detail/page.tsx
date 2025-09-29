@@ -40,7 +40,7 @@ function OrderPageContent() {
     enabled: !!asset,
   });
   const { ticker, assetBalance, contractData, tickerInfo, isAnalyticsLoading, analyticsData, contractUrl, isContractStatusLoading, refresh, holders } = useLimitOrderDetailData(asset ?? '');
-  console.log('tickerInfo', tickerInfo);
+  //console.log('tickerInfo', tickerInfo);
 
   useEffect(() => {
     if (data) {

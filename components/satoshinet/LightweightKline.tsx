@@ -252,7 +252,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, heig
             firstDataLoadedRef.current = true;
             // 已全局禁用fitContent，防止任何分辨率切换或数据回补时抖动
         }
-        console.log('[LWK] data bars=', barsRef.current.length, 'mode=', candleSeriesModeRef.current);
+        //console.log('[LWK] data bars=', barsRef.current.length, 'mode=', candleSeriesModeRef.current);
     }, [applyMAs]);
 
     const mergeAndSet = useCallback((newBars: typeof barsRef.current, direction: 'prepend' | 'append') => {
@@ -670,7 +670,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, heig
         let rafPending = false;
         const handler = (param: any) => {
             // eslint-disable-next-line no-console
-            console.log('crosshair move', param);
+            //console.log('crosshair move', param);
             if (rafPending) return;
             rafPending = true;
             requestAnimationFrame(() => {

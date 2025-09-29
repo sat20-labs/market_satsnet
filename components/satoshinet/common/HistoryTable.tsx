@@ -296,7 +296,7 @@ export default function HistoryTable({
     if (!Number.isFinite(usd)) return '-';
     return usd.toFixed(2);
   }, [btcPrice]);
-  console.log('orders', orders);
+  //console.log('orders', orders);
   if (isLoading) {
     return <div className="text-center py-2">{t("common.loading")}</div>;
   }

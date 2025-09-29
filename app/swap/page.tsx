@@ -236,7 +236,7 @@ const Swap = () => {
     retry: 2, // 失败重试2次
     retryDelay: 1000, // 重试间隔1秒
   });
-  console.log('poolListData', poolListData);
+  //console.log('poolListData', poolListData);
   const poolList = poolListData?.pools || [];
 
   const adaptedPoolList = useMemo(() => {
