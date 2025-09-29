@@ -60,8 +60,8 @@ function OrderPageContent() {
   const { address } = useReactWalletStore();
 
   // Chart height classes (fixed)
-  const chartHeights_div = 'h-[37.5rem] sm:h-[39rem]';
-  const cHeights = 'h-[26rem] sm:h-[30rem]';
+  const chartHeights_div = 'h-[37.5rem] sm:h-[41rem]';
+  const cHeights = 'h-[26rem] sm:h-[32rem]';
   // Skeleton flags
   const showChartSkeleton = Boolean(isAnalyticsLoading && !analyticsData);
   const showRightCardSkeleton = Boolean(isSwapStatusLoading && !swapStatusData);
