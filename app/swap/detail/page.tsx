@@ -61,7 +61,7 @@ function OrderPageContent() {
 
   // Chart height classes (fixed)
   const chartHeights_div = 'h-[37.5rem] sm:h-[39rem]';
-  const cHeights = 'h-[27rem] sm:h-[30rem]';
+  const cHeights = 'h-[26rem] sm:h-[30rem]';
   // Skeleton flags
   const showChartSkeleton = Boolean(isAnalyticsLoading && !analyticsData);
   const showRightCardSkeleton = Boolean(isSwapStatusLoading && !swapStatusData);

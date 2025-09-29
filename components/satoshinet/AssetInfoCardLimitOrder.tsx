@@ -25,21 +25,10 @@ export function AssetInfoCardLimitOrder({
 }: AssetInfoCardLimitOrderProps) {
     const { t } = useTranslation();
     // 格式化 symbol 显示为 satdog(ordx)
-    function parseSymbol(contractUrl?: string) {
-        if (!contractUrl) return { assetName: '', protocol: '' };
-        const parts = contractUrl.split('_');
-        const assetInfo = parts[1] || '';
-        const asset = assetInfo.split(':');
-        const protocol = asset[0] || '';
-        const assetName = asset[2] || '';
-        return { assetName, protocol };
-    }
 
-    const { assetName, protocol } = parseSymbol(contractUrl);
-
-    const { data: assetMetaResp } = useQuery({
+    const { data: assetMetaResp, error: assetMetaError } = useQuery({
         queryKey: ['assetMeta', asset],
-        queryFn: () => getAsset(asset),
+        queryFn: () => getAsset(asset ?? ''),
         enabled: !!asset,
         staleTime: 5 * 60 * 1000,
         refetchOnWindowFocus: false,
@@ -56,6 +45,23 @@ export function AssetInfoCardLimitOrder({
         return s.length > 120 ? s.slice(0, 120) + '...' : s;
     }, [description]);
 
+    // 处理资产未找到（404）情况，类型守卫防止 ts 报错
+    if (
+        assetMetaError &&
+        (
+            (typeof assetMetaError === 'object' && assetMetaError !== null && 'response' in assetMetaError && (assetMetaError as any).response?.status === 404) ||
+            assetMetaError?.message?.includes('404')
+        )
+    ) {
+        return (
+            <div className="flex items-center gap-3 mb-2 pb-2">
+                <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-700 shadow-lg relative">
+                    <div className="text-red-400 text-center py-4">Asset not found.</div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex items-center gap-3 mb-2 pb-2">
             <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-700 shadow-lg relative">
@@ -63,7 +69,7 @@ export function AssetInfoCardLimitOrder({
                     <div className="w-11 h-11 rounded-full bg-zinc-700 flex items-center justify-start text-zinc-300 text-xl font-bold">
                         <div className='text-base'>
                             <Avatar className="w-12 h-12 text-xl text-gray-300 font-medium bg-zinc-700">
-                                <AssetLogo protocol={protocol} ticker={ticker} className="w-12 h-12" />
+                                <AssetLogo normalizedTicker={asset} className="w-12 h-12" />
                                 <AvatarFallback>
                                     {ticker?.charAt(0)?.toUpperCase()}
                                 </AvatarFallback>

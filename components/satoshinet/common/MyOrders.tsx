@@ -85,7 +85,7 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
           size="sm"
           onClick={cancelOrder}
         >
-          Cancel All Orders
+          Cancel
         </Button>
         <ButtonRefresh className="mx-4" loading={isLoading} onRefresh={() => refetch()} />
       </div> */}

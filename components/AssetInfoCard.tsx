@@ -81,7 +81,7 @@ export function AssetInfoCard({
 
           </div>
           <div className=''>
-            <div className="flex justify-start items-center text-zinc-400 font-semibold text-base sm:text-lg">
+            <div className="flex justify-start items-center text-zinc-400 font-semibold text-sm sm:text-base">
               <div>{ticker}</div>
               {/* NEW: social icons next to View Info */}
               {(twitter || telegram || discord) && (

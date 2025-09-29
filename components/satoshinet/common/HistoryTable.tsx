@@ -313,7 +313,7 @@ export default function HistoryTable({
           const sats = order.displayTradeAmountSats;
           const usdVal = formatUsdFromSats(Number(sats));
           return (
-            <div key={`${order.rawData.Id || i}-m`} className="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
+            <div key={`${order.rawData.Id}-${order.OrderTime}-${i}-m`} className="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
               <div className="flex items-start justify-between pb-2 border-b border-zinc-800 gap-3">
                 <div className="flex justify-center items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-sm text-[11px] font-medium first-letter:uppercase ${order.orderType === 2 ? 'bg-green-500/50 text-zinc-200 border border-green-500/40' : order.orderType === 1 ? 'bg-red-500/50 text-zinc-200 border border-red-500/40' : 'bg-zinc-700/40 text-zinc-300 border border-zinc-600/60'}`}>{order.displayOrderTypeLabel}</span>
@@ -402,7 +402,7 @@ export default function HistoryTable({
               <TableBody>
                 {orders.map((order, i) => {
                   return (
-                    <TableRow className="text-xs" key={`${order.rawData.Id || i}-d`}>
+                    <TableRow className="text-xs" key={`${order.rawData.Id}-${order.OrderTime}-${i}-d`}>
                       <TableCell className={`text-center font-medium first-letter:uppercase ${order.displayOrderStatusClass}`}>{order.displayOrderTypeLabel}
 
                       </TableCell>

@@ -332,7 +332,7 @@ export default function HistorySwapTable({
                   const sats = order.side === 'Buy' && order.done !== 0 ? order.inValue - order.outValue : order.outValue;
                   const usdVal = formatUsdFromSats(Number(sats));
                   return (
-                    <TableRow className="text-xs" key={`${order.rawData.Id ?? `${order.OrderTime}-${order.rawData.InUtxo || order.rawData.OutTxId || i}`}-m`}>
+                    <TableRow className="text-xs" key={`${order.rawData.Id ?? `${order.OrderTime}-${order.rawData.InUtxo || order.rawData.OutTxId || i}`}-pc`}>
                       <TableCell className={`text-center first-letter:uppercase font-bold ${order.rawData.OrderType === 2 ? "text-green-500" : order.rawData.OrderType === 1 ? "text-red-500" : "text-gray-600"}`}>
                         {orderTypeLabels[order.rawData.OrderType] || order.rawData.OrderType}
                       </TableCell>

@@ -41,7 +41,7 @@ export const AssetLogo: React.FC<AssetLogoProps> = ({ protocol, ticker, normaliz
     const norm = normalizeTicker(protocol, ticker, normalizedTicker);
     const shouldFetch = !!norm && enabled;
 
-    const { data } = useQuery({
+    const { data, error } = useQuery({
         queryKey: ['assetLogo', norm],
         queryFn: async () => {
             if (!shouldFetch) return null;
@@ -61,6 +61,15 @@ export const AssetLogo: React.FC<AssetLogoProps> = ({ protocol, ticker, normaliz
         staleTime: 5 * 60 * 1000,
         gcTime: 15 * 60 * 1000,
     });
+
+    if (error) {
+        const isNotFound = (typeof error === 'object' && error !== null && 'response' in error && (error as any).response?.status === 404) || error?.message?.includes('404');
+        return (
+            <div className="flex items-center justify-center w-10 h-10 bg-zinc-800 rounded-full">
+                {isNotFound ? 'Asset not found' : `failed to load: ${error.message}`}
+            </div>
+        );
+    }
 
     if (!data) return null; // no logo -> let AvatarFallback show
     return <AvatarImage src={data} alt="Logo" className={className} />;

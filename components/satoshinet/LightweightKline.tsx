@@ -105,6 +105,17 @@ const gapSynthetic = (time: UTCTimestamp, price: number): any => ({
     isOpen: false,
 });
 
+// 支持 initialResolution 传入 '4H'/'1H'/'1D' 等友好写法
+function normalizeResolution(res: string) {
+    if (res === '4H') return '240';
+    if (res === '1H') return '60';
+    if (res === '1D') return 'D';
+    if (res === '15m') return '15';
+    if (res === '1m') return '1';
+    if (res === '5m') return '5';
+    return res;
+}
+
 export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, height = 505, className = '', initialResolution = '240', theme = 'dark', chartHeights, priceDecimals = 4, changeDecimals = 2, lang: forcedLang }) => {
     const effectiveHeight = chartHeights?.height ?? height;
 
@@ -119,11 +130,11 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, heig
     const candleSeriesModeRef = useRef<'candle' | 'area'>('candle');
 
 
-    const [resolution, setResolution] = useState(initialResolution);
+    const [resolution, setResolution] = useState(() => normalizeResolution(initialResolution));
     const [chartReady, setChartReady] = useState(false);
     // Fallback: if initial (or previously stored) resolution is now hidden (1 or 5), switch to 15
     useEffect(() => {
-        if (resolution === '1' || resolution === '5') setResolution('4H');
+        if (resolution === '1' || resolution === '5') setResolution('15');
     }, [resolution]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

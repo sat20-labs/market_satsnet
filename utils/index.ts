@@ -142,6 +142,7 @@ export const formatLargeNumber = (num: number): string => {
   } else if (num >= 10_000) {
     return `${format(num / 1_000)} K`; // 转换为千单位
   }
+  if (typeof num !== 'number' || isNaN(num)) return '0';
   return num.toLocaleString(); // 小于 1000 的数字直接返回
 };
 

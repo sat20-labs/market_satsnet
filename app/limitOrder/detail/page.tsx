@@ -8,7 +8,7 @@ import { Suspense } from 'react';
 import { ChartModule } from '@/components/satoshinet/ChartModule';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
 import DepthPanel from '@/components/satoshinet/limitorder/DepthPanel';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent, UnderlineTabsList, UnderlineTabsTrigger } from '@/components/ui/tabs';
 import { useLimitOrderDetailData } from '@/hooks/pages/useLimitOrderDetailData';
 import MyOrders from '@/components/satoshinet/common/MyOrders';
 import HistoryOrders from '@/components/satoshinet/common/HistoryOrders';
@@ -22,6 +22,7 @@ import { useCommonStore } from '@/store/common';
 import dynamic from 'next/dynamic';
 import { Icon } from '@iconify/react';
 import { AssetInfoCardLimitOrder } from '@/components/satoshinet/AssetInfoCardLimitOrder';
+import { TikcerHoldersList } from '@/components/satoshinet/swap/TickerHoldersList';
 
 const LightweightKline = dynamic(() => import('@/components/satoshinet/LightweightKline').then(m => m.LightweightKline), { ssr: false });
 
@@ -30,6 +31,8 @@ function OrderPageContent() {
   const asset = params.get('asset');
   const { t } = useTranslation();
   const { btcFeeRate } = useCommonStore((state) => state);
+
+  const [total, setTotal] = useState(0);
   // Fetch asset summary
   const { data, isLoading, error } = useQuery({
     queryKey: ['assetSummary', asset],
@@ -39,6 +42,12 @@ function OrderPageContent() {
   const { ticker, assetBalance, contractData, tickerInfo, isAnalyticsLoading, analyticsData, contractUrl, isContractStatusLoading, refresh, holders } = useLimitOrderDetailData(asset ?? '');
   console.log('tickerInfo', tickerInfo);
 
+  useEffect(() => {
+    if (data) {
+      setTotal(data.total);
+    }
+  }, [data]);
+
   const refreshHandler = () => {
     setTimeout(() => {
       refresh();
@@ -46,7 +55,7 @@ function OrderPageContent() {
   }
 
   // Chart height classes (fixed)
-  const chartHeights_div = 'h-[37.5rem] sm:h-[39rem]';
+  const chartHeights_div = 'h-[35.5rem] sm:h-[39rem]';
   const cHeights = 'h-[27rem] sm:h-[30rem]';
   // Skeleton flags
   const showChartSkeleton = Boolean(isAnalyticsLoading && !analyticsData);
@@ -74,7 +83,9 @@ function OrderPageContent() {
     return <Loading />;
   }
   if (error) {
-    return <div className="p-4 bg-black text-white w-full">Error loading data: {error.message}</div>;
+    // 兼容 404 资产未找到的友好提示
+    const isNotFound = (typeof error === 'object' && error !== null && 'response' in error && (error as any).response?.status === 404) || error?.message?.includes('404');
+    return <div className="p-4 bg-black text-white w-full">{isNotFound ? 'Asset not found' : `failed to load: ${error.message}`}</div>;
   }
 
   const cancelOrder = async () => {
@@ -117,7 +128,7 @@ function OrderPageContent() {
 
           <div className={`relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 ${chartHeights_div}`}>
             {/* Chart Mode Switch */}
-            <div className="absolute top-5 sm:top-3 right-2 z-20 flex gap-2">
+            <div className="absolute top-7 sm:top-3 right-4 sm:right-4 z-20 flex gap-2">
               <button onClick={() => setChartModeAndStore('line')} className={`px-2 py-1 rounded text-[11px] border transition-colors ${chartMode === 'line' ? 'btn-gradient text-white border-purple-500' : 'bg-zinc-800/70 text-zinc-400 border-zinc-700 hover:text-zinc-200'}`}>
                 <Icon icon="lucide:chart-spline" className="w-4 h-4" />
               </button>
@@ -194,17 +205,34 @@ function OrderPageContent() {
       </div>
 
       {/* 全宽底部 Tabs 区域 */}
-      <div className="w-full px-2 sm:px-2 mt-4 sm:m-1 bg-transparent">
+      <div className="w-full px-2 sm:px-2 mt-4 sm:mt-4 bg-transparent">
         <Tabs defaultValue="history" className="w-full" suppressHydrationWarning>
-          <TabsList className="mb-2 text-xs" suppressHydrationWarning>
-            <TabsTrigger value="history">{t('common.activities')}</TabsTrigger>
-            <TabsTrigger value="myOrders">{t('common.my_activities')}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="history" className="mt-4 bg-zinc-950/80">
+          <div className="flex items-center justify-between border-b border-zinc-800">
+            <TabsList className="text-sm mb-2 whitespace-nowrap" suppressHydrationWarning>
+              <TabsTrigger value="history" className="flex-1">{t('common.activities')}</TabsTrigger>
+              <TabsTrigger value="myOrders" className="flex-1">{t('common.my_activities')}</TabsTrigger>
+              <TabsTrigger value="holders" suppressHydrationWarning>{t('common.holder') || 'Holders'}</TabsTrigger>
+            </TabsList>
+            <div className="flex items-center mr-2 mb-2 gap-2">
+              <Button
+                variant="outline"
+                className="px-4 h-9"
+                size="sm"
+                onClick={cancelOrder}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+
+          <TabsContent value="history" className="bg-zinc-950/80">
             <HistoryOrders contractURL={contractUrl} type="trade" />
           </TabsContent>
-          <TabsContent value="myOrders" className="mt-4 bg-zinc-950/80">
+          <TabsContent value="myOrders" className="bg-zinc-950/80">
             <MyOrders contractURL={contractUrl} type="trade" asset={asset} />
+          </TabsContent>
+          <TabsContent value="holders" className="mt-4 bg-zinc-950/80">
+            <TikcerHoldersList asset={asset} onTotalChange={setTotal} tickerInfo={tickerInfo} />
           </TabsContent>
         </Tabs>
       </div>
