@@ -61,12 +61,8 @@ const Swap = ({
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
   console.log('swapData', swapData);
   const lastDealPrice = useMemo(() => {
-    const lastPrice = getValueFromPrecision(swapData?.LastDealPrice);
-    if (lastPrice?.value && lastPrice.value > 0) {
-      return lastPrice;
-    }
-    // 如果没有最新成交价或为0，则用池子中的资产和sats计算
-    if (satValue && assetAmtInPool.value) {
+    // 直接使用池子数据计算价格，不使用接口返回的LastDealPrice
+    if (satValue && assetAmtInPool.value && assetAmtInPool.value > 0) {
       const calculatedPrice = satValue / assetAmtInPool.value;
       return {
         value: calculatedPrice,
@@ -74,7 +70,7 @@ const Swap = ({
       };
     }
     return { value: 0, formatted: '0' };
-  }, [swapData?.LastDealPrice, satValue, assetAmtInPool.value]);
+  }, [satValue, assetAmtInPool.value]);
 
   //const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData?.Contract]);
   // 使用一致单位计算常数乘积 K（sats * assetUnits），避免精度/单位不一致导致的异常结果

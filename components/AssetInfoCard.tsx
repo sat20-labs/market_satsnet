@@ -34,7 +34,14 @@ export function AssetInfoCard({
   const { t } = useTranslation();
   const assetAmt = useMemo(() => getValueFromPrecision(swapData?.AssetAmtInPool)?.value, [swapData?.AssetAmtInPool]);
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
-  const currentPrice = useMemo(() => getValueFromPrecision(swapData?.LastDealPrice)?.formatted, [swapData?.LastDealPrice]);
+  const currentPrice = useMemo(() => {
+    // 使用池子数据计算价格，不使用接口返回的LastDealPrice
+    if (satValue && assetAmt && assetAmt > 0) {
+      const calculatedPrice = satValue / assetAmt;
+      return calculatedPrice.toFixed(10);
+    }
+    return '--';
+  }, [satValue, assetAmt]);
 
   // NEW: fetch asset metadata for social links in header
   const { data: assetMetaResp } = useQuery({

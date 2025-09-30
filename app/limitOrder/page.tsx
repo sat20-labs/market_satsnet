@@ -88,14 +88,10 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
 
     const satsValueInPool = Number(pool.SatsValueInPool ?? pool.SatsAmtInPool ?? 0);
     const assetAmtInPool = extractAmount(pool.AssetAmtInPool) || extractAmount(pool.AssetAmt) || 0;
-    const rawDealPrice = Number(pool.dealPrice ?? 0);
-    const lastDealPrice = Number(pool.LastDealPrice ?? pool.lastDealPrice ?? 0);
+    // 直接使用池子数据计算价格，不使用接口返回的LastDealPrice
     const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
-    let effectivePoolPrice = derivedDealPrice;
-    if (effectivePoolPrice === 0) {
-        if (rawDealPrice > 0) effectivePoolPrice = rawDealPrice; else if (lastDealPrice > 0) effectivePoolPrice = lastDealPrice;
-    }
-    const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : (derivedDealPrice > 0 ? derivedDealPrice : (lastDealPrice > 0 ? lastDealPrice : 0));
+    const effectivePoolPrice = derivedDealPrice;
+    const finalDealPrice = derivedDealPrice;
     const volume24hBtc = Number(pool?.['24hour']?.volume ?? 0);
     const maxSupply = getMaxSupply(pool);
     const marketCap = maxSupply > 0 ? effectivePoolPrice * maxSupply : 0;

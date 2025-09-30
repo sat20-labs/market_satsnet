@@ -47,10 +47,9 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
       const p = Number(amtObj.Precision ?? amtObj.precision ?? 0);
       if (!isNaN(v)) assetAmtInPool = v / Math.pow(10, p || 0);
     }
-    const rawDealPrice = Number(pool.dealPrice ?? 0);
-    const lastDealPrice = Number(pool.LastDealPrice ?? pool.lastDealPrice ?? 0);
+    // 直接使用池子数据计算价格，不使用接口返回的LastDealPrice
     const derived = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
-    return rawDealPrice > 0 ? rawDealPrice : (derived > 0 ? derived : (lastDealPrice > 0 ? lastDealPrice : 0));
+    return derived;
   };
 
   // Fetch statuses for both sets and build a price map: `${protocol}:${ticker}` -> sats price
