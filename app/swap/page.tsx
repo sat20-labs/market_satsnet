@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { HomeTypeTabs } from '@/components/market/HomeTypeTabs';
 import { Badge } from '@/components/ui/badge';
 import { PoolStatus, statusTextMap, statusColorMap } from '@/types/launchpool';
@@ -29,6 +29,7 @@ import { getValueFromPrecision, formatLargeNumber } from '@/utils';
 import { clientApi } from '@/api';
 // import { Icon } from 'lucide-react';
 import { Icon } from '@iconify/react';
+import { SortDropdown } from '@/components/SortDropdown';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
@@ -159,6 +160,48 @@ const Swap = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const PAGE_SIZES = [10, 20, 50, 100];
+  const SORTABLE_COLUMNS = [
+    { key: 'assetName', label: t('pages.launchpool.asset_name') },
+    { key: 'dealPrice', label: t('common.price') },
+    { key: 'volume24hBtc', label: t('common.24h_volume_btc') },
+    { key: 'totalDealSats', label: t('common.volume_btc') },
+    { key: 'totalDealCount', label: t('common.tx_order_count') },
+    { key: 'marketCap', label: t('pages.launchpool.market_cap') },
+    { key: 'holders', label: t('common.holder') },
+    { key: 'satsValueInPool', label: t('common.pool_size_sats') },
+  ];
+
+  const [sortKey, setSortKey] = useState('volume24hBtc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortOrder('desc');
+    }
+  };
+
+  const SORT_OPTIONS = [
+    { label: t('common.24h_volume_btc'), value: 'volume24hBtc_desc' },
+    { label: t('common.24h_volume_btc'), value: 'volume24hBtc_asc' },
+    { label: t('common.price'), value: 'dealPrice_desc' },
+    { label: t('common.price'), value: 'dealPrice_asc' },
+    { label: t('pages.launchpool.market_cap'), value: 'marketCap_desc' },
+    { label: t('pages.launchpool.market_cap'), value: 'marketCap_asc' },
+  ];
+  const getSortStateFromValue = (val: string) => {
+    const [key, order] = val.split('_');
+    return { key, order };
+  };
+  const [sortDropdownValue, setSortDropdownValue] = useState('volume24hBtc_desc');
+  useEffect(() => {
+    const { key, order } = getSortStateFromValue(sortDropdownValue);
+    setSortKey(key);
+    setSortOrder(order as 'asc' | 'desc');
+  }, [sortDropdownValue]);
+
   // 获取所有合约URL列表
   const { data: contractURLsData, error: contractURLsError } = useQuery({
     queryKey: ['ammContractURLs', network],
@@ -340,21 +383,6 @@ const Swap = () => {
     });
   }, [adaptedPoolList, tickerInfoMap, holdersTotalsMap]);
 
-
-
-  const columns = [
-    { key: 'assetName', label: t('pages.launchpool.asset_name') },
-    { key: 'dealPrice', label: t('common.price') },
-    { key: '24h_volume', label: t('common.24h_volume_btc') },
-    { key: 'totalDealSats', label: t('common.volume_btc') },
-    { key: 'totalDealCount', label: t('common.tx_order_count') },
-    { key: 'marketCap', label: t('pages.launchpool.market_cap') },
-    { key: 'holder', label: t('common.holder') },
-    { key: 'satsValueInPool', label: t('common.pool_size_sats') },
-    { key: 'trade', label: t('common.trade') },
-    { key: 'deployTime', label: t('pages.launchpool.deploy_time') },
-  ];
-
   const [protocol, setProtocol] = useState('all');
   const protocolChange = (newProtocol) => setProtocol(newProtocol);
 
@@ -364,33 +392,39 @@ const Swap = () => {
     { label: t('pages.launchpool.runes'), key: 'runes' },
   ];
 
-  const filteredPoolList = useMemo(() => {
+  const sortedPoolList = useMemo(() => {
     let list =
       protocol === 'all'
         ? mergedPoolList
         : mergedPoolList.filter(pool => pool.protocol === protocol);
-
-    // 全局（所有页）按总交易量倒序；若相等再看成交笔数，然后按部署时间倒序
     return list.slice().sort((a, b) => {
-      const vA = Number(a.totalDealSats ?? 0);
-      const vB = Number(b.totalDealSats ?? 0);
-      if (vA !== vB) return vB - vA;
-
+      let vA = a[sortKey] ?? 0;
+      let vB = b[sortKey] ?? 0;
+      // assetName 字符串排序
+      if (sortKey === 'assetName') {
+        vA = String(vA).toLowerCase();
+        vB = String(vB).toLowerCase();
+        if (vA < vB) return sortOrder === 'asc' ? -1 : 1;
+        if (vA > vB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      }
+      vA = Number(vA);
+      vB = Number(vB);
+      if (vA !== vB) return sortOrder === 'asc' ? vA - vB : vB - vA;
+      // 次级排序：成交笔数、部署时间
       const cA = Number(a.totalDealCount ?? 0);
       const cB = Number(b.totalDealCount ?? 0);
       if (cA !== cB) return cB - cA;
-
       return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
     });
-  }, [mergedPoolList, protocol]);
+  }, [mergedPoolList, protocol, sortKey, sortOrder]);
 
-  // 前端分页切片
   const pagedPoolList = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return filteredPoolList.slice(start, start + pageSize);
-  }, [filteredPoolList, currentPage, pageSize]);
+    return sortedPoolList.slice(start, start + pageSize);
+  }, [sortedPoolList, currentPage, pageSize]);
 
-  const totalCount = filteredPoolList.length;
+  const totalCount = sortedPoolList.length;
   const totalPages = Math.ceil(totalCount / pageSize);
 
   // 处理分页变化
@@ -408,7 +442,7 @@ const Swap = () => {
       <div className="mb-2 px-2 flex items-center">
         <span className="text-sm text-gray-400 mr-4">Current Bitcoin Price：<BtcPrice btc={1} className="text-green-500 font-bold" /> USDT</span>
       </div>
-      <div className="my-4 px-2 sm:px-1 flex justify-between items-center gap-1">
+      <div className="py-2 px-2 sm:px-1 flex justify-between items-center gap-1 border-b border-zinc-800">
         <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
         <div className="flex items-center gap-2 mr-4">
           <WalletConnectBus asChild>
@@ -444,6 +478,15 @@ const Swap = () => {
           <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
         </div>
       )}
+
+      {/* 移动端排序下拉菜单 */}
+      <div className="sm:hidden mb-2 px-1 mt-2 text-sm">
+        <SortDropdown
+          sortList={SORT_OPTIONS}
+          value={sortDropdownValue}
+          onChange={v => setSortDropdownValue(v ?? '')}
+        />
+      </div>
 
       {/* 移动端卡片列表视图 */}
       <div className="sm:hidden space-y-3 mt-2">
@@ -523,25 +566,34 @@ const Swap = () => {
         <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[900px] bg-zinc-950/50">
           <TableHeader>
             <TableRow>
-              {columns.map((column) => {
-                // 隐藏部分列在较小的桌面宽度上
+              {SORTABLE_COLUMNS.map((column) => {
                 const hiddenOnMedium = ['totalDealCount', 'deployTime'];
                 const headExtraClass = hiddenOnMedium.includes(column.key) ? 'hidden lg:table-cell' : '';
+                const isSorted = sortKey === column.key;
                 return (
                   <TableHead
                     key={column.key}
-                    className={`px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap ${headExtraClass}`}
+                    className={`px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap cursor-pointer select-none ${headExtraClass} ${isSorted ? 'text-zinc-200' : ''}`}
+                    onClick={() => handleSort(column.key)}
                   >
-                    {column.label}
+                    <span className="inline-flex items-center gap-1">
+                      {column.label}
+                      <span className="flex flex-col text-[8px] gap-1 ml-0.5">
+                        <span style={{ color: isSorted && sortOrder === 'asc' ? '#e14b7b' : '#444', fontWeight: isSorted && sortOrder === 'asc' ? 'bold' : 'normal', lineHeight: '0.8' }}>&#9650;</span>
+                        <span style={{ color: isSorted && sortOrder === 'desc' ? '#e14b7b' : '#444', fontWeight: isSorted && sortOrder === 'desc' ? 'bold' : 'normal', lineHeight: '0.8' }}>&#9660;</span>
+                      </span>
+                    </span>
                   </TableHead>
                 );
               })}
+              <TableHead className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap">{t('common.trade')}</TableHead>
+              <TableHead className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap hidden lg:table-cell">{t('pages.launchpool.deploy_time')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPoolList.length === 0 && !isLoading && !error ? (
+            {sortedPoolList.length === 0 && !isLoading && !error ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center py-8 text-gray-400">
+                <TableCell colSpan={SORTABLE_COLUMNS.length + 2} className="text-center py-8 text-gray-400">
                   No data available.
                 </TableCell>
               </TableRow>
