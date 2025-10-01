@@ -235,10 +235,10 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, heig
         if (volumeSeriesRef.current) {
             // 十字星颜色跟随上一个candle
             const vols = barsRef.current.map((b, i, arr) => {
-                let color = '#1faa7a';
-                if (b.close > b.open) color = '#e74c4c';
-                else if (b.close < b.open) color = '#1faa7a';
-                else if (i > 0) color = arr[i - 1].close > arr[i - 1].open ? '#e74c4c' : arr[i - 1].close < arr[i - 1].open ? '#1faa7a' : '#e74c4c';
+                let color = '#1faa7a'; // 绿色涨
+                if (b.close > b.open) color = '#1faa7a'; // 涨绿色
+                else if (b.close < b.open) color = '#e74c4c'; // 跌红色
+                else if (i > 0) color = arr[i - 1].close > arr[i - 1].open ? '#1faa7a' : arr[i - 1].close < arr[i - 1].open ? '#e74c4c' : '#1faa7a';
                 return {
                     time: b.time,
                     value: b.volume,
@@ -471,7 +471,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, heig
 
         try {
             candleSeriesRef.current = chart.addCandlestickSeries({
-                upColor: '#e74c4c', downColor: '#1faa7a', wickUpColor: '#e74c4c', wickDownColor: '#1faa7a', borderVisible: false
+                upColor: '#1faa7a', downColor: '#e74c4c', wickUpColor: '#1faa7a', wickDownColor: '#e74c4c', borderVisible: false
             });
             // apply scale margins on the main (right) price scale
             try { chart.priceScale('right').applyOptions({ scaleMargins: { top: 0.05, bottom: configuredVolumeRatio + 0.02 } }); } catch { }
