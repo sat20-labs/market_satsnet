@@ -52,14 +52,13 @@ function adaptPoolData(pool, satsnetHeight) {
     poolStatus = PoolStatus.NOT_STARTED;
   }
 
-  // derive deal price if missing: price = satsValueInPool / assetAmtInPool
+  // 直接使用池子数据计算价格，不使用接口返回的LastDealPrice
   const satsValueInPoolNum = Number(pool.SatsValueInPool ?? 0);
   const assetAmtInPoolNum = pool.AssetAmtInPool?.Value
     ? pool.AssetAmtInPool.Value / Math.pow(10, pool.AssetAmtInPool.Precision)
     : 0;
-  const rawDealPriceNum = Number(pool.dealPrice ?? 0);
   const derivedDealPriceNum = assetAmtInPoolNum > 0 ? satsValueInPoolNum / assetAmtInPoolNum : 0;
-  const finalDealPriceNum = rawDealPriceNum > 0 ? rawDealPriceNum : derivedDealPriceNum;
+  const finalDealPriceNum = derivedDealPriceNum;
 
   return {
     ...pool,

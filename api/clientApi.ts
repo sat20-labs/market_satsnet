@@ -1,6 +1,5 @@
 import { useCommonStore } from '../store/common';
-import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
-
+import { Chain } from '@/types';
 interface RequestParams {
   address?: string;
   network?: string;
@@ -24,28 +23,39 @@ class ClientApi {
   private tickerInfoCache: Map<string, any> = new Map();
 
   // Add: holders cache and inflight maps to dedupe
-  private holdersCache: Map<string, { timestamp: number; data: any } > = new Map();
+  private holdersCache: Map<string, { timestamp: number; data: any }> =
+    new Map();
   private holdersInflight: Map<string, Promise<any>> = new Map();
   private readonly HOLDERS_CACHE_TTL_MS = 60000; // 60s ttl
 
-  private generatePath = (path: string, chain: string, network: string): string => {
+  private generatePath = (
+    path: string,
+    chain: string,
+    network: string,
+  ): string => {
     if (chain === 'SatoshiNet') {
-      return `${this.BASE_URL}/satsnet${network === 'testnet' ? '/testnet' : '/mainnet'
-        }/${path}`;
+      return `${this.BASE_URL}/satsnet${
+        network === 'testnet' ? '/testnet' : '/mainnet'
+      }/${path}`;
     } else {
-      return `${this.BASE_URL}${network === 'testnet' ? '/btc/testnet' : '/btc/mainnet'
-        }/${path}`;
+      return `${this.BASE_URL}${
+        network === 'testnet' ? '/btc/testnet' : '/btc/mainnet'
+      }/${path}`;
     }
-  }
+  };
 
   private request = async <T>(
     path: string,
     params: RequestParams = {},
     method: 'GET' | 'POST' = 'GET',
+    option?: any,
   ): Promise<T> => {
     const { chain, network } = useCommonStore.getState();
-
-    const url = this.generatePath(path, chain, network);
+    let _chain = chain;
+    if (option?.chain) {
+      _chain = option.chain;
+    }
+    const url = this.generatePath(path, _chain, network);
 
     const options: RequestInit = {
       method,
@@ -65,33 +75,33 @@ class ClientApi {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response.json();
-  }
+  };
 
   getUtxos = async (address: string): Promise<any> => {
     return this.request(`allutxos/address/${address}`);
-  }
+  };
 
   getTxRaw = async (txid: string): Promise<any> => {
     return this.request(`btc/rawtx/${txid}`);
-  }
+  };
 
   getPlainUtxos = async (address: string): Promise<any> => {
     return this.request(`utxo/address/${address}/0`);
-  }
+  };
 
   getRareUtxos = async (address: string): Promise<any> => {
     return this.request(`exotic/address/${address}`);
-  }
+  };
 
   getUtxo = async (utxo: string): Promise<any> => {
     return this.request(`utxo/range/${utxo}`);
-  }
+  };
   getUtxoInfo = async (utxo: string): Promise<any> => {
     return this.request(`v3/utxo/info/${utxo}`);
-  }
+  };
   getUtxosInfo = async (utxos: string[]): Promise<any> => {
     return this.request(`v3/utxos/info`, { utxos }, 'POST');
-  }
+  };
   /**
    * 获取ticker信息，始终请求btc主链接口（无论当前chain是什么）
    * @param ticker 资产ticker
@@ -146,29 +156,31 @@ class ClientApi {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    
+
     // 写入缓存（内存+sessionStorage），包含时间戳
     const cacheData = {
       data: data,
-      timestamp: currentTime
+      timestamp: currentTime,
     };
     this.tickerInfoCache.set(ticker, cacheData);
     sessionStorage.setItem(sessionKey, JSON.stringify(cacheData));
     return data;
-  }
+  };
   getNsName = async (name: string): Promise<any> => {
     return this.request(`ns/name/${name}`);
-  }
+  };
 
-  getAddressSummary = async (address: string): Promise<any> => {
-    return this.request(`v3/address/summary/${address}`);
-  }
+  getAddressSummary = async (address: string, chain?: any): Promise<any> => {
+    return this.request(`v3/address/summary/${address}`, {}, 'GET', {
+      chain,
+    });
+  };
   getBestHeight = async (): Promise<any> => {
     return this.request(`bestheight`);
-  }
+  };
   getNsListByAddress = async (address: string): Promise<any> => {
     return this.request(`ns/address/${address}`);
-  }
+  };
   getSeedByUtxo = async (utxo: string): Promise<any> => {
     return this.request(`utxo/seed/${utxo}`);
   };
@@ -197,28 +209,31 @@ class ClientApi {
 
     const promise = this.request(
       `v3/address/asset/${address}/${ticker}?start=${start}&limit=${limit}`,
-    ).then((data) => {
-      this.holdersCache.set(cacheKey, { timestamp: Date.now(), data });
-      return data;
-    }).catch((err) => {
-      if (expiredCached) {
-        // Serve stale data on error as a fallback
-        return expiredCached.data;
-      }
-      throw err;
-    }).finally(() => {
-      this.holdersInflight.delete(cacheKey);
-    });
+    )
+      .then((data) => {
+        this.holdersCache.set(cacheKey, { timestamp: Date.now(), data });
+        return data;
+      })
+      .catch((err) => {
+        if (expiredCached) {
+          // Serve stale data on error as a fallback
+          return expiredCached.data;
+        }
+        throw err;
+      })
+      .finally(() => {
+        this.holdersInflight.delete(cacheKey);
+      });
 
     this.holdersInflight.set(cacheKey, promise);
     return promise;
-  }
+  };
 
   // Expose a manual way to clear holders cache, e.g., on logout/network switch if desired
   clearHoldersCache = (): void => {
     this.holdersCache.clear();
     this.holdersInflight.clear();
-  }
+  };
 
   getOrdxNsUxtos = async (
     address: string,
@@ -231,37 +246,44 @@ class ClientApi {
     return this.request(
       `ns/address/${address}/${sub}?start=${start}&limit=${limit}`,
     );
-  }
+  };
 
   pushTx = async (hex: string): Promise<any> => {
     return this.request('btc/tx', { hex }, 'POST');
-  }
+  };
 
   getRecommendedFees = async (): Promise<any> => {
     const store = useCommonStore.getState();
     const { network } = store;
-    const url = `https://apiprd.ordx.market/${network === 'mainnet' ? '' : 'testnet/'
-      }ordx/GetRecommendedFees`;
+    const url = `https://apiprd.ordx.market/${
+      network === 'mainnet' ? '' : 'testnet/'
+    }ordx/GetRecommendedFees`;
     const response = await fetch(url);
     return response.json();
-  }
-  getTickerHolders = async (ticker: string, page: number = 1, pagesize: number = 10): Promise<any> => {
+  };
+  getTickerHolders = async (
+    ticker: string,
+    page: number = 1,
+    pagesize: number = 10,
+  ): Promise<any> => {
     const start = (page - 1) * pagesize;
-    return this.request(`v3/tick/holders/${ticker}?start=${start}&limit=${pagesize}`);
-  }
+    return this.request(
+      `v3/tick/holders/${ticker}?start=${start}&limit=${pagesize}`,
+    );
+  };
 
   getLptHolders = async (contractUrl: string): Promise<any> => {
     const { network } = useCommonStore.getState();
     const baseUrl = 'https://apiprd.sat20.org/stp';
     const networkPath = network === 'mainnet' ? 'mainnet' : 'testnet';
     const url = `${baseUrl}/${networkPath}/info/contract/liqprovider/${contractUrl}`;
-    
+
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response.json();
-  }
+  };
 }
 
 const clientApi = new ClientApi();

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { BtcPrice } from "../BtcPrice";
 import { useTranslation } from 'react-i18next';
 import { formatLargeNumber } from "@/utils";
@@ -23,7 +24,15 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
 
   const totalVolumeBtc = depthData?.TotalDealSats ?? 0;
   const volumeBtc = depthData && depthData['24hour']?.volume ? Number(depthData['24hour'].volume) : 0;
-  const lastPrice = depthData && depthData.LastDealPrice ? getValueFromPrecision(depthData.LastDealPrice).value : 0;
+  // 使用池子数据计算价格，不使用接口返回的LastDealPrice
+  const lastPrice = useMemo(() => {
+    const satsValueInPool = depthData?.SatsValueInPool || 0;
+    const assetAmtInPool = getValueFromPrecision(depthData?.AssetAmtInPool)?.value || 0;
+    if (satsValueInPool && assetAmtInPool && assetAmtInPool > 0) {
+      return satsValueInPool / assetAmtInPool;
+    }
+    return 0;
+  }, [depthData?.SatsValueInPool, depthData?.AssetAmtInPool]);
   const marketCapBtc = Math.floor(tickerInfo.maxSupply * lastPrice);
   const transactions = depthData?.TotalDealCount ?? 0;
 
