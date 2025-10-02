@@ -61,7 +61,7 @@ export function AssetInfoCard({
   const shortDesc = useMemo(() => {
     if (!description) return '';
     const s = description.trim();
-    return s.length > 120 ? s.slice(0, 120) + '...' : s;
+    return s.length > 240 ? s.slice(0, 240) + '...' : s;
   }, [description]);
 
   return (

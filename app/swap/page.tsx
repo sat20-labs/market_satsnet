@@ -98,10 +98,14 @@ function adaptPoolData(pool, satsnetHeight) {
 
   const satsValueInPool = Number(pool.SatsValueInPool ?? pool.SatsAmtInPool ?? 0);
   const assetAmtInPool = extractAmount(pool.AssetAmtInPool) || extractAmount(pool.AssetAmt) || 0;
-  // 直接使用池子数据计算价格，不使用接口返回的LastDealPrice
+  const rawDealPrice = Number(pool.dealPrice ?? 0);
+  const lastDealPrice = Number(pool.LastDealPrice ?? pool.lastDealPrice ?? 0);
   const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0; // latest pool price
-  const effectivePoolPrice = derivedDealPrice;
-  const finalDealPrice = derivedDealPrice;
+  let effectivePoolPrice = derivedDealPrice;
+  if (effectivePoolPrice === 0) {
+    if (rawDealPrice > 0) effectivePoolPrice = rawDealPrice; else if (lastDealPrice > 0) effectivePoolPrice = lastDealPrice;
+  }
+  const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : (derivedDealPrice > 0 ? derivedDealPrice : (lastDealPrice > 0 ? lastDealPrice : 0));
   const volume24hBtc = Number(pool?.['24hour']?.volume ?? 0);
 
   const maxSupply = getMaxSupply(pool);
@@ -109,7 +113,7 @@ function adaptPoolData(pool, satsnetHeight) {
   if (marketCap === 0) {
     console.debug('[Swap MarketCap Debug]', {
       id: pool?.contractURL, maxSupply, effectivePoolPrice, satsValueInPool, assetAmtInPool,
-      derivedDealPrice, supplyKeys: Object.keys(pool || {}).filter(k => /supply/i.test(k))
+      rawDealPrice, lastDealPrice, derivedDealPrice, supplyKeys: Object.keys(pool || {}).filter(k => /supply/i.test(k))
     });
   }
 
@@ -305,7 +309,7 @@ const Swap = () => {
       (poolList || []).map((p: any) => {
         const proto = p?.Contract?.assetName?.Protocol;
         const ticker = p?.Contract?.assetName?.Ticker;
-        if (!proto || ticker) return '';
+        if (!proto || !ticker) return '';
         return `${proto}:f:${ticker}`;
       }).filter(Boolean)
     ));
@@ -637,9 +641,7 @@ const Swap = () => {
                         }}
                       >
                         {adaptedPool.assetName}
-
-                        <span className='ml-1 text-[11px] text-zinc-500'>({adaptedPool.protocol})</span>
-
+                        <span className='ml-1 text-zinc-500'>({adaptedPool.protocol})</span>
                       </Link>
                     </TableCell>
 
