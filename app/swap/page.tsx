@@ -309,7 +309,7 @@ const Swap = () => {
       (poolList || []).map((p: any) => {
         const proto = p?.Contract?.assetName?.Protocol;
         const ticker = p?.Contract?.assetName?.Ticker;
-        if (!proto || !ticker) return '';
+        if (!proto || ticker) return '';
         return `${proto}:f:${ticker}`;
       }).filter(Boolean)
     ));
@@ -509,7 +509,7 @@ const Swap = () => {
               <div className="flex items-start justify-between gap-2">
                 <Link
                   href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
-                  className="text-primary text-sm font-medium text-left leading-tight max-w-[150px]"
+                  className="flex flex-col justify-start text-primary font-medium text-left max-w-[150px]"
                   title={p?.assetName}
                   style={{
                     display: '-webkit-box',
@@ -518,8 +518,18 @@ const Swap = () => {
                     overflow: 'hidden'
                   }}
                 >
-                  {abbreviateTicker(p?.assetName || '')}
-                  <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
+
+                  {p?.protocol === 'runes' ? (
+                    <>
+                      <span className='text-[13px]'>{p?.assetName || ''}</span>
+                      <span className='text-[11px] text-zinc-500' style={{ display: 'block' }}>({p?.protocol})</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className='text-[16px]'>{p?.assetName || ''}</span>
+                      <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
+                    </>
+                  )}
                 </Link>
 
                 {p.poolStatus === PoolStatus.ACTIVE ? (
@@ -631,7 +641,9 @@ const Swap = () => {
                         }}
                       >
                         {adaptedPool.assetName}
-                        <span className='ml-1 text-zinc-500'>({adaptedPool.protocol})</span>
+
+                        <span className='ml-1 text-[11px] text-zinc-500'>({adaptedPool.protocol})</span>
+
                       </Link>
                     </TableCell>
 
