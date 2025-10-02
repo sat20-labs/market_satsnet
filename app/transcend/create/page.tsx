@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Chain } from '@/types';
 import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
 import { Modal } from '@/components/ui/modal';
@@ -34,12 +34,12 @@ const CreateTranscend = () => {
   const router = useRouter();
   const { data: summaryData } = useQuery({
     queryKey: ['summary', address, network],
-    queryFn: () => clientApi.getAddressSummary(address),
+    queryFn: () => clientApi.getAddressSummary(address, Chain.BTC),
     refetchInterval: 15000, // 增加到15秒，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!address,
   });
-  console.log('summaryData', summaryData);
+  console.log('summaryData 123', summaryData);
   const assetList = summaryData?.data || [];
   console.log('summaryQuery data', assetList);
 
