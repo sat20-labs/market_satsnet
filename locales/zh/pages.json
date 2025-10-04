@@ -109,12 +109,15 @@
     "modal_title": "购买订单"
   },
   "explorer": {
-    "title": "浏览器",
+    "title": "资产浏览器",
     "subtitle": "查看地址的 OrdX 余额",
     "des": "识别包括部署、铸造和转账在内的所有操作。",
     "list_title": "OrdX 的完整列表",
     "not_support": "暂时不支持查看转移后的余额。",
     "ordx_version": "OrdX 版本"
+  },
+  "mempool": {
+    "title": "区块浏览器"
   },
   "transfer": {
     "title": "转移",

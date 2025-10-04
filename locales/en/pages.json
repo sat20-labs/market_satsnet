@@ -109,12 +109,15 @@
     "modal_title": "Buy Order"
   },
   "explorer": {
-    "title": "Explorer",
+    "title": "Asset Explorer",
     "subtitle": "Check out OrdX balance of the address.",
     "des": "Recognize all operations including DEPLOY, MINT and TRANSFER.",
     "list_title": "The full list of ordx",
     "not_support": "Viewing the transferred balance is temporarily unavailable.",
     "ordx_version": "OrdX Version"
+  },
+  "mempool": {
+    "title": "Mempool Explorer"
   },
   "transfer": {
     "title": "Transfer",
