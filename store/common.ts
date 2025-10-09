@@ -60,7 +60,7 @@ export const useCommonStore = create<CommonState>()(
         appVersion: 0,
         signature: '',
         // 服务暂停状态初始值
-        isServicePaused: false,
+        isServicePaused: true,
         servicePauseMessage: '服务暂时维护中，请稍后再试',
         setEnv: (env) => {
           set({
