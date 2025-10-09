@@ -98,10 +98,14 @@ function adaptPoolData(pool, satsnetHeight) {
 
   const satsValueInPool = Number(pool.SatsValueInPool ?? pool.SatsAmtInPool ?? 0);
   const assetAmtInPool = extractAmount(pool.AssetAmtInPool) || extractAmount(pool.AssetAmt) || 0;
-  // 直接使用池子数据计算价格，不使用接口返回的LastDealPrice
+  const rawDealPrice = Number(pool.dealPrice ?? 0);
+  const lastDealPrice = Number(pool.LastDealPrice ?? pool.lastDealPrice ?? 0);
   const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0; // latest pool price
-  const effectivePoolPrice = derivedDealPrice;
-  const finalDealPrice = derivedDealPrice;
+  let effectivePoolPrice = derivedDealPrice;
+  if (effectivePoolPrice === 0) {
+    if (rawDealPrice > 0) effectivePoolPrice = rawDealPrice; else if (lastDealPrice > 0) effectivePoolPrice = lastDealPrice;
+  }
+  const finalDealPrice = rawDealPrice > 0 ? rawDealPrice : (derivedDealPrice > 0 ? derivedDealPrice : (lastDealPrice > 0 ? lastDealPrice : 0));
   const volume24hBtc = Number(pool?.['24hour']?.volume ?? 0);
 
   const maxSupply = getMaxSupply(pool);
@@ -109,7 +113,7 @@ function adaptPoolData(pool, satsnetHeight) {
   if (marketCap === 0) {
     console.debug('[Swap MarketCap Debug]', {
       id: pool?.contractURL, maxSupply, effectivePoolPrice, satsValueInPool, assetAmtInPool,
-      derivedDealPrice, supplyKeys: Object.keys(pool || {}).filter(k => /supply/i.test(k))
+      rawDealPrice, lastDealPrice, derivedDealPrice, supplyKeys: Object.keys(pool || {}).filter(k => /supply/i.test(k))
     });
   }
 
@@ -505,7 +509,7 @@ const Swap = () => {
               <div className="flex items-start justify-between gap-2">
                 <Link
                   href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
-                  className="text-primary text-sm font-medium text-left leading-tight max-w-[150px]"
+                  className="flex flex-col justify-start text-primary font-medium text-left max-w-[150px]"
                   title={p?.assetName}
                   style={{
                     display: '-webkit-box',
@@ -514,8 +518,18 @@ const Swap = () => {
                     overflow: 'hidden'
                   }}
                 >
-                  {abbreviateTicker(p?.assetName || '')}
-                  <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
+
+                  {p?.protocol === 'runes' ? (
+                    <>
+                      <span className='text-[13px]'>{p?.assetName || ''}</span>
+                      <span className='text-[11px] text-zinc-500' style={{ display: 'block' }}>({p?.protocol})</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className='text-[16px]'>{p?.assetName || ''}</span>
+                      <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
+                    </>
+                  )}
                 </Link>
 
                 {p.poolStatus === PoolStatus.ACTIVE ? (

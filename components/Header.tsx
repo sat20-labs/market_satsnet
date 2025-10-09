@@ -99,6 +99,13 @@ export const Header = () => {
             href: '/tools/batch-send',
           },
           {
+            label: t('pages.mempool.title'),
+            href: network === 'testnet'
+              ? 'https://mempool.sat20.org/testnet/'
+              : 'https://mempool.sat20.org/',
+            target: '_blank',
+          },
+          {
             label: t('pages.explorer.title'),
             href: network === 'testnet'
               ? 'https://testnet.sat20.org/browser/app/'

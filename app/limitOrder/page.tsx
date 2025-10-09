@@ -460,8 +460,17 @@ export default function LimitOrderPage() {
                                         overflow: 'hidden'
                                     }}
                                 >
-                                    {abbreviateTicker(p?.assetName || '')}
-                                    <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
+                                    {p?.protocol === 'runes' ? (
+                                        <>
+                                            <span className='text-[13px]'>{p?.assetName || ''}</span>
+                                            <span className='text-[11px] text-zinc-500' style={{ display: 'block' }}>({p?.protocol})</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className='text-[16px]'>{p?.assetName || ''}</span>
+                                            <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
+                                        </>
+                                    )}
                                 </Link>
 
                                 <Link

@@ -352,10 +352,10 @@ export default function HistorySwapTable({
                       <TableCell className="text-center">
                         <span
                           className={`whitespace-nowrap px-2 py-0.5 rounded border text-xs font-semibold ${Number(order.done) === 1
-                            ? "bg-green-500 text-green-700 border-green-400"
+                            ? "bg-zinc-800 text-green-600"
                             : Number(order.done) === 2
-                              ? "bg-gray-500 text-gray-700 border-gray-400"
-                              : "bg-blue-500 text-blue-700 border-blue-400"
+                              ? "bg-zinc-800 text-gray-600"
+                              : "bg-zinc-800 text-blue-600"
                             }`}
                           title={order.status}
                         >
