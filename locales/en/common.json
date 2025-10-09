@@ -327,5 +327,6 @@
   "copy": "Copy",
   "request_failed": "Request failed",
   "noLiquidityTip": "No liquidity found. Add liquidity before removing.",
-  "error": "Error"
+  "error": "Error",
+  "poolStartupRequired": "Add {{assetAmount}} {{ticker}} + {{satsAmount}} sats to start the pool."
 }

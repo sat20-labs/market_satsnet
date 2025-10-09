@@ -32,6 +32,24 @@ export function AssetInfoCard({
   isRefreshing
 }: AssetInfoCardProps) {
   const { t } = useTranslation();
+  
+  // Handle status 101 case - use Contract data for startup message
+  const isPoolStartupRequired = swapData?.status === 101;
+  const contractAssetAmt = useMemo(() => {
+    if (isPoolStartupRequired && swapData?.Contract?.assetAmt) {
+      return Number(swapData.Contract.assetAmt);
+    }
+    return 0;
+  }, [isPoolStartupRequired, swapData?.Contract?.assetAmt]);
+  
+  const contractSatValue = useMemo(() => {
+    if (isPoolStartupRequired && swapData?.Contract?.satValue) {
+      return Number(swapData.Contract.satValue);
+    }
+    return 0;
+  }, [isPoolStartupRequired, swapData?.Contract?.satValue]);
+  
+  // For normal pool display (non-101 status)
   const assetAmt = useMemo(() => getValueFromPrecision(swapData?.AssetAmtInPool)?.value, [swapData?.AssetAmtInPool]);
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
   const currentPrice = useMemo(() => {
@@ -161,20 +179,36 @@ export function AssetInfoCard({
           </div>
         )}
         <div className="text-xs sm:text-sm pt-2 text-zinc-500 border-t border-zinc-800 space-y-2">
-          <div className="flex justify-start items-start">
-            <span className="text-zinc-500">{t('common.poolAssetInfo')}：</span>
-            <div className="text-left text-zinc-500 space-y-1">
-              <p><span className="font-bold mr-2">{assetAmt?.toLocaleString()}</span> {ticker}</p>
-              <p><span className="font-bold mr-2">{satValue?.toLocaleString()}</span> sats</p>
+          {isPoolStartupRequired ? (
+            // Status 101: Show startup message
+            <div className="flex justify-start items-center">
+              <span className="text-orange-400 font-medium">
+                {t('common.poolStartupRequired', {
+                  assetAmount: contractAssetAmt?.toLocaleString(),
+                  ticker: ticker,
+                  satsAmount: contractSatValue?.toLocaleString()
+                })}
+              </span>
             </div>
-          </div>
-          <div className="flex justify-start items-center gap-1">
-            <span className="text-zinc-500">{t('common.currentPrice')}：</span>
-            <span className="text-green-600 font-bold">
-              ~ {currentPrice || '--'}
-            </span>
-            sats
-          </div>
+          ) : (
+            // Normal status: Show pool info
+            <>
+              <div className="flex justify-start items-start">
+                <span className="text-zinc-500">{t('common.poolAssetInfo')}：</span>
+                <div className="text-left text-zinc-500 space-y-1">
+                  <p><span className="font-bold mr-2">{assetAmt?.toLocaleString()}</span> {ticker}</p>
+                  <p><span className="font-bold mr-2">{satValue?.toLocaleString()}</span> sats</p>
+                </div>
+              </div>
+              <div className="flex justify-start items-center gap-1">
+                <span className="text-zinc-500">{t('common.currentPrice')}：</span>
+                <span className="text-green-600 font-bold">
+                  ~ {currentPrice || '--'}
+                </span>
+                sats
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
