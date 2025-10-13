@@ -332,5 +332,6 @@
   "request_failed": "请求失败",
   "noLiquidityTip": "未找到流动性，请先添加后再移除。",
   "error": "错误",
-  "poolStartupRequired": "需添加 {{assetAmount}} {{ticker}} 与 {{satsAmount}} sats 启动池子。"
+  "poolStartupRequired": "需添加 {{assetAmount}} {{ticker}} 与 {{satsAmount}} sats 启动池子。",
+  "contract_maintenance": "合约维护升级中"
 }

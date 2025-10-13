@@ -13,6 +13,7 @@ import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function RootLayout({
   children,
@@ -116,6 +117,7 @@ export default function RootLayout({
               </ul>
             </footer>
           </div>
+          <Toaster position="top-center" richColors />
         </Providers>
       </body>
     </html>

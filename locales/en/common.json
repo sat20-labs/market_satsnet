@@ -328,5 +328,6 @@
   "request_failed": "Request failed",
   "noLiquidityTip": "No liquidity found. Add liquidity before removing.",
   "error": "Error",
-  "poolStartupRequired": "Add {{assetAmount}} {{ticker}} + {{satsAmount}} sats to start the pool."
+  "poolStartupRequired": "Add {{assetAmount}} {{ticker}} + {{satsAmount}} sats to start the pool.",
+  "contract_maintenance": "Contract under maintenance"
 }

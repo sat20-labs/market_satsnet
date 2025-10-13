@@ -30,9 +30,18 @@ import { clientApi } from '@/api';
 // import { Icon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { SortDropdown } from '@/components/SortDropdown';
+import { toast } from 'sonner';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
+
+// 维护中的 Runes 资产列表
+const MAINTENANCE_RUNES = [
+  'DOG•GO•TO•THE•MOON',
+  'SHIB•SHIB•SHIB',
+  'LOBO•THE•WOLF•PUP',
+  'FUNNY•FISH•MASK'
+];
 
 function extractAmount(obj) {
   if (!obj) return 0;
@@ -160,6 +169,20 @@ const Swap = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const PAGE_SIZES = [10, 20, 50, 100];
+
+  // 判断资产是否在维护中
+  const isUnderMaintenance = (pool: any) => {
+    return pool?.protocol === 'runes' && MAINTENANCE_RUNES.includes(pool?.assetName);
+  };
+
+  // 处理维护中资产的点击
+  const handleMaintenanceClick = (e: React.MouseEvent, pool: any) => {
+    if (isUnderMaintenance(pool)) {
+      e.preventDefault();
+      toast.warning(t('common.contract_maintenance'));
+      return false;
+    }
+  };
   const SORTABLE_COLUMNS = [
     { key: 'assetName', label: t('pages.launchpool.asset_name') },
     { key: 'dealPrice', label: t('common.price') },
@@ -511,6 +534,7 @@ const Swap = () => {
                   href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
                   className="flex flex-col justify-start text-primary font-medium text-left max-w-[150px]"
                   title={p?.assetName}
+                  onClick={(e) => handleMaintenanceClick(e, p)}
                   style={{
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -536,6 +560,7 @@ const Swap = () => {
                   <Link
                     href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
                     className={`${statusColorMap[p.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
+                    onClick={(e) => handleMaintenanceClick(e, p)}
                   >
                     <Icon icon="lucide:zap" width={18} height={18} className="text-white mr-1" />{t('common.buy')}
                   </Link>
@@ -634,6 +659,7 @@ const Swap = () => {
                         className={`cursor-pointer text-primary hover:underline leading-snug ${adaptedPool.protocol !== 'runes' ? 'max-w-[160px]' : 'max-w-[180px]'}`}
                         prefetch={true}
                         title={adaptedPool.assetName}
+                        onClick={(e) => handleMaintenanceClick(e, adaptedPool)}
                         style={{
                           display: '-webkit-box',
                           WebkitLineClamp: 2,
@@ -693,6 +719,7 @@ const Swap = () => {
                         <Link
                           href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
                           className={`${statusColorMap[adaptedPool.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
+                          onClick={(e) => handleMaintenanceClick(e, adaptedPool)}
                         >
                           <Icon icon="lucide:zap" width={16} height={16} className="text-white mr-1" /> {t('common.buy')}
                         </Link>
