@@ -16,6 +16,8 @@ interface DepositProps {
   isRefreshing: boolean;
   tickerInfo?: any;
   swapData?: any;
+  isUnderMaintenance?: boolean;
+  onMaintenanceAction?: () => void;
 }
 
 interface DepositParams {
@@ -24,7 +26,7 @@ interface DepositParams {
   contractUrl: string;
 }
 
-const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo, swapData }) => {
+const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo, swapData, isUnderMaintenance = false, onMaintenanceAction }) => {
   const { t } = useTranslation();
   const { btcFeeRate } = useCommonStore();
   const [amount, setAmount] = useState('');
@@ -115,6 +117,11 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
   };
 
   const handleDeposit = () => {
+    // 检查是否为维护中
+    if (isUnderMaintenance) {
+      onMaintenanceAction?.();
+      return;
+    }
     // 检查是否为流动性开放状态
     if (swapData?.status === 101) {
       toast.error(t('common.liquidityOpen'));

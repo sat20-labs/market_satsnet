@@ -19,6 +19,8 @@ interface WithDrawProps {
   isRefreshing: boolean;
   tickerInfo?: any;
   swapData?: any;
+  isUnderMaintenance?: boolean;
+  onMaintenanceAction?: () => void;
 }
 
 interface WithdrawParams {
@@ -36,7 +38,9 @@ const WithDraw: React.FC<WithDrawProps> = ({
   refresh,
   isRefreshing,
   tickerInfo,
-  swapData
+  swapData,
+  isUnderMaintenance = false,
+  onMaintenanceAction
 }) => {
   const { t } = useTranslation();
   const [amount, setAmount] = useState('');
@@ -111,6 +115,11 @@ const WithDraw: React.FC<WithDrawProps> = ({
   };
 
   const handleWithdraw = () => {
+    // 检查是否为维护中
+    if (isUnderMaintenance) {
+      onMaintenanceAction?.();
+      return;
+    }
     // 检查是否为流动性开放状态
     if (swapData?.status === 101) {
       toast.error(t('common.liquidityOpen'));

@@ -30,6 +30,8 @@ interface RemoveLiquidityProps {
   swapData?: any;
   lptAmt?: LptAmount | null;
   operationHistory?: string[] | null;
+  isUnderMaintenance?: boolean;
+  onMaintenanceAction?: () => void;
 }
 
 interface RemoveLiquidityParams {
@@ -49,7 +51,9 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
   tickerInfo,
   swapData,
   lptAmt,
-  operationHistory
+  operationHistory,
+  isUnderMaintenance = false,
+  onMaintenanceAction
 }) => {
   const { t } = useTranslation();
   const { address } = useReactWalletStore();
@@ -146,6 +150,11 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
 
 
   const handleRemoveLiquidity = () => {
+    // 检查是否为维护中
+    if (isUnderMaintenance) {
+      onMaintenanceAction?.();
+      return;
+    }
     // 检查是否为流动性开放状态
     if (swapData?.status === 101) {
       toast.error(t('common.liquidityOpen'));

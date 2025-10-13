@@ -27,6 +27,8 @@ interface AddLiquidityProps {
     lockedAmt: number;
   };
   operationHistory?: string[] | null;
+  isUnderMaintenance?: boolean;
+  onMaintenanceAction?: () => void;
 }
 
 interface AddLiquidityParams {
@@ -36,7 +38,7 @@ interface AddLiquidityParams {
   value: string;
 }
 
-const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo, swapData, assetBalance, satsBalance, operationHistory }) => {
+const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker, refresh, isRefreshing, tickerInfo, swapData, assetBalance, satsBalance, operationHistory, isUnderMaintenance = false, onMaintenanceAction }) => {
   const { t } = useTranslation();
   const { btcFeeRate, network } = useCommonStore();
   const [amount, setAmount] = useState('');
@@ -170,6 +172,11 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
 
 
   const handleAddLiquidity = () => {
+    // 检查是否为维护中
+    if (isUnderMaintenance) {
+      onMaintenanceAction?.();
+      return;
+    }
     if (!amount || !value || !asset || !contractUrl) {
       toast.error("Please enter a valid amount and value");
       return;

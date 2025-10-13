@@ -32,6 +32,8 @@ interface SwapProps {
   };
   refresh: () => void;
   isRefreshing: boolean;
+  isUnderMaintenance?: boolean;
+  onMaintenanceAction?: () => void;
 }
 
 type SwapType = 'asset-to-sats' | 'sats-to-asset';
@@ -46,7 +48,9 @@ const Swap = ({
   satsBalance,
   assetBalance,
   refresh,
-  isRefreshing
+  isRefreshing,
+  isUnderMaintenance = false,
+  onMaintenanceAction
 }: SwapProps) => {
   const { t } = useTranslation();
   const [swapType, setSwapType] = useState<SwapType>('sats-to-asset');
@@ -334,6 +338,11 @@ const Swap = ({
 
   // Replace handleSwap with new mutation-based function
   const handleSwap = () => {
+    // 检查是否为维护中
+    if (isUnderMaintenance) {
+      onMaintenanceAction?.();
+      return;
+    }
     // 检查是否为流动性开放状态
     if (swapData?.status === 101) {
       toast.error(t('common.liquidityOpen'));

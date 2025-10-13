@@ -26,8 +26,17 @@ import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 import dynamic from 'next/dynamic';
 import { Icon } from '@iconify/react';
+import { toast } from 'sonner';
 
 const LightweightKline = dynamic(() => import('@/components/satoshinet/LightweightKline').then(m => m.LightweightKline), { ssr: false });
+
+// 维护中的 Runes 资产列表
+const MAINTENANCE_RUNES = [
+  'DOG•GO•TO•THE•MOON',
+  'SHIB•SHIB•SHIB',
+  'LOBO•THE•WOLF•PUP',
+  'FUNNY•FISH•MASK'
+];
 
 function OrderPageContent() {
   const params = useSearchParams();
@@ -58,6 +67,17 @@ function OrderPageContent() {
   } = useSwapDetailData(asset ?? '');
   const protocol = useMemo(() => swapStatusData?.Contract?.assetName?.Protocol || '', [swapStatusData]);
   const { address } = useReactWalletStore();
+
+  // 判断是否为维护中的资产
+  const isUnderMaintenance = useMemo(() => {
+    const assetName = swapStatusData?.Contract?.assetName?.Ticker || ticker;
+    return protocol === 'runes' && MAINTENANCE_RUNES.includes(assetName);
+  }, [protocol, swapStatusData, ticker]);
+
+  // 处理维护中资产的操作
+  const handleMaintenanceAction = () => {
+    toast.warning(t('common.contract_maintenance'));
+  };
 
   // Chart height classes (fixed)
   const chartHeights_div = 'h-[37.5rem] sm:h-[41rem]';
@@ -209,6 +229,8 @@ function OrderPageContent() {
                   assetBalance={assetBalance}
                   refresh={refreshAll}
                   isRefreshing={isSwapStatusLoading || isAnalyticsLoading || isTickerLoading}
+                  isUnderMaintenance={isUnderMaintenance}
+                  onMaintenanceAction={handleMaintenanceAction}
                 />
               </TabsContent>
               <TabsContent value="deposit">
@@ -219,6 +241,8 @@ function OrderPageContent() {
                   refresh={refreshBalances}
                   isRefreshing={isSwapStatusLoading}
                   swapData={swapStatusData}
+                  isUnderMaintenance={isUnderMaintenance}
+                  onMaintenanceAction={handleMaintenanceAction}
                 />
               </TabsContent>
               <TabsContent value="withdraw">
@@ -231,6 +255,8 @@ function OrderPageContent() {
                   refresh={refreshBalances}
                   isRefreshing={isSwapStatusLoading}
                   swapData={swapStatusData}
+                  isUnderMaintenance={isUnderMaintenance}
+                  onMaintenanceAction={handleMaintenanceAction}
                 />
               </TabsContent>
               <TabsContent value="liquidity">
@@ -255,6 +281,8 @@ function OrderPageContent() {
                         assetBalance={assetBalance}
                         satsBalance={satsBalance}
                         operationHistory={userOperationHistory?.addLiq}
+                        isUnderMaintenance={isUnderMaintenance}
+                        onMaintenanceAction={handleMaintenanceAction}
                       />
                     </TabsContent>
                     <TabsContent value="remove">
@@ -271,6 +299,8 @@ function OrderPageContent() {
                         swapData={swapStatusData}
                         lptAmt={lptAmt}
                         operationHistory={userOperationHistory?.removeLiq}
+                        isUnderMaintenance={isUnderMaintenance}
+                        onMaintenanceAction={handleMaintenanceAction}
                       />
                     </TabsContent>
                   </Tabs>
