@@ -86,7 +86,11 @@ function OrderPageContent() {
   const showChartSkeleton = Boolean(isAnalyticsLoading && !analyticsData);
   const showRightCardSkeleton = Boolean(isSwapStatusLoading && !swapStatusData);
   // LPT ownership flag
-  const hasLpt = useMemo(() => (lptAmt?.Value ?? 0) > 0, [lptAmt]);
+  const hasLpt = useMemo(() => {
+    if (!lptAmt?.Value) return false;
+    const value = typeof lptAmt.Value === 'string' ? parseFloat(lptAmt.Value) : lptAmt.Value;
+    return value > 0;
+  }, [lptAmt]);
 
   const [total, setTotal] = useState(0);
 
