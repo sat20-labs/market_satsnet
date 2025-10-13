@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
+import Decimal from 'decimal.js';
 import { useCommonStore, useWalletStore } from "@/store";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
 import { Button } from '@/components/ui/button';
@@ -66,10 +67,12 @@ const Swap = ({
   console.log('swapData', swapData);
   const lastDealPrice = useMemo(() => {
     // 直接使用池子数据计算价格，不使用接口返回的LastDealPrice
-    if (satValue && assetAmtInPool.value && assetAmtInPool.value > 0) {
-      const calculatedPrice = satValue / assetAmtInPool.value;
+    const assetAmt = new Decimal(assetAmtInPool.value || '0');
+    const satValueDecimal = new Decimal(satValue);
+    if (satValueDecimal.gt(0) && assetAmt.gt(0)) {
+      const calculatedPrice = satValueDecimal.div(assetAmt);
       return {
-        value: calculatedPrice,
+        value: calculatedPrice.toNumber(),
         formatted: calculatedPrice.toFixed(10)
       };
     }
@@ -79,9 +82,9 @@ const Swap = ({
   //const contractK = useMemo(() => swapData?.Contract?.k || 0, [swapData?.Contract]);
   // 使用一致单位计算常数乘积 K（sats * assetUnits），避免精度/单位不一致导致的异常结果
   const contractK = useMemo(() => {
-    const a = Number(satValue) || 0; // sats
-    const b = Number(assetAmtInPool.value) || 0; // 已按精度还原的可读资产数量
-    return a > 0 && b > 0 ? a * b : 0;
+    const a = new Decimal(satValue); // sats
+    const b = new Decimal(assetAmtInPool.value || '0'); // 已按精度还原的可读资产数量
+    return a.gt(0) && b.gt(0) ? a.mul(b) : new Decimal(0);
   }, [satValue, assetAmtInPool.value]);
   const displayAssetBalance = assetBalance.availableAmt + assetBalance.lockedAmt;
   const displaySatsBalance = Number(satsBalance.availableAmt) + Number(satsBalance.lockedAmt);
@@ -107,56 +110,64 @@ const Swap = ({
   };
 
   const calcToAmount = (input: string) => {
-    const amtNum = Number(input);
-    if (!satValue || !assetAmtInPool.value || !amtNum || !contractK) return "";
+    const amtNum = new Decimal(input);
+    const assetAmt = new Decimal(assetAmtInPool.value || '0');
+    const satValueDecimal = new Decimal(satValue);
+    if (satValueDecimal.eq(0) || assetAmt.eq(0) || amtNum.eq(0) || contractK.eq(0)) return "";
+
     if (swapType === 'sats-to-asset') {
       // 用聪买资产
-      const newSatValue = satValue + amtNum;
-      const newAssetAmt = contractK / newSatValue;
-      const assetOut = assetAmtInPool.value - newAssetAmt;
+      const newSatValue = satValueDecimal.add(amtNum);
+      const newAssetAmt = contractK.div(newSatValue);
+      const assetOut = assetAmt.sub(newAssetAmt);
       console.log('calcToAmount divisibility', divisibility);
       console.log('calcToAmount satValue', satValue);
-      console.log('calcToAmount assetAmtInPool', assetAmtInPool.value);
-      console.log('calcToAmount contractK', contractK);
-      console.log('calcToAmount amtNum', amtNum);
-      console.log('calcToAmount newSatValue', newSatValue);
-      console.log('calcToAmount newAssetAmt', newAssetAmt);
-      console.log('calcToAmount assetOut', assetOut);
+      console.log('calcToAmount assetAmtInPool', assetAmt.toString());
+      console.log('calcToAmount contractK', contractK.toString());
+      console.log('calcToAmount amtNum', amtNum.toString());
+      console.log('calcToAmount newSatValue', newSatValue.toString());
+      console.log('calcToAmount newAssetAmt', newAssetAmt.toString());
+      console.log('calcToAmount assetOut', assetOut.toString());
+
+      if (assetOut.lte(0)) return "0";
       if (divisibility === 0) {
-        return assetOut > 0 ? Math.floor(assetOut).toString() : "0";
+        return assetOut.floor().toString();
       }
-      return assetOut > 0 ? assetOut.toFixed(divisibility) : "0";
+      return assetOut.toFixed(divisibility);
     } else {
       // 用资产换聪
-      const newAssetAmt = assetAmtInPool.value + amtNum;
-      const newSatValue = contractK / newAssetAmt;
-      const satsOut = satValue - newSatValue;
-      return Math.max(satsOut, 0).toFixed(0);
+      const newAssetAmt = assetAmt.add(amtNum);
+      const newSatValue = contractK.div(newAssetAmt);
+      const satsOut = satValueDecimal.sub(newSatValue);
+      return satsOut.gt(0) ? satsOut.floor().toString() : "0";
     }
   };
 
   const calcFromAmount = (input: string) => {
     console.log('calcFromAmount', input);
-    const amtNum = Number(input);
-    if (!satValue || !assetAmtInPool.value || !amtNum || !contractK) return "";
+    const amtNum = new Decimal(input);
+    const assetAmt = new Decimal(assetAmtInPool.value || '0');
+    const satValueDecimal = new Decimal(satValue);
+    if (satValueDecimal.eq(0) || assetAmt.eq(0) || amtNum.eq(0) || contractK.eq(0)) return "";
 
     if (swapType === 'sats-to-asset') {
       const assetOut = amtNum;
-      if (assetOut > assetAmtInPool.value) return ""; // 防止 assetOut 超过池内资产
-      const newAssetAmt = assetAmtInPool.value - assetOut;
-      if (newAssetAmt <= 0) return ""; // 确保 newAssetAmt 有效
-      const newSatValue = contractK / newAssetAmt;
-      const satsIn = newSatValue - satValue;
-      console.log('satsIn', satsIn);
-      return satsIn > 0 ? satsIn.toFixed(0) : "0";
+      if (assetOut.gt(assetAmt)) return ""; // 防止 assetOut 超过池内资产
+      const newAssetAmt = assetAmt.sub(assetOut);
+      if (newAssetAmt.lte(0)) return ""; // 确保 newAssetAmt 有效
+      const newSatValue = contractK.div(newAssetAmt);
+      const satsIn = newSatValue.sub(satValueDecimal);
+      console.log('satsIn', satsIn.toString());
+      return satsIn.gt(0) ? satsIn.floor().toString() : "0";
     } else {
       const satsOut = amtNum;
-      if (satsOut > satValue) return ""; // 防止 satsOut 超过池内聪
-      const newSatValue = satValue - satsOut;
-      if (newSatValue <= 0) return ""; // 确保 newSatValue 有效
-      const newAssetAmt = contractK / newSatValue;
-      const assetIn = newAssetAmt - assetAmtInPool.value;
-      return assetIn > 0 ? assetIn.toFixed(swapData?.AssetAmtInPool?.Precision || 8) : "0";
+      if (satsOut.gt(satValueDecimal)) return ""; // 防止 satsOut 超过池内聪
+      const newSatValue = satValueDecimal.sub(satsOut);
+      if (newSatValue.lte(0)) return ""; // 确保 newSatValue 有效
+      const newAssetAmt = contractK.div(newSatValue);
+      const assetIn = newAssetAmt.sub(assetAmt);
+      if (assetIn.lte(0)) return "0";
+      return assetIn.toFixed(swapData?.AssetAmtInPool?.Precision || 8);
     }
   };
 
@@ -352,16 +363,17 @@ const Swap = ({
   };
 
   const buyQuickInputValues = useMemo(() => {
-    if (!assetAmtInPool.value) return [];
-    const maxBuyAmount = assetAmtInPool.value * 0.5;
-    const percentages = assetAmtInPool.value > 100000
+    const assetAmt = new Decimal(assetAmtInPool.value || '0');
+    if (assetAmt.eq(0)) return [];
+    const maxBuyAmount = assetAmt.mul(0.5);
+    const percentages = assetAmt.gt(100000)
       ? [0.0001, 0.0002, 0.0005, 0.001]
       : [0.02, 0.05, 0.1, 0.2];
 
     const values = percentages.map((percentage) => {
-      const calculatedValue = maxBuyAmount * percentage;
-      const magnitude = Math.pow(10, Math.floor(Math.log10(calculatedValue)));
-      return Math.round(calculatedValue / magnitude) * magnitude;
+      const calculatedValue = maxBuyAmount.mul(percentage);
+      const magnitude = new Decimal(10).pow(Math.floor(Math.log10(calculatedValue.toNumber())));
+      return calculatedValue.div(magnitude).floor().mul(magnitude).toNumber();
     });
     return values;
   }, [assetAmtInPool.value]);

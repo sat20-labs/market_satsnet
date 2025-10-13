@@ -187,7 +187,7 @@ export default function HistoryTable({
         displayTradeQuantity = inAmtNum - remainingAmtNum - outAmtNum;
       }
 
-      if (item.OrderType === 2 && outAmt > 0) {
+      if (item.OrderType === 2 && outAmtNum > 0) {
         displayTradeAmountSats = inValue - remainingValue - serviceFee - outValue;
       }
       let status = item.Done === 1 ? t("common.limitorder_status_completed") : item.Done === 2 ? t("common.limitorder_status_cancelled") : t("common.limitorder_status_pending");
