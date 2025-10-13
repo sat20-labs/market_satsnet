@@ -292,6 +292,7 @@
   "quantity_must_be_positive": "数量必须大于0。",
   "refund": "退款",
   "nodata": "暂无数据",
+  "no_data": "暂无数据",
   "loading": "加载中...",
   "showing": "显示",
   "total_count": "共",
