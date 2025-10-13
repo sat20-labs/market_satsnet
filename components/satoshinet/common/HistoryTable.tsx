@@ -154,6 +154,13 @@ export default function HistoryTable({
       const { value: expectedAmt } = getValueFromPrecision(item.ExpectedAmt);
       const { value: outAmt } = getValueFromPrecision(item.OutAmt);
       const { value: remainingAmt } = getValueFromPrecision(item.RemainingAmt);
+
+      // 转换为数字类型
+      const priceNum = parseFloat(price || '0');
+      const inAmtNum = parseFloat(inAmt || '0');
+      const expectedAmtNum = parseFloat(expectedAmt || '0');
+      const outAmtNum = parseFloat(outAmt || '0');
+      const remainingAmtNum = parseFloat(remainingAmt || '0');
       if (item.OrderType === 3) {
         //console.log('item', item);
 
@@ -171,13 +178,13 @@ export default function HistoryTable({
           : "text-blue-500";
 
       const displayOrderTypeLabel = orderTypeLabels[item.OrderType] || item.OrderType;
-      const displayOrderQuantity = expectedAmt;
-      let displayTradeQuantity = outAmt;
+      const displayOrderQuantity = expectedAmtNum;
+      let displayTradeQuantity = outAmtNum;
       let displayTradeAmountSats = outValue;
       const displayAssetName = formatAssetName(item.AssetName);
 
       if (item.OrderType === 1) {
-        displayTradeQuantity = inAmt - remainingAmt - outAmt;
+        displayTradeQuantity = inAmtNum - remainingAmtNum - outAmtNum;
       }
 
       if (item.OrderType === 2 && outAmt > 0) {
@@ -205,16 +212,16 @@ export default function HistoryTable({
 
       return {
         orderType: item.OrderType,
-        price,
-        quantity: inAmt,
+        price: priceNum,
+        quantity: inAmtNum,
         status,
         done: item.Done,
-        outAmt,
-        expectedAmt,
+        outAmt: outAmtNum,
+        expectedAmt: expectedAmtNum,
         outValue,
         inValue,
-        inAmt,
-        remainingAmt,
+        inAmt: inAmtNum,
+        remainingAmt: remainingAmtNum,
         remainingValue,
         OrderTime: item.OrderTime,
         rawData: item,

@@ -54,7 +54,7 @@ function getMaxSupply(pool: any): number {
     const raw = (pool && pool.maxSupply) ?? (pool?.Contract && pool.Contract.maxSupply);
     if (raw == null) return 0;
     if (typeof raw === 'object' && typeof raw.Value === 'number') {
-        return getValueFromPrecision(raw as any).value;
+        return parseFloat(getValueFromPrecision(raw as any).value || '0');
     }
     const n = Number(raw);
     return isNaN(n) ? 0 : n;
@@ -315,7 +315,7 @@ export default function LimitOrderPage() {
             let maxSupply = p.maxSupply;
             if (ti && ti.maxSupply != null) {
                 if (typeof ti.maxSupply === 'object' && typeof ti.maxSupply.Value === 'number') {
-                    maxSupply = getValueFromPrecision(ti.maxSupply as any).value;
+                    maxSupply = parseFloat(getValueFromPrecision(ti.maxSupply as any).value || '0');
                 } else {
                     const n = Number(ti.maxSupply);
                     maxSupply = isNaN(n) ? 0 : n;

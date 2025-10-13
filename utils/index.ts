@@ -1,3 +1,5 @@
+import Decimal from 'decimal.js';
+
 export * from './url';
 export function satsToBitcoin(sats: string | number): number {
   if (typeof sats === 'string') {
@@ -148,31 +150,38 @@ export const formatLargeNumber = (num: number): string => {
 
 
 interface PrecisionValue {
-  Value: number;
+  Value: string | number; // 支持字符串避免精度丢失
   Precision: number;
 }
 
-export const getValueFromPrecision = (input: PrecisionValue | null | undefined): { value: number; formatted: string } => {
-  if (!input || typeof input.Value !== 'number' || isNaN(input.Value)) {
-    return { value: 0, formatted: '0' };
+export const getValueFromPrecision = (input: PrecisionValue | null | undefined): { value: string; formatted: string } => {
+  if (!input || input.Value === undefined || input.Value === null) {
+    return { value: '0', formatted: '0' };
   }
-  
-  const calculatedValue = input.Value / Math.pow(10, input.Precision);
-  
+
+  // 优化：如果 Value 已经是字符串，直接使用；否则转换为字符串
+  // 使用 Decimal.js 处理大数值精度问题
+  const valueStr = typeof input.Value === 'string' ? input.Value : input.Value.toString();
+  const valueDecimal = new Decimal(valueStr);
+  const precisionPow = new Decimal(10).pow(input.Precision || 0);
+  const calculatedValue = valueDecimal.div(precisionPow);
+
   // Convert to string and remove trailing zeros
   let formattedString = calculatedValue.toString();
-  
+
   // If it contains decimal point, remove trailing zeros and potentially the decimal point
   if (formattedString.includes('.')) {
     formattedString = formattedString.replace(/0+$/, ''); // Remove trailing zeros
-    formattedString = formattedString.replace(/\.$/, ''); 
+    formattedString = formattedString.replace(/\.$/, '');
   }
-  
+
   return {
-    value: calculatedValue,
+    value: calculatedValue.toString(),
     formatted: formattedString
   };
 };
+
+
 
 export const getAssetEditWhitelist = (): string[] => {
   const raw = (process.env.NEXT_PUBLIC_ASSET_EDIT_WHITELIST || '').trim();

@@ -27,7 +27,7 @@ export const AssetInfo = ({ depthData, tickerInfo, holders }: AssetInfoProps) =>
   // 使用池子数据计算价格，不使用接口返回的LastDealPrice
   const lastPrice = useMemo(() => {
     const satsValueInPool = depthData?.SatsValueInPool || 0;
-    const assetAmtInPool = getValueFromPrecision(depthData?.AssetAmtInPool)?.value || 0;
+    const assetAmtInPool = parseFloat(getValueFromPrecision(depthData?.AssetAmtInPool)?.value || '0');
     if (satsValueInPool && assetAmtInPool && assetAmtInPool > 0) {
       return satsValueInPool / assetAmtInPool;
     }

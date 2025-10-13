@@ -12,13 +12,13 @@ export enum Chain {
 
 // LPT (Liquidity Provider Token) 数据结构
 export interface LptAmount {
-  Value: number;
+  Value: string | number; // 支持字符串避免精度丢失
   Precision: number;
 }
 
 // 用户合约状态中的各种金额数据结构
 export interface ContractAmount {
-  Value: number;
+  Value: string | number; // 支持字符串避免精度丢失
   Precision: number;
 }
 

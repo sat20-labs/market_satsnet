@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import Decimal from 'decimal.js';
 import { Button } from '@/components/ui/button';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
@@ -61,11 +62,15 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
   const { btcFeeRate, network } = useCommonStore((state) => state);
   const [removeAmount, setRemoveAmount] = useState('');
 
-  // 使用 lptAmt 作为可用的流动性代币余额
+  // 使用 lptAmt 作为可用的流动性代币余额，使用 Decimal.js 处理大数值
   const displayLptBalance = useMemo(() => {
     if (!lptAmt?.Value) return 0;
-    const precision = lptAmt.Precision || 0;
-    return lptAmt.Value / Math.pow(10, precision);
+    // 优化：如果 Value 已经是字符串，直接使用；否则转换为字符串
+    const valueStr = typeof lptAmt.Value === 'string' ? lptAmt.Value : lptAmt.Value.toString();
+    const valueDecimal = new Decimal(valueStr);
+    const precisionPow = new Decimal(10).pow(lptAmt.Precision || 0);
+    // 由于 getValueFromPrecision 现在返回字符串，需要转换为 number
+    return parseFloat(valueDecimal.div(precisionPow).toString());
   }, [lptAmt]);
 
   // 检查用户是否有 LPT（是否加入了池子）

@@ -139,6 +139,12 @@ export default function HistorySwapTable({
             const { value: expectedAmt } = getValueFromPrecision(item.ExpectedAmt);
             const { value: outAmt } = getValueFromPrecision(item.OutAmt);
 
+            // 转换为数字类型
+            const priceNum = parseFloat(price || '0');
+            const inAmtNum = parseFloat(inAmt || '0');
+            const expectedAmtNum = parseFloat(expectedAmt || '0');
+            const outAmtNum = parseFloat(outAmt || '0');
+
             const inValue = typeof item.InValue === 'number' ? item.InValue : 0;
             const outValue = typeof item.OutValue === 'number' ? item.OutValue : 0;
             const remainingAmt = 0; // Add if needed from raw data

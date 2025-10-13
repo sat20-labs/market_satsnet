@@ -92,7 +92,7 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
   const assetAmtInPool = useMemo(() => {
     // 如果池子中有资产，使用池子中的数量
     if (swapData?.AssetAmtInPool) {
-      return getValueFromPrecision(swapData.AssetAmtInPool).value;
+      return parseFloat(getValueFromPrecision(swapData.AssetAmtInPool).value || '0');
     }
     // 如果池子为空，使用Contract中的初始资产数量
     if (swapData?.Contract?.assetAmt) {
