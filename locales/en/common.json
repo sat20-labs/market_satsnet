@@ -288,6 +288,7 @@
   "price_must_be_positive": "Price must be greater than 0.",
   "quantity_must_be_positive": "Quantity must be greater than 0.",
   "nodata": "No data",
+  "no_data": "No data",
   "refund": "Refund",
   "loading": "Loading...",
   "showing": "Showing",
