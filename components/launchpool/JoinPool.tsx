@@ -67,12 +67,12 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
         let totalMinted = 0;
         if (data?.valid?.TotalAmt) {
           const totalAmt = getValueFromPrecision(data.valid.TotalAmt);
-          totalMinted = totalAmt.value;
+          totalMinted = parseFloat(totalAmt.value || '0');
         } else if (data?.valid?.History) {
           // 回退方案：累加 History 数组中的 OutAmt
           totalMinted = data.valid.History.reduce((acc: number, item: any) => {
             const amt = getValueFromPrecision(item.OutAmt);
-            return acc + amt.value;
+            return acc + parseFloat(amt.value || '0');
           }, 0);
         }
         setMinted(totalMinted);
