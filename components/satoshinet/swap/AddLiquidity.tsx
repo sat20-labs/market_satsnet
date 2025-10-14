@@ -186,12 +186,38 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
   };
 
   const handleMaxClick = () => {
-    const maxAmount = divisibility === 0
-      ? Math.floor(displayAssetBalance).toString()
-      : displayAssetBalance.toFixed(divisibility);
+    // 计算最大资产数量
+    const maxAssetAmount = divisibility === 0
+      ? Math.floor(displayAssetBalance)
+      : parseFloat(displayAssetBalance.toFixed(divisibility));
+
+    // 计算对应的聪数量
+    const requiredSats = calculateValueFromAmount(maxAssetAmount);
+
+    // 计算可用聪数量（总余额减去20）
+    const availableSats = (satsBalance.availableAmt + satsBalance.lockedAmt) - 20;
+
+    let finalAmount = maxAssetAmount;
+
+    // 如果需要的聪数量超过可用聪数量，则重新计算可以添加的最大资产数量
+    if (requiredSats > availableSats && availableSats > 0 && assetAmtInPool > 0 && satValueInPool > 0) {
+      // 根据可用聪数量反推可添加的资产数量
+      const ratio = availableSats / satValueInPool;
+      finalAmount = ratio * assetAmtInPool;
+
+      // 确保不超过资产余额
+      finalAmount = Math.min(finalAmount, maxAssetAmount);
+
+      // 根据divisibility格式化
+      if (divisibility === 0) {
+        finalAmount = Math.floor(finalAmount);
+      } else {
+        finalAmount = parseFloat(finalAmount.toFixed(divisibility));
+      }
+    }
 
     // 使用 handleAmountChange 来确保 value 也被正确计算
-    handleAmountChange(maxAmount);
+    handleAmountChange(finalAmount.toString());
   };
 
   return (
