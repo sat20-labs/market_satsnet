@@ -7,6 +7,7 @@ import { useCommonStore, useWalletStore } from "@/store";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { LptAmount, UserContractStatus, ParsedContractStatus } from "@/types";
+import { log } from "console";
 
 interface TickerInfo {
   name: {
@@ -154,11 +155,12 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
     if (!userContractStatus?.status) return null;
     try {
       const parsedStatus = JSON.parse(userContractStatus.status);
+      console.log('parsedStatus', parsedStatus)
       const lptData = parsedStatus?.status?.LptAmt;
       
       // 验证 lptAmt 数据结构
-      if (lptData && typeof lptData === 'object' && 
-          typeof lptData.Value === 'number' && 
+      if (lptData && typeof lptData === 'object' &&
+          (typeof lptData.Value === 'number' || typeof lptData.Value === 'string') &&
           typeof lptData.Precision === 'number') {
         return lptData as LptAmount;
       }
