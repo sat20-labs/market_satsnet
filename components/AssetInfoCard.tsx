@@ -50,7 +50,12 @@ export function AssetInfoCard({
   }, [isPoolStartupRequired, swapData?.Contract?.satValue]);
   
   // For normal pool display (non-101 status)
-  const assetAmt = useMemo(() => parseFloat(getValueFromPrecision(swapData?.AssetAmtInPool)?.value || '0'), [swapData?.AssetAmtInPool]);
+  const assetAmt = useMemo(() => {
+    const precisionResult = getValueFromPrecision(swapData?.AssetAmtInPool);
+    console.log('AssetInfoCard - swapData?.AssetAmtInPool:', swapData?.AssetAmtInPool);
+    console.log('AssetInfoCard - getValueFromPrecision result:', precisionResult);
+    return parseFloat(precisionResult?.value || '0');
+  }, [swapData?.AssetAmtInPool]);
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
   const currentPrice = useMemo(() => {
     // 使用池子数据计算价格，不使用接口返回的LastDealPrice
