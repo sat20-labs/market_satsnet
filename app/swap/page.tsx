@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { BtcPrice } from '@/components/BtcPrice';
 import { getDeployedContractInfo, getContractStatus, getContractPriceChange } from '@/api/market';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,11 @@ const MAINTENANCE_RUNES = [
   'SHIB•SHIB•SHIB',
   'LOBO•THE•WOLF•PUP',
   'FUNNY•FISH•MASK'
+];
+
+// 白名单用户地址（可以绕过维护限制）
+const WHITELIST_ADDRESSES = [
+  'h7cw9ay7vxvpl3tmnjdyd8eafdrfr4ur6kxnsvk4yq4'
 ];
 
 function extractAmount(obj) {
@@ -163,15 +169,24 @@ function formatDeployDate(ts?: number) {
 }
 
 const Swap = () => {
-  const { t } = useTranslation(); // Specify the namespace 
+  const { t } = useTranslation(); // Specify the namespace
   const { satsnetHeight, network } = useCommonStore();
   const { btcPrice } = useCommonStore();
+  const { address } = useReactWalletStore();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const PAGE_SIZES = [10, 20, 50, 100];
 
   // 判断资产是否在维护中
   const isUnderMaintenance = (pool: any) => {
+    // 检查用户地址是否在白名单中
+    const isUserWhitelisted = address && WHITELIST_ADDRESSES.includes(address);
+
+    // 如果用户在白名单中，则不视为维护状态
+    if (isUserWhitelisted) {
+      return false;
+    }
+
     return pool?.protocol === 'runes' && MAINTENANCE_RUNES.includes(pool?.assetName);
   };
 

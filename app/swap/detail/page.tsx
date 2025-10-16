@@ -38,6 +38,11 @@ const MAINTENANCE_RUNES = [
   'FUNNY•FISH•MASK'
 ];
 
+// 白名单用户地址（可以绕过维护限制）
+const WHITELIST_ADDRESSES = [
+  'h7cw9ay7vxvpl3tmnjdyd8eafdrfr4ur6kxnsvk4yq4'
+];
+
 function OrderPageContent() {
   const params = useSearchParams();
   const asset = params.get('asset');
@@ -71,8 +76,17 @@ function OrderPageContent() {
   // 判断是否为维护中的资产
   const isUnderMaintenance = useMemo(() => {
     const assetName = swapStatusData?.Contract?.assetName?.Ticker || ticker;
+
+    // 检查用户地址是否在白名单中
+    const isUserWhitelisted = address && WHITELIST_ADDRESSES.includes(address);
+
+    // 如果用户在白名单中，则不视为维护状态
+    if (isUserWhitelisted) {
+      return false;
+    }
+
     return protocol === 'runes' && MAINTENANCE_RUNES.includes(assetName);
-  }, [protocol, swapStatusData, ticker]);
+  }, [protocol, swapStatusData, ticker, address]);
 
   // 处理维护中资产的操作
   const handleMaintenanceAction = () => {
