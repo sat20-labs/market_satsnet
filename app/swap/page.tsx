@@ -41,12 +41,7 @@ import { toast } from "sonner";
 const PAGE_SIZE = 10;
 
 // 维护中的 Runes 资产列表
-const MAINTENANCE_RUNES = [
-  "DOG•GO•TO•THE•MOON",
-  "SHIB•SHIB•SHIB",
-  "LOBO•THE•WOLF•PUP",
-  "FUNNY•FISH•MASK",
-];
+const MAINTENANCE_RUNES: string[] = [];
 
 // 白名单用户地址（可以绕过维护限制）
 const WHITELIST_ADDRESSES = [
