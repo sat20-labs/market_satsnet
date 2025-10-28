@@ -358,5 +358,11 @@
   "total_profit_assets": "总利润资产",
   "base_lpt_amt": "基础LPT数量",
   "total_profit_tx": "利润交易次数",
-  "no_profit_data": "暂无利润数据"
+  "no_profit_data": "暂无利润数据",
+  "deployer_info": "部署者信息",
+  "current_deployer": "当前部署者",
+  "contract_address": "合约地址",
+  "network_status": "网络状态",
+  "copy_address": "复制地址",
+  "copied": "已复制"
 }

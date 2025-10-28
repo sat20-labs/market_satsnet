@@ -10,6 +10,7 @@ import { generateMempoolUrl } from "@/utils/url";
 import { Chain } from "@/types";
 import { hideStr } from "@/utils";
 import { log } from "console";
+import { Copy, Check } from "lucide-react";
 
 interface ClaimProfitsProps {
   asset: string;
@@ -44,6 +45,19 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
   const { btcFeeRate, network } = useCommonStore();
   const [ratio, setRatio] = useState("1"); // 默认提取100%利润
   const { address } = useReactWalletStore();
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+
+  // 复制地址功能
+  const handleCopyAddress = async (addressToCopy: string, type: string) => {
+    try {
+      await navigator.clipboard.writeText(addressToCopy);
+      setCopiedAddress(type);
+      toast.success(t("common.copied") || "已复制");
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (err) {
+      toast.error("复制失败");
+    }
+  };
 
   // 检查是否为部署者
   const isDeployer = useMemo(() => {
@@ -272,6 +286,112 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                 className="bg-zinc-800/50"
               />
             </span>
+          </div>
+
+          {/* 部署者信息显示 */}
+          <div className="mb-4 p-4 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
+            <p className="text-sm font-medium text-zinc-400 mb-3 flex items-center">
+              <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+              {t("common.deployer_info") || "部署者信息"}
+            </p>
+            <div className="grid grid-cols-1 gap-3 text-sm">
+              {/* 当前部署者 */}
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-medium">
+                  {t("common.current_deployer") || "当前部署者"}:
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded">
+                    {swapData?.deployer ? hideStr(swapData.deployer, 6) : "无"}
+                  </span>
+                  {swapData?.deployer && (
+                    <button
+                      onClick={() => handleCopyAddress(swapData.deployer, "deployer")}
+                      className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
+                      title={t("common.copy_address") || "复制地址"}
+                    >
+                      {copiedAddress === "deployer" ? (
+                        <Check className="w-3 h-3 text-green-400" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  )}
+                  {isDeployer && (
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full font-medium">
+                      您
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* 合约地址 */}
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-medium">
+                  {t("common.contract_address") || "合约地址"}:
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded max-w-[120px] truncate">
+                    {contractUrl ? contractUrl.split("/").pop() || "未知" : "未知"}
+                  </span>
+                  {contractUrl && (
+                    <button
+                      onClick={() => handleCopyAddress(contractUrl, "contract")}
+                      className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
+                      title={t("common.copy_address") || "复制地址"}
+                    >
+                      {copiedAddress === "contract" ? (
+                        <Check className="w-3 h-3 text-green-400" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 网络状态 */}
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-medium">
+                  {t("common.network_status") || "网络状态"}:
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${
+                    network === "mainnet" ? "bg-green-400" : "bg-yellow-400"
+                  }`}></span>
+                  <span className={`text-zinc-300 font-medium ${
+                    network === "mainnet" ? "text-green-400" : "text-yellow-400"
+                  }`}>
+                    {network === "mainnet" ? "Mainnet" : "Testnet"}
+                  </span>
+                </div>
+              </div>
+
+              {/* 当前用户地址 */}
+              {address && (
+                <div className="flex justify-between items-center pt-2 border-t border-zinc-700/50">
+                  <span className="text-zinc-500 font-medium">
+                    您的地址:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded">
+                      {hideStr(address, 6)}
+                    </span>
+                    <button
+                      onClick={() => handleCopyAddress(address, "user")}
+                      className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
+                      title={t("common.copy_address") || "复制地址"}
+                    >
+                      {copiedAddress === "user" ? (
+                        <Check className="w-3 h-3 text-green-400" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 利润状态显示 */}

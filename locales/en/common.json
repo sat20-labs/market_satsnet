@@ -354,5 +354,11 @@
   "total_profit_assets": "Total Profit (Assets)",
   "base_lpt_amt": "Base LPT Amount",
   "total_profit_tx": "Profit Transactions",
-  "no_profit_data": "No profit data available"
+  "no_profit_data": "No profit data available",
+  "deployer_info": "Deployer Information",
+  "current_deployer": "Current Deployer",
+  "contract_address": "Contract Address",
+  "network_status": "Network Status",
+  "copy_address": "Copy Address",
+  "copied": "Copied"
 }
