@@ -260,13 +260,145 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
     { value: "1", label: "100%" },
   ];
 
-  // 如果不是部署者，不显示组件
+  // 如果不是部署者，显示有限的信息
   if (!isDeployer) {
     return (
-      <div className="w-full p-4 bg-zinc-800/50 rounded-lg text-center">
-        <p className="text-zinc-400 text-sm">
-          {t("common.only_deployer_can_view") || "只有部署者可以查看此功能"}
-        </p>
+      <div className="w-full">
+        <div className="bg-zinc-900 sm:p-2 rounded-xl relative">
+          <div className="mb-2 mx-4 py-2 rounded-lg relative">
+            <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
+              <span className="py-2 uppercase">
+                {t("common.claim_profits") || "提取收益"}
+              </span>
+              <span className="flex items-center text-xs text-zinc-500">
+                <ButtonRefresh
+                  onRefresh={refresh}
+                  loading={isRefreshing}
+                  className="bg-zinc-800/50"
+                />
+              </span>
+            </div>
+
+            {/* 访问限制提示 */}
+            <div className="mb-4 p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
+              <p className="text-red-400 text-sm font-medium mb-2">
+                ⚠️ {t("common.access_denied") || "访问被拒绝"}
+              </p>
+              <p className="text-red-300 text-xs">
+                {t("common.deployer_only_feature") || "此功能仅限合约部署者使用"}
+              </p>
+            </div>
+
+            {/* 合约信息显示（非部署者版本） */}
+            <div className="mb-4 p-4 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
+              <p className="text-sm font-medium text-zinc-400 mb-3 flex items-center">
+                <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
+                {t("common.contract_info") || "合约信息"}
+              </p>
+              <div className="grid grid-cols-1 gap-3 text-sm">
+                {/* 当前部署者（隐藏部分信息） */}
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-500 font-medium">
+                    {t("common.current_deployer") || "当前部署者"}:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded">
+                      {swapData?.deployer ? hideStr(swapData.deployer, 3) : "未知"}
+                    </span>
+                    {swapData?.deployer && (
+                      <button
+                        onClick={() => handleCopyAddress(swapData.deployer, "deployer")}
+                        className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
+                        title={t("common.copy_address") || "复制地址"}
+                      >
+                        {copiedAddress === "deployer" ? (
+                          <Check className="w-3 h-3 text-green-400" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 合约地址 */}
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-500 font-medium">
+                    {t("common.contract_address") || "合约地址"}:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded max-w-[120px] truncate">
+                      {contractUrl ? contractUrl.split("/").pop() || "未知" : "未知"}
+                    </span>
+                    {contractUrl && (
+                      <button
+                        onClick={() => handleCopyAddress(contractUrl, "contract")}
+                        className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
+                        title={t("common.copy_address") || "复制地址"}
+                      >
+                        {copiedAddress === "contract" ? (
+                          <Check className="w-3 h-3 text-green-400" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 网络状态 */}
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-500 font-medium">
+                    {t("common.network_status") || "网络状态"}:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${
+                      network === "mainnet" ? "bg-green-400" : "bg-yellow-400"
+                    }`}></span>
+                    <span className={`text-zinc-300 font-medium ${
+                      network === "mainnet" ? "text-green-400" : "text-yellow-400"
+                    }`}>
+                      {network === "mainnet" ? "Mainnet" : "Testnet"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 当前用户地址 */}
+                {address && (
+                  <div className="flex justify-between items-center pt-2 border-t border-zinc-700/50">
+                    <span className="text-zinc-500 font-medium">
+                      您的地址:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded">
+                        {hideStr(address, 6)}
+                      </span>
+                      <button
+                        onClick={() => handleCopyAddress(address, "user")}
+                        className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
+                        title={t("common.copy_address") || "复制地址"}
+                      >
+                        {copiedAddress === "user" ? (
+                          <Check className="w-3 h-3 text-green-400" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 功能说明 */}
+            <div className="p-3 bg-zinc-800/20 rounded-lg">
+              <p className="text-zinc-400 text-xs leading-relaxed">
+                💡 <span className="font-medium">{t("common.view_contract_details") || "查看合约详情"}:</span>
+                只有合约部署者可以提取收益。如果您是部署者，请使用部署者地址的钱包连接此页面。
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

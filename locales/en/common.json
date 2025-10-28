@@ -360,5 +360,9 @@
   "contract_address": "Contract Address",
   "network_status": "Network Status",
   "copy_address": "Copy Address",
-  "copied": "Copied"
+  "copied": "Copied",
+  "contract_info": "Contract Information",
+  "access_denied": "Access Denied",
+  "deployer_only_feature": "This feature is only available to the contract deployer",
+  "view_contract_details": "View Contract Details"
 }

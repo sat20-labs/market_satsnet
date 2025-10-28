@@ -364,5 +364,9 @@
   "contract_address": "合约地址",
   "network_status": "网络状态",
   "copy_address": "复制地址",
-  "copied": "已复制"
+  "copied": "已复制",
+  "contract_info": "合约信息",
+  "access_denied": "访问被拒绝",
+  "deployer_only_feature": "此功能仅限合约部署者使用",
+  "view_contract_details": "查看合约详情"
 }
