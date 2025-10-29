@@ -61,4 +61,5 @@ export interface ParsedContractStatus {
   removeLiq: string[] | null;
   stake: string[] | null;
   unstake: string[] | null;
+  profit: string[] | null;
 }

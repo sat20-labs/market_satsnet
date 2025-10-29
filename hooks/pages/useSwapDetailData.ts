@@ -186,6 +186,7 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
         withdraw: parsedStatus?.withdraw || null,
         onList: parsedStatus?.onList || null,
         refund: parsedStatus?.refund || null,
+        profit: parsedStatus?.profit || null,
       };
     } catch (error) {
       console.error('Failed to parse user operation history:', error);

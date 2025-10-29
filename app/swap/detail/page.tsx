@@ -20,6 +20,7 @@ import WithDraw from "@/components/satoshinet/swap/WithDraw";
 import Deposit from "@/components/satoshinet/swap/Deposit";
 import AddLiquidity from "@/components/satoshinet/swap/AddLiquidity";
 import RemoveLiquidity from "@/components/satoshinet/swap/RemoveLiquidity";
+import ClaimProfits from "@/components/satoshinet/swap/ClaimProfits";
 import LptHoldersList from "@/components/satoshinet/swap/LptHoldersList";
 import { AssetInfo } from "@/components/satoshinet/AssetInfo";
 import { AssetInfoCard } from "@/components/AssetInfoCard";
@@ -378,6 +379,9 @@ function OrderPageContent() {
                         <UnderlineTabsTrigger value="remove">
                           {t("common.remove")}
                         </UnderlineTabsTrigger>
+                        <UnderlineTabsTrigger value="claim">
+                          {t("common.claim_profits")}
+                        </UnderlineTabsTrigger>
                       </UnderlineTabsList>
                       <ButtonRefresh
                         onRefresh={refreshBalances}
@@ -417,6 +421,19 @@ function OrderPageContent() {
                         swapData={swapStatusData}
                         lptAmt={lptAmt}
                         operationHistory={userOperationHistory?.removeLiq}
+                        isUnderMaintenance={isUnderMaintenance}
+                        onMaintenanceAction={handleMaintenanceAction}
+                      />
+                    </TabsContent>
+                    <TabsContent value="claim">
+                      <ClaimProfits
+                        asset={asset}
+                        ticker={ticker}
+                        contractUrl={contractUrl}
+                        refresh={refreshBalances}
+                        isRefreshing={isSwapStatusLoading}
+                        swapData={swapStatusData}
+                        operationHistory={userOperationHistory?.profit}
                         isUnderMaintenance={isUnderMaintenance}
                         onMaintenanceAction={handleMaintenanceAction}
                       />

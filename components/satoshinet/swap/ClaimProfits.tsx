@@ -66,35 +66,94 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
     return deployer.toLowerCase() === address.toLowerCase();
   }, [swapData, address]);
 
+  // 原始K值（Contract.k）
+  const originalK = useMemo(() => {
+    const contractK = swapData?.Contract?.k;
+    if (!contractK) return null;
+    return Number(contractK);
+  }, [swapData]);
+
+  // 当前K值（AssetAmtInPool * SatsValueInPool）
+  const currentK = useMemo(() => {
+    const assetAmtInPool = swapData?.AssetAmtInPool?.Value;
+    const satsValueInPool = swapData?.SatsValueInPool;
+
+    if (!assetAmtInPool || !satsValueInPool) return null;
+
+    // 考虑资产精度
+    const assetAmt = Number(assetAmtInPool) / Math.pow(10, swapData.AssetAmtInPool?.Precision || 0);
+    const satsAmt = Number(satsValueInPool);
+
+    return assetAmt * satsAmt;
+  }, [swapData]);
+
+  // 根据Go代码逻辑计算BaseLPT利润
+  const calculateBaseLptProfit = useMemo(() => {
+    const baseLptAmt = swapData?.BaseLptAmt?.Value;
+    const totalLptAmt = swapData?.TotalLptAmt?.Value;
+
+    if (!baseLptAmt || !totalLptAmt || !currentK || !originalK) {
+      return null;
+    }
+
+    // 转换为数字（考虑精度）
+    const baseLpt = Number(baseLptAmt) / Math.pow(10, swapData.BaseLptAmt?.Precision || 0);
+    const totalLpt = Number(totalLptAmt) / Math.pow(10, swapData.TotalLptAmt?.Precision || 0);
+    const k = currentK;
+
+    // Go代码逻辑：
+    // 1. 检查 BaseLptAmt > 0
+    if (baseLpt <= 0) return null;
+
+    // 2. 检查 k > originalK
+    if (k <= originalK) return null;
+
+    // 3. 计算LPT比例: BaseLptAmt / TotalLptAmt
+    if (totalLpt <= 0) return null;
+    const lptRatio = baseLpt / totalLpt;
+
+    // 4. 计算k²: k * lptRatio
+    const k2 = k * lptRatio;
+
+    // 5. 计算Δk: k² - originalK
+    const dk = k2 - originalK;
+    if (dk <= 0) return null;
+
+    // 6. 计算利润比例: Δk / k
+    const profitRatio = dk / k;
+
+    // 7. 计算最终利润: profitRatio * BaseLptAmt
+    const profit = profitRatio * baseLpt;
+
+    return profit;
+  }, [swapData, originalK, currentK]);
+
   // 检查是否有足够的利润可提取
   const hasProfits = useMemo(() => {
-    const baseLptAmt = swapData?.BaseLptAmt;
+    const baseLptProfit = calculateBaseLptProfit;
     const totalProfitSats = swapData?.TotalProfitSats;
 
-    // 检查 BaseLptAmt 或者 TotalProfitSats 是否有利润
-    const hasBaseLptProfit =
-      baseLptAmt !== null && baseLptAmt !== undefined && Number(baseLptAmt) > 0;
+    // 检查计算出的BaseLPT利润或者直接的Sats利润
+    const hasBaseLptProfit = baseLptProfit !== null && baseLptProfit > 0;
     const hasSatsProfit =
       totalProfitSats !== null &&
       totalProfitSats !== undefined &&
       Number(totalProfitSats) > 0;
 
     return hasBaseLptProfit || hasSatsProfit;
-  }, [swapData]);
+  }, [calculateBaseLptProfit, swapData]);
 
   // 计算可提取的利润数量
   const availableProfits = useMemo(() => {
-    const baseLptAmt = swapData?.BaseLptAmt;
+    const baseLptProfit = calculateBaseLptProfit;
     const totalProfitSats = swapData?.TotalProfitSats;
 
-    if (
-      baseLptAmt !== null &&
-      baseLptAmt !== undefined &&
-      Number(baseLptAmt) > 0
-    ) {
-      return Number(baseLptAmt) * Number(ratio);
+    // 优先使用计算出的BaseLPT利润
+    if (baseLptProfit !== null && baseLptProfit > 0) {
+      return baseLptProfit * Number(ratio);
     }
 
+    // 如果没有BaseLPT利润，检查Sats利润
     if (
       totalProfitSats !== null &&
       totalProfitSats !== undefined &&
@@ -104,28 +163,26 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
     }
 
     return 0;
-  }, [swapData, ratio]);
+  }, [calculateBaseLptProfit, swapData, ratio]);
 
   // 获取利润类型和数值
   const profitInfo = useMemo(() => {
-    const baseLptAmt = swapData?.BaseLptAmt;
+    const baseLptProfit = calculateBaseLptProfit;
     const totalProfitSats = swapData?.TotalProfitSats;
     const totalProfitAssets = swapData?.TotalProfitAssets;
 
-    if (
-      baseLptAmt !== null &&
-      baseLptAmt !== undefined &&
-      Number(baseLptAmt) > 0
-    ) {
+    // 优先显示计算出的BaseLPT利润
+    if (baseLptProfit !== null && baseLptProfit > 0) {
       return {
         type: "lpt",
-        value: baseLptAmt,
-        displayValue: baseLptAmt,
+        value: baseLptProfit,
+        displayValue: baseLptProfit.toFixed(swapData?.BaseLptAmt?.Precision || 0),
         unit: ticker,
         label: "LPT收益",
       };
     }
 
+    // 如果没有BaseLPT利润，检查Sats利润
     if (
       totalProfitSats !== null &&
       totalProfitSats !== undefined &&
@@ -140,6 +197,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
       };
     }
 
+    // 检查资产利润
     if (
       totalProfitAssets !== null &&
       totalProfitAssets !== undefined &&
@@ -155,7 +213,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
     }
 
     return null;
-  }, [swapData, ticker]);
+  }, [calculateBaseLptProfit, swapData, ticker]);
 
   const claimProfitsMutation = useMutation({
     mutationFn: async ({ asset, contractUrl, ratio }: ClaimProfitsParams) => {
@@ -568,6 +626,54 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-zinc-500">
+                  原始K值(Contract.k):
+                </span>
+                <span className="text-zinc-300">
+                  {originalK || 0}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">
+                  当前K值(池子):
+                </span>
+                <span className="text-zinc-300">
+                  {currentK?.toFixed(2) || "0"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">
+                  计算的LPT利润:
+                </span>
+                <span className="text-zinc-300">
+                  {calculateBaseLptProfit?.toFixed(6) || "无"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">
+                  总LPT数量:
+                </span>
+                <span className="text-zinc-300">
+                  {swapData?.TotalLptAmt?.Value || "0"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">
+                  池中资产数量:
+                </span>
+                <span className="text-zinc-300">
+                  {swapData?.AssetAmtInPool?.Value || "0"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">
+                  池中Sats数量:
+                </span>
+                <span className="text-zinc-300">
+                  {swapData?.SatsValueInPool || "0"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">
                   {t("common.total_profit_sats") || "总利润(Sats)"}:
                 </span>
                 <span className="text-zinc-300">
@@ -587,10 +693,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                   {t("common.base_lpt_amt") || "基础LPT数量"}:
                 </span>
                 <span className="text-zinc-300">
-                  {swapData?.BaseLptAmt !== null &&
-                  swapData?.BaseLptAmt !== undefined
-                    ? swapData.BaseLptAmt
-                    : "无"}
+                  {swapData?.BaseLptAmt?.Value || "0"}
                 </span>
               </div>
               <div className="flex justify-between">
