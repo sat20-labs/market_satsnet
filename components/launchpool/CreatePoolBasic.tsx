@@ -33,7 +33,7 @@ export default function CreatePoolBasic({ closeModal }: Props) {
     const bol = true;
 
     // 可变参数（开放）
-    const [protocol, setProtocol] = useState<'ordx' | 'runes'>('ordx');
+    const [protocol, setProtocol] = useState<'ordx' | 'runes' | 'brc20'>('ordx');
     const [ticker, setTicker] = useState('');
     const [startBlock, setStartBlock] = useState<number>(0);
     const [endBlock, setEndBlock] = useState<number>(0);
@@ -145,11 +145,13 @@ export default function CreatePoolBasic({ closeModal }: Props) {
                     <label className="block text-sm font-medium text-gray-300">
                         {t('pages.createPool.protocol.title', { defaultValue: 'Protocol' })}
                     </label>
-                    <Select value={protocol} onValueChange={(v) => setProtocol(v as 'ordx' | 'runes')}>
+                    <Select value={protocol} onValueChange={(v) => setProtocol(v as 'ordx' | 'runes' | 'brc20')}>
                         <SelectTrigger className="w-56 py-4 h-12">
                             {protocol === 'ordx'
                                 ? t('pages.createPool.protocol.ordx', { defaultValue: 'OrdX' })
-                                : t('pages.createPool.protocol.runes', { defaultValue: 'Runes' })}
+                                : protocol === 'runes'
+                                ? t('pages.createPool.protocol.runes', { defaultValue: 'Runes' })
+                                : t('pages.createPool.protocol.brc20', { defaultValue: 'BRC20' })}
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ordx" className="h-9 py-2">
@@ -157,6 +159,9 @@ export default function CreatePoolBasic({ closeModal }: Props) {
                             </SelectItem>
                             <SelectItem value="runes" className="h-9 py-2">
                                 {t('pages.createPool.protocol.runes', { defaultValue: 'Runes' })}
+                            </SelectItem>
+                            <SelectItem value="brc20" className="h-9 py-2">
+                                {t('pages.createPool.protocol.brc20', { defaultValue: 'BRC20' })}
                             </SelectItem>
                         </SelectContent>
                     </Select>
@@ -171,7 +176,9 @@ export default function CreatePoolBasic({ closeModal }: Props) {
                     value={ticker}
                     onChange={(e) => {
                         let v = e.target.value;
-                        if (protocol === 'runes') v = v.toUpperCase().replace(/\s+/g, '•');
+                        if (protocol === 'runes') {
+                            v = v.toUpperCase().replace(/\s+/g, '•');
+                        }
                         setTicker(v);
                     }}
                 />

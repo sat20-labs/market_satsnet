@@ -1,11 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import SellOrderModal from './SellOrderModal'; // 引入挂单弹窗组件
+import { useMemo } from 'react';
 import { AssetItem } from '@/store/asset';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { getDeployedContractInfo, getContractStatus } from '@/api/market';
 import { BtcPrice } from '@/components/BtcPrice';
@@ -60,11 +59,8 @@ const deriveSatsPrice = (pool: any): number => {
 };
 
 export const AssetsList = ({ assets }: AssetListProps) => {
-  const { t, ready } = useTranslation();
+  const { t } = useTranslation();
   const { network } = useCommonStore();
-  const [isModalOpen, setIsModalOpen] = useState(false); // 控制弹窗显示状态
-  const [selectedAsset, setSelectedAsset] = useState<any>(null); // 当前选中的资产
-  const [tickerInfo, setTickerInfo] = useState<any>(null); // 当前选中的资产
 
   // 获取transcend合约URL列表
   const { data: contractURLsData } = useQuery({
@@ -198,8 +194,8 @@ export const AssetsList = ({ assets }: AssetListProps) => {
           {(asset: any) => {
             const proto = (asset.protocol || 'plain').toLowerCase();
             const tick = (asset.ticker || asset.label || '').toLowerCase();
-            const priceSats = (proto === 'ordx' || proto === 'runes') ? (priceMap[`${proto}:${tick}`] || 0) : 0;
-            const hasTokenPrice = (proto === 'ordx' || proto === 'runes') ? priceSats > 0 : true;
+            const priceSats = (proto === 'ordx' || proto === 'runes' || proto === 'brc-20' || proto === 'brc20') ? (priceMap[`${proto}:${tick}`] || 0) : 0;
+            const hasTokenPrice = (proto === 'ordx' || proto === 'runes' || proto === 'brc-20' || proto === 'brc20') ? priceSats > 0 : true;
             const btcValue = proto === 'plain'
               ? Number(asset.amount || 0) / 1e8
               : hasTokenPrice ? (priceSats * Number(asset.amount || 0)) / 1e8 : 0;

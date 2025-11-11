@@ -271,6 +271,9 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
                                         <SelectItem value="runes" className="h-9 py-2">
                                             {t('pages.createPool.protocol.runes')}
                                         </SelectItem>
+                                        <SelectItem value="brc20" className="h-9 py-2">
+                                            {t('pages.createPool.protocol.brc20')}
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

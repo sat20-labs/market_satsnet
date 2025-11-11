@@ -19,6 +19,7 @@ export const Assets = () => {
       setProtocol(t);
     }
   };
+  console.log(assets);
 
   const currentAssets = assets[protocol as keyof typeof assets];
   return (

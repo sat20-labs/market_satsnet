@@ -183,6 +183,7 @@ const CreateTranscend = () => {
               <SelectContent className="max-h-60 overflow-y-auto">
                 <SelectItem value="ordx" className="h-9 py-2">{t('pages.createPool.protocol.ordx')}</SelectItem>
                 <SelectItem value="runes" className="h-9 py-2">{t('pages.createPool.protocol.runes')}</SelectItem>
+                <SelectItem value="brc20" className="h-9 py-2">{t('pages.createPool.protocol.brc20')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

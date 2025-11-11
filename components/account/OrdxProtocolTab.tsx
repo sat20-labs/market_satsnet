@@ -106,7 +106,7 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
     return map;
   }, [ammPools, swapPools]);
 
-  // Compute BTC balances for ORDX and RUNES
+  // Compute BTC balances for ORDX, RUNES and BRC-20
   const ordxBtc = useMemo(() => {
     return (assets.ordx || []).reduce((sum, a) => {
       const key = `${(a.protocol || 'ordx').toLowerCase()}:${(a.ticker || '').toLowerCase()}`;
@@ -123,6 +123,14 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
     }, 0) / 1e8;
   }, [assets.runes, priceMap]);
 
+  const brc20Btc = useMemo(() => {
+    return (assets.brc20 || []).reduce((sum, a) => {
+      const key = `${(a.protocol || 'brc-20').toLowerCase()}:${(a.ticker || '').toLowerCase()}`;
+      const price = priceMap[key] || 0;
+      return sum + (price * Number(a.amount || 0));
+    }, 0) / 1e8;
+  }, [assets.brc20, priceMap]);
+
   const fmtBtc = (v: number) => (isNaN(v) ? '0' : Number(v).toFixed(6));
 
   const list = useMemo(() => {
@@ -137,13 +145,18 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
         key: 'runes',
         value: fmtBtc(runesBtc),
       },
+      {
+        label: 'BRC-20',
+        key: 'brc20',
+        value: fmtBtc(brc20Btc),
+      },
       // {
       //   label: t('pages.points.tab'),
       //   key: 'points',
       //   value: pointsValue,
       // },
     ];
-  }, [ordxBtc, runesBtc, t]);
+  }, [ordxBtc, runesBtc, brc20Btc, t]);
 
   const [selected, setSelected] = useState(list[0].key);
 
@@ -155,10 +168,11 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
   }, [selected]);
 
   return (
-    <div className="grid grid-cols-2 max-w-4xl md:grid-cols-4 gap-2 md:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 max-w-4xl md:grid-cols-3 gap-2 md:gap-4">
       {list.map((item) => {
         const iconSpec = (() => {
           if (item.key === 'runes') return { icon: 'pajamas:status-waiting', grad: 'from-cyan-400 to-blue-500' };
+          if (item.key === 'brc20') return { icon: 'pajamas:issue-built', grad: 'from-orange-400 to-red-500' };
           return { icon: 'pajamas:status-health', grad: 'from-pink-500 to-violet-600' }; // ordx
         })();
         return (

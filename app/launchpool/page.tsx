@@ -126,6 +126,7 @@ export default function LaunchPoolProgressSortTest() {
         { label: t('pages.launchpool.all'), key: 'all' },
         { label: t('pages.launchpool.ordx'), key: 'ordx' },
         { label: t('pages.launchpool.runes'), key: 'runes' },
+        { label: t('pages.launchpool.brc20'), key: 'brc20' },
     ];
 
     // ===== 新增：状态筛选（全部 / 未激活 / 正在铸造 / 铸造已完成）=====

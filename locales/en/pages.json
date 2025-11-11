@@ -7,7 +7,8 @@
     "title": "Home",
     "all": "All",
     "ordx": "OrdX",
-    "runes": "Runes"
+    "runes": "Runes",
+    "brc20": "BRC-20"
   },
   "footer": {
     "help": {
@@ -33,6 +34,7 @@
     "all": "All",
     "ordx": "OrdX",
     "runes": "Runes",
+    "brc20": "BRC-20",
     "create_pool": "Create Pool",
     "asset_name": "Asset Name",
     "pool_status": "Pool Status",
@@ -294,11 +296,13 @@
       "title": "Protocol",
       "ordx": "ORDX",
       "runes": "Runes",
+      "brc20": "BRC-20",
       "btc": "BTC"
     },
     "currentBlockHeight": "Current Block Height",
     "ticker": "Ticker",
     "selectTicker": "Select Ticker",
+    "selectProtocol": "Select Protocol",
     "bindingSat": "Mint Amount Per Sat(Mainnet)",
     "assetSymbol": "Asset Symbol",
     "limit": "Single Address Minting Limit (SatoshiNet)",

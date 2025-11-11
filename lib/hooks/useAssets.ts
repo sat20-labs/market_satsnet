@@ -118,6 +118,8 @@ export const useAssets = () => {
         ...(newAssetList.some(item => !item.protocol) ? [{ label: 'BTC', value: 'btc' }] : []),
         ...(newAssetList.some(item => item.protocol === 'ordx') ? [{ label: 'SAT20', value: 'ordx' }] : []),
         ...(newAssetList.some(item => item.protocol === 'runes') ? [{ label: 'Runes', value: 'runes' }] : []),
+        ...(newAssetList.some(item => item.protocol === 'brc20') ? [{ label: 'BRC-20', value: 'brc20' }] : []),
+        ...(newAssetList.some(item => item.protocol === 'ord') ? [{ label: 'Ordinals', value: 'ord' }] : []),
       ];
       setAvailableAssetTypes(uniqueTypes);
 

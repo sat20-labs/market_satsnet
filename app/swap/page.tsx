@@ -481,6 +481,7 @@ const Swap = () => {
     { label: t("pages.launchpool.all"), key: "all" },
     { label: t("pages.launchpool.ordx"), key: "ordx" },
     { label: t("pages.launchpool.runes"), key: "runes" },
+    { label: t("pages.launchpool.brc20"), key: "brc20" },
   ];
 
   const sortedPoolList = useMemo(() => {
