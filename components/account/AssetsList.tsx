@@ -194,8 +194,8 @@ export const AssetsList = ({ assets }: AssetListProps) => {
           {(asset: any) => {
             const proto = (asset.protocol || 'plain').toLowerCase();
             const tick = (asset.ticker || asset.label || '').toLowerCase();
-            const priceSats = (proto === 'ordx' || proto === 'runes' || proto === 'brc-20' || proto === 'brc20') ? (priceMap[`${proto}:${tick}`] || 0) : 0;
-            const hasTokenPrice = (proto === 'ordx' || proto === 'runes' || proto === 'brc-20' || proto === 'brc20') ? priceSats > 0 : true;
+            const priceSats = (proto === 'ordx' || proto === 'runes' || proto === 'brc20' || proto === 'brc20') ? (priceMap[`${proto}:${tick}`] || 0) : 0;
+            const hasTokenPrice = (proto === 'ordx' || proto === 'runes' || proto === 'brc20' || proto === 'brc20') ? priceSats > 0 : true;
             const btcValue = proto === 'plain'
               ? Number(asset.amount || 0) / 1e8
               : hasTokenPrice ? (priceSats * Number(asset.amount || 0)) / 1e8 : 0;

@@ -250,7 +250,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
               ...(updatedRawAssetList.some(item => !item.protocol) ? [{ label: 'BTC', value: 'btc' }] : []), // Check for empty protocol
               ...(updatedRawAssetList.some(item => item.protocol === 'ordx') ? [{ label: 'SAT20', value: 'ordx' }] : []),
               ...(updatedRawAssetList.some(item => item.protocol === 'runes') ? [{ label: 'Runes', value: 'runes' }] : []),
-              ...(updatedRawAssetList.some(item => item.protocol === 'brc20') ? [{ label: 'BRC-20', value: 'brc20' }] : []),
+              ...(updatedRawAssetList.some(item => item.protocol === 'brc20') ? [{ label: 'BRC20', value: 'brc20' }] : []),
               ...(updatedRawAssetList.some(item => item.protocol === 'ord') ? [{ label: 'Ordinals', value: 'ord' }] : []),
             ];
 

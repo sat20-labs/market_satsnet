@@ -8,7 +8,7 @@
     "all": "全部",
     "ordx": "OrdX",
     "runes": "Runes",
-    "brc20": "BRC-20"
+    "brc20": "BRC20"
   },
   "footer": {
     "help": {
@@ -34,7 +34,7 @@
     "all": "全部",
     "ordx": "OrdX",
     "runes": "Runes",
-    "brc20": "BRC-20",
+    "brc20": "BRC20",
     "create_pool": "创建池子",
     "asset_name": "资产名称",
     "pool_status": "池子状态",
@@ -282,7 +282,7 @@
       "title": "协议",
       "ordx": "ORDX",
       "runes": "Runes",
-      "brc20": "BRC-20",
+      "brc20": "BRC20",
       "btc": "BTC"
     },
     "ticker": "资产名称",

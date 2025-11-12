@@ -8,7 +8,7 @@
     "all": "All",
     "ordx": "OrdX",
     "runes": "Runes",
-    "brc20": "BRC-20"
+    "brc20": "BRC20"
   },
   "footer": {
     "help": {
@@ -34,7 +34,7 @@
     "all": "All",
     "ordx": "OrdX",
     "runes": "Runes",
-    "brc20": "BRC-20",
+    "brc20": "BRC20",
     "create_pool": "Create Pool",
     "asset_name": "Asset Name",
     "pool_status": "Pool Status",
@@ -296,7 +296,7 @@
       "title": "Protocol",
       "ordx": "ORDX",
       "runes": "Runes",
-      "brc20": "BRC-20",
+      "brc20": "BRC20",
       "btc": "BTC"
     },
     "currentBlockHeight": "Current Block Height",

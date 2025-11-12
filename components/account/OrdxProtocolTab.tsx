@@ -125,7 +125,7 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
 
   const brc20Btc = useMemo(() => {
     return (assets.brc20 || []).reduce((sum, a) => {
-      const key = `${(a.protocol || 'brc-20').toLowerCase()}:${(a.ticker || '').toLowerCase()}`;
+      const key = `${(a.protocol || 'brc20').toLowerCase()}:${(a.ticker || '').toLowerCase()}`;
       const price = priceMap[key] || 0;
       return sum + (price * Number(a.amount || 0));
     }, 0) / 1e8;
@@ -146,7 +146,7 @@ export const OrdxProtocolTab = ({ onChange }: IOrdxProtocolTabProps) => {
         value: fmtBtc(runesBtc),
       },
       {
-        label: 'BRC-20',
+        label: 'BRC20',
         key: 'brc20',
         value: fmtBtc(brc20Btc),
       },

@@ -110,7 +110,7 @@ const CreateStack = () => {
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
       <div className="sticky top-0 text bg-zinc-800/50 border border-zinc-800 z-10 p-4 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-2">🚀 Create Stack</h2>
+        <h2 className="text-xl font-bold mb-2">Create AMM contract</h2>
         <button
           className="absolute top-4 right-6 text-zinc-400 hover:text-white"
           onClick={() => router.back()}
@@ -135,6 +135,7 @@ const CreateStack = () => {
               <SelectContent className="max-h-60 overflow-y-auto">
                 <SelectItem value="ordx" className="h-9 py-2">{t('pages.createPool.protocol.ordx')}</SelectItem>
                 <SelectItem value="runes" className="h-9 py-2">{t('pages.createPool.protocol.runes')}</SelectItem>
+                <SelectItem value="brc20" className="h-9 py-2">{t('pages.createPool.protocol.brc20')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

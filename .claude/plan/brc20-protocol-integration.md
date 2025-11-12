@@ -60,7 +60,7 @@
     "all": "全部",
     "ordx": "OrdX",
     "runes": "Runes",
-    "brc20": "BRC-20"  // 新增
+    "brc20": "BRC20"  // 新增
   }
 }
 
@@ -70,7 +70,7 @@
     "all": "All",
     "ordx": "OrdX",
     "runes": "Runes",
-    "brc20": "BRC-20"  // 新增
+    "brc20": "BRC20"  // 新增
   }
 }
 ```
