@@ -9,7 +9,6 @@ import { useCommonStore } from "@/store";
 import { generateMempoolUrl } from "@/utils/url";
 import { Chain } from "@/types";
 import { hideStr } from "@/utils";
-import { log } from "console";
 import { Copy, Check } from "lucide-react";
 
 interface ClaimProfitsProps {
@@ -30,6 +29,17 @@ interface ClaimProfitsParams {
   ratio: string;
 }
 
+const getAssetDisplayPrecision = (precision?: number) => {
+  if (typeof precision === "number" && precision >= 0) {
+    return precision;
+  }
+  return 4;
+};
+
+const formatAssetAmount = (value: number, precision?: number) => {
+  return value.toFixed(getAssetDisplayPrecision(precision));
+};
+
 const ClaimProfits: React.FC<ClaimProfitsProps> = ({
   contractUrl,
   asset,
@@ -41,11 +51,20 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
   isUnderMaintenance = false,
   onMaintenanceAction,
 }) => {
+  console.log( "Render ClaimProfits:", { swapData } );
   const { t } = useTranslation();
   const { btcFeeRate, network } = useCommonStore();
   const [ratio, setRatio] = useState("1"); // 默认提取100%利润
   const { address } = useReactWalletStore();
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const baseLptPrecision = swapData?.BaseLptAmt?.Precision || 0;
+  const formattedBaseLptAmt = useMemo(() => {
+    const baseValue = swapData?.BaseLptAmt?.Value;
+    if (!baseValue) return "0";
+    const normalized =
+      Number(baseValue) / Math.pow(10, swapData?.BaseLptAmt?.Precision || 0);
+    return normalized.toFixed(getAssetDisplayPrecision(baseLptPrecision));
+  }, [baseLptPrecision, swapData]);
 
   // 复制地址功能
   const handleCopyAddress = async (addressToCopy: string, type: string) => {
@@ -97,8 +116,10 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
     }
 
     // 转换为数字（考虑精度）
-    const baseLpt = Number(baseLptAmt) / Math.pow(10, swapData.BaseLptAmt?.Precision || 0);
-    const totalLpt = Number(totalLptAmt) / Math.pow(10, swapData.TotalLptAmt?.Precision || 0);
+    const baseLpt =
+      Number(baseLptAmt) / Math.pow(10, swapData.BaseLptAmt?.Precision || 0);
+    const totalLpt =
+      Number(totalLptAmt) / Math.pow(10, swapData.TotalLptAmt?.Precision || 0);
     const k = currentK;
 
     // Go代码逻辑：
@@ -143,27 +164,77 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
     return hasBaseLptProfit || hasSatsProfit;
   }, [calculateBaseLptProfit, swapData]);
 
+  const lptProfitDistribution = useMemo(() => {
+    const baseLptProfit = calculateBaseLptProfit;
+    const totalLptAmt = swapData?.TotalLptAmt?.Value;
+
+    if (!baseLptProfit || baseLptProfit <= 0 || !totalLptAmt) {
+      return null;
+    }
+
+    const totalLpt =
+      Number(totalLptAmt) / Math.pow(10, swapData?.TotalLptAmt?.Precision || 0);
+    if (totalLpt <= 0) return null;
+
+    const lptRatio = baseLptProfit / totalLpt;
+    if (lptRatio <= 0) return null;
+
+    const assetAmtInPool = swapData?.AssetAmtInPool?.Value;
+    const assetPrecision = swapData?.AssetAmtInPool?.Precision || 0;
+    const normalizedAssetAmt =
+      assetAmtInPool !== undefined && assetAmtInPool !== null
+        ? Number(assetAmtInPool) / Math.pow(10, assetPrecision)
+        : 0;
+
+    const satsInPool = Number(swapData?.SatsValueInPool || 0);
+
+    return {
+      lptRatio,
+      assetAmount: normalizedAssetAmt * lptRatio,
+      satsAmount: satsInPool * lptRatio,
+      assetPrecision,
+    };
+  }, [calculateBaseLptProfit, swapData]);
+
   // 计算可提取的利润数量
   const availableProfits = useMemo(() => {
-    const baseLptProfit = calculateBaseLptProfit;
-    const totalProfitSats = swapData?.TotalProfitSats;
-
-    // 优先使用计算出的BaseLPT利润
-    if (baseLptProfit !== null && baseLptProfit > 0) {
-      return baseLptProfit * Number(ratio);
+    const ratioValue = Number(ratio) || 0;
+    if (lptProfitDistribution) {
+      return {
+        type: "lpt" as const,
+        assetAmount: lptProfitDistribution.assetAmount * ratioValue,
+        satsAmount: lptProfitDistribution.satsAmount * ratioValue,
+        assetPrecision: lptProfitDistribution.assetPrecision,
+        lptAmount: (calculateBaseLptProfit || 0) * ratioValue,
+      };
     }
 
-    // 如果没有BaseLPT利润，检查Sats利润
+    const totalProfitSats = Number(swapData?.TotalProfitSats || 0);
+    if (totalProfitSats > 0) {
+      return {
+        type: "sats" as const,
+        satsAmount: totalProfitSats * ratioValue,
+      };
+    }
+
+    const totalProfitAssets = swapData?.TotalProfitAssets;
     if (
-      totalProfitSats !== null &&
-      totalProfitSats !== undefined &&
-      Number(totalProfitSats) > 0
+      totalProfitAssets &&
+      totalProfitAssets.Value !== null &&
+      totalProfitAssets.Value !== undefined
     ) {
-      return Number(totalProfitSats) * Number(ratio);
+      const assetPrecision = totalProfitAssets?.Precision || 0;
+      const normalizedAssets =
+        Number(totalProfitAssets.Value) / Math.pow(10, assetPrecision);
+      return {
+        type: "asset" as const,
+        assetAmount: normalizedAssets * ratioValue,
+        assetPrecision,
+      };
     }
 
-    return 0;
-  }, [calculateBaseLptProfit, swapData, ratio]);
+    return null;
+  }, [lptProfitDistribution, ratio, swapData]);
 
   // 获取利润类型和数值
   const profitInfo = useMemo(() => {
@@ -173,11 +244,30 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
 
     // 优先显示计算出的BaseLPT利润
     if (baseLptProfit !== null && baseLptProfit > 0) {
+      if (lptProfitDistribution) {
+        const assetDisplay = formatAssetAmount(
+          lptProfitDistribution.assetAmount,
+          lptProfitDistribution.assetPrecision,
+        );
+        const satsDisplay = lptProfitDistribution.satsAmount.toFixed(8);
+        return {
+          type: "lpt",
+          value: baseLptProfit,
+          displayValue: `${assetDisplay} ${ticker} / ${satsDisplay} sats`,
+          lptValue: baseLptProfit,
+          lptDisplayValue: `${baseLptProfit.toFixed(baseLptPrecision)} LPT`,
+          unit: "",
+          label: "LPT收益",
+        };
+      }
+
       return {
         type: "lpt",
         value: baseLptProfit,
-        displayValue: baseLptProfit.toFixed(swapData?.BaseLptAmt?.Precision || 0),
-        unit: ticker,
+        displayValue: baseLptProfit.toFixed(baseLptPrecision),
+        lptValue: baseLptProfit,
+        lptDisplayValue: `${baseLptProfit.toFixed(baseLptPrecision)} LPT`,
+        unit: "lpt",
         label: "LPT收益",
       };
     }
@@ -188,10 +278,11 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
       totalProfitSats !== undefined &&
       Number(totalProfitSats) > 0
     ) {
+      const satsValue = Number(totalProfitSats);
       return {
         type: "sats",
-        value: totalProfitSats,
-        displayValue: totalProfitSats,
+        value: satsValue,
+        displayValue: satsValue.toString(),
         unit: "sats",
         label: "Sats收益",
       };
@@ -203,17 +294,20 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
       totalProfitAssets !== undefined &&
       totalProfitAssets.Value !== null
     ) {
+      const assetPrecision = totalProfitAssets?.Precision || 0;
+      const normalizedAssets =
+        Number(totalProfitAssets.Value) / Math.pow(10, assetPrecision);
       return {
         type: "asset",
-        value: totalProfitAssets.Value,
-        displayValue: totalProfitAssets.Value,
+        value: normalizedAssets,
+        displayValue: normalizedAssets.toFixed(assetPrecision),
         unit: ticker,
         label: "资产收益",
       };
     }
 
     return null;
-  }, [calculateBaseLptProfit, swapData, ticker]);
+  }, [calculateBaseLptProfit, lptProfitDistribution, swapData, ticker]);
 
   const claimProfitsMutation = useMutation({
     mutationFn: async ({ asset, contractUrl, ratio }: ClaimProfitsParams) => {
@@ -594,7 +688,11 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                 className={`font-semibold ${hasProfits ? "text-green-400" : "text-red-400"}`}
               >
                 {profitInfo
-                  ? `${profitInfo.displayValue || "0"} ${profitInfo.unit}`
+                  ? profitInfo.type === "lpt"
+                    ? `${profitInfo.displayValue || "0"}${
+                        profitInfo.lptDisplayValue ? ` (${profitInfo.lptDisplayValue})` : ""
+                      }`
+                    : `${profitInfo.displayValue || "0"} ${profitInfo.unit}`
                   : "0"}
               </span>
             </div>
@@ -603,7 +701,23 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                 {t("common.extract_amount") || "提取数量"}:
               </span>
               <span className="text-yellow-400 font-semibold">
-                {availableProfits.toFixed(4)} {profitInfo?.unit || ticker}
+                {availableProfits
+                  ? availableProfits.type === "lpt"
+                    ? `${formatAssetAmount(
+                        availableProfits.assetAmount || 0,
+                        availableProfits.assetPrecision,
+                      )} ${ticker} / ${(availableProfits.satsAmount || 0).toFixed(8)} sats${
+                        availableProfits.lptAmount !== undefined
+                          ? ` (${(availableProfits.lptAmount || 0).toFixed(baseLptPrecision)} LPT)`
+                          : ""
+                      }`
+                    : availableProfits.type === "sats"
+                      ? `${(availableProfits.satsAmount || 0).toFixed(8)} sats`
+                      : `${formatAssetAmount(
+                          availableProfits.assetAmount || 0,
+                          availableProfits.assetPrecision,
+                        )} ${ticker}`
+                  : `0 ${profitInfo?.unit || ticker}`}
               </span>
             </div>
             {profitInfo && (
@@ -693,7 +807,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                   {t("common.base_lpt_amt") || "基础LPT数量"}:
                 </span>
                 <span className="text-zinc-300">
-                  {swapData?.BaseLptAmt?.Value || "0"}
+                  {formattedBaseLptAmt}
                 </span>
               </div>
               <div className="flex justify-between">
