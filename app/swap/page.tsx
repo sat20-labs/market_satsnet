@@ -36,6 +36,7 @@ import { clientApi } from "@/api";
 import { Icon } from "@iconify/react";
 import { SortDropdown } from "@/components/SortDropdown";
 import { toast } from "sonner";
+import WalletDownload from '@/components/wallet/WalletDownload';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
@@ -531,11 +532,14 @@ const Swap = () => {
 
   return (
     <div className="p-4 relative">
-      <div className="mb-2 px-2 flex items-center">
+      <div className="mb-2 px-2 flex items-center justify-between flex-wrap gap-3">
         <span className="text-sm text-gray-400 mr-4">
           Current Bitcoin Price：
           <BtcPrice btc={1} className="text-green-500 font-bold" /> USDT
         </span>
+        <div className="w-auto max-w-full flex-1 md:flex-none">
+          <WalletDownload showLabel={false} iconSize={24} className="min-w-[260px]" />
+        </div>
       </div>
       <div className="py-2 px-2 sm:px-1 flex justify-between items-center gap-1 border-b border-zinc-800">
         <HomeTypeTabs
@@ -543,7 +547,8 @@ const Swap = () => {
           onChange={protocolChange}
           tabs={protocolTabs}
         />
-        <div className="flex items-center gap-2 mr-4">
+        <div className="flex items-center gap-3 mr-4">
+          {/* WalletDownload moved to top bar */}
           <WalletConnectBus asChild>
             <Button
               className="h-9 btn-gradient"
@@ -933,7 +938,7 @@ const Swap = () => {
                           {"$"}
                           {formatLargeNumber(
                             (Number(adaptedPool.volume24hBtc || 0) / 1e8) *
-                              (Number(btcPrice) || 0),
+                            (Number(btcPrice) || 0),
                           )}
                         </span>
                       </div>
@@ -953,7 +958,7 @@ const Swap = () => {
                           {"$"}
                           {formatLargeNumber(
                             (Number(adaptedPool.totalDealSats || 0) / 1e8) *
-                              (Number(btcPrice) || 0),
+                            (Number(btcPrice) || 0),
                           )}
                         </span>
                       </div>
@@ -979,7 +984,7 @@ const Swap = () => {
                           {"$"}
                           {formatLargeNumber(
                             (Number(adaptedPool.marketCap || 0) / 1e8) *
-                              (Number(btcPrice) || 0),
+                            (Number(btcPrice) || 0),
                           )}
                         </span>
                       </div>
@@ -1001,7 +1006,7 @@ const Swap = () => {
                           {formatLargeNumber(
                             ((Number(adaptedPool.satsValueInPool || 0) * 2) /
                               1e8) *
-                              (Number(btcPrice) || 0),
+                            (Number(btcPrice) || 0),
                           )}
                         </span>
                       </div>
