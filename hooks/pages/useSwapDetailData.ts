@@ -7,7 +7,6 @@ import { useCommonStore, useWalletStore } from "@/store";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { LptAmount, UserContractStatus, ParsedContractStatus } from "@/types";
-import { log } from "console";
 
 interface TickerInfo {
   name: {
@@ -33,7 +32,8 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
   console.log('asset', asset);
   const { network } = useCommonStore();
 
-  const ticker = asset.split(':')[2];
+  // ticker 仅用于展示；合约匹配必须基于完整 asset，避免 ordxordi 误命中 ordi
+  const ticker = useMemo(() => asset?.split(':')?.[2] ?? '', [asset]);
   console.log('swap ticker', ticker);
 
   const { address } = useReactWalletStore();
@@ -55,16 +55,29 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
   const contractUrlQuery = useQuery({
     queryKey: ['contractUrl', network],
     queryFn: () => contractService.getDeployedContractInfo(),
-    enabled: !initialContractUrl && !!ticker,
+    enabled: !initialContractUrl && !!asset,
   });
+
   const contractUrl = useMemo(() => {
     if (initialContractUrl) return initialContractUrl; // 直接复用外部传入的合约 URL
-    return contractUrlQuery.data?.filter((url: string) => url.indexOf(`${ticker}_amm.tc`) > -1)[0];
-  }, [contractUrlQuery.data, ticker, initialContractUrl]);
+
+    const list: string[] = contractUrlQuery.data ?? [];
+    if (!asset || list.length === 0) return undefined;
+
+    // 期望 suffix：_{asset}_amm.tc，例如 _brc20:f:ordi_amm.tc
+    const expectedSuffix = `_${asset}_amm.tc`;
+
+    // 优先 suffix 精确匹配，避免 ordx:f:ordxordi_amm.tc 误匹配到 ordi
+    const exact = list.find((url) => typeof url === 'string' && url.endsWith(expectedSuffix));
+    if (exact) return exact;
+
+    // 兜底：仍然用完整 asset 匹配（比 `${ticker}_amm.tc` 更安全）
+    return list.find((url) => typeof url === 'string' && url.includes(expectedSuffix));
+  }, [contractUrlQuery.data, asset, initialContractUrl]);
 
   const { data: swapStatus, isPending: isSwapStatusPending, isLoading: isSwapStatusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ["amm", 'status', contractUrl, network],
-    queryFn: () => contractService.getContractStatus(contractUrl),
+    queryFn: () => contractService.getContractStatus(contractUrl!),
     refetchInterval: 15000, // 增加到15秒，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractUrl,
@@ -73,7 +86,7 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
 
   const { data: analytics, isPending: isAnalyticsPending, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
     queryKey: ["amm", 'analytics', contractUrl, network],
-    queryFn: () => contractService.getContractAnalytics(contractUrl),
+    queryFn: () => contractService.getContractAnalytics(contractUrl!),
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractUrl,
@@ -83,42 +96,64 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
   // 获取用户合约状态（包含 lptAmt）- 只在测试网环境下启用
   const { data: userContractStatus, isPending: isUserContractStatusPending, isLoading: isUserContractStatusLoading, refetch: refetchUserContractStatus } = useQuery({
     queryKey: ["amm", 'userStatus', contractUrl, address, network],
-    queryFn: () => getContractStatusByAddress(contractUrl, address),
+    queryFn: () => getContractStatusByAddress(contractUrl!, address),
     refetchInterval: 15000, // 15秒刷新一次
     refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractUrl && !!address,
     refetchOnWindowFocus: false,
   });
+// console.log('analytics', analytics);
+//   console.log('tickerQuery', tickerQuery);
+//   console.log('isSwapStatusPending', isSwapStatusPending);
+//   console.log('isAnalyticsPending', isAnalyticsPending);
+//   console.log('userContractStatus', userContractStatus);
+  
 
-  console.log('analytics', analytics);
-  console.log('tickerQuery', tickerQuery);
-  console.log('isSwapStatusPending', isSwapStatusPending);
-  console.log('isAnalyticsPending', isAnalyticsPending);
-  console.log('userContractStatus', userContractStatus);
+// console.log('analytics', analytics);
+//   console.log('tickerQuery', tickerQuery);
+//   console.log('isSwapStatusPending', isSwapStatusPending);
+//   console.log('isAnalyticsPending', isAnalyticsPending);
+//   console.log('userContractStatus', userContractStatus);
   
   // 只有在有 contractUrl 时才考虑 swapStatus 和 analytics 的 loading 状态
   // 只有在有 address 且在测试网时才考虑 userContractStatus 的 loading 状态
   const isLoading = tickerQuery.isPending || 
     (!!contractUrl && isSwapStatusPending) || 
     (!!contractUrl && isAnalyticsPending) || 
-    (address && isUserContractStatusPending);
-  
+    (address && isUserContractStatusPending
   // 调试信息
-  console.log('Loading states:', {
-    tickerQuery: tickerQuery.isPending,
-    isSwapStatusPending,
-    isAnalyticsPending,
-    isUserContractStatusPending,
-    address,
-    network,
-    ticker,
-    contractUrl,
-    contractUrlQueryData: contractUrlQuery.data,
-    finalIsLoading: isLoading,
-    initialContractUrl
-  });
+  // console.log('Loading states:', {
+  //   tickerQuery: tickerQuery.isPending,
+  //   isSwapStatusPending,
+  //   isAnalyticsPending,
+  //   isUserContractStatusPending,
+  //   address,
+  //   network,
+  //   ticker,
+  //   contractUrl,
+  //   contractUrlQueryData: contractUrlQuery.data,
+  //   finalIsLoading: isLoading,
+  //   initialContractUrl
+  // });
 
+);
 
+  // 调试信息
+  // console.log('Loading states:', {
+  //   tickerQuery: tickerQuery.isPending,
+  //   isSwapStatusPending,
+  //   isAnalyticsPending,
+  //   isUserContractStatusPending,
+  //   address,
+  //   network,
+  //   ticker,
+  //   contractUrl,
+  //   contractUrlQueryData: contractUrlQuery.data,
+  //   finalIsLoading: isLoading,
+  //   initialContractUrl
+  // });
+
+  
   const { balance: satsBalance, getBalance } = useWalletStore();
   const { balance: assetBalance, refetch: refreshAssetBalance } = useAssetBalance(address, asset);
 
@@ -155,7 +190,7 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
     if (!userContractStatus?.status) return null;
     try {
       const parsedStatus = JSON.parse(userContractStatus.status);
-      console.log('parsedStatus', parsedStatus)
+console.log('parsedStatus', parsedStatus)
       const lptData = parsedStatus?.status?.LptAmt;
       
       // 验证 lptAmt 数据结构

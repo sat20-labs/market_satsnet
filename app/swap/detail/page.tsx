@@ -139,13 +139,13 @@ function OrderPageContent() {
       if (saved === "line" || saved === "lw") setChartMode(saved);
       else if (saved === "simple") setChartMode("line");
       else if (saved === "kline") setChartMode("lw");
-    } catch {}
+    } catch { }
   }, []);
   const setChartModeAndStore = (m: "line" | "lw") => {
     setChartMode(m);
     try {
       window.localStorage.setItem("chartMode", m);
-    } catch {}
+    } catch { }
   };
 
   if (!asset) {
@@ -164,6 +164,15 @@ function OrderPageContent() {
         <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
           {t("common.swap_notice")}
         </div>
+      </div>
+    );
+  }
+
+  // contractUrl 尚未解析出来时，避免向需要 string 的子组件传 undefined
+  if (!contractUrl) {
+    return (
+      <div className="w-full flex items-center justify-center py-10" suppressHydrationWarning>
+        <Loading />
       </div>
     );
   }
@@ -310,7 +319,7 @@ function OrderPageContent() {
                   <AssetInfoCard
                     asset={asset}
                     ticker={ticker}
-                    contractUrl={contractUrl}
+                    contractUrl={contractUrl!}
                     tickerInfo={tickerInfo}
                     protocol={protocol}
                     swapData={swapStatusData}
@@ -321,7 +330,7 @@ function OrderPageContent() {
                 <Swap
                   asset={asset}
                   ticker={ticker}
-                  contractUrl={contractUrl}
+                  contractUrl={contractUrl!}
                   tickerInfo={tickerInfo}
                   onSwapSuccess={() => {
                     refreshHandler();
@@ -341,7 +350,7 @@ function OrderPageContent() {
                 <Deposit
                   asset={asset}
                   ticker={ticker}
-                  contractUrl={contractUrl}
+                  contractUrl={contractUrl!}
                   refresh={refreshBalances}
                   isRefreshing={isSwapStatusLoading}
                   swapData={swapStatusData}
@@ -351,7 +360,7 @@ function OrderPageContent() {
               </TabsContent>
               <TabsContent value="withdraw">
                 <WithDraw
-                  contractUrl={contractUrl}
+                  contractUrl={contractUrl!}
                   asset={asset}
                   ticker={ticker}
                   assetBalance={assetBalance}
@@ -393,7 +402,7 @@ function OrderPageContent() {
                       <AddLiquidity
                         asset={asset}
                         ticker={ticker}
-                        contractUrl={contractUrl}
+                        contractUrl={contractUrl!}
                         refresh={refreshBalances}
                         isRefreshing={isSwapStatusLoading}
                         tickerInfo={tickerInfo}
@@ -407,7 +416,7 @@ function OrderPageContent() {
                     </TabsContent>
                     <TabsContent value="remove">
                       <RemoveLiquidity
-                        contractUrl={contractUrl}
+                        contractUrl={contractUrl!}
                         asset={asset}
                         ticker={ticker}
                         assetBalance={assetBalance}
@@ -429,7 +438,7 @@ function OrderPageContent() {
                       <ClaimProfits
                         asset={asset}
                         ticker={ticker}
-                        contractUrl={contractUrl}
+                        contractUrl={contractUrl!}
                         refresh={refreshBalances}
                         isRefreshing={isSwapStatusLoading}
                         swapData={swapStatusData}
@@ -497,13 +506,13 @@ function OrderPageContent() {
           </UnderlineTabsList>
           <TabsContent value="activities" className="mt-4 bg-zinc-950/80">
             <HistorySwapOrders
-              contractURL={contractUrl}
+              contractURL={contractUrl!}
               type="swap"
               ticker={ticker}
             />
           </TabsContent>
           <TabsContent value="myactivities" className="mt-4 bg-zinc-950/80">
-            <MyOrders contractURL={contractUrl} type="swap" ticker={ticker} />
+            <MyOrders contractURL={contractUrl!} type="swap" ticker={ticker} />
           </TabsContent>
           <TabsContent value="holders" className="mt-4 bg-zinc-950/80">
             <TikcerHoldersList
@@ -516,7 +525,7 @@ function OrderPageContent() {
             <LptHoldersList
               asset={asset}
               ticker={ticker}
-              contractUrl={contractUrl}
+              contractUrl={contractUrl!}
               tickerInfo={tickerInfo}
               refresh={refreshAll}
               isRefreshing={isSwapStatusLoading}
