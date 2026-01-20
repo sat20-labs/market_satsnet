@@ -61,7 +61,7 @@ const deriveSatsPrice = (pool: any): number => {
 export const AssetsList = ({ assets }: AssetListProps) => {
   const { t } = useTranslation();
   const { network } = useCommonStore();
-
+  console.log('assets', assets);
   // 获取transcend合约URL列表
   const { data: contractURLsData } = useQuery({
     queryKey: ['transcendContractURLs', network],

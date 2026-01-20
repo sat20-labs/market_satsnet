@@ -185,7 +185,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
         const result = await clientApi.getAddressSummary(address);
         // Update summary data regardless of processing result.data
         console.log('result', result);
-        
+
         state.setSummaryData(result);
 
         if (result?.data) {
@@ -205,7 +205,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
             if (!state.rawAssetList.find((v) => v?.key === key)) {
               let label = item.Name.Ticker;
               console.log('key', key);
-              
+
               newAssetList.push({
                 id: key,
                 key,
@@ -261,7 +261,7 @@ export const useAssetStore = create<AssetState>((set, get) => {
               availableAssetTypes: updatedAvailableAssetTypes,
             });
             console.log('updatedRawAssetList', updatedAssets);
-            
+
           }
         } else {
           // Handle case where result exists but result.data is null/empty
@@ -299,7 +299,8 @@ export const useAssetStore = create<AssetState>((set, get) => {
           return [];
         }
 
-        const utxoResults = await processAllUtxos(address, keysToFetch);
+        // const utxoResults = await processAllUtxos(address, keysToFetch);
+        const utxoResults = [];
 
         // --- Start: Update UTXOs in rawAssetList and categorized assets ---
         const updatedRawAssetList = state.rawAssetList.map((asset) => {

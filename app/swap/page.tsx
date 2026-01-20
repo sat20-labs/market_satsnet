@@ -156,7 +156,7 @@ function adaptPoolData(pool, satsnetHeight) {
   return {
     ...pool,
     id: pool.contractURL ?? pool.id,
-    assetName: ticker,
+    assetName: protocol?.toLowerCase() === "brc20" ? (pool.displayName || ticker) : ticker,
     protocol: protocol,
     poolStatus,
     deployTime: pool.deployTime ?? "",
@@ -511,7 +511,7 @@ const Swap = () => {
       return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
     });
   }, [mergedPoolList, protocol, sortKey, sortOrder]);
-
+  console.log('sortedPoolList', sortedPoolList)
   const pagedPoolList = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return sortedPoolList.slice(start, start + pageSize);

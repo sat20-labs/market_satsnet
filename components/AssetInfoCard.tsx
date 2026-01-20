@@ -32,7 +32,7 @@ export function AssetInfoCard({
   isRefreshing
 }: AssetInfoCardProps) {
   const { t } = useTranslation();
-  
+
   // Handle status 101 case - use Contract data for startup message
   const isPoolStartupRequired = swapData?.status === 101;
   const contractAssetAmt = useMemo(() => {
@@ -41,14 +41,14 @@ export function AssetInfoCard({
     }
     return 0;
   }, [isPoolStartupRequired, swapData?.Contract?.assetAmt]);
-  
+
   const contractSatValue = useMemo(() => {
     if (isPoolStartupRequired && swapData?.Contract?.satValue) {
       return Number(swapData.Contract.satValue);
     }
     return 0;
   }, [isPoolStartupRequired, swapData?.Contract?.satValue]);
-  
+
   // For normal pool display (non-101 status)
   const assetAmt = useMemo(() => {
     const precisionResult = getValueFromPrecision(swapData?.AssetAmtInPool);
@@ -57,6 +57,14 @@ export function AssetInfoCard({
     return parseFloat(precisionResult?.value || '0');
   }, [swapData?.AssetAmtInPool]);
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
+
+  const displayName = useMemo(() => {
+    if (protocol?.toLowerCase() === 'brc20' && tickerInfo?.displayName) {
+      return tickerInfo.displayName;
+    }
+    return ticker;
+  }, [protocol, tickerInfo?.displayName, ticker]);
+
   const currentPrice = useMemo(() => {
     // 使用池子数据计算价格，不使用接口返回的LastDealPrice
     if (satValue && assetAmt && assetAmt > 0) {
@@ -112,7 +120,7 @@ export function AssetInfoCard({
           </div>
           <div className=''>
             <div className="flex justify-start items-center text-zinc-400 font-semibold text-sm sm:text-base">
-              <div>{ticker}</div>
+              <div>{displayName}</div>
               {/* NEW: social icons next to View Info */}
               {(twitter || telegram || discord) && (
                 <div className="ml-4 flex items-center gap-2">
@@ -190,7 +198,7 @@ export function AssetInfoCard({
               <span className="text-orange-400 font-medium">
                 {t('common.poolStartupRequired', {
                   assetAmount: contractAssetAmt?.toLocaleString(),
-                  ticker: ticker,
+                  ticker: displayName,
                   satsAmount: contractSatValue?.toLocaleString()
                 })}
               </span>
@@ -201,7 +209,7 @@ export function AssetInfoCard({
               <div className="flex justify-start items-start">
                 <span className="text-zinc-500">{t('common.poolAssetInfo')}：</span>
                 <div className="text-left text-zinc-500 space-y-1">
-                  <p><span className="font-bold mr-2">{assetAmt?.toLocaleString()}</span> {ticker}</p>
+                  <p><span className="font-bold mr-2">{assetAmt?.toLocaleString()}</span> {displayName}</p>
                   <p><span className="font-bold mr-2">{satValue?.toLocaleString()}</span> sats</p>
                 </div>
               </div>
