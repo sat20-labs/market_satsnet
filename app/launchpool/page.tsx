@@ -71,17 +71,23 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
     poolStatus = PoolStatus.NOT_STARTED;
   }
 
+  const assetNameObj = pool?.assetName || {};
+  const ticker = assetNameObj.Ticker || '-';
+  const protocol = assetNameObj.Protocol || '-';
+  const displayName = protocol.toLowerCase() === 'brc20' ? (pool.displayName || ticker) : ticker;
+
   return {
     ...pool,
     id: pool?.contractURL ?? pool?.id,
     logo: pool?.logo ?? '',
-    assetName: pool?.assetName,
+    assetName: displayName,
+    assetNameObj: assetNameObj,
     unitPrice: pool?.unitPrice ?? '',
     marketCap: pool?.marketCap ?? '',
     totalSupply: maxSupply,
     poolSize: pool?.limit ?? pool?.poolSize ?? '',
     progress,
-    protocol: pool?.assetName?.Protocol ?? '',
+    protocol: protocol,
     template: pool?.template ?? '',
     templateName: pool?.templateName ?? '',
     templateDescription: pool?.templateDescription ?? '',
@@ -95,17 +101,46 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
   };
 }
 
-// 新增：名称缩写函数（移动端）
+// 移除缩写逻辑
 function abbreviateTicker(name: string): string {
-  if (!name) return '';
-  if (name.length <= 12) return name;
-  if (/[._-]/.test(name)) {
-    const parts = name.split(/[._-]/).filter(Boolean);
-    if (parts.length >= 3)
-      return `${parts[0]}-${parts[1]}…-${parts[parts.length - 1]}`.slice(0, 18);
-  }
-  return `${name.slice(0, 6)}…${name.slice(-4)}`;
+  return name || '';
 }
+
+const TickerName = ({
+  name,
+  ticker,
+  protocol,
+  className = "",
+  abbreviate = false
+}: {
+  name: string,
+  ticker: string,
+  protocol: string,
+  className?: string,
+  abbreviate?: boolean
+}) => {
+  const is5Byte = ticker?.length === 5 && protocol?.toLowerCase() === 'brc20';
+  const displayName = abbreviate ? abbreviateTicker(name) : name;
+  const parts = (displayName || "").split(' ');
+
+  return (
+    <div className={`flex flex-col items-start ${className}`}>
+      <div className={`flex items-center flex-wrap font-medium`}>
+        {parts.map((part, i) => (
+          <span key={i}>
+            {part}
+            {i < parts.length - 1 && <span className="text-zinc-500 font-normal">%20</span>}
+          </span>
+        ))}
+      </div>
+      {is5Byte && (
+        <div className="mt-1 w-[46px] flex justify-center py-0.5 rounded text-[10px] bg-orange-500/10 text-orange-500 border border-orange-500/20 leading-none font-medium">
+          5-byte
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function LaunchPoolProgressSortTest() {
   const { t } = useTranslation();
@@ -395,8 +430,8 @@ export default function LaunchPoolProgressSortTest() {
             <div className="flex-shrink-0">
               <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                 <AssetLogo
-                  protocol={p?.assetName?.Protocol}
-                  ticker={p?.assetName?.Ticker}
+                  protocol={p?.assetNameObj?.Protocol}
+                  ticker={p?.assetNameObj?.Ticker}
                   className="w-10 h-10"
                   enabled={
                     p.poolStatus === PoolStatus.COMPLETED ||
@@ -406,31 +441,32 @@ export default function LaunchPoolProgressSortTest() {
                 <AvatarFallback>
                   {p?.assetSymbol
                     ? String.fromCodePoint(p.assetSymbol)
-                    : p.assetName?.Ticker?.charAt(0)?.toUpperCase() || '₿'}
+                    : p.assetNameObj?.Ticker?.charAt(0)?.toUpperCase() || '₿'}
                 </AvatarFallback>
               </Avatar>
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-1">
               <div className="flex items-start justify-between gap-2">
-                <button
-                  onClick={() => openModal('details', p)}
-                  className="text-primary text-sm font-medium text-left leading-tight max-w-[150px]"
-                  title={p.assetName?.Ticker}
-                  data-full={p.assetName?.Ticker}
-                  style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {abbreviateTicker(p.assetName?.Ticker || '')}
-                </button>
-                <Badge
-                  className={`${statusColorMap[p.poolStatus]} text-white flex-shrink-0`}
-                >
-                  {statusTextMap[p.poolStatus]}
-                </Badge>
+                <div className="flex flex-col items-start">
+                  <button
+                    onClick={() => openModal('details', p)}
+                    className="text-primary text-sm font-medium text-left leading-tight max-w-[200px]"
+                    title={p.assetName}
+                    data-full={p.assetName}
+                  >
+                    <TickerName
+                      name={p.assetName || ""}
+                      ticker={p.assetNameObj?.Ticker || ""}
+                      protocol={p.protocol || ""}
+                      abbreviate
+                    />
+                  </button>
+                  <Badge
+                    className={`${statusColorMap[p.poolStatus]} text-white flex-shrink-0 mt-1`}
+                  >
+                    {statusTextMap[p.poolStatus]}
+                  </Badge>
+                </div>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-zinc-500">
                 <span>
@@ -468,7 +504,7 @@ export default function LaunchPoolProgressSortTest() {
                         className="rounded-md border border-zinc-700 p-1.5 text-zinc-400 hover:text-indigo-500 transition-colors"
                         onClick={() =>
                           router.push(
-                            `/swap/detail?asset=${p.assetName.Protocol}:f:${p.assetName.Ticker}`,
+                            `/swap/detail?asset=${p.assetNameObj.Protocol}:f:${p.assetNameObj.Ticker}`,
                           )
                         }
                         title="Swap"
@@ -528,7 +564,7 @@ export default function LaunchPoolProgressSortTest() {
                     onClick={
                       isSortable
                         ? () =>
-                            handleSort(column.key as 'progress' | 'deployTime')
+                          handleSort(column.key as 'progress' | 'deployTime')
                         : undefined
                     }
                     className={`px-4 py-2 text-left font-semibold bg-zinc-900 whitespace-nowrap ${isSortable ? 'cursor-pointer select-none' : ''} ${isActive ? 'text-primary' : 'text-muted-foreground'} ${headExtraClass}`}
@@ -548,11 +584,11 @@ export default function LaunchPoolProgressSortTest() {
                 key={adaptedPool.id ?? index}
                 className="border-b border-border hover:bg-accent transition-colors whitespace-nowrap"
               >
-                <TableCell className="flex items-center gap-2 px-4 py-4">
+                <TableCell className="flex items-center gap-2 px-4 py-4 min-w-[200px]">
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                     <AssetLogo
-                      protocol={adaptedPool?.assetName?.Protocol}
-                      ticker={adaptedPool?.assetName?.Ticker}
+                      protocol={adaptedPool?.assetNameObj?.Protocol}
+                      ticker={adaptedPool?.assetNameObj?.Ticker}
                       className="w-10 h-10"
                       enabled={
                         adaptedPool.poolStatus === PoolStatus.COMPLETED ||
@@ -562,25 +598,17 @@ export default function LaunchPoolProgressSortTest() {
                     <AvatarFallback>
                       {adaptedPool?.assetSymbol
                         ? String.fromCodePoint(adaptedPool.assetSymbol)
-                        : adaptedPool.assetName?.Ticker?.charAt(
-                            0,
-                          )?.toUpperCase() || '₿'}
+                        : adaptedPool.assetNameObj?.Ticker?.charAt(
+                          0,
+                        )?.toUpperCase() || '₿'}
                     </AvatarFallback>
                   </Avatar>
-                  <span
-                    className="cursor-pointer text-primary hover:underline max-w-[160px] leading-snug"
-                    onClick={() => openModal('details', adaptedPool)}
-                    title={adaptedPool.assetName?.Ticker}
-                    data-full={adaptedPool.assetName?.Ticker}
-                    style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {abbreviateTicker(adaptedPool.assetName?.Ticker || '')}
-                  </span>
+                  <TickerName
+                    name={adaptedPool.assetName || ""}
+                    ticker={adaptedPool.assetNameObj?.Ticker || ""}
+                    protocol={adaptedPool.protocol || ""}
+                    abbreviate
+                  />
                 </TableCell>
 
                 <TableCell className="px-4 py-4">
@@ -611,8 +639,8 @@ export default function LaunchPoolProgressSortTest() {
                 <TableCell className="px-4 py-4 hidden lg:table-cell">
                   {adaptedPool.deployTime
                     ? new Date(
-                        Number(adaptedPool.deployTime) * 1000,
-                      ).toLocaleString()
+                      Number(adaptedPool.deployTime) * 1000,
+                    ).toLocaleString()
                     : '-'}
                 </TableCell>
 
@@ -648,7 +676,7 @@ export default function LaunchPoolProgressSortTest() {
                         className="rounded-md border border-zinc-700 p-2 text-zinc-400 hover:text-indigo-500 transition-colors"
                         onClick={() =>
                           router.push(
-                            `/swap/detail?asset=${adaptedPool.assetName.Protocol}:f:${adaptedPool.assetName.Ticker}`,
+                            `/swap/detail?asset=${adaptedPool.assetNameObj.Protocol}:f:${adaptedPool.assetNameObj.Ticker}`,
                           )
                         }
                       >

@@ -79,7 +79,7 @@ function adaptPoolData(pool, satsnetHeight) {
   return {
     ...pool,
     id: pool.contractURL ?? pool.id,
-    assetName: ticker,
+    assetName: protocol.toLowerCase() === 'brc20' ? (pool.displayName || ticker) : ticker,
     protocol: protocol,
     poolStatus,
     deployTime: pool.deployTime ?? '',
@@ -91,6 +91,39 @@ function adaptPoolData(pool, satsnetHeight) {
     // 其它字段可按需补充
   };
 }
+
+const TickerName = ({
+  name,
+  ticker,
+  protocol,
+  className = ""
+}: {
+  name: string,
+  ticker: string,
+  protocol: string,
+  className?: string
+}) => {
+  const is5Byte = ticker?.length === 5 && protocol?.toLowerCase() === 'brc20';
+  const parts = (name || "").split(' ');
+
+  return (
+    <div className={`flex flex-col items-start ${className}`}>
+      <div className={`flex items-center flex-wrap font-medium text-primary`}>
+        {parts.map((part, i) => (
+          <span key={i}>
+            {part}
+            {i < parts.length - 1 && <span className="text-zinc-500 font-normal">%20</span>}
+          </span>
+        ))}
+      </div>
+      {is5Byte && (
+        <div className="mt-1 w-[46px] flex justify-center py-0.5 rounded text-[10px] bg-orange-500/10 text-orange-500 border border-orange-500/20 leading-none font-medium">
+          5-byte
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TranscendPage = () => {
   const { t, ready } = useTranslation(); // Specify the namespace 
@@ -288,7 +321,7 @@ const TranscendPage = () => {
                 key={adaptedPool.id ?? index}
                 className="border-b border-border hover:bg-accent transition-colors  whitespace-nowrap"
               >
-                <TableCell className="flex items-center gap-2 px-4 py-2">
+                <TableCell className="flex items-center gap-2 px-4 py-2 min-w-[200px]">
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
                     <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
                     <AvatarFallback>
@@ -301,10 +334,14 @@ const TranscendPage = () => {
                   </Avatar>
                   <Link
                     href={generateTranscendDetailHref(adaptedPool.Contract.assetName)}
-                    className="cursor-pointer text-primary hover:underline"
+                    className="cursor-pointer hover:underline"
                     prefetch={true}
                   >
-                    {adaptedPool.assetName}
+                    <TickerName
+                      name={adaptedPool.assetName}
+                      ticker={adaptedPool?.Contract?.assetName?.Ticker || ""}
+                      protocol={adaptedPool.protocol}
+                    />
                   </Link>
                   {/* TS removed as requested */}
                   {isOwner(adaptedPool) || isAddressInAssetEditWhitelist(address) ? (

@@ -100,7 +100,7 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
     return {
         ...pool,
         id: pool.contractURL ?? pool.id,
-        assetName: ticker,
+        assetName: protocol.toLowerCase() === 'brc20' ? (pool.displayName || ticker) : ticker,
         protocol: protocol,
         poolStatus,
         deployTime: pool.deployTime ?? '',
@@ -116,14 +116,48 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
 
 // 名称缩写（移动端）
 function abbreviateTicker(name: string): string {
-    if (!name) return '';
-    if (name.length <= 12) return name;
-    if (/[._-]/.test(name)) {
-        const parts = name.split(/[._-]/).filter(Boolean);
-        if (parts.length >= 3) return `${parts[0]}-${parts[1]}…-${parts[parts.length - 1]}`.slice(0, 18);
-    }
-    return `${name.slice(0, 6)}…${name.slice(-4)}`;
+    return name || '';
 }
+
+const TickerName = ({
+    name,
+    ticker,
+    protocol,
+    className = "",
+    abbreviate = false,
+    fontSize = "normal"
+}: {
+    name: string,
+    ticker: string,
+    protocol: string,
+    className?: string,
+    abbreviate?: boolean,
+    fontSize?: "small" | "normal" | "large"
+}) => {
+    const is5Byte = ticker?.length === 5 && protocol?.toLowerCase() === 'brc20';
+    const displayName = abbreviate ? abbreviateTicker(name) : name;
+    const parts = (displayName || "").split(' ');
+
+    const sizeClass = fontSize === 'small' ? 'text-[13px]' : fontSize === 'large' ? 'text-[16px]' : 'text-[14px]';
+
+    return (
+        <div className={`flex flex-col items-start ${className}`}>
+            <div className={`flex items-center flex-wrap font-medium ${sizeClass}`}>
+                {parts.map((part, i) => (
+                    <span key={i}>
+                        {part}
+                        {i < parts.length - 1 && <span className="text-zinc-500 font-normal">%20</span>}
+                    </span>
+                ))}
+            </div>
+            {is5Byte && (
+                <div className="mt-1 w-[46px] flex justify-center py-0.5 rounded text-[10px] bg-orange-500/10 text-orange-500 border border-orange-500/20 leading-none font-medium text-left">
+                    5-byte
+                </div>
+            )}
+        </div>
+    );
+};
 
 // 仅格式化为日期（精确到日）
 function formatDeployDate(ts?: number) {
@@ -452,26 +486,15 @@ export default function LimitOrderPage() {
                             <div className="flex items-start justify-between gap-2">
                                 <Link
                                     href={`/limitOrder/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
-                                    className="text-primary text-sm font-medium text-left leading-tight max-w-[150px]"
+                                    className="text-primary font-medium text-left leading-tight max-w-[200px]"
                                     title={p?.assetName}
-                                    style={{
-                                        display: '-webkit-box',
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden'
-                                    }}
                                 >
-                                    {p?.protocol === 'runes' ? (
-                                        <>
-                                            <span className='text-[13px]'>{p?.assetName || ''}</span>
-                                            <span className='text-[11px] text-zinc-500' style={{ display: 'block' }}>({p?.protocol})</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className='text-[16px]'>{p?.assetName || ''}</span>
-                                            <span className='ml-1 text-[11px] text-zinc-500'>({p?.protocol})</span>
-                                        </>
-                                    )}
+                                    <TickerName
+                                        name={p?.assetName || ""}
+                                        ticker={p?.Contract?.assetName?.Ticker || ""}
+                                        protocol={p?.protocol || ""}
+                                        fontSize={p?.protocol === 'runes' ? "small" : "large"}
+                                    />
                                 </Link>
 
                                 <Link
@@ -551,7 +574,7 @@ export default function LimitOrderPage() {
                                         key={adaptedPool.id ?? index}
                                         className="border-b border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200/88 hover:text-zinc-100 transition-colors whitespace-nowrap"
                                     >
-                                        <TableCell className={`px-4 py-4 flex items-center ${adaptedPool.protocol === 'runes' ? 'gap-1' : 'gap-2'}`}>
+                                        <TableCell className={`px-4 py-4 flex items-center min-w-[200px] ${adaptedPool.protocol === 'runes' ? 'gap-1' : 'gap-2'}`}>
                                             {adaptedPool.protocol === 'runes' ? (
                                                 <Avatar className="w-10 h-10 bg-zinc-700 flex-shrink-0">
                                                     <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
@@ -565,21 +588,14 @@ export default function LimitOrderPage() {
                                                     </AvatarFallback>
                                                 </Avatar>
                                             )}
-                                            <Link
-                                                href={`/limitOrder/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
-                                                className={`cursor-pointer text-primary hover:underline leading-snug ${adaptedPool.protocol !== 'runes' ? 'max-w-[160px]' : 'max-w-[180px]'}`}
-                                                prefetch={true}
-                                                title={adaptedPool.assetName}
-                                                style={{
-                                                    display: '-webkit-box',
-                                                    WebkitLineClamp: 2,
-                                                    WebkitBoxOrient: 'vertical',
-
-                                                }}
-                                            >
-                                                {adaptedPool.assetName}
-                                                <span className='ml-1 text-zinc-500'>({adaptedPool.protocol})</span>
-                                            </Link>
+                                            <div className="flex flex-col items-start leading-tight">
+                                                <TickerName
+                                                    name={adaptedPool.assetName}
+                                                    ticker={adaptedPool?.Contract?.assetName?.Ticker || ""}
+                                                    protocol={adaptedPool.protocol}
+                                                />
+                                                <span className='text-zinc-500 text-[11px] mt-1'>({adaptedPool.protocol})</span>
+                                            </div>
                                         </TableCell>
 
                                         <TableCell className="px-4 py-4">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}<span className='ml-1 text-xs text-zinc-500 font-medium'>sats</span>

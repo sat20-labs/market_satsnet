@@ -173,14 +173,7 @@ function adaptPoolData(pool, satsnetHeight) {
 
 // 新增：名称缩写函数（移动端显示优化）
 function abbreviateTicker(name: string): string {
-  if (!name) return "";
-  if (name.length <= 12) return name;
-  if (/[._-]/.test(name)) {
-    const parts = name.split(/[._-]/).filter(Boolean);
-    if (parts.length >= 3)
-      return `${parts[0]}-${parts[1]}…-${parts[parts.length - 1]}`.slice(0, 18);
-  }
-  return `${name.slice(0, 6)}…${name.slice(-4)}`;
+  return name || "";
 }
 
 // 新增：仅格式化日期（精确到日）
@@ -189,6 +182,41 @@ function formatDeployDate(ts?: number) {
   const d = new Date(ts * 1000);
   return d.toLocaleDateString(); // 如需固定格式可改为 d.toISOString().slice(0,10)
 }
+
+const TickerName = ({
+  name,
+  ticker,
+  protocol,
+  className = "",
+  size = "normal"
+}: {
+  name: string,
+  ticker: string,
+  protocol: string,
+  className?: string,
+  size?: "small" | "normal"
+}) => {
+  const is5Byte = ticker?.length === 5 && protocol?.toLowerCase() === 'brc20';
+  const parts = (name || "").split(' ');
+
+  return (
+    <div className={`flex flex-col items-start ${className}`}>
+      <div className={`flex items-center flex-wrap ${size === 'small' ? 'text-[13px]' : 'text-[16px]'} font-medium`}>
+        {parts.map((part, i) => (
+          <span key={i}>
+            {part}
+            {i < parts.length - 1 && <span className="text-zinc-500 font-normal">%20</span>}
+          </span>
+        ))}
+      </div>
+      {is5Byte && (
+        <div className="mt-1 w-[46px] flex justify-center py-0.5 rounded text-[10px] bg-orange-500/10 text-orange-500 border border-orange-500/20 leading-none font-medium">
+          5-byte
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Swap = () => {
   const { t } = useTranslation(); // Specify the namespace
@@ -648,34 +676,19 @@ const Swap = () => {
               <div className="flex items-start justify-between gap-2">
                 <Link
                   href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
-                  className="flex flex-col justify-start text-primary font-medium text-left max-w-[150px]"
+                  className="flex flex-col justify-start text-primary font-medium text-left max-w-[200px]"
                   title={p?.assetName}
                   onClick={(e) => handleMaintenanceClick(e, p)}
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
                 >
-                  {p?.protocol === "runes" ? (
-                    <>
-                      <span className="text-[13px]">{p?.assetName || ""}</span>
-                      <span
-                        className="text-[11px] text-zinc-500"
-                        style={{ display: "block" }}
-                      >
-                        ({p?.protocol})
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-[16px]">{p?.assetName || ""}</span>
-                      <span className="ml-1 text-[11px] text-zinc-500">
-                        ({p?.protocol})
-                      </span>
-                    </>
-                  )}
+                  <TickerName
+                    name={p?.assetName || ""}
+                    ticker={p?.Contract?.assetName?.Ticker || ""}
+                    protocol={p?.protocol || ""}
+                    size={p?.protocol === "runes" ? "small" : "normal"}
+                  />
+                  <span className="text-[11px] text-zinc-500 mt-0.5">
+                    ({p?.protocol})
+                  </span>
                 </Link>
 
                 {p.poolStatus === PoolStatus.ACTIVE ? (
@@ -874,20 +887,21 @@ const Swap = () => {
                       )}
                       <Link
                         href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
-                        className={`cursor-pointer text-primary hover:underline leading-snug ${adaptedPool.protocol !== "runes" ? "max-w-[160px]" : "max-w-[180px]"}`}
+                        className={`cursor-pointer text-primary hover:underline leading-snug ${adaptedPool.protocol !== "runes" ? "max-w-[220px]" : "max-w-[240px]"}`}
                         prefetch={true}
                         title={adaptedPool.assetName}
                         onClick={(e) => handleMaintenanceClick(e, adaptedPool)}
-                        style={{
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                        }}
                       >
-                        {adaptedPool.assetName}
-                        <span className="ml-1 text-zinc-500">
-                          ({adaptedPool.protocol})
-                        </span>
+                        <div className="flex flex-col items-start leading-tight">
+                          <TickerName
+                            name={adaptedPool.assetName}
+                            ticker={adaptedPool?.Contract?.assetName?.Ticker || ""}
+                            protocol={adaptedPool.protocol}
+                          />
+                          <span className="text-[11px] text-zinc-500 mt-1">
+                            ({adaptedPool.protocol})
+                          </span>
+                        </div>
                       </Link>
                     </TableCell>
 
