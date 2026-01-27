@@ -304,6 +304,10 @@
     "runesTickerNote": "* 可输入空格代替Runes符号，如：XXX YYY ZZZ",
     "deployFeeTip": "* 部署发射池的费用，可选择主网或聪网支付交易",
     "bindingSatError": "绑定聪必须大于0且为10的整数倍",
+    "reserveRation": "预留比例",
+    "reserveRationTips": "预留资产比例。设置为10意味着10%的资产作为预留资产，发射成功时会直接发给部署地址。注意会有预留比例×5%的份额发给引导节点地址。",
+    "reserveRationNote": "预留资产将在发射成功时发送给部署地址，其中预留比例×5%的份额将发送给引导节点地址。",
+    "reserveRationError": "预留比例必须在0到100之间",
     "largePoolWarning": {
       "title": "发射池过大警告",
       "message": "您设置的发射池超过了 100 BTC，当前发射成功率较低。请确认是否继续发射？",

@@ -37,6 +37,7 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
         startBlock: '0',
         endBlock: '0',
         assetSymbol: '',
+        reserveRation: '0',
     });
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showLargePoolWarning, setShowLargePoolWarning] = useState(false);
@@ -94,6 +95,13 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
             return;
         }
 
+        // 验证 reserveRation 范围
+        const reserveRation = Number(formData.reserveRation);
+        if (reserveRation < 0 || reserveRation > 100) {
+            toast.error(t('pages.createPool.reserveRationError'));
+            return;
+        }
+
         if (formData.endBlock !== '0' && Number(formData.endBlock) <= satsnetHeight) {
             toast.error(t('End Block must be 0 or greater than current block height'));
             return;
@@ -126,6 +134,7 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
             limit: Number(formData.limit),
             maxSupply: Number(formData.maxSupply),
             launchRation: Number(formData.launchRatio),
+            reserveRation: Number(formData.reserveRation),
             ...(formData.protocol === 'runes' && formData.assetSymbol
                 ? { assetSymbol: formData.assetSymbol.charCodeAt(0) }
                 : {}),
@@ -452,6 +461,43 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
                                 value={formData.endBlock}
                                 onChange={(e) => handleInputChange('endBlock', e.target.value)}
                             />
+
+                            <div className="flex items-center mt-4">
+                                <label className="block text-sm font-medium text-gray-300 mb-1">
+                                    {t('pages.createPool.reserveRation')}
+                                </label>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span className="ml-1 cursor-pointer align-middle inline-flex">
+                                            <Icon icon="lucide:help-circle" className="w-4 h-4 text-zinc-400" />
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent sideOffset={4} className="max-w-xs">
+                                        <div className="text-xs">
+                                            {t('pages.createPool.reserveRationTips')}
+                                        </div>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
+                            <Input
+                                placeholder={t('pages.createPool.reserveRation')}
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={formData.reserveRation}
+                                onChange={(e) => {
+                                    const value = Number(e.target.value);
+                                    if (value >= 0 && value <= 100) {
+                                        handleInputChange('reserveRation', e.target.value);
+                                    }
+                                }}
+                            />
+                            <p className="mt-1 text-xs text-gray-400">
+                                {t('pages.createPool.reserveRation')}: 0-100
+                            </p>
+                            <p className="mt-1 text-xs text-purple-400">
+                                {t('pages.createPool.reserveRationNote')}
+                            </p>
                         </div>
                     )}
 
