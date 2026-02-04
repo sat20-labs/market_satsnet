@@ -157,6 +157,7 @@ function adaptPoolData(pool, satsnetHeight) {
     ...pool,
     id: pool.contractURL ?? pool.id,
     assetName: protocol?.toLowerCase() === "brc20" ? (pool.displayName || ticker) : ticker,
+    assetNameObj: assetNameObj,
     protocol: protocol,
     poolStatus,
     deployTime: pool.deployTime ?? "",
@@ -675,14 +676,14 @@ const Swap = () => {
             <div className="flex-1 min-w-0 flex flex-col gap-1">
               <div className="flex items-start justify-between gap-2">
                 <Link
-                  href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
+                  href={`/swap/detail?asset=${p.assetNameObj?.Protocol}:f:${p.assetNameObj?.Ticker}`}
                   className="flex flex-col justify-start text-primary font-medium text-left max-w-[200px]"
                   title={p?.assetName}
                   onClick={(e) => handleMaintenanceClick(e, p)}
                 >
                   <TickerName
                     name={p?.assetName || ""}
-                    ticker={p?.Contract?.assetName?.Ticker || ""}
+                    ticker={p.assetNameObj?.Ticker || ""}
                     protocol={p?.protocol || ""}
                     size={p?.protocol === "runes" ? "small" : "normal"}
                   />
@@ -886,7 +887,7 @@ const Swap = () => {
                         </Avatar>
                       )}
                       <Link
-                        href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                        href={`/swap/detail?asset=${adaptedPool.assetNameObj?.Protocol}:f:${adaptedPool.assetNameObj?.Ticker}`}
                         className={`cursor-pointer text-primary hover:underline leading-snug ${adaptedPool.protocol !== "runes" ? "max-w-[220px]" : "max-w-[240px]"}`}
                         prefetch={true}
                         title={adaptedPool.assetName}
@@ -895,7 +896,7 @@ const Swap = () => {
                         <div className="flex flex-col items-start leading-tight">
                           <TickerName
                             name={adaptedPool.assetName}
-                            ticker={adaptedPool?.Contract?.assetName?.Ticker || ""}
+                            ticker={adaptedPool.assetNameObj?.Ticker || ""}
                             protocol={adaptedPool.protocol}
                           />
                           <span className="text-[11px] text-zinc-500 mt-1">

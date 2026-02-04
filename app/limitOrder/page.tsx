@@ -101,6 +101,7 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
         ...pool,
         id: pool.contractURL ?? pool.id,
         assetName: protocol.toLowerCase() === 'brc20' ? (pool.displayName || ticker) : ticker,
+        assetNameObj: assetNameObj,
         protocol: protocol,
         poolStatus,
         deployTime: pool.deployTime ?? '',
@@ -485,15 +486,15 @@ export default function LimitOrderPage() {
                         <div className="flex-1 min-w-0 flex flex-col gap-1">
                             <div className="flex items-start justify-between gap-2">
                                 <Link
-                                    href={`/limitOrder/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
+                                    href={`/limitOrder/detail?asset=${p.assetNameObj?.Protocol}:f:${p.assetNameObj?.Ticker}`}
                                     className="text-primary font-medium text-left leading-tight max-w-[200px]"
-                                    title={p?.assetName}
+                                    title={p.assetName}
                                 >
                                     <TickerName
-                                        name={p?.assetName || ""}
-                                        ticker={p?.Contract?.assetName?.Ticker || ""}
-                                        protocol={p?.protocol || ""}
-                                        fontSize={p?.protocol === 'runes' ? "small" : "large"}
+                                        name={p.assetName || ""}
+                                        ticker={p.assetNameObj?.Ticker || ""}
+                                        protocol={p.protocol || ""}
+                                        fontSize={p.protocol === 'runes' ? "small" : "large"}
                                     />
                                 </Link>
 
@@ -588,14 +589,20 @@ export default function LimitOrderPage() {
                                                     </AvatarFallback>
                                                 </Avatar>
                                             )}
-                                            <div className="flex flex-col items-start leading-tight">
-                                                <TickerName
-                                                    name={adaptedPool.assetName}
-                                                    ticker={adaptedPool?.Contract?.assetName?.Ticker || ""}
-                                                    protocol={adaptedPool.protocol}
-                                                />
-                                                <span className='text-zinc-500 text-[11px] mt-1'>({adaptedPool.protocol})</span>
-                                            </div>
+                                            <Link
+                                                href={`/limitOrder/detail?asset=${adaptedPool.assetNameObj?.Protocol}:f:${adaptedPool.assetNameObj?.Ticker}`}
+                                                className="cursor-pointer hover:underline"
+                                                prefetch={true}
+                                            >
+                                                <div className="flex flex-col items-start leading-tight text-primary">
+                                                    <TickerName
+                                                        name={adaptedPool.assetName}
+                                                        ticker={adaptedPool.assetNameObj?.Ticker || ""}
+                                                        protocol={adaptedPool.protocol}
+                                                    />
+                                                    <span className='text-zinc-500 text-[11px] mt-1'>({adaptedPool.protocol})</span>
+                                                </div>
+                                            </Link>
                                         </TableCell>
 
                                         <TableCell className="px-4 py-4">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}<span className='ml-1 text-xs text-zinc-500 font-medium'>sats</span>

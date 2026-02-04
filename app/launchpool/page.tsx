@@ -448,9 +448,9 @@ export default function LaunchPoolProgressSortTest() {
             <div className="flex-1 min-w-0 flex flex-col gap-1">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex flex-col items-start">
-                  <button
+                  <div
                     onClick={() => openModal('details', p)}
-                    className="text-primary text-sm font-medium text-left leading-tight max-w-[200px]"
+                    className="text-primary text-sm font-medium text-left leading-tight max-w-[200px] cursor-pointer hover:underline"
                     title={p.assetName}
                     data-full={p.assetName}
                   >
@@ -460,7 +460,7 @@ export default function LaunchPoolProgressSortTest() {
                       protocol={p.protocol || ""}
                       abbreviate
                     />
-                  </button>
+                  </div>
                   <Badge
                     className={`${statusColorMap[p.poolStatus]} text-white flex-shrink-0 mt-1`}
                   >
@@ -603,12 +603,17 @@ export default function LaunchPoolProgressSortTest() {
                         )?.toUpperCase() || '₿'}
                     </AvatarFallback>
                   </Avatar>
-                  <TickerName
-                    name={adaptedPool.assetName || ""}
-                    ticker={adaptedPool.assetNameObj?.Ticker || ""}
-                    protocol={adaptedPool.protocol || ""}
-                    abbreviate
-                  />
+                  <div
+                    onClick={() => openModal('details', adaptedPool)}
+                    className="text-primary hover:underline text-left cursor-pointer"
+                  >
+                    <TickerName
+                      name={adaptedPool.assetName || ""}
+                      ticker={adaptedPool.assetNameObj?.Ticker || ""}
+                      protocol={adaptedPool.protocol || ""}
+                      abbreviate
+                    />
+                  </div>
                 </TableCell>
 
                 <TableCell className="px-4 py-4">

@@ -64,6 +64,7 @@ function adaptPoolData(pool, satsnetHeight) {
     ...pool,
     id: pool.contractURL ?? pool.id,
     assetName: protocol.toLowerCase() === 'brc20' ? (pool.displayName || ticker) : ticker,
+    assetNameObj: assetNameObj,
     protocol: protocol,
     poolStatus,
     deployTime: pool.deployTime ?? '',
@@ -282,13 +283,13 @@ const MarketPage = () => {
                     </AvatarFallback>
                   </Avatar>
                   <Link
-                    href={`/limitOrder/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                    href={`/limitOrder/detail?asset=${adaptedPool.assetNameObj?.Protocol}:f:${adaptedPool.assetNameObj?.Ticker}`}
                     className="cursor-pointer hover:underline"
                     prefetch={true}
                   >
                     <TickerName
                       name={adaptedPool.assetName}
-                      ticker={adaptedPool?.Contract?.assetName?.Ticker || ""}
+                      ticker={adaptedPool.assetNameObj?.Ticker || ""}
                       protocol={adaptedPool.protocol}
                     />
                   </Link>
