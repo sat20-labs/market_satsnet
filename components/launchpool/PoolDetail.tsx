@@ -198,7 +198,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                                   href={generateMempoolUrl({
                                     network: network,
                                     path: `tx/${txid}`,
-                                    chain: Chain.SATNET,
+                                    chain: Chain.BTC,
                                     env: 'dev',
                                   })}
                                   target="_blank"
@@ -228,7 +228,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                                   href={generateMempoolUrl({
                                     network: network,
                                     path: `tx/${txid}`,
-                                    chain: Chain.SATNET,
+                                    chain: Chain.BTC,
                                     env: 'dev',
                                   })}
                                   target="_blank"
@@ -290,7 +290,7 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                       showMintHistory={true}
                       showIndex={false}
                       tableHeaders={[
-                        t('pages.poolDetail.address'), 
+                        t('pages.poolDetail.address'),
                         '资产数量/聪',
                         '退款聪数'
                       ]}

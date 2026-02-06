@@ -36,6 +36,8 @@ export const generateMempoolUrl = ({
   chain?: Chain;
   env?: Env;
 }) => {
+  console.log('generateMempoolUrl', network)
+  console.log('generateMempoolUrl', chain)
   const satMempoolUrl: Record<Env, string> = {
     dev: 'https://mempool.sat20.org',
     test: 'https://mempool.sat20.org',
@@ -47,14 +49,15 @@ export const generateMempoolUrl = ({
     base = satMempoolUrl[env];
   }
   let url = base;
-  if (chain !== Chain.SATNET &&locale) {
+  if (chain !== Chain.SATNET && locale) {
     url += `/${locale}`;
   }
-  if (chain !== Chain.SATNET && network === 'testnet') {
+  if (chain === Chain.SATNET && network === 'testnet') {
     url += '/testnet';
   } else if (network === 'testnet') {
-    url += `/${network}`;
+    url += `/testnet4`;
   }
+  console.log('generateMempoolUrl', url)
   if (path) {
     url += `/${path}`;
   }
