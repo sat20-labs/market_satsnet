@@ -84,7 +84,22 @@ function OrderPageContent() {
     [swapStatusData],
   );
   const { address } = useReactWalletStore();
-
+  console.log("Swap Detail Data:", {
+    tickerInfo,
+    swapStatusData,
+    isLoading,
+    contractUrl,
+    satsBalance,
+    assetBalance,
+    ticker,
+    analyticsData,
+    isAnalyticsLoading,
+    isSwapStatusLoading,
+    isTickerLoading,
+    holders,
+    lptAmt,
+    userOperationHistory,
+  });
   // 判断是否为维护中的资产
   const isUnderMaintenance = useMemo(() => {
     const assetName = swapStatusData?.Contract?.assetName?.Ticker || ticker;

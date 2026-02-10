@@ -57,13 +57,13 @@ export function AssetInfoCard({
     return parseFloat(precisionResult?.value || '0');
   }, [swapData?.AssetAmtInPool]);
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
-
+  console.log('protocol:', protocol, 'tickerInfo:', tickerInfo, 'assetAmt:', assetAmt, 'satValue:', satValue);
   const displayName = useMemo(() => {
-    if (protocol?.toLowerCase() === 'brc20' && tickerInfo?.displayName) {
-      return tickerInfo.displayName;
+    if (protocol?.toLowerCase() === 'brc20' && tickerInfo?.displayname) {
+      return tickerInfo.displayname;
     }
     return ticker;
-  }, [protocol, tickerInfo?.displayName, ticker]);
+  }, [protocol, tickerInfo?.displayname, ticker]);
 
   const currentPrice = useMemo(() => {
     // 使用池子数据计算价格，不使用接口返回的LastDealPrice
