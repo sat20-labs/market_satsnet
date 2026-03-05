@@ -136,7 +136,7 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
             launchRation: Number(formData.launchRatio),
             reserveRation: Number(formData.reserveRation),
             ...(formData.protocol === 'runes' && formData.assetSymbol
-                ? { assetSymbol: formData.assetSymbol.charCodeAt(0) }
+                ? { assetSymbol: formData.assetSymbol.codePointAt(0) }
                 : {}),
             ...(formData.protocol === 'ordx' ? { bindingSat: Number(formData.n) } : {}),
         };
@@ -360,13 +360,12 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
                                         placeholder={t('pages.createPool.assetSymbol')}
                                         type="text"
                                         value={formData.assetSymbol}
-                                        maxLength={1}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                'assetSymbol',
-                                                e.target.value.replace(/./g, (c) => (c.length === 1 ? c : ''))
-                                            )
-                                        }
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const charArray = Array.from(val);
+                                            const singleChar = charArray.length > 0 ? charArray[0] : '';
+                                            handleInputChange('assetSymbol', singleChar);
+                                        }}
                                     />
                                 </>
                             )}
