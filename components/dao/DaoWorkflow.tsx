@@ -50,7 +50,11 @@ export function DaoWorkflow({
 
     const defaultAssetName = useMemo(() => normalizeAssetName(status.assetName as any), [status.assetName]);
 
-    const [loading, setLoading] = useState(false);
+    const [processing, setProcessing] = useState<{ register: boolean; donate: boolean; airdrop: boolean }>({
+        register: false,
+        donate: false,
+        airdrop: false,
+    });
 
     // Register
     const [uid, setUid] = useState('');
@@ -64,18 +68,16 @@ export function DaoWorkflow({
     // Airdrop
     const [airdropUidsText, setAirdropUidsText] = useState('');
 
-    const doInvoke = async (invoke: any) => {
-        setLoading(true);
+    const doInvoke = async (kind: 'register' | 'donate' | 'airdrop', invoke: any) => {
+        setProcessing((p) => ({ ...p, [kind]: true }));
         try {
-            const res: any = await invokeDaoContractSatsNet(contractUrl, invoke);
-            const txId = res?.txId || res?.txid || res?.data?.txId;
-            toast.success(txId ? `Submitted: ${txId}` : 'Submitted');
+            await invokeDaoContractSatsNet(contractUrl, invoke);
+            toast.success(t('common.submitted_waiting', { defaultValue: '已提交，等待审核/确认' }));
             refresh();
         } catch (e: any) {
             console.error(e);
             toast.error(e?.message || 'Invoke failed');
-        } finally {
-            setLoading(false);
+            setProcessing((p) => ({ ...p, [kind]: false }));
         }
     };
 
@@ -103,18 +105,34 @@ export function DaoWorkflow({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.uid')}</div>
-                                <Input value={uid} onChange={(e) => setUid(e.target.value)} placeholder="your uid" />
+                                <Input
+                                    value={uid}
+                                    onChange={(e) => setUid(e.target.value)}
+                                    placeholder="your uid"
+                                    disabled={processing.register}
+                                />
                             </div>
                             <div>
                                 <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.referrer_uid')}</div>
-                                <Input value={referrerUid} onChange={(e) => setReferrerUid(e.target.value)} placeholder="referrer uid" />
+                                <Input
+                                    value={referrerUid}
+                                    onChange={(e) => setReferrerUid(e.target.value)}
+                                    placeholder="referrer uid"
+                                    disabled={processing.register}
+                                />
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <Button className="btn-gradient" disabled={loading || !uid.trim()} onClick={() => doInvoke(buildRegisterInvoke(uid, referrerUid || undefined))}>
-                                {t('pages.dao.workflow.actions.submit_register')}
+                            <Button
+                                className="btn-gradient"
+                                disabled={processing.register || !uid.trim()}
+                                onClick={() => doInvoke('register', buildRegisterInvoke(uid, referrerUid || undefined))}
+                            >
+                                {processing.register
+                                    ? t('common.processing', { defaultValue: '处理中...' })
+                                    : t('pages.dao.workflow.actions.submit_register')}
                             </Button>
-                            <Button variant="outline" disabled={loading} onClick={() => refresh()}>
+                            <Button variant="outline" disabled={processing.register} onClick={() => refresh()}>
                                 {t('pages.dao.detail.refresh')}
                             </Button>
                         </div>
@@ -127,26 +145,45 @@ export function DaoWorkflow({
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.asset_name')}</div>
-                                <Input value={donateAsset} onChange={(e) => setDonateAsset(e.target.value)} placeholder={defaultAssetName} />
+                                <Input
+                                    value={donateAsset}
+                                    onChange={(e) => setDonateAsset(e.target.value)}
+                                    placeholder={defaultAssetName}
+                                    disabled={processing.donate}
+                                />
                             </div>
                             <div>
                                 <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.amt')}</div>
-                                <Input value={donateAmt} onChange={(e) => setDonateAmt(e.target.value)} placeholder="4000" />
+                                <Input
+                                    value={donateAmt}
+                                    onChange={(e) => setDonateAmt(e.target.value)}
+                                    placeholder="4000"
+                                    disabled={processing.donate}
+                                />
                             </div>
                             <div>
                                 <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.sats_value')}</div>
-                                <Input value={donateSats} onChange={(e) => setDonateSats(e.target.value)} placeholder="0" />
+                                <Input
+                                    value={donateSats}
+                                    onChange={(e) => setDonateSats(e.target.value)}
+                                    placeholder="0"
+                                    disabled={processing.donate}
+                                />
                             </div>
                         </div>
                         <div className="flex gap-2">
                             <Button
                                 className="btn-gradient"
-                                disabled={loading || !donateAsset.trim() || !donateAmt.trim()}
-                                onClick={() => doInvoke(buildDonateInvoke(donateAsset.trim(), donateAmt.trim(), Number(donateSats || 0)))}
+                                disabled={processing.donate || !donateAsset.trim() || !donateAmt.trim()}
+                                onClick={() =>
+                                    doInvoke('donate', buildDonateInvoke(donateAsset.trim(), donateAmt.trim(), Number(donateSats || 0)))
+                                }
                             >
-                                {t('pages.dao.workflow.actions.submit_donate')}
+                                {processing.donate
+                                    ? t('common.processing', { defaultValue: '处理中...' })
+                                    : t('pages.dao.workflow.actions.submit_donate')}
                             </Button>
-                            <Button variant="outline" disabled={loading} onClick={() => refresh()}>
+                            <Button variant="outline" disabled={processing.donate} onClick={() => refresh()}>
                                 {t('pages.dao.detail.refresh')}
                             </Button>
                         </div>
@@ -163,18 +200,21 @@ export function DaoWorkflow({
                                 onChange={(e) => setAirdropUidsText(e.target.value)}
                                 className="min-h-[96px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200"
                                 placeholder="id3\nid4\nid5"
+                                disabled={processing.airdrop}
                             />
                             <div className="text-xs text-zinc-500 mt-1">{t('pages.dao.workflow.fields.count')}: {parseUidList(airdropUidsText).length}</div>
                         </div>
                         <div className="flex gap-2">
                             <Button
                                 className="btn-gradient"
-                                disabled={loading || parseUidList(airdropUidsText).length === 0}
-                                onClick={() => doInvoke(buildAirdropInvoke(parseUidList(airdropUidsText)))}
+                                disabled={processing.airdrop || parseUidList(airdropUidsText).length === 0}
+                                onClick={() => doInvoke('airdrop', buildAirdropInvoke(parseUidList(airdropUidsText)))}
                             >
-                                {t('pages.dao.workflow.actions.submit_airdrop')}
+                                {processing.airdrop
+                                    ? t('common.processing', { defaultValue: '处理中...' })
+                                    : t('pages.dao.workflow.actions.submit_airdrop')}
                             </Button>
-                            <Button variant="outline" disabled={loading} onClick={() => refresh()}>
+                            <Button variant="outline" disabled={processing.airdrop} onClick={() => refresh()}>
                                 {t('pages.dao.detail.refresh')}
                             </Button>
                         </div>
