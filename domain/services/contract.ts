@@ -1,5 +1,63 @@
 import * as marketApi from '@/api/market';
 
+export interface DaoRegisterItem {
+  Id: number;
+  InUtxo: string;
+  Address: string;
+  UID: string;
+  ReferrerUID: string;
+}
+
+export interface DaoAirdropItem {
+  Id: number;
+  InUtxo: string;
+  Address: string;
+  UID: string;
+  ReferralUIDs: string[];
+}
+
+export interface DaoContractStatus {
+  contractType: 'dao.tc' | string;
+  assetName: { Protocol: string; Type: string; Ticker: string };
+  startBlock: number;
+  endBlock: number;
+  AssetAmt?: string;
+  SatValue?: number;
+  ValidatorNum: number;
+  RegisterFee: number;
+  RegisterTimeOut: number;
+  HoldingAssetName: { Protocol: string; Type: string; Ticker: string };
+  HoldingAssetThreshold: string;
+  AirDropRatio: string;
+  AirDropLimit: string;
+  AirDropTimeOut: number;
+  ReferralRatio: number;
+  deployTime?: number;
+  status?: number;
+  enableBlock?: number;
+  currentBlock?: number;
+  enableBlockL1?: number;
+  currentBlockL1?: number;
+  enableTxId?: string;
+  deployer?: string;
+  resvId?: number;
+  channelAddr?: string;
+  invokeCount?: number;
+  divisibility?: number;
+  uidCount?: number;
+  registerList?: Array<string>;
+  airdropList?: Array<string>;
+  AssetAmtInPool?: { Precision: number; Value: string };
+  SatsValueInPool?: number;
+  TotalDonateCount?: number;
+  TotalDonateAmt?: { Precision: number; Value: string };
+  TotalInputValue?: number;
+  TotalAirdropCount?: number;
+  TotalAirdropAmt?: any;
+  TotalFeeValue?: number;
+  Validators?: Record<string, { Precision: number; Value: string }>;
+}
+
 export default class ContractService {
   private readonly client: typeof marketApi;
 

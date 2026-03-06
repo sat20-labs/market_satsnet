@@ -593,5 +593,70 @@
     "invalid": "Invalid asset identifier",
     "upload": "Choose File",
     "no_file": "No file chosen"
+  },
+  "dao": {
+    "title": "DAO",
+    "list": {
+      "subtitle": "Deployed DAO contracts",
+      "asset": "Asset",
+      "status": "Status",
+      "uids": "UIDs",
+      "action": "Action",
+      "view_detail": "View Detail",
+      "no_contracts": "No DAO contracts",
+      "create_hint": "Create one to get started.",
+      "loading": "Loading...",
+      "status_active": "Active",
+      "create": "Create DAO",
+      "actions": {
+        "register": "Register",
+        "donate": "Donate",
+        "airdrop": "Airdrop",
+        "review": "Review"
+      }
+    },
+    "detail": {
+      "back_to_list": "Back to list",
+      "refresh": "Refresh",
+      "show_debug": "Show Debug",
+      "hide_debug": "Hide Debug",
+      "interaction_disabled": "Interaction disabled",
+      "interaction_disabled_tip": "Connect wallet and switch to Testnet to use Overview/Register/Donate/Airdrop/Review."
+    },
+    "workflow": {
+      "title": "Workflow",
+      "tabs": {
+        "overview": "Overview",
+        "register": "Register",
+        "donate": "Donate",
+        "airdrop": "Airdrop",
+        "review": "Review"
+      },
+      "overview_tip": "Read-only contract status",
+      "register_tip": "Create UID in this DAO. Validators may review it.",
+      "donate_tip": "Donate to become a validator candidate / contribute to the pool.",
+      "airdrop_tip": "Request airdrop (uids list) after meeting holding threshold.",
+      "review_tip": "Validators review pending register/airdrop items and batch reject.",
+      "fields": {
+        "uid": "UID",
+        "referrer_uid": "Referrer UID (optional)",
+        "asset_name": "AssetName",
+        "amt": "Amt",
+        "sats_value": "Sats value",
+        "uids": "Uids (split by whitespace/comma/newline)",
+        "count": "Count"
+      },
+      "actions": {
+        "submit_register": "Submit Register",
+        "submit_donate": "Submit Donate",
+        "submit_airdrop": "Submit Airdrop"
+      }
+    },
+    "guard": {
+      "restricted_title": "DAO Tools are restricted",
+      "restricted_tip_connected": "Please switch wallet network to Testnet.",
+      "restricted_tip_disconnected": "Please connect wallet and switch to Testnet.",
+      "restricted_list_tip": "You can still browse the DAO list."
+    }
   }
 }
