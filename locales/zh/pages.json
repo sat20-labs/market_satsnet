@@ -579,5 +579,70 @@
   },
   "mintAmtPerSat": "每聪分发数量",
   "mintAmtPerSatTip": "每一聪分发的资产数量。通常比绑定聪数小10-1000倍。例如绑定聪为1000时，分发数量一般为1-100。",
-  "mintAmtPerSatSuggest": "建议值：{{min}} ~ {{max}}（参考绑定聪）"
+  "mintAmtPerSatSuggest": "建议值：{{min}} ~ {{max}}（参考绑定聪）",
+  "dao": {
+    "title": "DAO",
+    "list": {
+      "subtitle": "已部署的 DAO 合约",
+      "asset": "资产",
+      "status": "状态",
+      "uids": "UID 数",
+      "action": "操作",
+      "view_detail": "查看详细",
+      "no_contracts": "暂无 DAO 合约",
+      "create_hint": "创建一个开始使用。",
+      "loading": "加载中...",
+      "status_active": "运行中",
+      "create": "创建 DAO",
+      "actions": {
+        "register": "注册",
+        "donate": "捐赠",
+        "airdrop": "空投",
+        "review": "审核"
+      }
+    },
+    "detail": {
+      "back_to_list": "返回列表",
+      "refresh": "刷新",
+      "show_debug": "显示调试",
+      "hide_debug": "隐藏调试",
+      "interaction_disabled": "交互功能已禁用",
+      "interaction_disabled_tip": "请连接钱包并切换到测试网后，使用概览/注册/捐赠/空投/审核等功能。"
+    },
+    "workflow": {
+      "title": "工作流",
+      "tabs": {
+        "overview": "概览",
+        "register": "注册",
+        "donate": "捐赠",
+        "airdrop": "空投",
+        "review": "审核"
+      },
+      "overview_tip": "合约状态（只读）",
+      "register_tip": "创建 UID，等待验证者审核。",
+      "donate_tip": "捐赠以申请验证者候选 / 为池子贡献。",
+      "airdrop_tip": "满足持仓门槛后，提交空投申请（UID 列表）。",
+      "review_tip": "验证者审核待处理的注册/空投项，并可批量拒绝。",
+      "fields": {
+        "uid": "UID",
+        "referrer_uid": "推荐人 UID（可选）",
+        "asset_name": "资产名",
+        "amt": "数量",
+        "sats_value": "Sats 价值",
+        "uids": "UID 列表（空格/逗号/换行分隔）",
+        "count": "数量"
+      },
+      "actions": {
+        "submit_register": "提交注册",
+        "submit_donate": "提交捐赠",
+        "submit_airdrop": "提交空投"
+      }
+    },
+    "guard": {
+      "restricted_title": "DAO 工具已限制",
+      "restricted_tip_connected": "请将钱包网络切换到测试网。",
+      "restricted_tip_disconnected": "请先连接钱包并切换到测试网。",
+      "restricted_list_tip": "你仍然可以浏览 DAO 列表。"
+    }
+  }
 }

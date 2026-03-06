@@ -19,6 +19,7 @@ import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { ChainSelect } from '@/components/ChainSelect';
 import { NetworkSelect } from '@/components/NetworkSelect';
 import WalletConnectButton from '@/components/wallet/WalletConnectButton';
+import { useToolsEnabled } from '@/lib/toolsAccess';
 // Add dropdown menu imports for desktop Tools grouping
 import {
   DropdownMenu,
@@ -35,6 +36,7 @@ export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t, i18n } = useTranslation();
   const pathname = usePathname();
+  const toolsEnabled = useToolsEnabled();
   // const walletUrl = 'https://chromewebstore.google.com/detail/sat20-wallet/dfdlimjfgcjlgghagidokgkdgcdggpjm?hl=zh-CN&utm_source=ext_sidebar';
   const walletUrl = 'https://github.com/sat20-labs/sat20wallet/releases/download/0.0.1/sat20wallet-chrome-test.zip';
   const { data: btcData } = useQuery({
@@ -72,6 +74,7 @@ export const Header = () => {
         { label: '...', href: '/account' },
       ];
     }
+
     const menus = [
       // 将原来的下拉菜单改为三个独立的菜单项
       {
@@ -95,6 +98,14 @@ export const Header = () => {
             label: 'Transcend',
             href: '/transcend',
           },
+          ...(toolsEnabled
+            ? [
+              {
+                label: 'DAO',
+                href: '/dao',
+              },
+            ]
+            : []),
           {
             label: 'Batch Send',
             href: '/tools/batch-send',
@@ -123,7 +134,6 @@ export const Header = () => {
             href: walletUrl,
             target: '_blank',
           },
-
         ],
       },
 
@@ -133,7 +143,7 @@ export const Header = () => {
       },
     ];
     return menus as any;
-  }, [i18n.language, network, t, address, mounted]);
+  }, [i18n.language, network, t, address, mounted, toolsEnabled]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
