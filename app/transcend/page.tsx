@@ -80,6 +80,7 @@ function adaptPoolData(pool, satsnetHeight) {
     ...pool,
     id: pool.contractURL ?? pool.id,
     assetName: protocol.toLowerCase() === 'brc20' ? (pool.displayName || ticker) : ticker,
+    assetNameObj: assetNameObj,
     protocol: protocol,
     poolStatus,
     deployTime: pool.deployTime ?? '',
@@ -333,13 +334,13 @@ const TranscendPage = () => {
                     </AvatarFallback>
                   </Avatar>
                   <Link
-                    href={generateTranscendDetailHref(adaptedPool.Contract.assetName)}
+                    href={generateTranscendDetailHref(adaptedPool.assetNameObj)}
                     className="cursor-pointer hover:underline"
                     prefetch={true}
                   >
                     <TickerName
                       name={adaptedPool.assetName}
-                      ticker={adaptedPool?.Contract?.assetName?.Ticker || ""}
+                      ticker={adaptedPool.assetNameObj?.Ticker || ""}
                       protocol={adaptedPool.protocol}
                     />
                   </Link>
