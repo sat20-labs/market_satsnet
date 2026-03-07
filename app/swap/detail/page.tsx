@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { ChartModule } from "@/components/satoshinet/ChartModule";
@@ -84,6 +83,25 @@ function OrderPageContent() {
     [swapStatusData],
   );
   const { address } = useReactWalletStore();
+
+  // Only deployer can see/use claim profits
+  const deployerAddress = useMemo(() => {
+    return (
+      swapStatusData?.Contract?.deployer ||
+      swapStatusData?.Contract?.deployerAddress ||
+      swapStatusData?.Contract?.Deployer ||
+      swapStatusData?.Contract?.DeployerAddress ||
+      swapStatusData?.deployer ||
+      swapStatusData?.deployerAddress ||
+      swapStatusData?.Deployer ||
+      swapStatusData?.DeployerAddress ||
+      ''
+    );
+  }, [swapStatusData]);
+  const isDeployer = useMemo(() => {
+    if (!address || !deployerAddress) return false;
+    return address.trim() === String(deployerAddress).trim();
+  }, [address, deployerAddress]);
 
   // 判断是否为维护中的资产
   const isUnderMaintenance = useMemo(() => {
@@ -388,9 +406,11 @@ function OrderPageContent() {
                         <UnderlineTabsTrigger value="remove">
                           {t("common.remove")}
                         </UnderlineTabsTrigger>
+                        {/* {isDeployer && ( */}
                         <UnderlineTabsTrigger value="claim">
-                          {t("common.claim_profits")}
+                          {t("common.deployer_profit")}
                         </UnderlineTabsTrigger>
+                        {/* )} */}
                       </UnderlineTabsList>
                       <ButtonRefresh
                         onRefresh={refreshBalances}
@@ -434,6 +454,7 @@ function OrderPageContent() {
                         onMaintenanceAction={handleMaintenanceAction}
                       />
                     </TabsContent>
+                    {/* {isDeployer && ( */}
                     <TabsContent value="claim">
                       <ClaimProfits
                         asset={asset}
@@ -447,6 +468,7 @@ function OrderPageContent() {
                         onMaintenanceAction={handleMaintenanceAction}
                       />
                     </TabsContent>
+                    {/* )} */}
                   </Tabs>
                 </div>
               </TabsContent>
