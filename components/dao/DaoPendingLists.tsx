@@ -51,7 +51,19 @@ export function DaoPendingLists({
 
     const [reasonPreset, setReasonPreset] = useState(REASONS[0]);
     const [reasonText, setReasonText] = useState('');
+    const [reasonTouched, setReasonTouched] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const validators = useMemo(() => {
+        const list = (status as any)?.validatorList || (status as any)?.validators || [];
+        return Array.isArray(list) ? list : [];
+    }, [status]);
+
+    const isValidator = useMemo(() => {
+        const pk = (window as any)?.sat20?.publicKey || '';
+        const addr = (window as any)?.sat20?.selectedAddress || '';
+        return validators.includes(pk) || validators.includes(addr);
+    }, [validators]);
 
     const reason = useMemo(() => {
         const t = reasonText.trim();
@@ -101,6 +113,10 @@ export function DaoPendingLists({
     };
 
     const doValidateReject = async (orderType: number, ids: number[]) => {
+        if (!isValidator) {
+            toast.error('You are not a validator');
+            return;
+        }
         if (!contractUrl) {
             toast.error('Missing contractUrl');
             return;
@@ -161,7 +177,16 @@ export function DaoPendingLists({
                             <div className="text-xs text-zinc-500 mb-1">Custom</div>
                             <input
                                 value={reasonText}
-                                onChange={(e) => setReasonText(e.target.value)}
+                                onFocus={() => {
+                                    if (!reasonTouched) {
+                                        setReasonText('');
+                                        setReasonTouched(true);
+                                    }
+                                }}
+                                onChange={(e) => {
+                                    setReasonTouched(true);
+                                    setReasonText(e.target.value);
+                                }}
                                 disabled={reasonPreset !== 'reject: other'}
                                 className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 text-sm text-zinc-200 disabled:opacity-50"
                                 placeholder="e.g. invalid UID format"

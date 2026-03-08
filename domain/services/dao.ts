@@ -67,6 +67,35 @@ export async function invokeDaoContractSatsNet(contractUrl: string, invoke: DaoI
   return window.sat20.invokeContract_SatsNet(contractUrl, JSON.stringify(invoke), feeRate);
 }
 
+// Donate needs transfer, so it must use invokeContractV2_SatsNet.
+export async function invokeDaoContractDonateSatsNet(
+  contractUrl: string,
+  invoke: DaoInvokeParam,
+  assetName: string,
+  amt: string,
+) {
+  if (!window.sat20?.invokeContractV2_SatsNet) {
+    throw new Error('sat20 wallet API not available');
+  }
+  const { btcFeeRate } = useCommonStore.getState();
+  const feeRate = (btcFeeRate?.value ?? 0).toString();
+
+  // invokeContractV2_SatsNet(contractUrl, params, asset, amt, feeRate, customData?)
+  // It returns no txid; treat submission as success.
+  return window.sat20.invokeContractV2_SatsNet(
+    contractUrl,
+    JSON.stringify(invoke),
+    assetName,
+    amt,
+    feeRate,
+    {
+      action: invoke.action,
+      assetName,
+      amt,
+    },
+  );
+}
+
 export function buildRegisterInvoke(uid: string, referrerUid?: string) {
   const p: DaoRegisterParam = { uid: uid.trim(), ...(referrerUid ? { referrerUid: referrerUid.trim() } : {}) };
   return buildDaoInvoke(DAO_ACTION_REGISTER, p);
