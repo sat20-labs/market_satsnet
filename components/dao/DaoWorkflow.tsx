@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import type { DaoContractStatus } from '@/domain/services/contract';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DaoPendingLists } from '@/components/dao/DaoPendingLists';
@@ -11,6 +11,7 @@ import {
     buildAirdropInvoke,
     buildDonateInvoke,
     buildRegisterInvoke,
+    invokeDaoContractDonateSatsNet,
     invokeDaoContractSatsNet,
 } from '@/domain/services/dao';
 import { DaoStatusCard } from '@/components/dao/DaoStatusCard';
@@ -56,28 +57,89 @@ export function DaoWorkflow({
         airdrop: false,
     });
 
+    const [lastSubmitAt, setLastSubmitAt] = useState<{ register: number; donate: number; airdrop: number }>({
+        register: 0,
+        donate: 0,
+        airdrop: 0,
+    });
+
+    const shouldBlockFastRepeat = (kind: 'register' | 'donate' | 'airdrop', ms: number = 1500) => {
+        const now = Date.now();
+        if (now - lastSubmitAt[kind] < ms) return true;
+        setLastSubmitAt((p) => ({ ...p, [kind]: now }));
+        return false;
+    };
+
     // Register
     const [uid, setUid] = useState('');
     const [referrerUid, setReferrerUid] = useState('');
 
-    // Donate
+    // Donate (assetName fixed by contract)
     const [donateAsset, setDonateAsset] = useState(defaultAssetName);
     const [donateAmt, setDonateAmt] = useState('');
     const [donateSats, setDonateSats] = useState('0');
+
+    const [donateSatsTouched, setDonateSatsTouched] = useState(false);
+
+    useEffect(() => {
+        setDonateAsset(defaultAssetName);
+    }, [defaultAssetName]);
 
     // Airdrop
     const [airdropUidsText, setAirdropUidsText] = useState('');
 
     const doInvoke = async (kind: 'register' | 'donate' | 'airdrop', invoke: any) => {
+        if (processing[kind]) return;
+        if (shouldBlockFastRepeat(kind)) return;
+
         setProcessing((p) => ({ ...p, [kind]: true }));
         try {
             await invokeDaoContractSatsNet(contractUrl, invoke);
             toast.success(t('common.submitted_waiting', { defaultValue: '已提交，等待审核/确认' }));
+
+            // clear inputs only on success
+            if (kind === 'register') {
+                setUid('');
+                setReferrerUid('');
+            }
+            if (kind === 'airdrop') {
+                setAirdropUidsText('');
+            }
+
             refresh();
         } catch (e: any) {
             console.error(e);
             toast.error(e?.message || 'Invoke failed');
+        } finally {
             setProcessing((p) => ({ ...p, [kind]: false }));
+        }
+    };
+
+    const doDonateInvoke = async () => {
+        if (processing.donate) return;
+        if (shouldBlockFastRepeat('donate')) return;
+
+        const assetName = defaultAssetName;
+        const amt = donateAmt.trim();
+        const satsVal = Number(donateSats || 0);
+        const invoke = buildDonateInvoke(assetName, amt, satsVal);
+
+        setProcessing((p) => ({ ...p, donate: true }));
+        try {
+            await invokeDaoContractDonateSatsNet(contractUrl, invoke, assetName, amt);
+            toast.success(t('common.submitted_waiting', { defaultValue: '已提交，等待审核/确认' }));
+
+            // clear inputs only on success
+            setDonateAmt('');
+            setDonateSats('0');
+            setDonateSatsTouched(false);
+
+            refresh();
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e?.message || 'Invoke failed');
+        } finally {
+            setProcessing((p) => ({ ...p, donate: false }));
         }
     };
 
@@ -88,8 +150,8 @@ export function DaoWorkflow({
             <Tabs defaultValue={defaultTab || 'register'}>
                 <TabsList>
                     <TabsTrigger value="overview">{t('pages.dao.workflow.tabs.overview')}</TabsTrigger>
-                    <TabsTrigger value="register">{t('pages.dao.workflow.tabs.register')}</TabsTrigger>
                     <TabsTrigger value="donate">{t('pages.dao.workflow.tabs.donate')}</TabsTrigger>
+                    <TabsTrigger value="register">{t('pages.dao.workflow.tabs.register')}</TabsTrigger>
                     <TabsTrigger value="airdrop">{t('pages.dao.workflow.tabs.airdrop')}</TabsTrigger>
                     <TabsTrigger value="review">{t('pages.dao.workflow.tabs.review')}{pendingTotal ? ` (${pendingTotal})` : ''}</TabsTrigger>
                 </TabsList>
@@ -108,7 +170,7 @@ export function DaoWorkflow({
                                 <Input
                                     value={uid}
                                     onChange={(e) => setUid(e.target.value)}
-                                    placeholder="your uid"
+                                    placeholder={t('pages.dao.workflow.placeholders.uid', { defaultValue: '请输入 UID' })}
                                     disabled={processing.register}
                                 />
                             </div>
@@ -117,7 +179,7 @@ export function DaoWorkflow({
                                 <Input
                                     value={referrerUid}
                                     onChange={(e) => setReferrerUid(e.target.value)}
-                                    placeholder="referrer uid"
+                                    placeholder={t('pages.dao.workflow.placeholders.referrer_uid', { defaultValue: '可选：推荐人 UID' })}
                                     disabled={processing.register}
                                 />
                             </div>
@@ -147,9 +209,9 @@ export function DaoWorkflow({
                                 <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.asset_name')}</div>
                                 <Input
                                     value={donateAsset}
-                                    onChange={(e) => setDonateAsset(e.target.value)}
-                                    placeholder={defaultAssetName}
-                                    disabled={processing.donate}
+                                    readOnly
+                                    placeholder={t('pages.dao.workflow.placeholders.asset_name', { defaultValue: defaultAssetName || '—' })}
+                                    disabled
                                 />
                             </div>
                             <div>
@@ -157,7 +219,7 @@ export function DaoWorkflow({
                                 <Input
                                     value={donateAmt}
                                     onChange={(e) => setDonateAmt(e.target.value)}
-                                    placeholder="4000"
+                                    placeholder={t('pages.dao.workflow.placeholders.amt', { defaultValue: '请输入数量，例如 4000' })}
                                     disabled={processing.donate}
                                 />
                             </div>
@@ -165,8 +227,17 @@ export function DaoWorkflow({
                                 <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.sats_value')}</div>
                                 <Input
                                     value={donateSats}
-                                    onChange={(e) => setDonateSats(e.target.value)}
-                                    placeholder="0"
+                                    onFocus={() => {
+                                        if (!donateSatsTouched) {
+                                            setDonateSats('');
+                                            setDonateSatsTouched(true);
+                                        }
+                                    }}
+                                    onChange={(e) => {
+                                        setDonateSatsTouched(true);
+                                        setDonateSats(e.target.value);
+                                    }}
+                                    placeholder={t('pages.dao.workflow.placeholders.sats_value', { defaultValue: '可选：转账聪值，例如 0' })}
                                     disabled={processing.donate}
                                 />
                             </div>
@@ -174,10 +245,8 @@ export function DaoWorkflow({
                         <div className="flex gap-2">
                             <Button
                                 className="btn-gradient"
-                                disabled={processing.donate || !donateAsset.trim() || !donateAmt.trim()}
-                                onClick={() =>
-                                    doInvoke('donate', buildDonateInvoke(donateAsset.trim(), donateAmt.trim(), Number(donateSats || 0)))
-                                }
+                                disabled={processing.donate || !donateAmt.trim()}
+                                onClick={doDonateInvoke}
                             >
                                 {processing.donate
                                     ? t('common.processing', { defaultValue: '处理中...' })

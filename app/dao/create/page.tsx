@@ -7,10 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { useCommonStore } from '@/store/common';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 type Protocol = 'brc20' | 'ordx' | 'runes';
 
 export default function DaoCreatePage() {
+    // Use the default namespace; keys are stored under pages.json but are registered as default in this app.
+    const { t } = useTranslation();
+    const tp = (key: string, options?: any) => String(t(`pages.dao.create.${key}`, options));
     const router = useRouter();
     const { btcFeeRate } = useCommonStore();
 
@@ -38,14 +42,14 @@ export default function DaoCreatePage() {
 
     const assetNameString = useMemo(() => {
         const p = (form.protocol || '').trim();
-        const t = (form.ticker || '').trim();
-        return p && t ? `${p}:f:${t}` : '';
+        const tkr = (form.ticker || '').trim();
+        return p && tkr ? `${p}:f:${tkr}` : '';
     }, [form.protocol, form.ticker]);
 
     const holdingAssetString = useMemo(() => {
         const p = (form.holdingProtocol || '').trim();
-        const t = (form.holdingTicker || '').trim();
-        return p && t ? `${p}:f:${t}` : '';
+        const tkr = (form.holdingTicker || '').trim();
+        return p && tkr ? `${p}:f:${tkr}` : '';
     }, [form.holdingProtocol, form.holdingTicker]);
 
     const isValid = useMemo(() => {
@@ -68,11 +72,11 @@ export default function DaoCreatePage() {
 
     const onSubmit = async () => {
         if (!isValid) {
-            toast.error('Invalid parameters');
+            toast.error(tp('toast_invalid_parameters'));
             return;
         }
         if (!window.sat20?.deployContract_Remote) {
-            toast.error('sat20 wallet API not available');
+            toast.error(tp('toast_wallet_api_not_available'));
             return;
         }
 
@@ -109,43 +113,47 @@ export default function DaoCreatePage() {
 
             if (!contractUrl) {
                 console.warn('deployContract_Remote result:', res);
-                toast.error(`Contract deployment submitted${txId ? `, tx: ${txId}` : ''}, but contractUrl not returned`);
+                toast.error(
+                    tp('toast_submitted_no_contract_url', {
+                        tx: txId ? String(txId) : '',
+                    })
+                );
                 return;
             }
 
-            toast.success('DAO contract deployed');
+            toast.success(tp('toast_deployed'));
             router.push(`/dao/detail?contractUrl=${encodeURIComponent(contractUrl)}`);
         } catch (e: any) {
             console.error(e);
-            toast.error(e?.message || 'Deploy failed');
+            toast.error(e?.message || tp('toast_deploy_failed'));
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <div className="container mx-auto p-4 max-w-2xl">
+        <div className="container mx-auto p-4 max-w-4xl">
             <div className="mb-4">
-                <h1 className="text-xl font-bold text-zinc-200">Create DAO Contract</h1>
-                <div className="text-xs text-zinc-500">Deploy via wallet SDK (sat20)</div>
+                <h1 className="text-xl font-bold text-zinc-200">{tp('title')}</h1>
+                <div className="text-xs text-zinc-500">{tp('subtitle')}</div>
             </div>
 
             <div className="space-y-4 bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                 <div className="flex flex-col gap-2">
-                    <div className="text-sm text-zinc-400">Deploy on</div>
+                    <div className="text-sm text-zinc-400">{tp('deploy_on')}</div>
                     <Select value={bol ? 'btc' : 'satsnet'} onValueChange={(v) => setBol(v === 'btc')}>
-                        <SelectTrigger className="w-56 py-4 h-12">{bol ? 'BTC' : 'SatsNet'}</SelectTrigger>
+                        <SelectTrigger className="w-56 py-4 h-12">{bol ? tp('network_btc') : tp('network_satsnet')}</SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="btc" className="h-9 py-2">BTC</SelectItem>
-                            <SelectItem value="satsnet" className="h-9 py-2">SatsNet</SelectItem>
+                            <SelectItem value="btc" className="h-9 py-2">{tp('network_btc')}</SelectItem>
+                            <SelectItem value="satsnet" className="h-9 py-2">{tp('network_satsnet')}</SelectItem>
                         </SelectContent>
                     </Select>
-                    <div className="text-xs text-zinc-500">feeRate: {btcFeeRate?.value ?? '-'} sat/vB</div>
+                    <div className="text-xs text-zinc-500">{tp('fee_rate', { value: btcFeeRate?.value ?? '-' })}</div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <div className="text-sm text-zinc-400 mb-1">Asset Protocol</div>
+                        <div className="text-sm text-zinc-400 mb-1">{tp('asset_protocol')}</div>
                         <Select value={form.protocol} onValueChange={(v) => onChange('protocol', v)}>
                             <SelectTrigger className="py-4 h-12">{form.protocol}</SelectTrigger>
                             <SelectContent>
@@ -156,33 +164,33 @@ export default function DaoCreatePage() {
                         </Select>
                     </div>
                     <div>
-                        <div className="text-sm text-zinc-400 mb-1">Asset Ticker</div>
+                        <div className="text-sm text-zinc-400 mb-1">{tp('asset_ticker')}</div>
                         <Input value={form.ticker} onChange={(e) => onChange('ticker', e.target.value)} />
                     </div>
                 </div>
 
-                <div className="text-xs text-zinc-500">assetName: {assetNameString || '-'}</div>
+                <div className="text-xs text-zinc-500">{tp('asset_name', { value: assetNameString || '-' })}</div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <div className="text-sm text-zinc-400 mb-1">ValidatorNum</div>
+                        <div className="text-sm text-zinc-400 mb-1">{tp('validator_num')}</div>
                         <Input value={form.validatorNum} onChange={(e) => onChange('validatorNum', e.target.value)} />
                     </div>
                     <div>
-                        <div className="text-sm text-zinc-400 mb-1">RegisterFee (sats)</div>
+                        <div className="text-sm text-zinc-400 mb-1">{tp('register_fee')}</div>
                         <Input value={form.registerFee} onChange={(e) => onChange('registerFee', e.target.value)} />
                     </div>
                     <div>
-                        <div className="text-sm text-zinc-400 mb-1">RegisterTimeOut (blocks)</div>
+                        <div className="text-sm text-zinc-400 mb-1">{tp('register_timeout')}</div>
                         <Input value={form.registerTimeout} onChange={(e) => onChange('registerTimeout', e.target.value)} />
                     </div>
                 </div>
 
                 <div className="border-t border-zinc-800 pt-4">
-                    <div className="text-sm text-zinc-300 font-semibold mb-3">Airdrop condition</div>
+                    <div className="text-sm text-zinc-300 font-semibold mb-3">{tp('airdrop_condition')}</div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <div className="text-sm text-zinc-400 mb-1">Holding Protocol</div>
+                            <div className="text-sm text-zinc-400 mb-1">{tp('holding_protocol')}</div>
                             <Select value={form.holdingProtocol} onValueChange={(v) => onChange('holdingProtocol', v)}>
                                 <SelectTrigger className="py-4 h-12">{form.holdingProtocol}</SelectTrigger>
                                 <SelectContent>
@@ -193,43 +201,45 @@ export default function DaoCreatePage() {
                             </Select>
                         </div>
                         <div>
-                            <div className="text-sm text-zinc-400 mb-1">Holding Ticker</div>
+                            <div className="text-sm text-zinc-400 mb-1">{tp('holding_ticker')}</div>
                             <Input value={form.holdingTicker} onChange={(e) => onChange('holdingTicker', e.target.value)} />
                         </div>
                     </div>
-                    <div className="text-xs text-zinc-500 mt-2">holdingAsset: {holdingAssetString || '-'}</div>
+                    <div className="text-xs text-zinc-500 mt-2">{tp('holding_asset', { value: holdingAssetString || '-' })}</div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div>
-                            <div className="text-sm text-zinc-400 mb-1">Holding Threshold</div>
+                            <div className="text-sm text-zinc-400 mb-1">{tp('holding_threshold')}</div>
                             <Input value={form.holdingThreshold} onChange={(e) => onChange('holdingThreshold', e.target.value)} />
                         </div>
                         <div>
-                            <div className="text-sm text-zinc-400 mb-1">AirDropRatio</div>
+                            <div className="text-sm text-zinc-400 mb-1">{tp('airdrop_ratio')}</div>
                             <Input value={form.airdropRatio} onChange={(e) => onChange('airdropRatio', e.target.value)} />
                         </div>
                         <div>
-                            <div className="text-sm text-zinc-400 mb-1">AirDropLimit</div>
+                            <div className="text-sm text-zinc-400 mb-1">{tp('airdrop_limit')}</div>
                             <Input value={form.airdropLimit} onChange={(e) => onChange('airdropLimit', e.target.value)} />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div>
-                            <div className="text-sm text-zinc-400 mb-1">AirDropTimeOut (blocks)</div>
+                            <div className="text-sm text-zinc-400 mb-1">{tp('airdrop_timeout')}</div>
                             <Input value={form.airdropTimeout} onChange={(e) => onChange('airdropTimeout', e.target.value)} />
                         </div>
                         <div>
-                            <div className="text-sm text-zinc-400 mb-1">ReferralRatio (%)</div>
+                            <div className="text-sm text-zinc-400 mb-1">{tp('referral_ratio')}</div>
                             <Input value={form.referralRatio} onChange={(e) => onChange('referralRatio', e.target.value)} />
                         </div>
                     </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">
-                    <Button variant="outline" disabled={submitting} onClick={() => router.back()}>Cancel</Button>
+                    <Button variant="outline" disabled={submitting} onClick={() => router.back()}>
+                        {tp('cancel')}
+                    </Button>
                     <Button className="btn-gradient" disabled={!isValid || submitting} onClick={onSubmit}>
-                        {submitting ? 'Deploying...' : 'Deploy'}
+                        {submitting ? tp('deploying') : tp('deploy')}
                     </Button>
                 </div>
             </div>

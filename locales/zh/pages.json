@@ -643,6 +643,32 @@
       "restricted_tip_connected": "请将钱包网络切换到测试网。",
       "restricted_tip_disconnected": "请先连接钱包并切换到测试网。",
       "restricted_list_tip": "你仍然可以浏览 DAO 列表。"
+    },
+    "create": {
+      "title": "创建 DAO",
+      "subtitle": "为您的资产创建一个新的 DAO。请填写以下详细信息。",
+      "deploy_on": "部署在",
+      "network_btc": "BTC Mainnet",
+      "network_satsnet": "SatoshiNet",
+      "fee_rate": "部署费用率 (sats/vByte)",
+      "asset_protocol": "资产协议",
+      "asset_ticker": "资产 Ticker",
+      "validator_num": "验证者数量",
+      "register_fee": "注册费用 (sats)",
+      "register_timeout": "注册超时 (块)",
+      "airdrop_condition": "空投条件",
+      "holding_protocol": "持仓协议",
+      "holding_ticker": "持仓资产 Ticker",
+      "holding_threshold": "持仓门槛 (数量)",
+      "airdrop_ratio": "空投比例 (可空投的数量/资产)",
+      "airdrop_limit": "空投数量上限 (每人)",
+      "airdrop_timeout": "空投申请超时 (块)",
+      "referral_ratio": "推荐比例 (推荐可获得注册费用的部分返佣，单位为%)",
+      "submit": "提交",
+      "deploy": "部署",
+      "cancel": "取消",
+      "success": "DAO 创建成功！ TxId: {{txId}}",
+      "failure": "DAO 创建失败，请重试。"
     }
   }
 }

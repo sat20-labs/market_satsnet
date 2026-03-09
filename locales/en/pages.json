@@ -657,6 +657,32 @@
       "restricted_tip_connected": "Please switch wallet network to Testnet.",
       "restricted_tip_disconnected": "Please connect wallet and switch to Testnet.",
       "restricted_list_tip": "You can still browse the DAO list."
+    },
+    "create": {
+      "title": "Create DAO",
+      "subtitle": "Deploy a new DAO contract",
+      "deploy_on": "Deploy on",
+      "network_btc": "BTC Mainnet",
+      "network_satsnet": "SatoshiNet",
+      "fee_rate": "Deployment Fee Rate",
+      "asset_protocol": "Asset Protocol for Airdrop Eligibility",
+      "asset_ticker": "Asset Ticker for Airdrop Eligibility",
+      "validator_num": "Number of Validators",
+      "register_fee": "Register Fee (sats)",
+      "register_timeout": "Register Timeout (blocks)",
+      "airdrop_condition": "Airdrop Condition",
+      "holding_protocol": "Holding Protocol",
+      "holding_ticker": "Holding Ticker",
+      "holding_threshold": "Holding Threshold",
+      "airdrop_ratio": "Airdrop Ratio (sats per asset)",
+      "airdrop_limit": "Airdrop Limit (sats)",
+      "airdrop_timeout": "Airdrop Timeout (blocks)",
+      "referral_ratio": "Referral Ratio (percentage of airdrop amount)",
+      "submit": "Submit",
+      "deploy": "Deploying...",
+      "cancel": "Cancel",
+      "success": "DAO created successfully! TxId: {{txId}}",
+      "failure": "Failed to create DAO"
     }
   }
 }

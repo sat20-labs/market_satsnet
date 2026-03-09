@@ -51,7 +51,6 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
   isUnderMaintenance = false,
   onMaintenanceAction,
 }) => {
-  console.log( "Render ClaimProfits:", { swapData } );
   const { t } = useTranslation();
   const { btcFeeRate, network } = useCommonStore();
   const [ratio, setRatio] = useState("1"); // 默认提取100%利润
@@ -74,16 +73,30 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
       toast.success(t("common.copied") || "已复制");
       setTimeout(() => setCopiedAddress(null), 2000);
     } catch (err) {
-      toast.error("复制失败");
+      toast.error(t("common.copy_failed", { defaultValue: "复制失败" }));
     }
   };
 
+  // Unify deployer address extraction with the page-level fallback logic
+  const deployerAddress = useMemo(() => {
+    return (
+      swapData?.Contract?.deployer ||
+      swapData?.Contract?.deployerAddress ||
+      swapData?.Contract?.Deployer ||
+      swapData?.Contract?.DeployerAddress ||
+      swapData?.deployer ||
+      swapData?.deployerAddress ||
+      swapData?.Deployer ||
+      swapData?.DeployerAddress ||
+      ""
+    );
+  }, [swapData]);
+
   // 检查是否为部署者
   const isDeployer = useMemo(() => {
-    const deployer = swapData?.deployer;
-    if (!deployer || !address) return false;
-    return deployer.toLowerCase() === address.toLowerCase();
-  }, [swapData, address]);
+    if (!deployerAddress || !address) return false;
+    return String(deployerAddress).trim().toLowerCase() === address.trim().toLowerCase();
+  }, [deployerAddress, address]);
 
   // 原始K值（Contract.k）
   const originalK = useMemo(() => {
@@ -257,7 +270,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
           lptValue: baseLptProfit,
           lptDisplayValue: `${baseLptProfit.toFixed(baseLptPrecision)} LPT`,
           unit: "",
-          label: "LPT收益",
+          label: t("common.profit_label_lpt", { defaultValue: "LPT Profit" }),
         };
       }
 
@@ -268,7 +281,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
         lptValue: baseLptProfit,
         lptDisplayValue: `${baseLptProfit.toFixed(baseLptPrecision)} LPT`,
         unit: "lpt",
-        label: "LPT收益",
+        label: t("common.profit_label_lpt", { defaultValue: "LPT Profit" }),
       };
     }
 
@@ -284,7 +297,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
         value: satsValue,
         displayValue: satsValue.toString(),
         unit: "sats",
-        label: "Sats收益",
+        label: t("common.profit_label_sats", { defaultValue: "Sats Profit" }),
       };
     }
 
@@ -302,12 +315,12 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
         value: normalizedAssets,
         displayValue: normalizedAssets.toFixed(assetPrecision),
         unit: ticker,
-        label: "资产收益",
+        label: t("common.profit_label_asset", { defaultValue: "Asset Profit" }),
       };
     }
 
     return null;
-  }, [calculateBaseLptProfit, lptProfitDistribution, swapData, ticker]);
+  }, [calculateBaseLptProfit, lptProfitDistribution, swapData, ticker, t, baseLptPrecision]);
 
   const claimProfitsMutation = useMutation({
     mutationFn: async ({ asset, contractUrl, ratio }: ClaimProfitsParams) => {
@@ -431,122 +444,16 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
               </span>
             </div>
 
-            {/* 访问限制提示 */}
-            <div className="mb-4 p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
-              <p className="text-red-400 text-sm font-medium mb-2">
-                ⚠️ {t("common.access_denied") || "访问被拒绝"}
-              </p>
-              <p className="text-red-300 text-xs">
+            {/* Defensive placeholder (tab should be hidden at page-level for non-deployers) */}
+            <div className="mb-2 p-3 bg-zinc-800/20 border border-zinc-700/30 rounded-lg">
+              <p className="text-zinc-300 text-xs">
                 {t("common.deployer_only_feature") || "此功能仅限合约部署者使用"}
               </p>
-            </div>
-
-            {/* 合约信息显示（非部署者版本） */}
-            <div className="mb-4 p-4 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
-              <p className="text-sm font-medium text-zinc-400 mb-3 flex items-center">
-                <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
-                {t("common.contract_info") || "合约信息"}
-              </p>
-              <div className="grid grid-cols-1 gap-3 text-sm">
-                {/* 当前部署者（隐藏部分信息） */}
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-medium">
-                    {t("common.current_deployer") || "当前部署者"}:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded">
-                      {swapData?.deployer ? hideStr(swapData.deployer, 3) : "未知"}
-                    </span>
-                    {swapData?.deployer && (
-                      <button
-                        onClick={() => handleCopyAddress(swapData.deployer, "deployer")}
-                        className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
-                        title={t("common.copy_address") || "复制地址"}
-                      >
-                        {copiedAddress === "deployer" ? (
-                          <Check className="w-3 h-3 text-green-400" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* 合约地址 */}
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-medium">
-                    {t("common.contract_address") || "合约地址"}:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded max-w-[120px] truncate">
-                      {contractUrl ? contractUrl.split("/").pop() || "未知" : "未知"}
-                    </span>
-                    {contractUrl && (
-                      <button
-                        onClick={() => handleCopyAddress(contractUrl, "contract")}
-                        className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
-                        title={t("common.copy_address") || "复制地址"}
-                      >
-                        {copiedAddress === "contract" ? (
-                          <Check className="w-3 h-3 text-green-400" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* 网络状态 */}
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-medium">
-                    {t("common.network_status") || "网络状态"}:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${
-                      network === "mainnet" ? "bg-green-400" : "bg-yellow-400"
-                    }`}></span>
-                    <span className={`text-zinc-300 font-medium ${
-                      network === "mainnet" ? "text-green-400" : "text-yellow-400"
-                    }`}>
-                      {network === "mainnet" ? "Mainnet" : "Testnet"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 当前用户地址 */}
-                {address && (
-                  <div className="flex justify-between items-center pt-2 border-t border-zinc-700/50">
-                    <span className="text-zinc-500 font-medium">
-                      您的地址:
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded">
-                        {hideStr(address, 6)}
-                      </span>
-                      <button
-                        onClick={() => handleCopyAddress(address, "user")}
-                        className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
-                        title={t("common.copy_address") || "复制地址"}
-                      >
-                        {copiedAddress === "user" ? (
-                          <Check className="w-3 h-3 text-green-400" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 功能说明 */}
-            <div className="p-3 bg-zinc-800/20 rounded-lg">
-              <p className="text-zinc-400 text-xs leading-relaxed">
-                💡 <span className="font-medium">{t("common.view_contract_details") || "查看合约详情"}:</span>
-                只有合约部署者可以提取收益。如果您是部署者，请使用部署者地址的钱包连接此页面。
+              <p className="text-zinc-500 text-[11px] mt-1 leading-relaxed">
+                {t("common.connect_deployer_wallet_to_claim", {
+                  defaultValue:
+                    "如果您是部署者，请切换到部署者地址的钱包后重试。",
+                })}
               </p>
             </div>
           </div>
@@ -586,11 +493,11 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded">
-                    {swapData?.deployer ? hideStr(swapData.deployer, 6) : "无"}
+                    {deployerAddress ? hideStr(deployerAddress, 6) : "无"}
                   </span>
-                  {swapData?.deployer && (
+                  {deployerAddress && (
                     <button
-                      onClick={() => handleCopyAddress(swapData.deployer, "deployer")}
+                      onClick={() => handleCopyAddress(deployerAddress, "deployer")}
                       className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 hover:bg-zinc-700/50 rounded"
                       title={t("common.copy_address") || "复制地址"}
                     >
@@ -603,7 +510,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                   )}
                   {isDeployer && (
                     <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full font-medium">
-                      您
+                      {t("common.you", { defaultValue: "您" })}
                     </span>
                   )}
                 </div>
@@ -616,7 +523,9 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded max-w-[120px] truncate">
-                    {contractUrl ? contractUrl.split("/").pop() || "未知" : "未知"}
+                    {contractUrl
+                      ? contractUrl.split("/").pop() || t("common.unknown")
+                      : t("common.unknown")}
                   </span>
                   {contractUrl && (
                     <button
@@ -640,13 +549,19 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                   {t("common.network_status") || "网络状态"}:
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${
-                    network === "mainnet" ? "bg-green-400" : "bg-yellow-400"
-                  }`}></span>
-                  <span className={`text-zinc-300 font-medium ${
-                    network === "mainnet" ? "text-green-400" : "text-yellow-400"
-                  }`}>
-                    {network === "mainnet" ? "Mainnet" : "Testnet"}
+                  <span
+                    className={`w-2 h-2 rounded-full ${network === "mainnet" ? "bg-green-400" : "bg-yellow-400"
+                      }`}
+                  ></span>
+                  <span
+                    className={`text-zinc-300 font-medium ${network === "mainnet"
+                        ? "text-green-400"
+                        : "text-yellow-400"
+                      }`}
+                  >
+                    {network === "mainnet"
+                      ? t("common.mainnet")
+                      : t("common.testnet")}
                   </span>
                 </div>
               </div>
@@ -655,7 +570,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
               {address && (
                 <div className="flex justify-between items-center pt-2 border-t border-zinc-700/50">
                   <span className="text-zinc-500 font-medium">
-                    您的地址:
+                    {t("common.your_address", { defaultValue: "您的地址" })}:
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="text-zinc-300 font-mono text-xs bg-zinc-900/50 px-2 py-1 rounded">
@@ -689,9 +604,8 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
               >
                 {profitInfo
                   ? profitInfo.type === "lpt"
-                    ? `${profitInfo.displayValue || "0"}${
-                        profitInfo.lptDisplayValue ? ` (${profitInfo.lptDisplayValue})` : ""
-                      }`
+                    ? `${profitInfo.displayValue || "0"}${profitInfo.lptDisplayValue ? ` (${profitInfo.lptDisplayValue})` : ""
+                    }`
                     : `${profitInfo.displayValue || "0"} ${profitInfo.unit}`
                   : "0"}
               </span>
@@ -704,19 +618,18 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                 {availableProfits
                   ? availableProfits.type === "lpt"
                     ? `${formatAssetAmount(
-                        availableProfits.assetAmount || 0,
-                        availableProfits.assetPrecision,
-                      )} ${ticker} / ${(availableProfits.satsAmount || 0).toFixed(8)} sats${
-                        availableProfits.lptAmount !== undefined
-                          ? ` (${(availableProfits.lptAmount || 0).toFixed(baseLptPrecision)} LPT)`
-                          : ""
-                      }`
+                      availableProfits.assetAmount || 0,
+                      availableProfits.assetPrecision,
+                    )} ${ticker} / ${(availableProfits.satsAmount || 0).toFixed(8)} sats${availableProfits.lptAmount !== undefined
+                      ? ` (${(availableProfits.lptAmount || 0).toFixed(baseLptPrecision)} LPT)`
+                      : ""
+                    }`
                     : availableProfits.type === "sats"
                       ? `${(availableProfits.satsAmount || 0).toFixed(8)} sats`
                       : `${formatAssetAmount(
-                          availableProfits.assetAmount || 0,
-                          availableProfits.assetPrecision,
-                        )} ${ticker}`
+                        availableProfits.assetAmount || 0,
+                        availableProfits.assetPrecision,
+                      )} ${ticker}`
                   : `0 ${profitInfo?.unit || ticker}`}
               </span>
             </div>
@@ -740,7 +653,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-zinc-500">
-                  原始K值(Contract.k):
+                  {t("common.original_k", { defaultValue: "原始K值(Contract.k)" })}:
                 </span>
                 <span className="text-zinc-300">
                   {originalK || 0}
@@ -748,7 +661,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">
-                  当前K值(池子):
+                  {t("common.current_k", { defaultValue: "当前K值(池子)" })}:
                 </span>
                 <span className="text-zinc-300">
                   {currentK?.toFixed(2) || "0"}
@@ -756,15 +669,15 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">
-                  计算的LPT利润:
+                  {t("common.calculated_lpt_profit", { defaultValue: "计算的LPT利润" })}:
                 </span>
                 <span className="text-zinc-300">
-                  {calculateBaseLptProfit?.toFixed(6) || "无"}
+                  {calculateBaseLptProfit?.toFixed(6) || t("common.none", { defaultValue: "无" })}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">
-                  总LPT数量:
+                  {t("common.total_lpt_amount", { defaultValue: "总LPT数量" })}:
                 </span>
                 <span className="text-zinc-300">
                   {swapData?.TotalLptAmt?.Value || "0"}
@@ -772,7 +685,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">
-                  池中资产数量:
+                  {t("common.asset_in_pool", { defaultValue: "池中资产数量" })}:
                 </span>
                 <span className="text-zinc-300">
                   {swapData?.AssetAmtInPool?.Value || "0"}
@@ -780,7 +693,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">
-                  池中Sats数量:
+                  {t("common.sats_in_pool", { defaultValue: "池中Sats数量" })}:
                 </span>
                 <span className="text-zinc-300">
                   {swapData?.SatsValueInPool || "0"}
@@ -831,11 +744,10 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
                 <button
                   key={preset.value}
                   onClick={() => setRatio(preset.value)}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
-                    ratio === preset.value
-                      ? "bg-purple-500 text-white"
-                      : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
-                  }`}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${ratio === preset.value
+                    ? "bg-purple-500 text-white"
+                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                    }`}
                   disabled={claimProfitsMutation.isPending || !hasProfits}
                 >
                   {preset.label}
@@ -882,11 +794,10 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
       <Button
         type="button"
         size="lg"
-        className={`w-full my-2 text-sm font-semibold transition-all duration-200 ${
-          hasProfits
-            ? "btn-gradient"
-            : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
-        }`}
+        className={`w-full my-2 text-sm font-semibold transition-all duration-200 ${hasProfits
+          ? "btn-gradient"
+          : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+          }`}
         onClick={handleClaimProfits}
         disabled={claimProfitsMutation.isPending || !hasProfits}
       >
@@ -900,7 +811,9 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
         {!hasProfits && (
           <div className="p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
             <p className="text-yellow-400 text-sm">
-              {t("common.no_profits_available") || "当前池子没有可提取的收益"}
+              {t("common.no_profits_available_pool") ||
+                t("common.no_profits_available") ||
+                "当前池子没有可提取的收益"}
             </p>
           </div>
         )}

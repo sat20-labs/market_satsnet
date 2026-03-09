@@ -141,7 +141,9 @@ export default function DaoListPage() {
                                 <TableHead className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap">{t('pages.dao.list.status')}</TableHead>
                                 <TableHead className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap">{t('pages.dao.list.uids')}</TableHead>
                                 {toolsEnabled && (
-                                    <TableHead className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap">{t('pages.dao.list.action')}</TableHead>
+                                    <TableHead className="px-4 py-2 text-right font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap">
+                                        {t('pages.dao.list.action')}
+                                    </TableHead>
                                 )}
                                 <TableHead className="px-4 py-2 text-left font-semibold text-muted-foreground bg-zinc-900 whitespace-nowrap text-right">{t('pages.dao.list.view_detail')}</TableHead>
                             </TableRow>
@@ -150,12 +152,12 @@ export default function DaoListPage() {
                             {rows.map((r: any, idx: number) => (
                                 <TableRow key={r.contractURL || idx} className="border-b border-border hover:bg-accent transition-colors whitespace-nowrap">
                                     <TableCell className="px-4 py-2 font-mono text-zinc-200">{r.name}</TableCell>
-                                    <TableCell className="px-4 py-2 text-zinc-300">{String(r.status)}</TableCell>
+                                    <TableCell className="px-4 py-2 text-zinc-300 text-green-600">{String(r.status)}</TableCell>
                                     <TableCell className="px-4 py-2 text-zinc-300">{String(r.uidCount)}</TableCell>
                                     {toolsEnabled && (
-                                        <TableCell className="px-4 py-2">
+                                        <TableCell className="px-4 py-2 text-right">
                                             {r.contractURL ? (
-                                                <div className="flex flex-wrap gap-2">
+                                                <div className="flex flex-wrap justify-end gap-4">
                                                     <Button size="sm" variant="outline" onClick={() => openTab(r.contractURL, 'register')}>
                                                         {t('pages.dao.list.actions.register')}
                                                     </Button>
