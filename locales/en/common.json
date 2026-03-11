@@ -383,5 +383,11 @@
   "testnet": "Testnet",
   "no_profits_available_pool": "There are no profits available to claim from this pool",
   "deployer_profit": "Deployer Profit",
-  "only_deployer_tooltip": "Only deployer can use"
+  "only_deployer_tooltip": "Only deployer can use",
+  "connect_wallet_to_view": "Connect wallet to view",
+  "connect_wallet_to_register": "Connect wallet to register",
+  "fetch_failed": "Failed to fetch data",
+  "retry": "Retry",
+  "search": "Search",
+  "submitted_waiting": "Submitted, waiting for review/confirmation"
 }

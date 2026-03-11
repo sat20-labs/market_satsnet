@@ -16,6 +16,9 @@ import {
 } from '@/domain/services/dao';
 import { DaoStatusCard } from '@/components/dao/DaoStatusCard';
 import { useTranslation } from 'react-i18next';
+import { AddressStatusDisplay } from '@/components/dao/AddressStatusDisplay';
+import { AllAddressesList } from '@/components/dao/AllAddressesList';
+import { AirdropReferralsSelector } from '@/components/dao/AirdropReferralsSelector';
 
 function normalizeAssetName(a?: { Protocol?: string; Type?: string; Ticker?: string }) {
     if (!a?.Protocol || !a?.Type || !a?.Ticker) return '';
@@ -63,7 +66,7 @@ export function DaoWorkflow({
         airdrop: 0,
     });
 
-    const shouldBlockFastRepeat = (kind: 'register' | 'donate' | 'airdrop', ms: number = 1500) => {
+    const shouldBlockFastRepeat = (kind: 'register' | 'donate' | 'airdrop', ms: number = 500) => {
         const now = Date.now();
         if (now - lastSubmitAt[kind] < ms) return true;
         setLastSubmitAt((p) => ({ ...p, [kind]: now }));
@@ -87,6 +90,7 @@ export function DaoWorkflow({
 
     // Airdrop
     const [airdropUidsText, setAirdropUidsText] = useState('');
+    const [selectedReferrals, setSelectedReferrals] = useState<string[]>([]);
 
     const doInvoke = async (kind: 'register' | 'donate' | 'airdrop', invoke: any) => {
         if (processing[kind]) return;
@@ -104,6 +108,7 @@ export function DaoWorkflow({
             }
             if (kind === 'airdrop') {
                 setAirdropUidsText('');
+                setSelectedReferrals([]);
             }
 
             refresh();
@@ -143,6 +148,34 @@ export function DaoWorkflow({
         }
     };
 
+    // 处理从推荐选择器中选择的UID
+    const handleSelectReferrals = (uids: string[]) => {
+        setSelectedReferrals(uids);
+    };
+
+    // 添加选中的推荐到输入框
+    const handleAddSelectedToText = () => {
+        if (selectedReferrals.length > 0) {
+            const newUids = selectedReferrals.join('\n');
+            setAirdropUidsText(prev => prev ? `${prev}\n${newUids}` : newUids);
+        }
+    };
+
+    // 监听自定义事件
+    useEffect(() => {
+        const handleSelectedUids = (event: CustomEvent) => {
+            const { uidsText } = event.detail;
+            if (uidsText) {
+                setAirdropUidsText(prev => prev ? `${prev}\n${uidsText}` : uidsText);
+            }
+        };
+
+        window.addEventListener('airdrop:selected-uids', handleSelectedUids as EventListener);
+        return () => {
+            window.removeEventListener('airdrop:selected-uids', handleSelectedUids as EventListener);
+        };
+    }, []);
+
     return (
         <div className="bg-zinc-950/20 border border-zinc-800 rounded-xl p-4">
             <div className="text-sm text-zinc-400 mb-2">{t('pages.dao.workflow.title')}</div>
@@ -158,46 +191,53 @@ export function DaoWorkflow({
 
                 <TabsContent value="overview">
                     <div className="text-xs text-zinc-500 mb-2">{t('pages.dao.workflow.overview_tip')}</div>
-                    <DaoStatusCard status={status} />
+                    <div className="space-y-4">
+                        <DaoStatusCard status={status} />
+                        <AllAddressesList contractUrl={contractUrl} />
+                    </div>
                 </TabsContent>
 
                 <TabsContent value="register">
                     <div className="text-xs text-zinc-500 mb-2">{t('pages.dao.workflow.register_tip')}</div>
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                                <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.uid')}</div>
-                                <Input
-                                    value={uid}
-                                    onChange={(e) => setUid(e.target.value)}
-                                    placeholder={t('pages.dao.workflow.placeholders.uid', { defaultValue: '请输入 UID' })}
-                                    disabled={processing.register}
-                                />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.uid')}</div>
+                                    <Input
+                                        value={uid}
+                                        onChange={(e) => setUid(e.target.value)}
+                                        placeholder={t('pages.dao.workflow.placeholders.uid', { defaultValue: '请输入 UID' })}
+                                        disabled={processing.register}
+                                    />
+                                </div>
+                                <div>
+                                    <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.referrer_uid')}</div>
+                                    <Input
+                                        value={referrerUid}
+                                        onChange={(e) => setReferrerUid(e.target.value)}
+                                        placeholder={t('pages.dao.workflow.placeholders.referrer_uid', { defaultValue: '可选：推荐人 UID' })}
+                                        disabled={processing.register}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.referrer_uid')}</div>
-                                <Input
-                                    value={referrerUid}
-                                    onChange={(e) => setReferrerUid(e.target.value)}
-                                    placeholder={t('pages.dao.workflow.placeholders.referrer_uid', { defaultValue: '可选：推荐人 UID' })}
-                                    disabled={processing.register}
-                                />
+                            <div className="flex gap-2">
+                                <Button
+                                    className="btn-gradient"
+                                    disabled={processing.register || !uid.trim()}
+                                    onClick={() => doInvoke('register', buildRegisterInvoke(uid, referrerUid || undefined))}
+                                >
+                                    {processing.register
+                                        ? t('common.processing', { defaultValue: '处理中...' })
+                                        : t('pages.dao.workflow.actions.submit_register')}
+                                </Button>
+                                <Button variant="outline" disabled={processing.register} onClick={() => refresh()}>
+                                    {t('pages.dao.detail.refresh')}
+                                </Button>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button
-                                className="btn-gradient"
-                                disabled={processing.register || !uid.trim()}
-                                onClick={() => doInvoke('register', buildRegisterInvoke(uid, referrerUid || undefined))}
-                            >
-                                {processing.register
-                                    ? t('common.processing', { defaultValue: '处理中...' })
-                                    : t('pages.dao.workflow.actions.submit_register')}
-                            </Button>
-                            <Button variant="outline" disabled={processing.register} onClick={() => refresh()}>
-                                {t('pages.dao.detail.refresh')}
-                            </Button>
-                        </div>
+
+                        <AddressStatusDisplay contractUrl={contractUrl} />
                     </div>
                 </TabsContent>
 
@@ -261,32 +301,41 @@ export function DaoWorkflow({
 
                 <TabsContent value="airdrop">
                     <div className="text-xs text-zinc-500 mb-2">{t('pages.dao.workflow.airdrop_tip')}</div>
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
-                        <div>
-                            <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.uids')}</div>
-                            <textarea
-                                value={airdropUidsText}
-                                onChange={(e) => setAirdropUidsText(e.target.value)}
-                                className="min-h-[96px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200"
-                                placeholder="id3\nid4\nid5"
-                                disabled={processing.airdrop}
-                            />
-                            <div className="text-xs text-zinc-500 mt-1">{t('pages.dao.workflow.fields.count')}: {parseUidList(airdropUidsText).length}</div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="space-y-4">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                                <div>
+                                    <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.fields.uids')}</div>
+                                    <textarea
+                                        value={airdropUidsText}
+                                        onChange={(e) => setAirdropUidsText(e.target.value)}
+                                        className="min-h-[96px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200"
+                                        placeholder="id3\nid4\nid5"
+                                        disabled={processing.airdrop}
+                                    />
+                                    <div className="text-xs text-zinc-500 mt-1">{t('pages.dao.workflow.fields.count')}: {parseUidList(airdropUidsText).length}</div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        className="btn-gradient"
+                                        disabled={processing.airdrop || parseUidList(airdropUidsText).length === 0}
+                                        onClick={() => doInvoke('airdrop', buildAirdropInvoke(parseUidList(airdropUidsText)))}
+                                    >
+                                        {processing.airdrop
+                                            ? t('common.processing', { defaultValue: '处理中...' })
+                                            : t('pages.dao.workflow.actions.submit_airdrop')}
+                                    </Button>
+                                    <Button variant="outline" disabled={processing.airdrop} onClick={() => refresh()}>
+                                        {t('pages.dao.detail.refresh')}
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button
-                                className="btn-gradient"
-                                disabled={processing.airdrop || parseUidList(airdropUidsText).length === 0}
-                                onClick={() => doInvoke('airdrop', buildAirdropInvoke(parseUidList(airdropUidsText)))}
-                            >
-                                {processing.airdrop
-                                    ? t('common.processing', { defaultValue: '处理中...' })
-                                    : t('pages.dao.workflow.actions.submit_airdrop')}
-                            </Button>
-                            <Button variant="outline" disabled={processing.airdrop} onClick={() => refresh()}>
-                                {t('pages.dao.detail.refresh')}
-                            </Button>
-                        </div>
+
+                        <AirdropReferralsSelector
+                            contractUrl={contractUrl}
+                            onSelectReferrals={handleSelectReferrals}
+                        />
                     </div>
                 </TabsContent>
 

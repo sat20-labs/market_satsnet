@@ -387,5 +387,11 @@
   "mainnet": "主网",
   "testnet": "测试网",
   "deployer_profit": "部署者收益",
-  "only_deployer_tooltip": "仅部署者可用"
+  "only_deployer_tooltip": "仅部署者可用",
+  "connect_wallet_to_view": "请连接钱包以查看",
+  "connect_wallet_to_register": "请连接钱包以注册",
+  "fetch_failed": "获取数据失败",
+  "retry": "重试",
+  "search": "搜索",
+  "submitted_waiting": "已提交，等待审核/确认"
 }

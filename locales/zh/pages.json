@@ -636,6 +636,41 @@
         "submit_register": "提交注册",
         "submit_donate": "提交捐赠",
         "submit_airdrop": "提交空投"
+      },
+      "overview": {
+        "all_addresses": "所有地址列表",
+        "all_addresses_description": "合约中所有已注册的地址信息",
+        "search_placeholder": "搜索UID或地址",
+        "total": "总数",
+        "address": "地址",
+        "referrer": "推荐人",
+        "referral_count": "推荐数量",
+        "donate": "捐赠",
+        "airdrop": "空投"
+      },
+      "register": {
+        "address_status": "地址状态",
+        "address_status_description": "您的地址在合约中的状态信息",
+        "your_uid": "您的UID",
+        "referrer_uid": "推荐人UID",
+        "invoke_count": "调用次数",
+        "donate_amount": "捐赠数量",
+        "donate_value": "捐赠价值",
+        "airdrop_amount": "空投数量",
+        "referral_count": "推荐数量",
+        "referrals_list": "推荐列表",
+        "no_status_data": "暂无地址状态数据"
+      },
+      "airdrop": {
+        "referrals_list": "推荐列表",
+        "referrals_description": "您推荐的用户列表",
+        "selected_count": "已选择",
+        "select_all": "全选",
+        "deselect_all": "取消全选",
+        "add_selected": "添加选中项",
+        "airdrop_amount": "空投数量",
+        "selection_hint": "选择要空投的UID，然后点击添加选中项",
+        "no_referrals": "暂无推荐用户"
       }
     },
     "guard": {
