@@ -684,7 +684,9 @@
         "add_selected": "Add Selected",
         "airdrop_amount": "Airdrop Amount",
         "selection_hint": "Select UIDs to airdrop, then click Add Selected",
-        "no_referrals": "No referrals available"
+        "no_referrals": "No referrals available",
+        "no_selection": "Please select UIDs to airdrop from the left",
+        "clear_selection": "Clear Selection"
       }
     },
     "guard": {

@@ -670,7 +670,9 @@
         "add_selected": "添加选中项",
         "airdrop_amount": "空投数量",
         "selection_hint": "选择要空投的UID，然后点击添加选中项",
-        "no_referrals": "暂无推荐用户"
+        "no_referrals": "暂无推荐用户",
+        "no_selection": "请从左侧选择要空投的UID",
+        "clear_selection": "清空选择"
       }
     },
     "guard": {
