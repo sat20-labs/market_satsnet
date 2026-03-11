@@ -55,9 +55,9 @@ export function DaoPendingLists({
     const [loading, setLoading] = useState(false);
 
     const validators = useMemo(() => {
-        const list = (status as any)?.validatorList || (status as any)?.validators || [];
-        return Array.isArray(list) ? list : [];
-    }, [status]);
+        const obj = status.Validators || {};
+        return Object.keys(obj); // 返回地址数组
+    }, [status.Validators]);
 
     const isValidator = useMemo(() => {
         const pk = (window as any)?.sat20?.publicKey || '';
@@ -135,7 +135,7 @@ export function DaoPendingLists({
             const invoke = buildValidateInvoke(orderType, ids, reason, -1);
             const res: any = await invokeDaoContractSatsNet(contractUrl, invoke);
             const txId = res?.txId || res?.txid || res?.data?.txId;
-            toast.success(txId ? `Validate submitted: ${txId}` : 'Validate submitted');
+            toast.success(txId ? `Reject submitted: ${txId}` : 'Reject submitted');
 
             // reset selection after submission
             if (orderType === DAO_ORDERTYPE_REGISTER) setRegisterSelected({});
@@ -144,7 +144,45 @@ export function DaoPendingLists({
             onValidated?.();
         } catch (e: any) {
             console.error(e);
-            toast.error(e?.message || 'Validate failed');
+            toast.error(e?.message || 'Reject failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const doValidateAccept = async (orderType: number, ids: number[]) => {
+        if (!isValidator) {
+            toast.error('You are not a validator');
+            return;
+        }
+        if (!contractUrl) {
+            toast.error('Missing contractUrl');
+            return;
+        }
+        if (!window.sat20?.invokeContract_SatsNet) {
+            toast.error('sat20 wallet API not available');
+            return;
+        }
+        if (!ids.length) {
+            toast.error('No selected items');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const invoke = buildValidateInvoke(orderType, ids, 'accept', 0); // result=0 表示接受
+            const res: any = await invokeDaoContractSatsNet(contractUrl, invoke);
+            const txId = res?.txId || res?.txid || res?.data?.txId;
+            toast.success(txId ? `Accept submitted: ${txId}` : 'Accept submitted');
+
+            // reset selection after submission
+            if (orderType === DAO_ORDERTYPE_REGISTER) setRegisterSelected({});
+            if (orderType === DAO_ORDERTYPE_AIRDROP) setAirdropSelected({});
+
+            onValidated?.();
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e?.message || 'Accept failed');
         } finally {
             setLoading(false);
         }
@@ -156,7 +194,7 @@ export function DaoPendingLists({
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                     <div>
                         <div className="text-sm font-semibold text-zinc-200">Pending Review</div>
-                        <div className="text-xs text-zinc-500">Select items to reject, then submit validate (batch).</div>
+                        <div className="text-xs text-zinc-500">Select items to accept or reject, then submit validate (batch).</div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:w-auto">
                         <div>
@@ -217,6 +255,13 @@ export function DaoPendingLists({
                     <div className="flex items-center gap-2">
                         <Button variant="outline" disabled={loading || registerItems.length === 0} onClick={() => toggleAll('register', true)}>
                             Select all
+                        </Button>
+                        <Button
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            disabled={loading || selectedRegisterIds.length === 0}
+                            onClick={() => doValidateAccept(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
+                        >
+                            Accept selected
                         </Button>
                         <Button
                             className="btn-gradient"
@@ -283,6 +328,13 @@ export function DaoPendingLists({
                     <div className="flex items-center gap-2">
                         <Button variant="outline" disabled={loading || airdropItems.length === 0} onClick={() => toggleAll('airdrop', true)}>
                             Select all
+                        </Button>
+                        <Button
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            disabled={loading || selectedAirdropIds.length === 0}
+                            onClick={() => doValidateAccept(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
+                        >
+                            Accept selected
                         </Button>
                         <Button
                             className="btn-gradient"

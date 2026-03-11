@@ -37,8 +37,6 @@ export function AirdropReferralsSelector({
   const [statusData, setStatusData] = useState<AddressStatusResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
-  // const [selectAll, setSelectAll] = useState(false);
   const [localSelectedUids, setLocalSelectedUids] = useState<Set<string>>(new Set(propSelectedUids));
   const [selectAll, setSelectAll] = useState(false);
 
@@ -83,7 +81,7 @@ export function AirdropReferralsSelector({
 
   useEffect(() => {
     const handleClearSelection = () => {
-      setSelectedUids(new Set());
+      setLocalSelectedUids(new Set());
       setSelectAll(false);
       onSelectReferrals([]); // 通知父组件
     };
@@ -122,7 +120,7 @@ export function AirdropReferralsSelector({
   };
 
   const handleAddSelectedToText = () => {
-    const uidsText = Array.from(selectedUids).join('\n');
+    const uidsText = Array.from(localSelectedUids).join('\n');
     // 这里可以触发一个事件或者通过回调传递给父组件
     // 暂时先输出到控制台
     console.log('Selected UIDs:', uidsText);
@@ -194,7 +192,7 @@ export function AirdropReferralsSelector({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div className="text-sm text-zinc-400">
-              {t('pages.dao.workflow.airdrop.selected_count')}: {selectedUids.size}
+              {t('pages.dao.workflow.airdrop.selected_count')}: {localSelectedUids.size}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleSelectAll}>
@@ -229,8 +227,8 @@ export function AirdropReferralsSelector({
                 {statusData.referrals.map((referral, index) => (
                   <TableRow key={index} className="border-zinc-800">
                     <TableCell>
-                      <Checkbox
-                        checked={selectedUids.has(referral.uid)}
+                      &nbsp;&nbsp;<Checkbox
+                        checked={localSelectedUids.has(referral.uid)}
                         onCheckedChange={() => handleSelectUid(referral.uid)}
                       />
                     </TableCell>
