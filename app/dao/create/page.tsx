@@ -33,7 +33,7 @@ export default function DaoCreatePage() {
         holdingTicker: 'ordi',
         holdingThreshold: '100',
 
-        airdropRatio: '0.1',
+        airdropRatio: '0', // 隐藏此参数，默认值为0
         airdropLimit: '100',
         airdropTimeout: '2',
 
@@ -207,12 +207,13 @@ export default function DaoCreatePage() {
                     </div>
                     <div className="text-xs text-zinc-500 mt-2">{tp('holding_asset', { value: holdingAssetString || '-' })}</div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div>
                             <div className="text-sm text-zinc-400 mb-1">{tp('holding_threshold')}</div>
                             <Input value={form.holdingThreshold} onChange={(e) => onChange('holdingThreshold', e.target.value)} />
                         </div>
-                        <div>
+                        {/* airdrop_ratio 参数已隐藏，默认值为0 */}
+                        <div className="hidden">
                             <div className="text-sm text-zinc-400 mb-1">{tp('airdrop_ratio')}</div>
                             <Input value={form.airdropRatio} onChange={(e) => onChange('airdropRatio', e.target.value)} />
                         </div>

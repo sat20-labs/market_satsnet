@@ -650,6 +650,43 @@
         "submit_register": "Submit Register",
         "submit_donate": "Submit Donate",
         "submit_airdrop": "Submit Airdrop"
+      },
+      "overview": {
+        "all_addresses": "All Addresses List",
+        "all_addresses_description": "All registered addresses in the contract",
+        "search_placeholder": "Search UID or address",
+        "total": "Total",
+        "address": "Address",
+        "referrer": "Referrer",
+        "referral_count": "Referral Count",
+        "donate": "Donate",
+        "airdrop": "Airdrop"
+      },
+      "register": {
+        "address_status": "Address Status",
+        "address_status_description": "Your address status information in the contract",
+        "your_uid": "Your UID",
+        "referrer_uid": "Referrer UID",
+        "invoke_count": "Invoke Count",
+        "donate_amount": "Donate Amount",
+        "donate_value": "Donate Value",
+        "airdrop_amount": "Airdrop Amount",
+        "referral_count": "Referral Count",
+        "referrals_list": "Referrals List",
+        "no_status_data": "No address status data"
+      },
+      "airdrop": {
+        "referrals_list": "Referrals List",
+        "referrals_description": "List of users you referred",
+        "selected_count": "Selected",
+        "select_all": "Select All",
+        "deselect_all": "Deselect All",
+        "add_selected": "Add Selected",
+        "airdrop_amount": "Airdrop Amount",
+        "selection_hint": "Select UIDs to airdrop, then click Add Selected",
+        "no_referrals": "No referrals available",
+        "no_selection": "Please select UIDs to airdrop from the left",
+        "clear_selection": "Clear Selection"
       }
     },
     "guard": {
@@ -674,8 +711,8 @@
       "holding_protocol": "Holding Protocol",
       "holding_ticker": "Holding Ticker",
       "holding_threshold": "Holding Threshold",
-      "airdrop_ratio": "Airdrop Ratio (sats per asset)",
-      "airdrop_limit": "Airdrop Limit (sats)",
+      "airdrop_ratio": "Airdrop Ratio",
+      "airdrop_limit": "Airdrop Limit",
       "airdrop_timeout": "Airdrop Timeout (blocks)",
       "referral_ratio": "Referral Ratio (percentage of airdrop amount)",
       "submit": "Submit",
