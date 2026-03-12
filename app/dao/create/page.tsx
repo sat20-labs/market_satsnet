@@ -27,17 +27,17 @@ export default function DaoCreatePage() {
 
         validatorNum: '5',
         registerFee: '30',
-        registerTimeout: '2',
+        registerTimeout: '10',//测试默认10，正式默认7200
 
         holdingProtocol: 'brc20' as Protocol,
         holdingTicker: 'ordi',
         holdingThreshold: '100',
 
-        airdropRatio: '0', // 隐藏此参数，默认值为0
+        airdropRatio: '0.01', // 隐藏此参数，默认值为0.01
         airdropLimit: '100',
-        airdropTimeout: '2',
+        airdropTimeout: '10',//测试默认10，正式默认7200
 
-        referralRatio: '10',
+        referralRatio: '0',
     });
 
     const assetNameString = useMemo(() => {
@@ -207,13 +207,13 @@ export default function DaoCreatePage() {
                     </div>
                     <div className="text-xs text-zinc-500 mt-2">{tp('holding_asset', { value: holdingAssetString || '-' })}</div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div>
                             <div className="text-sm text-zinc-400 mb-1">{tp('holding_threshold')}</div>
                             <Input value={form.holdingThreshold} onChange={(e) => onChange('holdingThreshold', e.target.value)} />
                         </div>
                         {/* airdrop_ratio 参数已隐藏，默认值为0 */}
-                        <div className="hidden">
+                        <div className="text-sm text-zinc-400 mb-1">
                             <div className="text-sm text-zinc-400 mb-1">{tp('airdrop_ratio')}</div>
                             <Input value={form.airdropRatio} onChange={(e) => onChange('airdropRatio', e.target.value)} />
                         </div>
@@ -228,7 +228,7 @@ export default function DaoCreatePage() {
                             <div className="text-sm text-zinc-400 mb-1">{tp('airdrop_timeout')}</div>
                             <Input value={form.airdropTimeout} onChange={(e) => onChange('airdropTimeout', e.target.value)} />
                         </div>
-                        <div>
+                        <div hidden>
                             <div className="text-sm text-zinc-400 mb-1">{tp('referral_ratio')}</div>
                             <Input value={form.referralRatio} onChange={(e) => onChange('referralRatio', e.target.value)} />
                         </div>
