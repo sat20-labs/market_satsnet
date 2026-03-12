@@ -5,6 +5,7 @@ import type { DaoAirdropItem, DaoContractStatus, DaoRegisterItem } from '@/domai
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import {
     buildValidateInvoke,
     DAO_ORDERTYPE_AIRDROP,
@@ -55,15 +56,41 @@ export function DaoPendingLists({
     const [loading, setLoading] = useState(false);
 
     const validators = useMemo(() => {
-        const obj = status.Validators || {};
-        return Object.keys(obj); // 返回地址数组
+        const validatorsData = status.Validators;
+        // console.log('Debug - status.Validators:', validatorsData);
+        // console.log('Debug - type:', typeof validatorsData);
+
+        if (Array.isArray(validatorsData)) {
+            // console.log('Debug - Validators is an array');
+            return validatorsData;
+        } else if (validatorsData && typeof validatorsData === 'object') {
+            // console.log('Debug - Validators is an object');
+            return Object.keys(validatorsData);
+        } else {
+            // console.log('Debug - Validators is empty or invalid');
+            return [];
+        }
     }, [status.Validators]);
 
+    const { address, publicKey, connected } = useReactWalletStore();
+
     const isValidator = useMemo(() => {
-        const pk = (window as any)?.sat20?.publicKey || '';
-        const addr = (window as any)?.sat20?.selectedAddress || '';
-        return validators.includes(pk) || validators.includes(addr);
-    }, [validators]);
+        // console.log('Debug - Wallet connection:');
+        // console.log('  connected:', connected);
+        // console.log('  address:', address);
+        // console.log('  publicKey:', publicKey);
+
+        const result = validators.includes(publicKey || '') || validators.includes(address || '');
+        // console.log('Debug - isValidator check:');
+        // console.log('  PK:', publicKey);
+        // console.log('  Addr:', address);
+        // console.log('  Validators count:', validators.length);
+        // console.log('  Result:', result);
+        // if (!result && validators.length > 0) {
+        //     console.log('  First few validators:', validators.slice(0, 3));
+        // }
+        return result;
+    }, [validators, address, publicKey, connected]);
 
     const reason = useMemo(() => {
         const t = reasonText.trim();
@@ -114,6 +141,13 @@ export function DaoPendingLists({
 
     const doValidateReject = async (orderType: number, ids: number[]) => {
         if (!isValidator) {
+            // 调试信息已注释
+            // console.log('Debug - Current user:');
+            // console.log('  Public Key:', publicKey);
+            // console.log('  Address:', address);
+            // console.log('  Connected:', connected);
+            // console.log('  Validators list:', validators);
+            // console.log('  Is in validators? PK:', validators.includes(publicKey || ''), 'Addr:', validators.includes(address || ''));
             toast.error('You are not a validator');
             return;
         }
@@ -152,6 +186,13 @@ export function DaoPendingLists({
 
     const doValidateAccept = async (orderType: number, ids: number[]) => {
         if (!isValidator) {
+            // 调试信息已注释
+            // console.log('Debug - Current user:');
+            // console.log('  Public Key:', publicKey);
+            // console.log('  Address:', address);
+            // console.log('  Connected:', connected);
+            // console.log('  Validators list:', validators);
+            // console.log('  Is in validators? PK:', validators.includes(publicKey || ''), 'Addr:', validators.includes(address || ''));
             toast.error('You are not a validator');
             return;
         }
@@ -195,6 +236,7 @@ export function DaoPendingLists({
                     <div>
                         <div className="text-sm font-semibold text-zinc-200">Pending Review</div>
                         <div className="text-xs text-zinc-500">Select items to accept or reject, then submit validate (batch).</div>
+
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:w-auto">
                         <div>
