@@ -658,7 +658,7 @@
         "donate_value": "捐赠价值",
         "airdrop_amount": "空投数量",
         "referral_count": "推荐数量",
-        "referrals_list": "推荐列表",
+        "referrals_list": "符合空投资格的推荐用户",
         "no_status_data": "暂无地址状态数据"
       },
       "airdrop": {
@@ -684,10 +684,10 @@
     "create": {
       "title": "创建 DAO",
       "subtitle": "为您的资产创建一个新的 DAO。请填写以下详细信息。",
-      "deploy_on": "部署在",
+      "deploy_on": "支付费用网络",
       "network_btc": "BTC Mainnet",
       "network_satsnet": "SatoshiNet",
-      "fee_rate": "部署费用率 (sats/vByte)",
+      "fee_rate": "部署",
       "asset_protocol": "资产协议",
       "asset_ticker": "资产 Ticker",
       "validator_num": "验证者数量",
@@ -703,6 +703,7 @@
       "referral_ratio": "推荐比例 (推荐可获得注册费用的部分返佣，单位为%)",
       "submit": "提交",
       "deploy": "部署",
+      "deploying": "部署中...",
       "cancel": "取消",
       "success": "DAO 创建成功！ TxId: {{txId}}",
       "failure": "DAO 创建失败，请重试。"

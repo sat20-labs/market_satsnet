@@ -672,7 +672,7 @@
         "donate_value": "Donate Value",
         "airdrop_amount": "Airdrop Amount",
         "referral_count": "Referral Count",
-        "referrals_list": "Referrals List",
+        "referrals_list": "Airdrop-Eligible Referrals",
         "no_status_data": "No address status data"
       },
       "airdrop": {
@@ -698,10 +698,10 @@
     "create": {
       "title": "Create DAO",
       "subtitle": "Deploy a new DAO contract",
-      "deploy_on": "Deploy on",
+      "deploy_on": "Pay fee on",
       "network_btc": "BTC Mainnet",
       "network_satsnet": "SatoshiNet",
-      "fee_rate": "Deployment Fee Rate",
+      "fee_rate": " Deploy",
       "asset_protocol": "Asset Protocol for Airdrop Eligibility",
       "asset_ticker": "Asset Ticker for Airdrop Eligibility",
       "validator_num": "Number of Validators",
@@ -716,7 +716,8 @@
       "airdrop_timeout": "Airdrop Timeout (blocks)",
       "referral_ratio": "Referral Ratio (percentage of airdrop amount)",
       "submit": "Submit",
-      "deploy": "Deploying...",
+      "deploying": "Deploying...",
+      "deploy": "Deploy",
       "cancel": "Cancel",
       "success": "DAO created successfully! TxId: {{txId}}",
       "failure": "Failed to create DAO"

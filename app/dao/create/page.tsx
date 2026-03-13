@@ -148,7 +148,9 @@ export default function DaoCreatePage() {
                             <SelectItem value="satsnet" className="h-9 py-2">{tp('network_satsnet')}</SelectItem>
                         </SelectContent>
                     </Select>
-                    <div className="text-xs text-zinc-500">{tp('fee_rate', { value: btcFeeRate?.value ?? '-' })}</div>
+                    <div className="text-xs text-zinc-500">
+                        {/* {tp('fee_rate', { value: btcFeeRate?.value ?? '-' })} */}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -169,7 +171,9 @@ export default function DaoCreatePage() {
                     </div>
                 </div>
 
-                <div className="text-xs text-zinc-500">{tp('asset_name', { value: assetNameString || '-' })}</div>
+                <div className="text-xs text-zinc-500">
+                    {/* {tp('asset_name', { value: assetNameString || '-' })} */}
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -205,7 +209,9 @@ export default function DaoCreatePage() {
                             <Input value={form.holdingTicker} onChange={(e) => onChange('holdingTicker', e.target.value)} />
                         </div>
                     </div>
-                    <div className="text-xs text-zinc-500 mt-2">{tp('holding_asset', { value: holdingAssetString || '-' })}</div>
+                    <div className="text-xs text-zinc-500 mt-2">
+                        {/* {tp('holding_asset', { value: holdingAssetString || '-' })} */}
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div>
