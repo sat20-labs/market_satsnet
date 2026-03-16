@@ -19,6 +19,8 @@ import { useTranslation } from 'react-i18next';
 import { AddressStatusDisplay } from '@/components/dao/AddressStatusDisplay';
 import { AllAddressesList } from '@/components/dao/AllAddressesList';
 import { AirdropReferralsSelector } from '@/components/dao/AirdropReferralsSelector';
+import { DaoLeaderboard } from '@/components/dao/DaoLeaderboard';
+import { contractService } from '@/domain/services/contract';
 
 function normalizeAssetName(a?: { Protocol?: string; Type?: string; Ticker?: string }) {
     if (!a?.Protocol || !a?.Type || !a?.Ticker) return '';
@@ -65,6 +67,11 @@ export function DaoWorkflow({
         donate: 0,
         airdrop: 0,
     });
+
+    // Leaderboard data
+    const [donateLeaderboard, setDonateLeaderboard] = useState<any[]>([]);
+    const [airdropLeaderboard, setAirdropLeaderboard] = useState<any[]>([]);
+    const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
     const shouldBlockFastRepeat = (kind: 'register' | 'donate' | 'airdrop', ms: number = 100) => {
         const now = Date.now();
@@ -175,6 +182,28 @@ export function DaoWorkflow({
             window.removeEventListener('airdrop:selected-uids', handleSelectedUids as EventListener);
         };
     }, []);
+
+    // 获取排行榜数据
+    useEffect(() => {
+        const fetchLeaderboard = async () => {
+            if (!contractUrl) return;
+
+            setLoadingLeaderboard(true);
+            try {
+                const analytics = await contractService.getContractAnalytics(contractUrl);
+                if (analytics) {
+                    setDonateLeaderboard(analytics.items_donate || []);
+                    setAirdropLeaderboard(analytics.items_airdrop || []);
+                }
+            } catch (error) {
+                console.error('Failed to fetch leaderboard:', error);
+            } finally {
+                setLoadingLeaderboard(false);
+            }
+        };
+
+        fetchLeaderboard();
+    }, [contractUrl, status]);
 
     return (
         <div className="bg-zinc-950/20 border border-zinc-800 rounded-xl p-4">
@@ -297,6 +326,17 @@ export function DaoWorkflow({
                             </Button>
                         </div>
                     </div>
+
+                    {/* 捐赠排行榜 */}
+                    <div className="mt-4">
+                        {loadingLeaderboard ? (
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500">
+                                {t('common.loading', { defaultValue: '加载中...' })}
+                            </div>
+                        ) : (
+                            <DaoLeaderboard items={donateLeaderboard} type="donate" />
+                        )}
+                    </div>
                 </TabsContent>
 
                 <TabsContent value="airdrop">
@@ -367,6 +407,17 @@ export function DaoWorkflow({
                         <Button variant="outline" disabled={processing.airdrop} onClick={() => refresh()}>
                             {t('pages.dao.detail.refresh')}
                         </Button>
+                    </div>
+
+                    {/* 空投排行榜 */}
+                    <div className="mt-4">
+                        {loadingLeaderboard ? (
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500">
+                                {t('common.loading', { defaultValue: '加载中...' })}
+                            </div>
+                        ) : (
+                            <DaoLeaderboard items={airdropLeaderboard} type="airdrop" />
+                        )}
                     </div>
                 </TabsContent>
 

@@ -689,6 +689,16 @@
         "clear_selection": "Clear Selection"
       }
     },
+    "leaderboard": {
+      "donate_title": "Donation Leaderboard",
+      "airdrop_title": "Airdrop Leaderboard",
+      "rank": "Rank",
+      "uid": "UID",
+      "address": "Address",
+      "amount": "Amount",
+      "referrals": "Referrals",
+      "no_data": "No leaderboard data"
+    },
     "guard": {
       "restricted_title": "DAO Tools are restricted",
       "restricted_tip_connected": "Please switch wallet network to Testnet.",

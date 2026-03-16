@@ -675,6 +675,16 @@
         "clear_selection": "清空选择"
       }
     },
+    "leaderboard": {
+      "donate_title": "捐赠排行榜",
+      "airdrop_title": "空投排行榜",
+      "rank": "排名",
+      "uid": "UID",
+      "address": "地址",
+      "amount": "数量",
+      "referrals": "推荐数",
+      "no_data": "暂无排行数据"
+    },
     "guard": {
       "restricted_title": "DAO 工具已限制",
       "restricted_tip_connected": "请将钱包网络切换到测试网。",
