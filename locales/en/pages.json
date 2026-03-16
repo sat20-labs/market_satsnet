@@ -692,12 +692,22 @@
     "leaderboard": {
       "donate_title": "Donation Leaderboard",
       "airdrop_title": "Airdrop Leaderboard",
+      "donate_ranking": "Donation Ranking",
+      "airdrop_ranking": "Airdrop Ranking",
+      "my_donate": "My Donations",
+      "my_airdrop": "My Airdrops",
       "rank": "Rank",
       "uid": "UID",
       "address": "Address",
       "amount": "Amount",
       "referrals": "Referrals",
-      "no_data": "No leaderboard data"
+      "no_data": "No leaderboard data",
+      "connect_wallet": "Please connect wallet to view records",
+      "no_history": "No history records",
+      "recent_activity": "Recent Activity",
+      "no_recent": "No recent activity",
+      "donated": "donated",
+      "airdropped": "airdropped"
     },
     "guard": {
       "restricted_title": "DAO Tools are restricted",

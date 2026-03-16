@@ -21,6 +21,7 @@ import { AllAddressesList } from '@/components/dao/AllAddressesList';
 import { AirdropReferralsSelector } from '@/components/dao/AirdropReferralsSelector';
 import { DaoLeaderboard } from '@/components/dao/DaoLeaderboard';
 import { contractService } from '@/domain/services/contract';
+import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 function normalizeAssetName(a?: { Protocol?: string; Type?: string; Ticker?: string }) {
     if (!a?.Protocol || !a?.Type || !a?.Ticker) return '';
@@ -50,6 +51,7 @@ export function DaoWorkflow({
     defaultTab?: 'overview' | 'register' | 'donate' | 'airdrop' | 'review';
 }) {
     const { t } = useTranslation();
+    const { address } = useReactWalletStore();
     const pendingRegisterCount = useMemo(() => (status.registerList || []).length, [status.registerList]);
     const pendingAirdropCount = useMemo(() => (status.airdropList || []).length, [status.airdropList]);
     const pendingTotal = pendingRegisterCount + pendingAirdropCount;
@@ -334,7 +336,12 @@ export function DaoWorkflow({
                                 {t('common.loading', { defaultValue: '加载中...' })}
                             </div>
                         ) : (
-                            <DaoLeaderboard items={donateLeaderboard} type="donate" />
+                            <DaoLeaderboard
+                                items={donateLeaderboard}
+                                type="donate"
+                                contractUrl={contractUrl}
+                                userAddress={address}
+                            />
                         )}
                     </div>
                 </TabsContent>
@@ -416,7 +423,12 @@ export function DaoWorkflow({
                                 {t('common.loading', { defaultValue: '加载中...' })}
                             </div>
                         ) : (
-                            <DaoLeaderboard items={airdropLeaderboard} type="airdrop" />
+                            <DaoLeaderboard
+                                items={airdropLeaderboard}
+                                type="airdrop"
+                                contractUrl={contractUrl}
+                                userAddress={address}
+                            />
                         )}
                     </div>
                 </TabsContent>

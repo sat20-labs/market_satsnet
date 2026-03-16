@@ -678,12 +678,22 @@
     "leaderboard": {
       "donate_title": "捐赠排行榜",
       "airdrop_title": "空投排行榜",
+      "donate_ranking": "捐赠排行",
+      "airdrop_ranking": "空投排行",
+      "my_donate": "我的捐赠",
+      "my_airdrop": "我的空投",
       "rank": "排名",
       "uid": "UID",
       "address": "地址",
       "amount": "数量",
       "referrals": "推荐数",
-      "no_data": "暂无排行数据"
+      "no_data": "暂无排行数据",
+      "connect_wallet": "请连接钱包查看记录",
+      "no_history": "暂无记录",
+      "recent_activity": "最近记录",
+      "no_recent": "暂无最近记录",
+      "donated": "捐赠",
+      "airdropped": "空投"
     },
     "guard": {
       "restricted_title": "DAO 工具已限制",
