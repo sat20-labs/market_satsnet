@@ -672,7 +672,7 @@
         "donate_value": "Donate Value",
         "airdrop_amount": "Airdrop Amount",
         "referral_count": "Referral Count",
-        "referrals_list": "Referrals List",
+        "referrals_list": "Airdrop-Eligible Referrals",
         "no_status_data": "No address status data"
       },
       "airdrop": {
@@ -689,6 +689,26 @@
         "clear_selection": "Clear Selection"
       }
     },
+    "leaderboard": {
+      "donate_title": "Donation Leaderboard",
+      "airdrop_title": "Airdrop Leaderboard",
+      "donate_ranking": "Donation Ranking",
+      "airdrop_ranking": "Airdrop Ranking",
+      "my_donate": "My Donations",
+      "my_airdrop": "My Airdrops",
+      "rank": "Rank",
+      "uid": "UID",
+      "address": "Address",
+      "amount": "Amount",
+      "referrals": "Referrals",
+      "no_data": "No leaderboard data",
+      "connect_wallet": "Please connect wallet to view records",
+      "no_history": "No history records",
+      "recent_activity": "Recent Activity",
+      "no_recent": "No recent activity",
+      "donated": "donated",
+      "airdropped": "airdropped"
+    },
     "guard": {
       "restricted_title": "DAO Tools are restricted",
       "restricted_tip_connected": "Please switch wallet network to Testnet.",
@@ -698,10 +718,10 @@
     "create": {
       "title": "Create DAO",
       "subtitle": "Deploy a new DAO contract",
-      "deploy_on": "Deploy on",
+      "deploy_on": "Pay fee on",
       "network_btc": "BTC Mainnet",
       "network_satsnet": "SatoshiNet",
-      "fee_rate": "Deployment Fee Rate",
+      "fee_rate": " Deploy",
       "asset_protocol": "Asset Protocol for Airdrop Eligibility",
       "asset_ticker": "Asset Ticker for Airdrop Eligibility",
       "validator_num": "Number of Validators",
@@ -716,7 +736,8 @@
       "airdrop_timeout": "Airdrop Timeout (blocks)",
       "referral_ratio": "Referral Ratio (percentage of airdrop amount)",
       "submit": "Submit",
-      "deploy": "Deploying...",
+      "deploying": "Deploying...",
+      "deploy": "Deploy",
       "cancel": "Cancel",
       "success": "DAO created successfully! TxId: {{txId}}",
       "failure": "Failed to create DAO"
