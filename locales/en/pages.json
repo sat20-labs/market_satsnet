@@ -722,7 +722,7 @@
       "network_btc": "BTC Mainnet",
       "network_satsnet": "SatoshiNet",
       "fee_rate": " Deploy",
-      "asset_protocol": "Asset Protocol for Airdrop Eligibility",
+      "asset_protocol": "Asset Protocol for Validate Eligibility",
       "asset_ticker": "Asset Ticker for Airdrop Eligibility",
       "validator_num": "Number of Validators",
       "register_fee": "Register Fee (sats)",

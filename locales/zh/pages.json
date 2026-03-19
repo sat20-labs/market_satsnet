@@ -708,7 +708,7 @@
       "network_btc": "BTC Mainnet",
       "network_satsnet": "SatoshiNet",
       "fee_rate": "部署",
-      "asset_protocol": "资产协议",
+      "asset_protocol": "资格验证资产协议",
       "asset_ticker": "资产 Ticker",
       "validator_num": "验证者数量",
       "register_fee": "注册费用 (sats)",
