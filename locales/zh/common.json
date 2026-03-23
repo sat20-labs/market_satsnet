@@ -393,5 +393,6 @@
   "fetch_failed": "获取数据失败",
   "retry": "重试",
   "search": "搜索",
-  "submitted_waiting": "已提交，等待审核/确认"
+  "submitted_waiting": "已提交，等待审核/确认",
+  "invoke_failed": "调用失败"
 }

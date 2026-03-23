@@ -20,6 +20,7 @@ import { AddressStatusDisplay } from '@/components/dao/AddressStatusDisplay';
 import { AllAddressesList } from '@/components/dao/AllAddressesList';
 import { AirdropReferralsSelector } from '@/components/dao/AirdropReferralsSelector';
 import { DaoLeaderboard } from '@/components/dao/DaoLeaderboard';
+import { AirdropHistory } from '@/components/dao/AirdropHistory';
 import { contractService } from '@/domain/services/contract';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
@@ -35,6 +36,7 @@ function parseUidList(text: string) {
                 .split(/[\s,\n\r]+/)
                 .map(s => s.trim())
                 .filter(Boolean)
+                .map(part => part.replace(/：/g, ':').trim())
         )
     );
 }
@@ -157,9 +159,18 @@ export function DaoWorkflow({
         }
     };
 
-    // 处理从推荐选择器中选择的UID
+    // 处理从推荐选择器中选择的UID（保留手动添加的 uid:address 条目）
     const handleSelectReferrals = (uids: string[]) => {
-        setSelectedReferrals(uids);
+        // 如果 uids 为空数组，则清空所有选择（包括手动添加的条目）
+        if (uids.length === 0) {
+            setSelectedReferrals([]);
+            return;
+        }
+        // 保留 selectedReferrals 中包含冒号的条目（即手动添加的 uid:address）
+        const manualEntries = selectedReferrals.filter(entry => entry.includes(':'));
+        // 合并手动条目和新的UID列表（确保唯一性）
+        const combined = Array.from(new Set([...manualEntries, ...uids]));
+        setSelectedReferrals(combined);
     };
 
     // 添加选中的推荐到输入框
@@ -168,6 +179,15 @@ export function DaoWorkflow({
             const newUids = selectedReferrals.join('\n');
             setAirdropUidsText(prev => prev ? `${prev}\n${newUids}` : newUids);
         }
+    };
+
+    // 添加手动输入的UID到选中列表（保留 uid:address 格式）
+    const handleAddManualUids = () => {
+        const lines = airdropUidsText.split(/[\n\r]+/).map(line => line.trim()).filter(Boolean);
+        // 保留原始行（可能是 uid:address 或仅 uid）
+        const newEntries = lines.filter(line => line.length > 0);
+        const combined = Array.from(new Set([...selectedReferrals, ...newEntries]));
+        setSelectedReferrals(combined);
     };
 
     // 监听自定义事件
@@ -222,10 +242,20 @@ export function DaoWorkflow({
 
                 <TabsContent value="overview">
                     <div className="text-xs text-zinc-500 mb-2">{t('pages.dao.workflow.overview_tip')}</div>
-                    <div className="space-y-4">
-                        <DaoStatusCard status={status} />
-                        <AllAddressesList contractUrl={contractUrl} />
-                    </div>
+                    <DaoStatusCard status={status} />
+
+                    <Tabs defaultValue="airdrop-history" className="mt-8">
+                        <TabsList>
+                            <TabsTrigger value="airdrop-history">{t('pages.dao.workflow.overview.airdrop_history')}</TabsTrigger>
+                            <TabsTrigger value="all-addresses">{t('pages.dao.workflow.overview.all_addresses')}</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="all-addresses">
+                            <AllAddressesList contractUrl={contractUrl} />
+                        </TabsContent>
+                        <TabsContent value="airdrop-history">
+                            <AirdropHistory contractUrl={contractUrl} />
+                        </TabsContent>
+                    </Tabs>
                 </TabsContent>
 
                 <TabsContent value="register">
@@ -351,7 +381,7 @@ export function DaoWorkflow({
                     <div className="grid grid-cols-1 gap-4">
                         <AirdropReferralsSelector
                             contractUrl={contractUrl}
-                            selectedUids={selectedReferrals} // 传递当前选择状态
+                            selectedUids={selectedReferrals.map(item => item.split(':')[0].trim())} // 传递当前选择状态（仅UID部分）
                             onSelectReferrals={handleSelectReferrals}
                         />
 
@@ -387,11 +417,41 @@ export function DaoWorkflow({
                         </div>
                     </div>
 
-                    <div className="mt-4 flex gap-2">
+                    {/* 手动输入 UID:Address */}
+                    <div className="mt-4">
+                        <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.airdrop.manual_input_label')}</div>
+                        <textarea
+                            value={airdropUidsText}
+                            onChange={(e) => setAirdropUidsText(e.target.value)}
+                            placeholder={t('pages.dao.workflow.airdrop.manual_input_placeholder')}
+                            className="w-full h-32 border border-zinc-700 bg-zinc-800 rounded-md p-2 text-sm text-white font-mono"
+                            rows={4}
+                        />
+                        <div className="flex gap-2 mt-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddManualUids}
+                                disabled={!airdropUidsText.trim()}
+                            >
+                                {t('pages.dao.workflow.airdrop.add_manual')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setAirdropUidsText('')}
+                                disabled={!airdropUidsText.trim()}
+                            >
+                                {t('pages.dao.workflow.airdrop.clear_input')}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 flex gap-2">
                         <Button
                             className="btn-gradient"
                             disabled={processing.airdrop || selectedReferrals.length === 0}
-                            onClick={() => doInvoke('airdrop', buildAirdropInvoke(selectedReferrals))}
+                            onClick={() => doInvoke('airdrop', buildAirdropInvoke(selectedReferrals.map(item => item.replace(/：/g, ':').trim())))}
                         >
                             {processing.airdrop
                                 ? t('common.processing', { defaultValue: '处理中...' })
@@ -415,9 +475,9 @@ export function DaoWorkflow({
                             {t('pages.dao.detail.refresh')}
                         </Button>
                     </div>
-
+                    <div className='mt-8'><hr /></div>
                     {/* 空投排行榜 */}
-                    <div className="mt-4">
+                    <div className="mt-8">
                         {loadingLeaderboard ? (
                             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center text-zinc-500">
                                 {t('common.loading', { defaultValue: '加载中...' })}

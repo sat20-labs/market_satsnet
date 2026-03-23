@@ -46,7 +46,8 @@ export function DaoActionsPanel({ contractUrl, status, onInvoked }: { contractUr
         const parts = text
             .split(/[\s,\n\r]+/)
             .map(s => s.trim())
-            .filter(Boolean);
+            .filter(Boolean)
+            .map(part => part.split(/[:：]/)[0].trim());
         return Array.from(new Set(parts));
     };
 

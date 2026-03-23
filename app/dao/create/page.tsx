@@ -182,7 +182,8 @@ export default function DaoCreatePage() {
                         </SelectContent>
                     </Select>
                     <div className="text-xs text-zinc-500">
-                        {tp('fee_rate', { value: btcFeeRate?.value ?? '-' })}
+                        {/* {tp('fee_rate', { value: btcFeeRate?.value ?? '-' })} */}
+                        <br />
                     </div>
                 </div>
 
@@ -223,7 +224,8 @@ export default function DaoCreatePage() {
                 </div>
 
                 <div className="text-xs text-zinc-500">
-                    {tp('asset_name', { value: assetNameString || '-' })}
+                    {/* {tp('asset_name', { value: assetNameString || '-' })} */}
+                    <br />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -256,7 +258,7 @@ export default function DaoCreatePage() {
                     </div>
                 </div>
 
-                <div className="border-t border-zinc-800 pt-4">
+                <div className="border-t border-zinc-800 pt-8">
                     <div className="text-sm text-zinc-300 font-semibold mb-3">
                         {tp('airdrop_condition')}
                     </div>
@@ -296,7 +298,7 @@ export default function DaoCreatePage() {
                         </div>
                     </div>
                     <div className="text-xs text-zinc-500 mt-2">
-                        {tp('holding_asset', { value: holdingAssetString || '-' })}
+                        {/* {tp('holding_asset', { value: holdingAssetString || '-' })} */}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import { useTranslation } from 'react-i18next';
 import {
     buildValidateInvoke,
     DAO_ORDERTYPE_AIRDROP,
@@ -18,15 +19,6 @@ function safeParseJson<T>(s: string): T | null {
         return JSON.parse(s) as T;
     } catch {
         return null;
-    }
-}
-
-function copy(text: string) {
-    try {
-        navigator.clipboard.writeText(text);
-        toast.success('Copied');
-    } catch {
-        toast.error('Copy failed');
     }
 }
 
@@ -47,8 +39,18 @@ export function DaoPendingLists({
     contractUrl: string;
     onValidated?: () => void;
 }) {
+    const { t } = useTranslation();
     const [registerSelected, setRegisterSelected] = useState<Record<number, boolean>>({});
     const [airdropSelected, setAirdropSelected] = useState<Record<number, boolean>>({});
+
+    const copy = (text: string) => {
+        try {
+            navigator.clipboard.writeText(text);
+            toast.success(t('pages.dao.pending.copy_success'));
+        } catch {
+            toast.error(t('pages.dao.pending.copy_failed'));
+        }
+    };
 
     const [reasonPreset, setReasonPreset] = useState(REASONS[0]);
     const [reasonText, setReasonText] = useState('');
@@ -148,19 +150,19 @@ export function DaoPendingLists({
             // console.log('  Connected:', connected);
             // console.log('  Validators list:', validators);
             // console.log('  Is in validators? PK:', validators.includes(publicKey || ''), 'Addr:', validators.includes(address || ''));
-            toast.error('You are not a validator');
+            toast.error(t('pages.dao.pending.not_validator'));
             return;
         }
         if (!contractUrl) {
-            toast.error('Missing contractUrl');
+            toast.error(t('pages.dao.pending.missing_contract_url'));
             return;
         }
         if (!window.sat20?.invokeContract_SatsNet) {
-            toast.error('sat20 wallet API not available');
+            toast.error(t('pages.dao.pending.wallet_api_unavailable'));
             return;
         }
         if (!ids.length) {
-            toast.error('No selected items');
+            toast.error(t('pages.dao.pending.no_selected_items'));
             return;
         }
 
@@ -169,7 +171,7 @@ export function DaoPendingLists({
             const invoke = buildValidateInvoke(orderType, ids, reason, -1);
             const res: any = await invokeDaoContractSatsNet(contractUrl, invoke);
             const txId = res?.txId || res?.txid || res?.data?.txId;
-            toast.success(txId ? `Reject submitted: ${txId}` : 'Reject submitted');
+            toast.success(txId ? t('pages.dao.pending.reject_submitted_with_tx', { txId }) : t('pages.dao.pending.reject_submitted'));
 
             // reset selection after submission
             if (orderType === DAO_ORDERTYPE_REGISTER) setRegisterSelected({});
@@ -178,7 +180,7 @@ export function DaoPendingLists({
             onValidated?.();
         } catch (e: any) {
             console.error(e);
-            toast.error(e?.message || 'Reject failed');
+            toast.error(e?.message || t('pages.dao.pending.reject_failed'));
         } finally {
             setLoading(false);
         }
@@ -193,19 +195,19 @@ export function DaoPendingLists({
             // console.log('  Connected:', connected);
             // console.log('  Validators list:', validators);
             // console.log('  Is in validators? PK:', validators.includes(publicKey || ''), 'Addr:', validators.includes(address || ''));
-            toast.error('You are not a validator');
+            toast.error(t('pages.dao.pending.not_validator'));
             return;
         }
         if (!contractUrl) {
-            toast.error('Missing contractUrl');
+            toast.error(t('pages.dao.pending.missing_contract_url'));
             return;
         }
         if (!window.sat20?.invokeContract_SatsNet) {
-            toast.error('sat20 wallet API not available');
+            toast.error(t('pages.dao.pending.wallet_api_unavailable'));
             return;
         }
         if (!ids.length) {
-            toast.error('No selected items');
+            toast.error(t('pages.dao.pending.no_selected_items'));
             return;
         }
 
@@ -214,7 +216,7 @@ export function DaoPendingLists({
             const invoke = buildValidateInvoke(orderType, ids, 'accept', 0); // result=0 表示接受
             const res: any = await invokeDaoContractSatsNet(contractUrl, invoke);
             const txId = res?.txId || res?.txid || res?.data?.txId;
-            toast.success(txId ? `Accept submitted: ${txId}` : 'Accept submitted');
+            toast.success(txId ? t('pages.dao.pending.accept_submitted_with_tx', { txId }) : t('pages.dao.pending.accept_submitted'));
 
             // reset selection after submission
             if (orderType === DAO_ORDERTYPE_REGISTER) setRegisterSelected({});
@@ -223,7 +225,7 @@ export function DaoPendingLists({
             onValidated?.();
         } catch (e: any) {
             console.error(e);
-            toast.error(e?.message || 'Accept failed');
+            toast.error(e?.message || t('pages.dao.pending.accept_failed'));
         } finally {
             setLoading(false);
         }
@@ -234,13 +236,13 @@ export function DaoPendingLists({
             <div>
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                     <div>
-                        <div className="text-sm font-semibold text-zinc-200">Pending Review</div>
-                        <div className="text-xs text-zinc-500">Select items to accept or reject, then submit validate (batch).</div>
+                        <div className="text-sm font-semibold text-zinc-200">{t('pages.dao.pending.pending_review_title')}</div>
+                        <div className="text-xs text-zinc-500">{t('pages.dao.pending.select_items_hint')}</div>
 
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:w-auto">
                         <div>
-                            <div className="text-xs text-zinc-500 mb-1">Reason</div>
+                            <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.pending.reason_label')}</div>
                             <select
                                 value={reasonPreset}
                                 onChange={(e) => setReasonPreset(e.target.value)}
@@ -254,7 +256,7 @@ export function DaoPendingLists({
                             </select>
                         </div>
                         <div>
-                            <div className="text-xs text-zinc-500 mb-1">Custom</div>
+                            <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.pending.custom_label')}</div>
                             <input
                                 value={reasonText}
                                 onFocus={() => {
@@ -269,7 +271,7 @@ export function DaoPendingLists({
                                 }}
                                 disabled={reasonPreset !== 'reject: other'}
                                 className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 text-sm text-zinc-200 disabled:opacity-50"
-                                placeholder="e.g. invalid UID format"
+                                placeholder={t('pages.dao.pending.custom_reason_placeholder')}
                             />
                         </div>
                         <div className="flex items-end gap-2">
@@ -281,7 +283,7 @@ export function DaoPendingLists({
                                     toggleAll('airdrop', false);
                                 }}
                             >
-                                Clear
+                                {t('pages.dao.pending.clear_button')}
                             </Button>
                         </div>
                     </div>
@@ -291,26 +293,26 @@ export function DaoPendingLists({
             <div>
                 <div className="flex items-center justify-between gap-3">
                     <div>
-                        <div className="text-sm font-semibold text-zinc-200">Pending Registers</div>
-                        <div className="text-xs text-zinc-500">Selected: {selectedRegisterIds.length}</div>
+                        <div className="text-sm font-semibold text-zinc-200">{t('pages.dao.pending.pending_registers')}</div>
+                        <div className="text-xs text-zinc-500">{t('pages.dao.pending.selected_count', { count: selectedRegisterIds.length })}</div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" disabled={loading || registerItems.length === 0} onClick={() => toggleAll('register', true)}>
-                            Select all
+                            {t('pages.dao.pending.select_all')}
                         </Button>
                         <Button
                             className="bg-green-600 hover:bg-green-700 text-white"
                             disabled={loading || selectedRegisterIds.length === 0}
                             onClick={() => doValidateAccept(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
                         >
-                            Accept selected
+                            {t('pages.dao.pending.accept_selected')}
                         </Button>
                         <Button
                             className="btn-gradient"
                             disabled={loading || selectedRegisterIds.length === 0}
                             onClick={() => doValidateReject(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
                         >
-                            Reject selected
+                            {t('pages.dao.pending.reject_selected')}
                         </Button>
                     </div>
                 </div>
@@ -322,13 +324,13 @@ export function DaoPendingLists({
                         <Table className="min-w-[1000px]">
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[50px]">Sel</TableHead>
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>UID</TableHead>
-                                    <TableHead>ReferrerUID</TableHead>
-                                    <TableHead>Address</TableHead>
-                                    <TableHead>InUtxo</TableHead>
-                                    <TableHead>Copy</TableHead>
+                                    <TableHead className="w-[50px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.uid')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.referrer_uid')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.in_utxo')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.copy')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -348,9 +350,9 @@ export function DaoPendingLists({
                                         <TableCell className="font-mono">{it.InUtxo}</TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
-                                                <Button size="sm" variant="outline" onClick={() => copy(String(it.Id))}>ID</Button>
-                                                <Button size="sm" variant="outline" onClick={() => copy(it.UID)}>UID</Button>
-                                                <Button size="sm" variant="outline" onClick={() => copy(it.Address)}>Addr</Button>
+                                                <Button size="sm" variant="outline" onClick={() => copy(String(it.Id))}>{t('pages.dao.pending.copy_buttons.id')}</Button>
+                                                <Button size="sm" variant="outline" onClick={() => copy(it.UID)}>{t('pages.dao.pending.copy_buttons.uid')}</Button>
+                                                <Button size="sm" variant="outline" onClick={() => copy(it.Address)}>{t('pages.dao.pending.copy_buttons.addr')}</Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -364,26 +366,26 @@ export function DaoPendingLists({
             <div>
                 <div className="flex items-center justify-between gap-3">
                     <div>
-                        <div className="text-sm font-semibold text-zinc-200">Pending Airdrops</div>
-                        <div className="text-xs text-zinc-500">Selected: {selectedAirdropIds.length}</div>
+                        <div className="text-sm font-semibold text-zinc-200">{t('pages.dao.pending.pending_airdrops')}</div>
+                        <div className="text-xs text-zinc-500">{t('pages.dao.pending.selected_count', { count: selectedAirdropIds.length })}</div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" disabled={loading || airdropItems.length === 0} onClick={() => toggleAll('airdrop', true)}>
-                            Select all
+                            {t('pages.dao.pending.select_all')}
                         </Button>
                         <Button
                             className="bg-green-600 hover:bg-green-700 text-white"
                             disabled={loading || selectedAirdropIds.length === 0}
                             onClick={() => doValidateAccept(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
                         >
-                            Accept selected
+                            {t('pages.dao.pending.accept_selected')}
                         </Button>
                         <Button
                             className="btn-gradient"
                             disabled={loading || selectedAirdropIds.length === 0}
                             onClick={() => doValidateReject(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
                         >
-                            Reject selected
+                            {t('pages.dao.pending.reject_selected')}
                         </Button>
                     </div>
                 </div>
@@ -395,13 +397,13 @@ export function DaoPendingLists({
                         <Table className="min-w-[1000px]">
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[50px]">Sel</TableHead>
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>UID</TableHead>
-                                    <TableHead>ReferralUIDs</TableHead>
-                                    <TableHead>Address</TableHead>
-                                    <TableHead>InUtxo</TableHead>
-                                    <TableHead>Copy</TableHead>
+                                    <TableHead className="w-[50px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.uid')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.referral_uids')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.in_utxo')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.copy')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -421,8 +423,8 @@ export function DaoPendingLists({
                                         <TableCell className="font-mono">{it.InUtxo}</TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
-                                                <Button size="sm" variant="outline" onClick={() => copy(String(it.Id))}>ID</Button>
-                                                <Button size="sm" variant="outline" onClick={() => copy(it.UID)}>UID</Button>
+                                                <Button size="sm" variant="outline" onClick={() => copy(String(it.Id))}>{t('pages.dao.pending.copy_buttons.id')}</Button>
+                                                <Button size="sm" variant="outline" onClick={() => copy(it.UID)}>{t('pages.dao.pending.copy_buttons.uid')}</Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>

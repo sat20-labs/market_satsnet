@@ -654,6 +654,7 @@
       "overview": {
         "all_addresses": "All Addresses List",
         "all_addresses_description": "All registered addresses in the contract",
+        "airdrop_history": "History",
         "search_placeholder": "Search UID or address",
         "total": "Total",
         "address": "Address",
@@ -686,7 +687,39 @@
         "selection_hint": "Select UIDs to airdrop, then click Add Selected",
         "no_referrals": "No referrals available",
         "no_selection": "Please select UIDs to airdrop from the left",
-        "clear_selection": "Clear Selection"
+        "clear_selection": "Clear Selection",
+        "manual_input_label": "Manual input UID:Address (one per line)",
+        "add_manual": "Add manual input",
+        "clear_input": "Clear input",
+        "manual_input_placeholder": "id1: address1"
+      },
+      "airdrop_history": {
+        "id": "ID",
+        "uid": "UID",
+        "order_type": "OrderType",
+        "address": "Address",
+        "amount": "Amount",
+        "time": "Time",
+        "txid": "TxId",
+        "action": "Action",
+        "all": "All",
+        "register": "Register",
+        "donate": "Donate",
+        "airdrop": "Airdrop",
+        "validate": "Validate",
+        "previous_page": "Previous",
+        "next_page": "Next",
+        "view_details": "View Details",
+        "collapse_details": "Collapse Details",
+        "airdrop_details": "Airdrop Details",
+        "filter_placeholder": "Filter OrderType",
+        "filter_all": "All",
+        "total_records": "Total {{total}} records",
+        "no_records": "No records",
+        "history_list": "History List",
+        "result": "Result",
+        "details": "Details",
+        "pagination_range": "{{start}} - {{end}} / {{total}} items"
       }
     },
     "leaderboard": {
@@ -708,6 +741,54 @@
       "no_recent": "No recent activity",
       "donated": "donated",
       "airdropped": "airdropped"
+    },
+    "pending": {
+      "copy_success": "Copied",
+      "copy_failed": "Copy failed",
+      "reasons": [
+        "reject: invalid uid",
+        "reject: invalid referrer",
+        "reject: duplicate uid",
+        "reject: insufficient asset",
+        "reject: other"
+      ],
+      "not_validator": "You are not a validator",
+      "missing_contract_url": "Missing contractUrl",
+      "wallet_api_unavailable": "sat20 wallet API not available",
+      "no_selected_items": "No selected items",
+      "reject_submitted": "Reject submitted",
+      "reject_submitted_with_tx": "Reject submitted: {{txId}}",
+      "reject_failed": "Reject failed",
+      "accept_submitted": "Accept submitted",
+      "accept_submitted_with_tx": "Accept submitted: {{txId}}",
+      "accept_failed": "Accept failed",
+      "select_items_hint": "Select items to accept or reject, then submit validate (batch).",
+      "reason_label": "Reason",
+      "custom_reason_placeholder": "e.g. invalid UID format",
+      "clear_button": "Clear",
+      "custom_label": "Custom",
+      "pending_review_title": "Pending Review",
+      "pending_registers": "Pending Registers",
+      "selected_count": "Selected: {{count}}",
+      "select_all": "Select all",
+      "accept_selected": "Accept selected",
+      "reject_selected": "Reject selected",
+      "pending_airdrops": "Pending Airdrops",
+      "table_headers": {
+        "sel": "Sel",
+        "id": "ID",
+        "uid": "UID",
+        "referrer_uid": "ReferrerUID",
+        "address": "Address",
+        "in_utxo": "InUtxo",
+        "copy": "Copy",
+        "referral_uids": "ReferralUIDs"
+      },
+      "copy_buttons": {
+        "id": "ID",
+        "uid": "UID",
+        "addr": "Addr"
+      }
     },
     "guard": {
       "restricted_title": "DAO Tools are restricted",

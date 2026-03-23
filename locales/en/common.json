@@ -389,5 +389,6 @@
   "fetch_failed": "Failed to fetch data",
   "retry": "Retry",
   "search": "Search",
-  "submitted_waiting": "Submitted, waiting for review/confirmation"
+  "submitted_waiting": "Submitted, waiting for review/confirmation",
+  "invoke_failed": "Invoke failed"
 }

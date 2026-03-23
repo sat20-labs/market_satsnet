@@ -97,9 +97,9 @@ function LeaderboardTable({ items }: { items: LeaderboardItem[] }) {
                         <th className="text-right py-2 px-2 text-zinc-400 font-normal">
                             {t('pages.dao.leaderboard.amount', { defaultValue: '数量' })}
                         </th>
-                        <th className="text-right py-2 px-2 text-zinc-400 font-normal">
+                        {/* <th className="text-right py-2 px-2 text-zinc-400 font-normal">
                             {t('pages.dao.leaderboard.referrals', { defaultValue: '推荐数' })}
-                        </th>
+                        </th> */}
                     </tr>
                 </thead>
                 <tbody>
@@ -137,9 +137,9 @@ function LeaderboardTable({ items }: { items: LeaderboardItem[] }) {
                                     {formatAmount(item.amt)}
                                 </span>
                             </td>
-                            <td className="py-3 px-2 text-right">
+                            {/* <td className="py-3 px-2 text-right">
                                 <span className="text-zinc-300">{item.referralCount}</span>
-                            </td>
+                            </td> */}
                         </tr>
                     ))}
                 </tbody>
