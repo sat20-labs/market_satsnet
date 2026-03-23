@@ -396,8 +396,6 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                         </Table>
                     </div>
 
-
-
                     {totalPages > 1 && (
                         <div className="mt-6">
                             <CustomPagination
