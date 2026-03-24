@@ -668,8 +668,12 @@ export const getContractStatus = async (uri: string) => {
 };
 
 // 获取合约调用历史
-export const getContractInvokeHistory = async (url: string, pageStart: number = 0, pageLimit: number = 20) => {
-  return requestContract(`/info/contract/history/${url}?start=${pageStart}&limit=${pageLimit}`, {});
+export const getContractInvokeHistory = async (url: string, pageStart: number = 0, pageLimit: number = 20, orderType?: number) => {
+  let query = `start=${pageStart}&limit=${pageLimit}`;
+  if (orderType !== undefined) {
+    query += `&order_type=${orderType}`;
+  }
+  return requestContract(`/info/contract/history/${url}?${query}`, {});
 };
 
 // 获取合约所有用户地址

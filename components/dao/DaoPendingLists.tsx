@@ -5,6 +5,7 @@ import type { DaoAirdropItem, DaoContractStatus, DaoRegisterItem } from '@/domai
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Copy } from 'lucide-react';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -50,6 +51,11 @@ export function DaoPendingLists({
         } catch {
             toast.error(t('pages.dao.pending.copy_failed'));
         }
+    };
+
+    const truncateMiddle = (str: string, startLength = 8, endLength = 8) => {
+        if (str.length <= startLength + endLength + 3) return str;
+        return `${str.slice(0, startLength)}...${str.slice(-endLength)}`;
     };
 
     const [reasonPreset, setReasonPreset] = useState(REASONS[0]);
@@ -291,6 +297,7 @@ export function DaoPendingLists({
             </div>
 
             <div>
+                <hr className="my-3 border-zinc-700" />
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <div className="text-sm font-semibold text-zinc-200">{t('pages.dao.pending.pending_registers')}</div>
@@ -300,20 +307,7 @@ export function DaoPendingLists({
                         <Button variant="outline" disabled={loading || registerItems.length === 0} onClick={() => toggleAll('register', true)}>
                             {t('pages.dao.pending.select_all')}
                         </Button>
-                        <Button
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                            disabled={loading || selectedRegisterIds.length === 0}
-                            onClick={() => doValidateAccept(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
-                        >
-                            {t('pages.dao.pending.accept_selected')}
-                        </Button>
-                        <Button
-                            className="btn-gradient"
-                            disabled={loading || selectedRegisterIds.length === 0}
-                            onClick={() => doValidateReject(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
-                        >
-                            {t('pages.dao.pending.reject_selected')}
-                        </Button>
+
                     </div>
                 </div>
 
@@ -326,11 +320,10 @@ export function DaoPendingLists({
                                 <TableRow>
                                     <TableHead className="w-[50px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead>
-                                    <TableHead>{t('pages.dao.pending.table_headers.uid')}</TableHead>
+                                    <TableHead className="w-[150px]">{t('pages.dao.pending.table_headers.uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.referrer_uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.in_utxo')}</TableHead>
-                                    <TableHead>{t('pages.dao.pending.table_headers.copy')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -344,15 +337,52 @@ export function DaoPendingLists({
                                             />
                                         </TableCell>
                                         <TableCell className="font-mono">{it.Id}</TableCell>
-                                        <TableCell className="font-mono">{it.UID}</TableCell>
+                                        <TableCell className="font-mono">
+                                            <div className="flex items-center gap-1">
+                                                {it.UID}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-4 w-4 p-0"
+                                                    onClick={() => copy(it.UID)}
+                                                >
+                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
                                         <TableCell className="font-mono">{it.ReferrerUID || '-'}</TableCell>
-                                        <TableCell className="font-mono">{it.Address}</TableCell>
-                                        <TableCell className="font-mono">{it.InUtxo}</TableCell>
-                                        <TableCell>
-                                            <div className="flex gap-2">
-                                                <Button size="sm" variant="outline" onClick={() => copy(String(it.Id))}>{t('pages.dao.pending.copy_buttons.id')}</Button>
-                                                <Button size="sm" variant="outline" onClick={() => copy(it.UID)}>{t('pages.dao.pending.copy_buttons.uid')}</Button>
-                                                <Button size="sm" variant="outline" onClick={() => copy(it.Address)}>{t('pages.dao.pending.copy_buttons.addr')}</Button>
+                                        <TableCell className="font-mono">
+                                            <div className="flex items-center gap-1">
+                                                {truncateMiddle(it.Address)}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-4 w-4 p-0"
+                                                    onClick={() => copy(it.Address)}
+                                                >
+                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="font-mono">
+                                            <div className="flex items-center gap-1">
+                                                <a
+                                                    href={`https://mempool.space/tx/${it.InUtxo.split(':')[0]}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-400 hover:underline"
+                                                    title={it.InUtxo}
+                                                >
+                                                    {truncateMiddle(it.InUtxo)}
+                                                </a>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-4 w-4 p-0"
+                                                    onClick={() => copy(it.InUtxo)}
+                                                >
+                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -362,8 +392,25 @@ export function DaoPendingLists({
                     </div>
                 )}
             </div>
+            <div className="flex items-left gap-2">
+                <Button
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    disabled={loading || selectedRegisterIds.length === 0}
+                    onClick={() => doValidateAccept(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
+                >
+                    {t('pages.dao.pending.accept_selected')}
+                </Button>
+                <Button
+                    className="btn-gradient"
+                    disabled={loading || selectedRegisterIds.length === 0}
+                    onClick={() => doValidateReject(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
+                >
+                    {t('pages.dao.pending.reject_selected')}
+                </Button>
+            </div>
 
             <div>
+                <hr className="my-3 border-zinc-700" />
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <div className="text-sm font-semibold text-zinc-200">{t('pages.dao.pending.pending_airdrops')}</div>
@@ -373,26 +420,14 @@ export function DaoPendingLists({
                         <Button variant="outline" disabled={loading || airdropItems.length === 0} onClick={() => toggleAll('airdrop', true)}>
                             {t('pages.dao.pending.select_all')}
                         </Button>
-                        <Button
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                            disabled={loading || selectedAirdropIds.length === 0}
-                            onClick={() => doValidateAccept(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
-                        >
-                            {t('pages.dao.pending.accept_selected')}
-                        </Button>
-                        <Button
-                            className="btn-gradient"
-                            disabled={loading || selectedAirdropIds.length === 0}
-                            onClick={() => doValidateReject(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
-                        >
-                            {t('pages.dao.pending.reject_selected')}
-                        </Button>
+
                     </div>
                 </div>
 
                 {airdropItems.length === 0 ? (
                     <div className="mt-2 text-sm text-zinc-500">-</div>
                 ) : (
+
                     <div className="mt-3 overflow-x-auto">
                         <Table className="min-w-[1000px]">
                             <TableHeader>
@@ -403,7 +438,6 @@ export function DaoPendingLists({
                                     <TableHead>{t('pages.dao.pending.table_headers.referral_uids')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.in_utxo')}</TableHead>
-                                    <TableHead>{t('pages.dao.pending.table_headers.copy')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -417,14 +451,52 @@ export function DaoPendingLists({
                                             />
                                         </TableCell>
                                         <TableCell className="font-mono">{it.Id}</TableCell>
-                                        <TableCell className="font-mono">{it.UID}</TableCell>
+                                        <TableCell className="font-mono">
+                                            <div className="flex items-center gap-1">
+                                                {it.UID}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-4 w-4 p-0"
+                                                    onClick={() => copy(it.UID)}
+                                                >
+                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
                                         <TableCell className="font-mono break-all">{(it.ReferralUIDs || []).join(', ')}</TableCell>
-                                        <TableCell className="font-mono">{it.Address}</TableCell>
-                                        <TableCell className="font-mono">{it.InUtxo}</TableCell>
-                                        <TableCell>
-                                            <div className="flex gap-2">
-                                                <Button size="sm" variant="outline" onClick={() => copy(String(it.Id))}>{t('pages.dao.pending.copy_buttons.id')}</Button>
-                                                <Button size="sm" variant="outline" onClick={() => copy(it.UID)}>{t('pages.dao.pending.copy_buttons.uid')}</Button>
+                                        <TableCell className="font-mono">
+                                            <div className="flex items-center gap-1">
+                                                {truncateMiddle(it.Address)}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-4 w-4 p-0"
+                                                    onClick={() => copy(it.Address)}
+                                                >
+                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="font-mono">
+                                            <div className="flex items-center gap-1">
+                                                <a
+                                                    href={`https://mempool.space/tx/${it.InUtxo.split(':')[0]}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-400 hover:underline"
+                                                    title={it.InUtxo}
+                                                >
+                                                    {truncateMiddle(it.InUtxo)}
+                                                </a>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-4 w-4 p-0"
+                                                    onClick={() => copy(it.InUtxo)}
+                                                >
+                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -433,6 +505,22 @@ export function DaoPendingLists({
                         </Table>
                     </div>
                 )}
+            </div>
+            <div className="flex items-left gap-2">
+                <Button
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    disabled={loading || selectedAirdropIds.length === 0}
+                    onClick={() => doValidateAccept(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
+                >
+                    {t('pages.dao.pending.accept_selected')}
+                </Button>
+                <Button
+                    className="btn-gradient"
+                    disabled={loading || selectedAirdropIds.length === 0}
+                    onClick={() => doValidateReject(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
+                >
+                    {t('pages.dao.pending.reject_selected')}
+                </Button>
             </div>
         </div>
     );

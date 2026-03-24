@@ -76,8 +76,8 @@ export default class ContractService {
     return status ? JSON.parse(status) : null;
   }
 
-  async getContractHistory(url: string, pageStart: number = 0, pageLimit: number = 20) {
-    const { status } = await this.client.getContractInvokeHistory(url, pageStart, pageLimit);
+  async getContractHistory(url: string, pageStart: number = 0, pageLimit: number = 20, orderType?: number) {
+    const { status } = await this.client.getContractInvokeHistory(url, pageStart, pageLimit, orderType);
     const data = status ? JSON.parse(status) : null;
     if (!data) return { data: [], total: 0 };
     return {

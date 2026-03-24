@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { contractService } from '@/domain/services/contract';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Loader2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CustomPagination } from '@/components/ui/CustomPagination';
@@ -19,7 +20,7 @@ const ORDER_TYPE_MAP: Record<number, { label: string; labelEn: string }> = {
     15: { label: '注册', labelEn: 'Register' },
     16: { label: '捐赠', labelEn: 'Donate' },
     17: { label: '空投', labelEn: 'Airdrop' },
-    // 18: { label: '审核', labelEn: 'Validate' },
+    18: { label: '审核', labelEn: 'Validate' },
 };
 
 interface AirdropItem {
@@ -55,9 +56,12 @@ interface ContractHistoryItem {
     airdrop?: {
         items: AirdropItem[];
     };
+    validate?: {
+        ids: string;
+        reason: string;
+    };
 }
 const PAGE_SIZE = 10;
-const MAX_PAGE_LIMIT = 1000;
 
 export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
     const { t, i18n } = useTranslation();
@@ -67,7 +71,8 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
     const [error, setError] = useState<string | null>(null);
     const [total, setTotal] = useState(0);
     const [selectedOrderType, setSelectedOrderType] = useState<number | 'all'>('all');
-    const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [detailModalOpen, setDetailModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<ContractHistoryItem | null>(null);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE);
@@ -86,16 +91,35 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
         setLoading(true);
         setError(null);
         try {
-            const result = await contractService.getContractHistory(contractUrl, 0, MAX_PAGE_LIMIT);
-            setHistory(result.data);
-            setTotal(result.total);
+            if (selectedOrderType === 'all') {
+                const start = (currentPage - 1) * pageSize;
+                const limit = pageSize;
+                const result = await contractService.getContractHistory(contractUrl, start, limit);
+                setHistory(result.data);
+                setTotal(result.total);
+            } else {
+                // 筛选状态下，一次性获取所有数据（假设不超过1000条）
+                const MAX_LIMIT = 1000;
+                const result = await contractService.getContractHistory(contractUrl, 0, MAX_LIMIT);
+                // 客户端筛选
+                const filtered = result.data.filter(item => item.OrderType === selectedOrderType);
+                setHistory(filtered);
+                setTotal(filtered.length);
+                // 重置当前页码为1，因为数据已全部加载（由 useEffect 处理）
+                // setCurrentPage(1); // 已移除，避免分页重置
+            }
         } catch (err: any) {
             console.error('Failed to fetch contract history:', err);
             setError(err.message || t('common.fetch_failed'));
         } finally {
             setLoading(false);
         }
-    }, [contractUrl, t]);
+    }, [contractUrl, t, currentPage, pageSize, selectedOrderType]);
+
+    // 当筛选类型变化时，重置页码为1
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedOrderType]);
 
     useEffect(() => {
         if (contractUrl) {
@@ -166,12 +190,19 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
         ? history
         : history.filter(item => item.OrderType === selectedOrderType);
 
-    const totalPages = Math.ceil(filteredHistory.length / pageSize);
-    const startIndex = (currentPage - 1) * pageSize;
-    const paginatedHistory = filteredHistory.slice(startIndex, startIndex + pageSize);
+    const totalPages = Math.ceil(total / pageSize);
+    let paginatedHistory;
+    if (selectedOrderType === 'all') {
+        // 已按分页请求，无需切片
+        paginatedHistory = filteredHistory;
+    } else {
+        const startIndex = (currentPage - 1) * pageSize;
+        paginatedHistory = filteredHistory.slice(startIndex, startIndex + pageSize);
+    }
 
-    const toggleExpand = (id: number) => {
-        setExpandedId(expandedId === id ? null : id);
+    const openDetailModal = (item: ContractHistoryItem) => {
+        setSelectedItem(item);
+        setDetailModalOpen(true);
     };
 
     if (loading && history.length === 0) {
@@ -226,7 +257,6 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-zinc-800">
-                                    <TableHead className="text-zinc-400 w-[50px]"></TableHead>
                                     <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.id')}</TableHead>
                                     <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.order_type')}</TableHead>
                                     <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.address')}</TableHead>
@@ -238,22 +268,10 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                             </TableHeader>
                             <TableBody>
                                 {paginatedHistory.map((item) => {
-                                    const hasDetails = item.airdrop?.items && item.airdrop.items.length > 0;
+                                    const hasDetails = (item.airdrop?.items && item.airdrop.items.length > 0) || item.validate;
                                     return (
                                         <React.Fragment key={item.Id}>
                                             <TableRow className="border-zinc-800">
-                                                <TableCell>
-                                                    {hasDetails && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => toggleExpand(item.Id)}
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            {expandedId === item.Id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                                        </Button>
-                                                    )}
-                                                </TableCell>
                                                 <TableCell className="font-mono text-sm text-white">{item.Id}</TableCell>
                                                 <TableCell className="text-white">
                                                     <span className="px-2 py-1 rounded text-xs bg-zinc-800">
@@ -271,7 +289,7 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                             className="h-4 w-4 p-0"
                                                             onClick={() => copyToClipboard(item.Address)}
                                                         >
-                                                            <Copy className="h-3 w-3" />
+                                                            <Copy className="h-3 w-3 ml-3 text-gray-400" />
                                                         </Button>
                                                     </div>
                                                 </TableCell>
@@ -321,7 +339,7 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                                 className="h-4 w-4 p-0"
                                                                 onClick={() => copyToClipboard(item.OutTxId || item.InUtxo)}
                                                             >
-                                                                <Copy className="h-3 w-3" />
+                                                                <Copy className="h-3 w-3 ml-3 text-gray-400" />
                                                             </Button>
                                                         )}
                                                     </div>
@@ -331,70 +349,106 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => toggleExpand(item.Id)}
+                                                            onClick={() => openDetailModal(item)}
                                                         >
-                                                            {expandedId === item.Id ? '收起详细' : '查看详细'}
+                                                            {t('pages.dao.workflow.airdrop_history.view_details')}
                                                         </Button>
                                                     )}
                                                 </TableCell>
                                             </TableRow>
-                                            {expandedId === item.Id && hasDetails && (
-                                                <TableRow className="border-zinc-800 bg-zinc-900/50">
-                                                    <TableCell colSpan={8} className="p-4">
-                                                        <div className="text-sm font-medium text-white mb-2">{t('pages.dao.workflow.airdrop_history.details')}</div>
-                                                        <Table>
-                                                            <TableHeader>
-                                                                <TableRow className="border-zinc-700">
-                                                                    <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.uid')}</TableHead>
-                                                                    <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.address')}</TableHead>
-                                                                    <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.result')}</TableHead>
-                                                                </TableRow>
-                                                            </TableHeader>
-                                                            <TableBody>
-                                                                {item.airdrop!.items.map((detail, idx) => (
-                                                                    <TableRow key={idx} className="border-zinc-700">
-                                                                        <TableCell className="font-mono text-white">
-                                                                            <div className="flex items-center gap-1">
-                                                                                {detail.uid}
-                                                                                <Button
-                                                                                    variant="ghost"
-                                                                                    size="icon"
-                                                                                    className="h-4 w-4 p-0"
-                                                                                    onClick={() => copyToClipboard(detail.uid)}
-                                                                                >
-                                                                                    <Copy className="h-3 w-3" />
-                                                                                </Button>
-                                                                            </div>
-                                                                        </TableCell>
-                                                                        <TableCell className="font-mono text-sm text-white">
-                                                                            <div className="flex items-center gap-1">
-                                                                                <span title={detail.address}>
-                                                                                    {truncateAddress(detail.address)}
-                                                                                </span>
-                                                                                <Button
-                                                                                    variant="ghost"
-                                                                                    size="icon"
-                                                                                    className="h-4 w-4 p-0"
-                                                                                    onClick={() => copyToClipboard(detail.address)}
-                                                                                >
-                                                                                    <Copy className="h-3 w-3" />
-                                                                                </Button>
-                                                                            </div>
-                                                                        </TableCell>
-                                                                        <TableCell className="text-white">{detail.result}</TableCell>
-                                                                    </TableRow>
-                                                                ))}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
                                         </React.Fragment>
                                     );
                                 })}
                             </TableBody>
                         </Table>
                     </div>
+
+                    <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+                        <DialogContent className="max-w-6xl max-h-[80vh] overflow-auto">
+                            <DialogHeader>
+                                <DialogTitle>&nbsp;&nbsp;{t('pages.dao.workflow.airdrop_history.view_details')}</DialogTitle>
+                            </DialogHeader>
+                            {selectedItem && (
+                                <div className="my-4">
+                                    {/* <div className="text-sm font-medium text-white mb-2">详情</div> */}
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="border-zinc-700">
+                                                {selectedItem.OrderType === 18 ? (
+                                                    <>
+                                                        <TableHead className="text-zinc-400 bg-zinc-800">{t('pages.dao.workflow.airdrop_history.validate_id')}</TableHead>
+                                                        <TableHead className="text-zinc-400 bg-zinc-800">{t('pages.dao.workflow.airdrop_history.reason')}</TableHead>
+                                                        <TableHead className="text-zinc-400 bg-zinc-800">{t('pages.dao.workflow.airdrop_history.status')}</TableHead>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.uid')}</TableHead>
+                                                        <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.address')}</TableHead>
+                                                        <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.result')}</TableHead>
+                                                    </>
+                                                )}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {selectedItem.OrderType === 18 && selectedItem.validate ? (
+                                                <TableRow className="border-zinc-700">
+                                                    <TableCell className="font-mono text-white">
+                                                        <div className="space-y-2">
+                                                            <div>{selectedItem.validate.ids}</div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-white">
+                                                        <div className="space-y-2">
+                                                            <div>{selectedItem.validate.reason}</div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-white">
+                                                        <div className="space-y-2">
+                                                            <div>{selectedItem.Done === 1 ? (selectedItem.validate.reason === 'validated' ? '✅ Approved' : '❌ Rejected') : '⏳ Processing'}</div>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : selectedItem.airdrop?.items ? (
+                                                selectedItem.airdrop.items.map((detail, idx) => (
+                                                    <TableRow key={idx} className="border-zinc-700">
+                                                        <TableCell className="font-mono text-white">
+                                                            <div className="flex items-center gap-1">
+                                                                {detail.uid}
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-4 w-4 p-0"
+                                                                    onClick={() => copyToClipboard(detail.uid)}
+                                                                >
+                                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="font-mono text-sm text-white">
+                                                            <div className="flex items-center gap-1">
+                                                                <span title={detail.address}>
+                                                                    {truncateAddress(detail.address)}
+                                                                </span>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-4 w-4 p-0"
+                                                                    onClick={() => copyToClipboard(detail.address)}
+                                                                >
+                                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="text-white">{detail.result}</TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : null}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
+                        </DialogContent>
+                    </Dialog>
 
                     {totalPages > 1 && (
                         <div className="mt-6">

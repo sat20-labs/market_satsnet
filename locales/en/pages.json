@@ -649,6 +649,7 @@
       "actions": {
         "submit_register": "Submit Register",
         "submit_donate": "Submit Donate",
+        "reset": "Reset",
         "submit_airdrop": "Submit Airdrop"
       },
       "overview": {
@@ -688,9 +689,12 @@
         "no_referrals": "No referrals available",
         "no_selection": "Please select UIDs to airdrop from the left",
         "clear_selection": "Clear Selection",
-        "manual_input_label": "Manual input UID:Address (one per line)",
-        "add_manual": "Add manual input",
+        "manual_input": "Manual Input",
+        "manual_input_uid": "Input UID",
+        "manual_input_address": "Input address",
+        "add_manual": "Add input",
         "clear_input": "Clear input",
+        "final_summary": "Final Summary",
         "manual_input_placeholder": "id1: address1"
       },
       "airdrop_history": {
@@ -713,6 +717,9 @@
         "collapse_details": "Collapse Details",
         "airdrop_details": "Airdrop Details",
         "filter_placeholder": "Filter OrderType",
+        "validate_id": "Validate ID",
+        "reason": "Reason",
+        "status": "Status",
         "filter_all": "All",
         "total_records": "Total {{total}} records",
         "no_records": "No records",

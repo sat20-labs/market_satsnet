@@ -183,7 +183,9 @@ export function AirdropReferralsSelector({
   return (
     <Card className="bg-zinc-900 border-zinc-800">
       <CardHeader>
-        <CardTitle className="text-white">{t('pages.dao.workflow.airdrop.referrals_list')}</CardTitle>
+        <CardTitle className="text-white">
+          {/* {t('pages.dao.workflow.airdrop.referrals_list')} */}
+        </CardTitle>
         <CardDescription className="text-zinc-400">
           {t('pages.dao.workflow.airdrop.referrals_description')} ({statusData.referrals.length})
         </CardDescription>
@@ -197,14 +199,6 @@ export function AirdropReferralsSelector({
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleSelectAll}>
                 {selectAll ? t('pages.dao.workflow.airdrop.deselect_all') : t('pages.dao.workflow.airdrop.select_all')}
-              </Button>
-              <Button size="sm" onClick={() => {
-                const uidsText = handleAddSelectedToText();
-                // 这里可以触发一个自定义事件
-                const event = new CustomEvent('airdrop:selected-uids', { detail: { uidsText } });
-                window.dispatchEvent(event);
-              }}>
-                {t('pages.dao.workflow.airdrop.add_selected')}
               </Button>
             </div>
           </div>

@@ -635,6 +635,7 @@
       "actions": {
         "submit_register": "提交注册",
         "submit_donate": "提交捐赠",
+        "reset": "重置",
         "submit_airdrop": "提交空投"
       },
       "overview": {
@@ -674,15 +675,18 @@
         "no_referrals": "暂无推荐用户",
         "no_selection": "请从左侧选择要空投的UID",
         "clear_selection": "清空选择",
-        "manual_input_label": "手动输入 UID:Address（每行一个）",
-        "add_manual": "添加手动输入",
+        "manual_input": "手动输入",
+        "manual_input_uid": "输入 UID",
+        "manual_input_address": "输入 钱包地址",
+        "add_manual": "提交输入",
         "clear_input": "清空输入",
+        "final_summary": "空投汇总",
         "manual_input_placeholder": "id1: address1"
       },
       "airdrop_history": {
         "id": "ID",
         "uid": "UID",
-        "order_type": "OrderType",
+        "order_type": "类型",
         "address": "地址",
         "amount": "数量",
         "time": "时间",
@@ -699,6 +703,9 @@
         "collapse_details": "收起详细",
         "airdrop_details": "空投明细",
         "filter_placeholder": "筛选 OrderType",
+        "validate_id": "审核ID",
+        "reason": "原因",
+        "status": "状态",
         "filter_all": "全部",
         "total_records": "共 {{total}} 条记录",
         "details": "详细信息",

@@ -102,6 +102,15 @@ export function DaoWorkflow({
     // Airdrop
     const [airdropUidsText, setAirdropUidsText] = useState('');
     const [selectedReferrals, setSelectedReferrals] = useState<string[]>([]);
+    const [manualUid, setManualUid] = useState('');
+    const [manualAddress, setManualAddress] = useState('');
+
+    const handleReset = () => {
+        setSelectedReferrals([]);
+        setAirdropUidsText('');
+        setManualUid('');
+        setManualAddress('');
+    };
 
     const doInvoke = async (kind: 'register' | 'donate' | 'airdrop', invoke: any) => {
         if (processing[kind]) return;
@@ -166,10 +175,25 @@ export function DaoWorkflow({
             setSelectedReferrals([]);
             return;
         }
-        // 保留 selectedReferrals 中包含冒号的条目（即手动添加的 uid:address）
-        const manualEntries = selectedReferrals.filter(entry => entry.includes(':'));
-        // 合并手动条目和新的UID列表（确保唯一性）
-        const combined = Array.from(new Set([...manualEntries, ...uids]));
+        // 基于UID去重，优先保留带有地址的条目
+        const uidMap = new Map<string, string>();
+        // 先遍历现有条目，建立映射（UID -> 条目）
+        selectedReferrals.forEach(entry => {
+            const uidPart = entry.split(':')[0];
+            // 如果已有映射，优先保留带有地址的条目（即包含冒号的）
+            if (!uidMap.has(uidPart) || entry.includes(':')) {
+                uidMap.set(uidPart, entry);
+            }
+        });
+        // 添加新的UID列表（不包含地址）
+        uids.forEach(uid => {
+            const uidPart = uid.split(':')[0];
+            if (!uidMap.has(uidPart)) {
+                uidMap.set(uidPart, uid);
+            }
+        });
+        // 转换回数组
+        const combined = Array.from(uidMap.values());
         setSelectedReferrals(combined);
     };
 
@@ -181,13 +205,32 @@ export function DaoWorkflow({
         }
     };
 
-    // 添加手动输入的UID到选中列表（保留 uid:address 格式）
+    // 添加手动输入的UID到选中列表（拆分UID和Address输入框）
     const handleAddManualUids = () => {
-        const lines = airdropUidsText.split(/[\n\r]+/).map(line => line.trim()).filter(Boolean);
-        // 保留原始行（可能是 uid:address 或仅 uid）
-        const newEntries = lines.filter(line => line.length > 0);
-        const combined = Array.from(new Set([...selectedReferrals, ...newEntries]));
+        if (!manualUid.trim()) return;
+        const uid = manualUid.trim();
+        const address = manualAddress.trim();
+        const entry = address ? `${uid}:${address}` : uid;
+        // 基于UID去重，优先保留带有地址的条目
+        const uidMap = new Map<string, string>();
+        selectedReferrals.forEach(existing => {
+            const uidPart = existing.split(':')[0];
+            // 如果已有映射，优先保留带有地址的条目（即包含冒号的）
+            if (!uidMap.has(uidPart) || existing.includes(':')) {
+                uidMap.set(uidPart, existing);
+            }
+        });
+        const newUidPart = entry.split(':')[0];
+        // 如果新条目带有地址或当前映射没有地址，则更新
+        const existing = uidMap.get(newUidPart);
+        if (!existing || (entry.includes(':') && !existing.includes(':'))) {
+            uidMap.set(newUidPart, entry);
+        }
+        const combined = Array.from(uidMap.values());
         setSelectedReferrals(combined);
+        // 清空输入框
+        setManualUid('');
+        setManualAddress('');
     };
 
     // 监听自定义事件
@@ -378,72 +421,88 @@ export function DaoWorkflow({
 
                 <TabsContent value="airdrop">
                     <div className="text-xs text-zinc-500 mb-2">{t('pages.dao.workflow.airdrop_tip')}</div>
-                    <div className="grid grid-cols-1 gap-4">
-                        <AirdropReferralsSelector
-                            contractUrl={contractUrl}
-                            selectedUids={selectedReferrals.map(item => item.split(':')[0].trim())} // 传递当前选择状态（仅UID部分）
-                            onSelectReferrals={handleSelectReferrals}
-                        />
+                    {/* 三段结构：系统推荐列表、用户手动输入、汇总区域 */}
+                    <div className="grid grid-cols-1 gap-6">
+                        {/* 系统推荐列表 */}
+                        <div className="lg:col-span-1">
+                            <div className="text-sm font-semibold text-white mb-2">{t('pages.dao.workflow.airdrop.referrals_list', { defaultValue: defaultAssetName || '系统推荐列表' })}</div>
+                            <AirdropReferralsSelector
+                                contractUrl={contractUrl}
+                                selectedUids={selectedReferrals.map(item => item.split(':')[0].trim())}
+                                onSelectReferrals={handleSelectReferrals}
+                            />
+                        </div>
 
-                        <div className="space-y-4">
+                        {/* 用户手动输入 */}
+                        <div className="lg:col-span-1">
+                            <div className="text-sm font-semibold text-white mb-2">{t('pages.dao.workflow.airdrop.manual_input', { defaultValue: defaultAssetName || '手动输入' })}</div>
                             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
                                 <div>
-                                    <div className="text-xs text-zinc-500 mb-1">
-                                        {t('pages.dao.workflow.airdrop.selected_count')}: {selectedReferrals.length}
-                                    </div>
-
-                                    {/* 显示已选择的UID列表 */}
-                                    {selectedReferrals.length > 0 ? (
-                                        <div className="border border-zinc-800 rounded-lg p-3 bg-zinc-800/50 max-h-48 overflow-y-auto">
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                                {selectedReferrals.map((uid, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="bg-zinc-700/50 border border-zinc-700 rounded px-2 py-1 text-sm font-mono text-white truncate"
-                                                        title={uid}
-                                                    >
-                                                        {uid}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="border border-zinc-800 rounded-lg p-6 text-center text-zinc-500">
-                                            {t('pages.dao.workflow.airdrop.no_selection', { defaultValue: '请从左侧选择要空投的UID' })}
-                                        </div>
-                                    )}
+                                    <div className="text-xs text-zinc-500 mb-1">UID</div>
+                                    <Input
+                                        value={manualUid}
+                                        onChange={(e) => setManualUid(e.target.value)}
+                                        placeholder={t('pages.dao.workflow.airdrop.manual_input_uid', { defaultValue: defaultAssetName || '请手动输入UID' })}
+                                        className="bg-zinc-800 border-zinc-700 text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <div className="text-xs text-zinc-500 mb-1">Address</div>
+                                    <Input
+                                        value={manualAddress}
+                                        onChange={(e) => setManualAddress(e.target.value)}
+                                        placeholder={t('pages.dao.workflow.airdrop.manual_input_address', { defaultValue: defaultAssetName || '请输入地址（可选）' })}
+                                        className="bg-zinc-800 border-zinc-700 text-white"
+                                    />
+                                </div>
+                                <div className="flex gap-2 pt-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleAddManualUids}
+                                        disabled={!manualUid.trim()}
+                                    >
+                                        {t('pages.dao.workflow.airdrop.add_manual')}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => { setManualUid(''); setManualAddress(''); }}
+                                        disabled={!manualUid.trim() && !manualAddress.trim()}
+                                    >
+                                        {t('pages.dao.workflow.airdrop.clear_input')}
+                                    </Button>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* 手动输入 UID:Address */}
-                    <div className="mt-4">
-                        <div className="text-xs text-zinc-500 mb-1">{t('pages.dao.workflow.airdrop.manual_input_label')}</div>
-                        <textarea
-                            value={airdropUidsText}
-                            onChange={(e) => setAirdropUidsText(e.target.value)}
-                            placeholder={t('pages.dao.workflow.airdrop.manual_input_placeholder')}
-                            className="w-full h-32 border border-zinc-700 bg-zinc-800 rounded-md p-2 text-sm text-white font-mono"
-                            rows={4}
-                        />
-                        <div className="flex gap-2 mt-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleAddManualUids}
-                                disabled={!airdropUidsText.trim()}
-                            >
-                                {t('pages.dao.workflow.airdrop.add_manual')}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setAirdropUidsText('')}
-                                disabled={!airdropUidsText.trim()}
-                            >
-                                {t('pages.dao.workflow.airdrop.clear_input')}
-                            </Button>
+                        {/* 汇总区域 */}
+                        <div className="lg:col-span-1">
+                            <div className="text-sm font-semibold text-white mb-2">{t('pages.dao.workflow.airdrop.final_summary', { defaultValue: defaultAssetName || '空投汇总' })}</div>
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+                                <div className="text-xs text-zinc-500 mb-1">
+                                    Selected: {selectedReferrals.length}
+                                </div>
+                                {selectedReferrals.length > 0 ? (
+                                    <div className="border border-zinc-800 rounded-lg p-3 bg-zinc-800/50 max-h-48 overflow-y-auto">
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                            {selectedReferrals.map((uid, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="bg-zinc-700/50 border border-zinc-700 rounded px-2 py-1 text-sm font-mono text-white truncate"
+                                                    title={uid}
+                                                >
+                                                    {uid}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="border border-zinc-800 rounded-lg p-6 text-center text-zinc-500">
+                                        暂无选择
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -458,22 +517,15 @@ export function DaoWorkflow({
                                 : t('pages.dao.workflow.actions.submit_airdrop')}
                         </Button>
 
-                        <Button
-                            variant="outline"
-                            disabled={processing.airdrop || selectedReferrals.length === 0}
-                            onClick={() => {
-                                setSelectedReferrals([]);
-                                // 触发事件通知子组件清除选择
-                                const event = new CustomEvent('airdrop:clear-selection');
-                                window.dispatchEvent(event);
-                            }}
-                        >
-                            {t('pages.dao.workflow.airdrop.clear_selection', { defaultValue: '清空选择' })}
+                        <Button variant="outline" disabled={processing.airdrop} onClick={handleReset}>
+                            {t('pages.dao.workflow.actions.reset', { defaultValue: '重置' })}
                         </Button>
 
                         <Button variant="outline" disabled={processing.airdrop} onClick={() => refresh()}>
                             {t('pages.dao.detail.refresh')}
                         </Button>
+
+
                     </div>
                     <div className='mt-8'><hr /></div>
                     {/* 空投排行榜 */}
