@@ -4,22 +4,26 @@ export const DAO_ACTION_REGISTER = 'register' as const;
 export const DAO_ACTION_DONATE = 'donate' as const;
 export const DAO_ACTION_AIRDROP = 'airdrop' as const;
 export const DAO_ACTION_VALIDATE = 'validate' as const;
+export const DAO_ACTION_BIND = 'bind' as const;
 
 export const DAO_ORDERTYPE_REGISTER = 15 as const;
 export const DAO_ORDERTYPE_DONATE = 16 as const;
 export const DAO_ORDERTYPE_AIRDROP = 17 as const;
 export const DAO_ORDERTYPE_VALIDATE = 18 as const;
+export const DAO_ORDERTYPE_BIND = 19 as const;
 
 export type DaoInvokeAction =
   | typeof DAO_ACTION_REGISTER
   | typeof DAO_ACTION_DONATE
   | typeof DAO_ACTION_AIRDROP
-  | typeof DAO_ACTION_VALIDATE;
+  | typeof DAO_ACTION_VALIDATE
+  | typeof DAO_ACTION_BIND;
 
 export type DaoInvokeParam = {
   action: DaoInvokeAction;
   // NOTE: 后端与现有合约一致：param 是 string 化 JSON
   param: string;
+  encoding?: string;
 };
 
 export type DaoRegisterParam = {
@@ -45,11 +49,21 @@ export type DaoValidateParam = {
   para: string;
 };
 
+export type DaoBindParam = {
+  items: { uid: string; address: string }[];
+};
+
 export function buildDaoInvoke(action: DaoInvokeAction, paramObj: any): DaoInvokeParam {
-  return {
+  const param = JSON.stringify(paramObj ?? {});
+  const result: DaoInvokeParam = {
     action,
-    param: JSON.stringify(paramObj ?? {}),
+    param,
   };
+  // 如果参数过长，添加 br 编码标记（后端可解压）
+  if (param.length > 1024) {
+    result.encoding = 'br';
+  }
+  return result;
 }
 
 export function buildValidateParaFromIds(ids: Array<number | string | bigint>): string {
@@ -109,6 +123,11 @@ export function buildDonateInvoke(assetName: string, amt: string, value: number)
 export function buildAirdropInvoke(uids: string[]) {
   const p: DaoAirdropParam = { uids };
   return buildDaoInvoke(DAO_ACTION_AIRDROP, p);
+}
+
+export function buildBindInvoke(items: { uid: string; address: string }[]) {
+  const p: DaoBindParam = { items };
+  return buildDaoInvoke(DAO_ACTION_BIND, p);
 }
 
 export function buildValidateInvoke(orderType: number, ids: Array<number | string | bigint>, reason: string, result: number = -1) {

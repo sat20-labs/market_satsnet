@@ -14,6 +14,7 @@ import {
     invokeDaoContractDonateSatsNet,
     invokeDaoContractSatsNet,
 } from '@/domain/services/dao';
+import ReferreeBind from '@/components/dao/ReferreeBind';
 import { DaoStatusCard } from '@/components/dao/DaoStatusCard';
 import { useTranslation } from 'react-i18next';
 import { AddressStatusDisplay } from '@/components/dao/AddressStatusDisplay';
@@ -60,16 +61,18 @@ export function DaoWorkflow({
 
     const defaultAssetName = useMemo(() => normalizeAssetName(status.assetName as any), [status.assetName]);
 
-    const [processing, setProcessing] = useState<{ register: boolean; donate: boolean; airdrop: boolean }>({
+    const [processing, setProcessing] = useState<{ register: boolean; donate: boolean; airdrop: boolean; bind: boolean }>({
         register: false,
         donate: false,
         airdrop: false,
+        bind: false,
     });
 
-    const [lastSubmitAt, setLastSubmitAt] = useState<{ register: number; donate: number; airdrop: number }>({
+    const [lastSubmitAt, setLastSubmitAt] = useState<{ register: number; donate: number; airdrop: number; bind: number }>({
         register: 0,
         donate: 0,
         airdrop: 0,
+        bind: 0,
     });
 
     // Leaderboard data
@@ -77,7 +80,7 @@ export function DaoWorkflow({
     const [airdropLeaderboard, setAirdropLeaderboard] = useState<any[]>([]);
     const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
-    const shouldBlockFastRepeat = (kind: 'register' | 'donate' | 'airdrop', ms: number = 100) => {
+    const shouldBlockFastRepeat = (kind: 'register' | 'donate' | 'airdrop' | 'bind', ms: number = 100) => {
         const now = Date.now();
         if (now - lastSubmitAt[kind] < ms) return true;
         setLastSubmitAt((p) => ({ ...p, [kind]: now }));
@@ -87,6 +90,7 @@ export function DaoWorkflow({
     // Register
     const [uid, setUid] = useState('');
     const [referrerUid, setReferrerUid] = useState('');
+
 
     // Donate (assetName fixed by contract)
     const [donateAsset, setDonateAsset] = useState(defaultAssetName);
@@ -139,6 +143,7 @@ export function DaoWorkflow({
             setProcessing((p) => ({ ...p, [kind]: false }));
         }
     };
+
 
     const doDonateInvoke = async () => {
         if (processing.donate) return;
@@ -343,6 +348,11 @@ export function DaoWorkflow({
                             {t('pages.dao.detail.refresh')}
                         </Button>
                     </div>
+
+                    {/* 绑定被推荐人 */}
+                    <div className="mt-8 border-t border-zinc-800 pt-6">
+                        <ReferreeBind contractUrl={contractUrl} refresh={refresh} />
+                    </div>
                 </TabsContent>
 
                 <TabsContent value="donate">
@@ -434,7 +444,7 @@ export function DaoWorkflow({
                         </div>
 
                         {/* 用户手动输入 */}
-                        <div className="lg:col-span-1">
+                        {/* <div className="lg:col-span-1">
                             <div className="text-sm font-semibold text-white mb-2">{t('pages.dao.workflow.airdrop.manual_input', { defaultValue: defaultAssetName || '手动输入' })}</div>
                             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
                                 <div>
@@ -474,7 +484,7 @@ export function DaoWorkflow({
                                     </Button>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* 汇总区域 */}
                         <div className="lg:col-span-1">

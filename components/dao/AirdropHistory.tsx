@@ -57,7 +57,7 @@ interface ContractHistoryItem {
         items: AirdropItem[];
     };
     validate?: {
-        ids: string;
+        uids: string;
         reason: string;
     };
 }
@@ -394,7 +394,7 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                 <TableRow className="border-zinc-700">
                                                     <TableCell className="font-mono text-white">
                                                         <div className="space-y-2">
-                                                            <div>{selectedItem.validate.ids}</div>
+                                                            <div>{selectedItem.validate.uids}</div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="font-mono text-white">
