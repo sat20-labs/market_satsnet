@@ -333,7 +333,7 @@ export function DaoPendingLists({
                                     const key = it.UID ?? index;
                                     return (
                                         <TableRow key={key}>
-                                            <TableCell>
+                                            <TableCell>&nbsp;&nbsp;&nbsp;
                                                 <input
                                                     type="checkbox"
                                                     checked={!!registerSelected[key]}
@@ -448,7 +448,7 @@ export function DaoPendingLists({
                             <TableBody>
                                 {airdropItems.map((it) => (
                                     <TableRow key={it.Id}>
-                                        <TableCell>
+                                        <TableCell>&nbsp;&nbsp;&nbsp;
                                             <input
                                                 type="checkbox"
                                                 checked={!!airdropSelected[it.Id]}
