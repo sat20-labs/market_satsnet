@@ -1,2 +1,2 @@
-export const version = 506;
+export const version = 507;
     

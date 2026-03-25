@@ -21,6 +21,7 @@ const ORDER_TYPE_MAP: Record<number, { label: string; labelEn: string }> = {
     16: { label: '捐赠', labelEn: 'Donate' },
     17: { label: '空投', labelEn: 'Airdrop' },
     18: { label: '审核', labelEn: 'Validate' },
+    19: { label: '绑定', labelEn: 'Bind' },
 };
 
 interface AirdropItem {
@@ -191,13 +192,13 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
         : history.filter(item => item.OrderType === selectedOrderType);
 
     const totalPages = Math.ceil(total / pageSize);
+    const start = (currentPage - 1) * pageSize;
     let paginatedHistory;
     if (selectedOrderType === 'all') {
         // 已按分页请求，无需切片
         paginatedHistory = filteredHistory;
     } else {
-        const startIndex = (currentPage - 1) * pageSize;
-        paginatedHistory = filteredHistory.slice(startIndex, startIndex + pageSize);
+        paginatedHistory = filteredHistory.slice(start, start + pageSize);
     }
 
     const openDetailModal = (item: ContractHistoryItem) => {
@@ -257,7 +258,7 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-zinc-800">
-                                    <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.id')}</TableHead>
+                                    <TableHead className="text-zinc-400">No. </TableHead>
                                     <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.order_type')}</TableHead>
                                     <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.address')}</TableHead>
                                     <TableHead className="text-zinc-400">{t('pages.dao.workflow.airdrop_history.amount')}</TableHead>
@@ -267,12 +268,15 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {paginatedHistory.map((item) => {
+                                {paginatedHistory.map((item, index) => {
                                     const hasDetails = (item.airdrop?.items && item.airdrop.items.length > 0) || item.validate;
                                     return (
                                         <React.Fragment key={item.Id}>
                                             <TableRow className="border-zinc-800">
-                                                <TableCell className="font-mono text-sm text-white">{item.Id}</TableCell>
+                                                <TableCell className="font-mono text-sm text-white ">
+                                                    {/* {item.Id} */}
+                                                    &nbsp; {start + index + 1}
+                                                </TableCell>
                                                 <TableCell className="text-white">
                                                     <span className="px-2 py-1 rounded text-xs bg-zinc-800">
                                                         {getOrderTypeLabel(item.OrderType)}

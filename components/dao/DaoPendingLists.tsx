@@ -41,8 +41,8 @@ export function DaoPendingLists({
     onValidated?: () => void;
 }) {
     const { t } = useTranslation();
-    const [registerSelected, setRegisterSelected] = useState<Record<number, boolean>>({});
-    const [airdropSelected, setAirdropSelected] = useState<Record<number, boolean>>({});
+    const [registerSelected, setRegisterSelected] = useState<Record<string, boolean>>({});
+    const [airdropSelected, setAirdropSelected] = useState<Record<string, boolean>>({});
 
     const copy = (text: string) => {
         try {
@@ -122,27 +122,29 @@ export function DaoPendingLists({
     }, [status.airdropList]);
 
     const selectedRegisterIds = useMemo(() => {
+        const uidToId = new Map(registerItems.map(item => [item.UID, item.Id]));
         return Object.entries(registerSelected)
             .filter(([, v]) => v)
-            .map(([k]) => Number(k))
-            .filter((n) => Number.isFinite(n));
-    }, [registerSelected]);
+            .map(([uid]) => uidToId.get(uid))
+            .filter((id): id is number => id !== undefined && Number.isFinite(id));
+    }, [registerSelected, registerItems]);
 
     const selectedAirdropIds = useMemo(() => {
+        const uidToId = new Map(airdropItems.map(item => [item.UID, item.Id]));
         return Object.entries(airdropSelected)
             .filter(([, v]) => v)
-            .map(([k]) => Number(k))
-            .filter((n) => Number.isFinite(n));
-    }, [airdropSelected]);
+            .map(([uid]) => uidToId.get(uid))
+            .filter((id): id is number => id !== undefined && Number.isFinite(id));
+    }, [airdropSelected, airdropItems]);
 
     const toggleAll = (kind: 'register' | 'airdrop', checked: boolean) => {
         if (kind === 'register') {
-            const next: Record<number, boolean> = {};
-            if (checked) registerItems.forEach((i) => (next[i.Id] = true));
+            const next: Record<string, boolean> = {};
+            if (checked) registerItems.forEach((i, idx) => (next[i.UID ?? idx] = true));
             setRegisterSelected(next);
         } else {
-            const next: Record<number, boolean> = {};
-            if (checked) airdropItems.forEach((i) => (next[i.Id] = true));
+            const next: Record<string, boolean> = {};
+            if (checked) airdropItems.forEach((i, idx) => (next[i.UID ?? idx] = true));
             setAirdropSelected(next);
         }
     };
@@ -319,7 +321,7 @@ export function DaoPendingLists({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[80px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
-                                    <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead>
+                                    {/* <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead> */}
                                     <TableHead className="w-[150px]">{t('pages.dao.pending.table_headers.uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.referrer_uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
@@ -327,66 +329,69 @@ export function DaoPendingLists({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {registerItems.map((it) => (
-                                    <TableRow key={it.Id}>
-                                        <TableCell>
-                                            <input
-                                                type="checkbox"
-                                                checked={!!registerSelected[it.Id]}
-                                                onChange={(e) => setRegisterSelected((prev) => ({ ...prev, [it.Id]: e.target.checked }))}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="font-mono">{it.Id}</TableCell>
-                                        <TableCell className="font-mono">
-                                            <div className="flex items-center gap-1">
-                                                {it.UID}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-4 w-4 p-0"
-                                                    onClick={() => copy(it.UID)}
-                                                >
-                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="font-mono">{it.ReferrerUID || '-'}</TableCell>
-                                        <TableCell className="font-mono">
-                                            <div className="flex items-center gap-1">
-                                                {truncateMiddle(it.Address)}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-4 w-4 p-0"
-                                                    onClick={() => copy(it.Address)}
-                                                >
-                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="font-mono">
-                                            <div className="flex items-center gap-1">
-                                                <a
-                                                    href={`https://mempool.space/tx/${it.InUtxo.split(':')[0]}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-blue-400 hover:underline"
-                                                    title={it.InUtxo}
-                                                >
-                                                    {truncateMiddle(it.InUtxo)}
-                                                </a>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-4 w-4 p-0"
-                                                    onClick={() => copy(it.InUtxo)}
-                                                >
-                                                    <Copy className="h-3 w-3 ml-3 text-gray-400" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {registerItems.map((it, index) => {
+                                    const key = it.UID ?? index;
+                                    return (
+                                        <TableRow key={key}>
+                                            <TableCell>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!registerSelected[key]}
+                                                    onChange={(e) => setRegisterSelected((prev) => ({ ...prev, [key]: e.target.checked }))}
+                                                />
+                                            </TableCell>
+                                            {/* <TableCell className="font-mono">{it.Id}</TableCell> */}
+                                            <TableCell className="font-mono">
+                                                <div className="flex items-center gap-1">
+                                                    {it.UID}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-4 w-4 p-0"
+                                                        onClick={() => copy(it.UID)}
+                                                    >
+                                                        <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="font-mono">{it.ReferrerUID || '-'}</TableCell>
+                                            <TableCell className="font-mono">
+                                                <div className="flex items-center gap-1">
+                                                    {truncateMiddle(it.Address)}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-4 w-4 p-0"
+                                                        onClick={() => copy(it.Address)}
+                                                    >
+                                                        <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="font-mono">
+                                                <div className="flex items-center gap-1">
+                                                    <a
+                                                        href={`https://mempool.space/tx/${it.InUtxo.split(':')[0]}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-400 hover:underline"
+                                                        title={it.InUtxo}
+                                                    >
+                                                        {truncateMiddle(it.InUtxo)}
+                                                    </a>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-4 w-4 p-0"
+                                                        onClick={() => copy(it.InUtxo)}
+                                                    >
+                                                        <Copy className="h-3 w-3 ml-3 text-gray-400" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </div>
@@ -433,7 +438,7 @@ export function DaoPendingLists({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[80px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
-                                    <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead>
+                                    {/* <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead> */}
                                     <TableHead>{t('pages.dao.pending.table_headers.uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.referral_uids')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
@@ -450,7 +455,7 @@ export function DaoPendingLists({
                                                 onChange={(e) => setAirdropSelected((prev) => ({ ...prev, [it.Id]: e.target.checked }))}
                                             />
                                         </TableCell>
-                                        <TableCell className="font-mono">{it.Id}</TableCell>
+                                        {/* <TableCell className="font-mono">{it.Id}</TableCell> */}
                                         <TableCell className="font-mono">
                                             <div className="flex items-center gap-1">
                                                 {it.UID}
