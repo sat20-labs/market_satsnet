@@ -318,7 +318,7 @@ export function DaoPendingLists({
                         <Table className="min-w-[1000px]">
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[50px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
+                                    <TableHead className="w-[80px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead>
                                     <TableHead className="w-[150px]">{t('pages.dao.pending.table_headers.uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.referrer_uid')}</TableHead>
@@ -432,7 +432,7 @@ export function DaoPendingLists({
                         <Table className="min-w-[1000px]">
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[50px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
+                                    <TableHead className="w-[80px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.referral_uids')}</TableHead>
