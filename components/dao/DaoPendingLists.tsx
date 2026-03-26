@@ -441,7 +441,7 @@ export function DaoPendingLists({
                                     {/* <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead> */}
                                     <TableHead>{t('pages.dao.pending.table_headers.uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
-                                    <TableHead>{t('pages.dao.pending.table_headers.referral_uids')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.referrer_uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.in_utxo')}</TableHead>
                                 </TableRow>
                             </TableHeader>
