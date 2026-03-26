@@ -69,6 +69,9 @@ interface ContractHistoryItem {
         uids: string;
         reason: string;
     };
+    bind?: {
+        items: AirdropItem[];
+    };
 }
 const PAGE_SIZE = 10;
 
@@ -277,7 +280,7 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                             </TableHeader>
                             <TableBody>
                                 {paginatedHistory.map((item, index) => {
-                                    const hasDetails = (item.airdrop?.items && item.airdrop.items.length > 0) || item.validate;
+                                    const hasDetails = (item.airdrop?.items && item.airdrop.items.length > 0) || item.validate || (item.bind?.items && item.bind.items.length > 0);
                                     return (
                                         <React.Fragment key={item.Id}>
                                             <TableRow className="border-zinc-800">
@@ -427,8 +430,8 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
-                                            ) : selectedItem.airdrop?.items ? (
-                                                selectedItem.airdrop.items.map((detail, idx) => (
+                                            ) : (selectedItem.airdrop?.items || selectedItem.bind?.items) ? (
+                                                (selectedItem.airdrop?.items || selectedItem.bind?.items)!.map((detail, idx) => (
                                                     <TableRow key={idx} className="border-zinc-700">
                                                         <TableCell className="font-mono text-white">
                                                             <div className="flex items-center gap-1">
