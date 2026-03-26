@@ -15,9 +15,10 @@ interface ReferreeItem {
 interface ReferreeBindProps {
     contractUrl: string;
     refresh?: () => void;
+    userUid?: string;
 }
 
-const ReferreeBind = ({ contractUrl, refresh }: ReferreeBindProps) => {
+const ReferreeBind = ({ contractUrl, refresh, userUid }: ReferreeBindProps) => {
     const { t } = useTranslation();
     const [items, setItems] = useState<ReferreeItem[]>([{ uid: '', address: '' }]);
     const [loading, setLoading] = useState(false);
@@ -42,6 +43,11 @@ const ReferreeBind = ({ contractUrl, refresh }: ReferreeBindProps) => {
     };
 
     const handleBind = async () => {
+        // 检查自己的UID是否为空
+        if (!userUid) {
+            toast.error(t('common.please_register_first', { defaultValue: '请先注册成功后再绑定被推荐人' }));
+            return;
+        }
         // Filter out empty rows
         const validItems = items.filter(item => item.uid.trim() && item.address.trim());
         if (validItems.length === 0) {

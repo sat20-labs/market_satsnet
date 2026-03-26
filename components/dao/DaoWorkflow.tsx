@@ -75,6 +75,8 @@ export function DaoWorkflow({
         bind: 0,
     });
 
+    const [userUid, setUserUid] = useState<string>('');
+
     // Leaderboard data
     const [donateLeaderboard, setDonateLeaderboard] = useState<any[]>([]);
     const [airdropLeaderboard, setAirdropLeaderboard] = useState<any[]>([]);
@@ -351,7 +353,7 @@ export function DaoWorkflow({
 
                     {/* 绑定被推荐人 */}
                     <div className="mt-8 border-t border-zinc-800 pt-6">
-                        <ReferreeBind contractUrl={contractUrl} refresh={refresh} />
+                        <ReferreeBind contractUrl={contractUrl} refresh={refresh} userUid={userUid} />
                     </div>
                 </TabsContent>
 

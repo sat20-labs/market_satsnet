@@ -321,8 +321,9 @@ export function DaoPendingLists({
                                     <TableHead className="w-[80px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
                                     {/* <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead> */}
                                     <TableHead className="w-[150px]">{t('pages.dao.pending.table_headers.uid')}</TableHead>
-                                    <TableHead>{t('pages.dao.pending.table_headers.referrer_uid')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.referrer_uid')}</TableHead>
+
                                     <TableHead>{t('pages.dao.pending.table_headers.in_utxo')}</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -352,7 +353,6 @@ export function DaoPendingLists({
                                                     </Button>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="font-mono">{it.ReferrerUID || '-'}</TableCell>
                                             <TableCell className="font-mono">
                                                 <div className="flex items-center gap-1">
                                                     {truncateMiddle(it.Address)}
@@ -366,6 +366,8 @@ export function DaoPendingLists({
                                                     </Button>
                                                 </div>
                                             </TableCell>
+                                            <TableCell className="font-mono">{it.ReferrerUID || '-'}</TableCell>
+
                                             <TableCell className="font-mono">
                                                 <div className="flex items-center gap-1">
                                                     <a
@@ -438,14 +440,14 @@ export function DaoPendingLists({
                                     <TableHead className="w-[80px]">{t('pages.dao.pending.table_headers.sel')}</TableHead>
                                     {/* <TableHead>{t('pages.dao.pending.table_headers.id')}</TableHead> */}
                                     <TableHead>{t('pages.dao.pending.table_headers.uid')}</TableHead>
-                                    <TableHead>{t('pages.dao.pending.table_headers.referral_uids')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.address')}</TableHead>
+                                    <TableHead>{t('pages.dao.pending.table_headers.referral_uids')}</TableHead>
                                     <TableHead>{t('pages.dao.pending.table_headers.in_utxo')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {airdropItems.map((it) => (
-                                    <TableRow key={it.Id}>
+                                    <TableRow key={it.UID}>
                                         <TableCell>&nbsp;&nbsp;&nbsp;
                                             <input
                                                 type="checkbox"
@@ -467,7 +469,6 @@ export function DaoPendingLists({
                                                 </Button>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-mono break-all">{(it.ReferralUIDs || []).join(', ')}</TableCell>
                                         <TableCell className="font-mono">
                                             <div className="flex items-center gap-1">
                                                 {truncateMiddle(it.Address)}
@@ -481,6 +482,8 @@ export function DaoPendingLists({
                                                 </Button>
                                             </div>
                                         </TableCell>
+                                        <TableCell className="font-mono break-all">{(it.ReferralUIDs || []).join(', ')}</TableCell>
+
                                         <TableCell className="font-mono">
                                             <div className="flex items-center gap-1">
                                                 <a

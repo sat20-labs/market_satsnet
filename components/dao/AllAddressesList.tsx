@@ -173,8 +173,8 @@ export function AllAddressesList({ contractUrl }: AllAddressesListProps) {
             <Table>
               <TableHeader>
                 <TableRow className="border-zinc-800">
-                  <TableHead className="text-zinc-400">{t('pages.dao.workflow.overview.address')}</TableHead>
                   <TableHead className="text-zinc-400">UID</TableHead>
+                  <TableHead className="text-zinc-400">{t('pages.dao.workflow.overview.address')}</TableHead>
                   <TableHead className="text-zinc-400">{t('pages.dao.workflow.overview.referrer')}</TableHead>
                   <TableHead className="text-zinc-400">{t('pages.dao.workflow.overview.referral_count')}</TableHead>
                   <TableHead className="text-zinc-400">{t('pages.dao.workflow.overview.donate')}</TableHead>
@@ -185,10 +185,11 @@ export function AllAddressesList({ contractUrl }: AllAddressesListProps) {
                 {filteredData.length > 0 ? (
                   filteredData.map((item, index) => (
                     <TableRow key={index} className="border-zinc-800">
+                      <TableCell className="font-mono text-white">{item.uid}</TableCell>
                       <TableCell className="font-mono text-sm text-white">
                         {item.address.substring(0, 10)}...{item.address.substring(item.address.length - 8)}
                       </TableCell>
-                      <TableCell className="font-mono text-white">{item.uid}</TableCell>
+
                       <TableCell className="font-mono text-white">
                         {item.referer || t('common.none')}
                       </TableCell>

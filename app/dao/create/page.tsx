@@ -31,14 +31,14 @@ export default function DaoCreatePage() {
     // 根据环境自动设置超时默认值
     const [form, setForm] = useState({
         protocol: 'brc20' as Protocol,
-        ticker: 'ordi',
+        ticker: '',
 
         validatorNum: '5',
         registerFee: '30',
         registerTimeout: String(getDefaultDaoTimeout('register')),
 
         holdingProtocol: 'brc20' as Protocol,
-        holdingTicker: 'ordi',
+        holdingTicker: '',
         holdingThreshold: '100',
 
         airdropRatio: '0.01',
@@ -187,7 +187,7 @@ export default function DaoCreatePage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <div className="text-sm text-zinc-400 mb-1">
                             {tp('asset_protocol')}
@@ -218,9 +218,11 @@ export default function DaoCreatePage() {
                         </div>
                         <Input
                             value={form.ticker}
+                            placeholder={t('pages.dao.create.input_placeholder', { defaultValue: '请输入资产名称' })}
                             onChange={(e) => onChange('ticker', e.target.value)}
                         />
                     </div>
+                    <div></div>
                 </div>
 
                 <div className="text-xs text-zinc-500">
@@ -262,7 +264,7 @@ export default function DaoCreatePage() {
                     <div className="text-sm text-zinc-300 font-semibold mb-3">
                         {tp('airdrop_condition')}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <div className="text-sm text-zinc-400 mb-1">
                                 {tp('holding_protocol')}
@@ -293,9 +295,11 @@ export default function DaoCreatePage() {
                             </div>
                             <Input
                                 value={form.holdingTicker}
+                                placeholder={t('pages.dao.create.input_placeholder', { defaultValue: 'Please input the name of ticker' })}
                                 onChange={(e) => onChange('holdingTicker', e.target.value)}
                             />
                         </div>
+                        <div></div>
                     </div>
                     <div className="text-xs text-zinc-500 mt-2">
                         {/* {tp('holding_asset', { value: holdingAssetString || '-' })} */}
