@@ -482,7 +482,8 @@ export function DaoPendingLists({
                                                 </Button>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-mono break-all">{(it.ReferralUIDs || []).join(', ')}</TableCell>
+                                        {/* <TableCell className="font-mono break-all">{(it.ReferralUIDs || []).join(', ')}</TableCell> */}
+                                        <TableCell className="font-mono">{it.ReferrerUID || '-'}</TableCell>
 
                                         <TableCell className="font-mono">
                                             <div className="flex items-center gap-1">

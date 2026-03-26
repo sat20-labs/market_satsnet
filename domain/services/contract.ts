@@ -13,7 +13,7 @@ export interface DaoAirdropItem {
   InUtxo: string;
   Address: string;
   UID: string;
-  ReferralUIDs: string[];
+  ReferrerUID: string;
 }
 
 export interface DaoContractStatus {
