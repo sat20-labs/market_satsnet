@@ -121,21 +121,19 @@ export function DaoPendingLists({
         return arr;
     }, [status.airdropList]);
 
-    const selectedRegisterIds = useMemo(() => {
-        const uidToId = new Map(registerItems.map(item => [item.UID, item.Id]));
+    const selectedRegisterUids = useMemo(() => {
         return Object.entries(registerSelected)
             .filter(([, v]) => v)
-            .map(([uid]) => uidToId.get(uid))
-            .filter((id): id is number => id !== undefined && Number.isFinite(id));
-    }, [registerSelected, registerItems]);
+            .map(([uid]) => uid)
+            .filter((uid): uid is string => uid !== undefined && uid !== '');
+    }, [registerSelected]);
 
-    const selectedAirdropIds = useMemo(() => {
-        const uidToId = new Map(airdropItems.map(item => [item.UID, item.Id]));
+    const selectedAirdropUids = useMemo(() => {
         return Object.entries(airdropSelected)
             .filter(([, v]) => v)
-            .map(([uid]) => uidToId.get(uid))
-            .filter((id): id is number => id !== undefined && Number.isFinite(id));
-    }, [airdropSelected, airdropItems]);
+            .map(([uid]) => uid)
+            .filter((uid): uid is string => uid !== undefined && uid !== '');
+    }, [airdropSelected]);
 
     const toggleAll = (kind: 'register' | 'airdrop', checked: boolean) => {
         if (kind === 'register') {
@@ -149,7 +147,7 @@ export function DaoPendingLists({
         }
     };
 
-    const doValidateReject = async (orderType: number, ids: number[]) => {
+    const doValidateReject = async (orderType: number, ids: string[]) => {
         if (!isValidator) {
             // 调试信息已注释
             // console.log('Debug - Current user:');
@@ -194,7 +192,7 @@ export function DaoPendingLists({
         }
     };
 
-    const doValidateAccept = async (orderType: number, ids: number[]) => {
+    const doValidateAccept = async (orderType: number, ids: string[]) => {
         if (!isValidator) {
             // 调试信息已注释
             // console.log('Debug - Current user:');
@@ -303,7 +301,7 @@ export function DaoPendingLists({
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <div className="text-sm font-semibold text-zinc-200">{t('pages.dao.pending.pending_registers')}</div>
-                        <div className="text-xs text-zinc-500">{t('pages.dao.pending.selected_count', { count: selectedRegisterIds.length })}</div>
+                        <div className="text-xs text-zinc-500">{t('pages.dao.pending.selected_count', { count: selectedRegisterUids.length })}</div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" disabled={loading || registerItems.length === 0} onClick={() => toggleAll('register', true)}>
@@ -400,15 +398,15 @@ export function DaoPendingLists({
             <div className="flex items-left gap-2">
                 <Button
                     className="bg-green-600 hover:bg-green-700 text-white"
-                    disabled={loading || selectedRegisterIds.length === 0}
-                    onClick={() => doValidateAccept(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
+                    disabled={loading || selectedRegisterUids.length === 0}
+                    onClick={() => doValidateAccept(DAO_ORDERTYPE_REGISTER, selectedRegisterUids)}
                 >
                     {t('pages.dao.pending.accept_selected')}
                 </Button>
                 <Button
                     className="btn-gradient"
-                    disabled={loading || selectedRegisterIds.length === 0}
-                    onClick={() => doValidateReject(DAO_ORDERTYPE_REGISTER, selectedRegisterIds)}
+                    disabled={loading || selectedRegisterUids.length === 0}
+                    onClick={() => doValidateReject(DAO_ORDERTYPE_REGISTER, selectedRegisterUids)}
                 >
                     {t('pages.dao.pending.reject_selected')}
                 </Button>
@@ -419,7 +417,7 @@ export function DaoPendingLists({
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <div className="text-sm font-semibold text-zinc-200">{t('pages.dao.pending.pending_airdrops')}</div>
-                        <div className="text-xs text-zinc-500">{t('pages.dao.pending.selected_count', { count: selectedAirdropIds.length })}</div>
+                        <div className="text-xs text-zinc-500">{t('pages.dao.pending.selected_count', { count: selectedAirdropUids.length })}</div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" disabled={loading || airdropItems.length === 0} onClick={() => toggleAll('airdrop', true)}>
@@ -451,8 +449,8 @@ export function DaoPendingLists({
                                         <TableCell>&nbsp;&nbsp;&nbsp;
                                             <input
                                                 type="checkbox"
-                                                checked={!!airdropSelected[it.Id]}
-                                                onChange={(e) => setAirdropSelected((prev) => ({ ...prev, [it.Id]: e.target.checked }))}
+                                                checked={!!airdropSelected[it.UID]}
+                                                onChange={(e) => setAirdropSelected((prev) => ({ ...prev, [it.UID]: e.target.checked }))}
                                             />
                                         </TableCell>
                                         {/* <TableCell className="font-mono">{it.Id}</TableCell> */}
@@ -514,15 +512,15 @@ export function DaoPendingLists({
             <div className="flex items-left gap-2">
                 <Button
                     className="bg-green-600 hover:bg-green-700 text-white"
-                    disabled={loading || selectedAirdropIds.length === 0}
-                    onClick={() => doValidateAccept(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
+                    disabled={loading || selectedAirdropUids.length === 0}
+                    onClick={() => doValidateAccept(DAO_ORDERTYPE_AIRDROP, selectedAirdropUids)}
                 >
                     {t('pages.dao.pending.accept_selected')}
                 </Button>
                 <Button
                     className="btn-gradient"
-                    disabled={loading || selectedAirdropIds.length === 0}
-                    onClick={() => doValidateReject(DAO_ORDERTYPE_AIRDROP, selectedAirdropIds)}
+                    disabled={loading || selectedAirdropUids.length === 0}
+                    onClick={() => doValidateReject(DAO_ORDERTYPE_AIRDROP, selectedAirdropUids)}
                 >
                     {t('pages.dao.pending.reject_selected')}
                 </Button>

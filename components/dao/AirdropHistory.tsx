@@ -24,6 +24,13 @@ const ORDER_TYPE_MAP: Record<number, { label: string; labelEn: string }> = {
     19: { label: '绑定', labelEn: 'Bind' },
 };
 
+const getOrderTypeLabel = (type, lang = 'zh') => {
+    const numType = Number(type)
+    const item = ORDER_TYPE_MAP[numType]
+    if (!item) return '-'
+    return lang === 'en' ? item.labelEn : item.label
+}
+
 interface AirdropItem {
     uid: string;
     address: string;
@@ -58,6 +65,7 @@ interface ContractHistoryItem {
         items: AirdropItem[];
     };
     validate?: {
+        type: number;
         uids: string;
         reason: string;
     };
@@ -369,20 +377,27 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
 
                     <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
                         <DialogContent className="max-w-6xl max-h-[80vh] overflow-auto">
-                            <DialogHeader>
-                                <DialogTitle>&nbsp;&nbsp;{t('pages.dao.workflow.airdrop_history.view_details')}</DialogTitle>
-                            </DialogHeader>
+                            {/* <DialogHeader>
+                                <DialogTitle>&nbsp;&nbsp; </DialogTitle>
+                            </DialogHeader> */}
                             {selectedItem && (
                                 <div className="my-4">
-                                    {/* <div className="text-sm font-medium text-white mb-2">详情</div> */}
+                                    <div className="text-[16px] font-medium text-white mb-4">
+                                        <span className='text-zinc-400'>
+                                            <span className='pb-2 text-[18px] text-purple-500'>[{getOrderTypeLabel(selectedItem.OrderType)}]</span>
+                                            &nbsp;{t('pages.dao.workflow.airdrop_history.view_details')}
+                                        </span>
+                                    </div>
+
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="border-zinc-700">
                                                 {selectedItem.OrderType === 18 ? (
                                                     <>
-                                                        <TableHead className="text-zinc-400 bg-zinc-800">{t('pages.dao.workflow.airdrop_history.validate_id')}</TableHead>
-                                                        <TableHead className="text-zinc-400 bg-zinc-800">{t('pages.dao.workflow.airdrop_history.reason')}</TableHead>
+                                                        <TableHead className="text-zinc-400 bg-zinc-800">{t('pages.dao.workflow.airdrop_history.uid')}</TableHead>
                                                         <TableHead className="text-zinc-400 bg-zinc-800">{t('pages.dao.workflow.airdrop_history.status')}</TableHead>
+                                                        <TableHead className="text-zinc-400 bg-zinc-800">{t('pages.dao.workflow.airdrop_history.reason')}</TableHead>
+
                                                     </>
                                                 ) : (
                                                     <>
@@ -403,12 +418,12 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                     </TableCell>
                                                     <TableCell className="font-mono text-white">
                                                         <div className="space-y-2">
-                                                            <div>{selectedItem.validate.reason}</div>
+                                                            <div>{selectedItem.Done === 1 ? (selectedItem.validate.reason === 'validated' ? '✅ Approved' : '❌ Rejected') : '⏳ Processing'}</div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="font-mono text-white">
                                                         <div className="space-y-2">
-                                                            <div>{selectedItem.Done === 1 ? (selectedItem.validate.reason === 'validated' ? '✅ Approved' : '❌ Rejected') : '⏳ Processing'}</div>
+                                                            <div className='py-2'><span className='bg-purple-800 text-zinc-200 rounded'><span className='p-2'>{getOrderTypeLabel(selectedItem.validate?.type)}</span></span> : {selectedItem.validate.reason}</div>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
