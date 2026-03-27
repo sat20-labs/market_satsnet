@@ -310,10 +310,29 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                 </TableCell>
                                                 <TableCell className="text-zinc-400">
                                                     {(() => {
+                                                        // 处理类型15（注册）
+                                                        if (item.OrderType === 15) {
+                                                            if (item.Done === 1) {
+                                                                return '✅ Success';
+                                                            }
+                                                            if (item.Done === 3) {
+                                                                return `❌ ${item.Reason}`;
+                                                            }
+                                                            // 其他 Done 值
+                                                            return '-';
+                                                        }
+                                                        // 原有逻辑
                                                         if (item.Done === 0) {
                                                             return "Not completed";
                                                         }
                                                         if (item.Done === 1) {
+                                                            // 处理类型18（审核）
+                                                            if (item.OrderType === 18) {
+                                                                if (item.validate?.reason === 'validated') {
+                                                                    return '✅ Approved';
+                                                                }
+                                                                return '❌ Rejected';
+                                                            }
                                                             const amount = item.OrderType === 16 ? item.InAmt : item.OutAmt;
                                                             const formatted = formatAmount(amount);
                                                             if (formatted === '-') {

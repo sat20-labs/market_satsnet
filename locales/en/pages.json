@@ -702,7 +702,7 @@
         "uid": "UID",
         "order_type": "OrderType",
         "address": "Address",
-        "amount": "Amount / Reason",
+        "amount": "Amount / Status",
         "time": "Time",
         "txid": "TxId",
         "action": "Action",
