@@ -308,8 +308,22 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                         </Button>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-white">
-                                                    {item.OrderType === 16 ? (item.InAmt !== null ? formatAmount(item.InAmt) : '-') : (item.OutAmt ? formatAmount(item.OutAmt) : '-')}
+                                                <TableCell className="text-zinc-400">
+                                                    {(() => {
+                                                        if (item.Done === 0) {
+                                                            return "Not completed";
+                                                        }
+                                                        if (item.Done === 1) {
+                                                            const amount = item.OrderType === 16 ? item.InAmt : item.OutAmt;
+                                                            const formatted = formatAmount(amount);
+                                                            if (formatted === '-') {
+                                                                return '-';
+                                                            }
+                                                            const assetName = item.AssetName ? ` (${item.AssetName})` : '';
+                                                            return formatted + assetName;
+                                                        }
+                                                        return '-';
+                                                    })()}
                                                 </TableCell>
                                                 <TableCell className="text-zinc-400 text-sm">{formatTime(item.OrderTime)}</TableCell>
                                                 <TableCell className="font-mono text-sm text-zinc-400">

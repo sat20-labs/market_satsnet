@@ -688,7 +688,7 @@
         "uid": "UID",
         "order_type": "类型",
         "address": "地址",
-        "amount": "数量",
+        "amount": "数量 / 原因",
         "time": "时间",
         "txid": "交易ID",
         "action": "操作",
