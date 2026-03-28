@@ -338,8 +338,10 @@ export function AirdropHistory({ contractUrl }: { contractUrl: string }) {
                                                             if (formatted === '-') {
                                                                 return '-';
                                                             }
-                                                            const assetName = item.AssetName ? ` (${item.AssetName})` : '';
-                                                            return formatted + assetName;
+                                                            // const assetName = item.AssetName ? ` (${item.AssetName})` : '';
+                                                            // return formatted + assetName;
+
+                                                            return formatted;
                                                         }
                                                         return '-';
                                                     })()}
