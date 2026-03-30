@@ -315,7 +315,7 @@
   "referree_uid": "被推荐人UID",
   "referree_address": "被推荐人地址",
   "add_referree": "添加被推荐人",
-  "bind_referrees": "绑定被推荐人列表",
+  "bind_referrees": "提交绑定被推荐人",
   "bind_referrees_success": "绑定被推荐人成功",
   "bind_referrees_failed": "绑定被推荐人失败",
   "become_referrer": "成为推荐人",
