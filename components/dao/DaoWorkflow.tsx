@@ -129,6 +129,7 @@ export function DaoWorkflow({
 
             // clear inputs only on success
             if (kind === 'register') {
+                setUserUid(uid);
                 setUid('');
                 setReferrerUid('');
             }
@@ -254,6 +255,28 @@ export function DaoWorkflow({
             window.removeEventListener('airdrop:selected-uids', handleSelectedUids as EventListener);
         };
     }, []);
+
+    // 获取当前地址的 UID
+    useEffect(() => {
+        const fetchUserUid = async () => {
+            if (!address || !contractUrl) {
+                setUserUid('');
+                return;
+            }
+            try {
+                const result = await contractService.getContractStatusByAddress(contractUrl, address);
+                if (result?.status?.UID) {
+                    setUserUid(result.status.UID);
+                } else {
+                    setUserUid('');
+                }
+            } catch (error) {
+                console.error('Failed to fetch user UID:', error);
+                setUserUid('');
+            }
+        };
+        fetchUserUid();
+    }, [address, contractUrl]);
 
     // 获取排行榜数据
     useEffect(() => {
