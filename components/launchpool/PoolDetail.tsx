@@ -16,7 +16,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Icon } from "@iconify/react";
 import ParticipantsTable from './ParticipantsTable';
 
-const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void; poolDetails: any }) => {
+const LaunchPoolDetails = ({ 
+  closeModal, 
+  poolDetails,
+  onClose,
+  isOwner 
+}: { 
+  closeModal: () => void; 
+  poolDetails: any;
+  onClose?: () => void;
+  isOwner?: boolean;
+}) => {
   const { t } = useTranslation(); // Specify the namespace
   const { satsnetHeight, network } = useCommonStore();
   console.log('poolDetails', poolDetails);
@@ -312,6 +322,15 @@ const LaunchPoolDetails = ({ closeModal, poolDetails }: { closeModal: () => void
                   {t('pages.poolDetail.join_pool')}
                 </Button>
               </WalletConnectBus>
+              {isOwner && poolDetails.poolStatus === PoolStatus.ACTIVE && onClose && (
+                <Button 
+                  variant="outline" 
+                  className="mt-2 w-36 sm:w-48 h-11 text-base text-red-400 border-red-400/30 hover:bg-red-400/10"
+                  onClick={onClose}
+                >
+                  {t('pages.poolDetail.close_pool')}
+                </Button>
+              )}
               <Button variant="outline" className="mt-2 w-36 sm:w-48 h-11 text-base text-zinc-300" onClick={closeModal}>
                 {t('pages.poolDetail.close')}
               </Button>

@@ -32,6 +32,8 @@ import AssetMetadataEditModal from '@/components/AssetMetadataEditModal';
 import AssetLogo from '@/components/AssetLogo';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { isAddressInAssetEditWhitelist } from '@/utils';
+import ClosePoolDialog from '@/components/launchpool/ClosePoolDialog';
+import { toast } from 'sonner';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
@@ -238,7 +240,7 @@ export default function LaunchPoolProgressSortTest() {
     };
   };
 
-  const { data: poolListData, isLoading } = useQuery({
+  const { data: poolListData, isLoading, refetch } = useQuery({
     queryKey: ['launchpoolList', network],
     queryFn: getLaunchpoolList,
     enabled: !!contractURLsData,
@@ -361,6 +363,13 @@ export default function LaunchPoolProgressSortTest() {
     return deployer && deployer.toLowerCase?.() === address.toLowerCase?.();
   };
 
+  // 关闭发射池状态
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [selectedClosePool, setSelectedClosePool] = useState<any | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
+
+  const { btcFeeRate } = useCommonStore((state) => state);
+
   // 模态框
   const [modalType, setModalType] = useState<string | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
@@ -376,6 +385,45 @@ export default function LaunchPoolProgressSortTest() {
     setModalType(null);
     setSelectedTemplateId(null);
     setSelectedPool(null);
+  };
+
+  const handleClosePool = (pool: any) => {
+    setSelectedClosePool(pool);
+    setCloseDialogOpen(true);
+  };
+
+  const handleConfirmClosePool = async () => {
+    if (!address) {
+      toast.error('请先连接钱包');
+      return;
+    }
+
+    if (!selectedClosePool) {
+      toast.error('未选择发射池');
+      return;
+    }
+
+    setIsClosing(true);
+    try {
+      const contractUrl = selectedClosePool.contractURL || selectedClosePool.id;
+      const params = {
+        action: 'close'
+      };
+      await window.sat20.invokeContract_SatsNet(
+        contractUrl,
+        JSON.stringify(params),
+        btcFeeRate.value.toString()
+      );
+      toast.success('发射池已成功关闭');
+      setCloseDialogOpen(false);
+      setSelectedClosePool(null);
+      refetch();
+    } catch (error: any) {
+      console.error('关闭发射池失败:', error);
+      toast.error(error?.message || '关闭发射池失败');
+    } finally {
+      setIsClosing(false);
+    }
   };
 
   return (
@@ -498,7 +546,12 @@ export default function LaunchPoolProgressSortTest() {
                     {p.progress}%
                   </span>
                   <div className="flex items-center gap-1">
-                    <ActionButtons pool={p} openModal={openModal} />
+                    <ActionButtons
+                      pool={p}
+                      openModal={openModal}
+                      onClose={() => handleClosePool(p)}
+                      isOwner={isOwner(p)}
+                    />
                     {p.progress >= 100 && (
                       <button
                         className="rounded-md border border-zinc-700 p-1.5 text-zinc-400 hover:text-indigo-500 transition-colors"
@@ -663,7 +716,12 @@ export default function LaunchPoolProgressSortTest() {
 
                 <TableCell className="px-4 py-2 text-center">
                   <div className="flex justify-start items-center h-full gap-4">
-                    <ActionButtons pool={adaptedPool} openModal={openModal} />
+                    <ActionButtons
+                      pool={adaptedPool}
+                      openModal={openModal}
+                      onClose={() => handleClosePool(adaptedPool)}
+                      isOwner={isOwner(adaptedPool)}
+                    />
                     {(isOwner(adaptedPool) ||
                       isAddressInAssetEditWhitelist(address)) &&
                       (adaptedPool.poolStatus === PoolStatus.COMPLETED ||
@@ -723,6 +781,8 @@ export default function LaunchPoolProgressSortTest() {
               <LaunchPoolDetails
                 closeModal={closeModal}
                 poolDetails={selectedPool}
+                onClose={() => handleClosePool(selectedPool)}
+                isOwner={isOwner(selectedPool)}
               />
             )}
             {modalType === 'template' && (
@@ -750,6 +810,13 @@ export default function LaunchPoolProgressSortTest() {
           onSuccess={closeEditMetadata}
         />
       )}
+      <ClosePoolDialog
+        isOpen={closeDialogOpen}
+        onClose={() => setCloseDialogOpen(false)}
+        onConfirm={handleConfirmClosePool}
+        poolName={selectedClosePool?.assetName}
+        isLoading={isClosing}
+      />
     </div>
   );
 }

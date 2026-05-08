@@ -7,7 +7,17 @@ import { useCommonStore } from '@/store/common';
 import { WalletConnectBus } from '../wallet/WalletConnectBus';
 import { useTranslation } from 'react-i18next';
 
-const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: string, pool: any) => void }) => {
+const ActionButtons = ({ 
+  pool, 
+  openModal, 
+  onClose, 
+  isOwner 
+}: { 
+  pool: any; 
+  openModal: (type: string, pool: any) => void;
+  onClose?: () => void;
+  isOwner?: boolean;
+}) => {
   const { t } = useTranslation(); // Specify the namespace
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制菜单显示状态
   const moreActions: React.ReactNode[] = [];
@@ -20,11 +30,18 @@ const ActionButtons = ({ pool, openModal }: { pool: any; openModal: (type: strin
 
     case PoolStatus.ACTIVE:
       mainAction = (
-        <WalletConnectBus asChild>
-          <Button variant="outline" className="btn-gradient w-24 text-zinc-400" onClick={() => openModal('join', pool)}>
-            {t('pages.launchpool.join_pool')}
-          </Button>
-        </WalletConnectBus>
+        <div className="flex items-center gap-2">
+          <WalletConnectBus asChild>
+            <Button variant="outline" className="btn-gradient w-24 text-zinc-400" onClick={() => openModal('join', pool)}>
+              {t('pages.launchpool.join_pool')}
+            </Button>
+          </WalletConnectBus>
+          {isOwner && onClose && (
+            <Button variant="outline" className="w-24 text-red-400" onClick={onClose}>
+              关闭
+            </Button>
+          )}
+        </div>
       );
       break;
 
