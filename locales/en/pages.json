@@ -382,6 +382,7 @@
     "mint_txid": "Mint TxId",
     "anchor_txid": "Anchor TxId",
     "join_pool": "Join Pool",
+    "close_pool": "Close Pool",
     "close": "Close",
     "template_info": "Template Info",
     "back_to_basic": "Back to Basic Info",

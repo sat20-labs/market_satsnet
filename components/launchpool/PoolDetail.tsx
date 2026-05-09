@@ -29,7 +29,6 @@ const LaunchPoolDetails = ({
 }) => {
   const { t } = useTranslation(); // Specify the namespace
   const { satsnetHeight, network } = useCommonStore();
-  console.log('poolDetails', poolDetails);
   const canViewParticipants = () => {
     return [
       PoolStatus.ACTIVE,

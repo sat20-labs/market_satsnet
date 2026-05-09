@@ -38,7 +38,7 @@ const ActionButtons = ({
           </WalletConnectBus>
           {isOwner && onClose && (
             <Button variant="outline" className="w-24 text-red-400" onClick={onClose}>
-              关闭
+              {t('pages.poolDetail.close_pool')}
             </Button>
           )}
         </div>

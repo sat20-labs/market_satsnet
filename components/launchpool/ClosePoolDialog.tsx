@@ -25,10 +25,11 @@ const ClosePoolDialog: React.FC<ClosePoolDialogProps> = ({
   };
 
   return (
-    <div 
-      className="p-6 w-full sm:w-[600px] max-w-10/12 mx-auto bg-zinc-900 rounded-lg shadow-lg relative"
-      data-testid="close-pool-dialog"
-    >
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+      <div 
+        className="p-6 w-full sm:w-[600px] max-w-10/12 mx-auto bg-zinc-900 rounded-lg shadow-lg relative"
+        data-testid="close-pool-dialog"
+      >
       <div className="relative flex justify-between items-center mb-4 gap-4 border-b border-zinc-700 pb-4">
         <h2 className="flex justify-start items-center text-2xl font-bold">
           <Icon icon="lucide:x-circle" className="w-8 h-8 mr-2 text-zinc-400" />
@@ -73,6 +74,7 @@ const ClosePoolDialog: React.FC<ClosePoolDialogProps> = ({
         >
           取消
         </Button>
+      </div>
       </div>
     </div>
   );

@@ -365,6 +365,7 @@
     "mint_txid": "Mint TxId",
     "anchor_txid": "Anchor TxId",
     "join_pool": "加入池子",
+    "close_pool": "关闭发射池",
     "close": "关闭",
     "template_info": "模板信息",
     "back_to_basic": "返回基本信息",
