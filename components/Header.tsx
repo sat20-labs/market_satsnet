@@ -98,14 +98,10 @@ export const Header = () => {
             label: 'Transcend',
             href: '/transcend',
           },
-          ...(toolsEnabled
-            ? [
-              {
-                label: 'DAO',
-                href: '/dao',
-              },
-            ]
-            : []),
+          {
+            label: 'DAO',
+            href: '/dao',
+          },
           {
             label: 'Batch Send',
             href: '/tools/batch-send',
