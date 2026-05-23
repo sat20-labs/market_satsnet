@@ -1,90 +1,49 @@
-# Next.js & NextUI Template
+# Sat20 Market
 
-This is a template for creating applications using Next.js 13 (app directory) and NextUI (v2).
+基于 Next.js 14 构建的比特币资产交易平台，支持 LaunchPool、Swap、Limit Order、DAO 等功能。
 
-## Technologies Used
+## 技术栈
 
-- [Next.js 13](https://nextjs.org/docs/getting-started)
-- [NextUI v2](https://nextui.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Tailwind Variants](https://tailwind-variants.org)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [next-themes](https://github.com/pacocoursey/next-themes)
+- **Next.js 14** (App Router) + **React 19**
+- **TypeScript** + **Tailwind CSS 4**
+- **NextUI v2** + **shadcn/ui** + **Framer Motion**
+- **Zustand** + **SWR** + **React Query**
+- **Bun** 包管理器
 
-## How to Use
-
-
-### Use the template with create-next-app
-
-To create a new project based on this template using `create-next-app`, run the following command:
+## 开发
 
 ```bash
-npx create-next-app -e https://github.com/nextui-org/next-app-template
+bun install        # 安装依赖
+bun dev            # 启动开发环境 (端口 3002)
+bun build          # 构建生产版本
+bun build:test     # 构建测试环境
+bun lint           # 代码检查
 ```
 
-### Install dependencies
+## 部署
 
-```bash
-npm install
+- **测试环境**：提交代码到 GitHub 自动触发部署
+- **生产环境**：`bun run deploy`
+
+## 项目结构
+
 ```
-
-### Run the development server
-
-```bash
-npm run dev
+market_satsnet/
+├── app/                    # Next.js App Router 页面
+│   ├── launchpool/         # 发射池
+│   ├── swap/               # 交易
+│   ├── market/             # 市场
+│   ├── limitOrder/         # 限价单
+│   └── dao/                # DAO
+├── components/             # 可复用组件
+│   ├── ui/                 # 基础 UI 组件 (shadcn/ui)
+│   ├── launchpool/         # 发射池组件
+│   ├── market/             # 市场组件
+│   └── account/            # 账户组件
+├── domain/                 # 领域层 (DDD)
+├── store/                  # 状态管理 (Zustand)
+├── lib/                    # 工具库 & Hooks
+├── types/                  # TypeScript 类型
+├── locales/                # 国际化 (中/英)
+└── infrastructure/         # 基础设施层
 ```
-
-## License
-
-Licensed under the [MIT license](https://github.com/nextui-org/next-app-template/blob/main/LICENSE).
-
-## 业务组件与UI组件拆分说明
-
-### TakeOrderContainer
-- 负责业务逻辑、数据获取、状态管理。
-- 通过props将数据和事件传递给TakeOrderUI。
-- 通过onBuyOrders回调将用户选择的订单返回给父组件。
-
-#### 用法示例：
-```tsx
-<TakeOrderContainer
-  assetInfo={...}
-  mode="buy"
-  setMode={setMode}
-  onBuyOrders={(orders) => {
-    // 这里处理用户选择的订单
-    console.log('用户选择的订单:', orders);
-  }}
-/>
-```
-
-#### Props说明：
-- assetInfo: { assetName, assetLogo, AssetId, floorPrice }
-- mode: "buy" | "sell"
-- setMode: (mode) => void
-- onBuyOrders: (orders: MarketOrder[]) => void // 用户点击Buy时回调，返回选中订单
-
-### TakeOrderUI
-- 只负责UI展示和交互，所有数据和事件通过props传入。
-- 点击Buy时通过onBuy回调。
-
-#### Props说明：
-- orders: MarketOrder[]
-- selectedIndexes: number[]
-- maxSelectableOrders: number
-- sliderValue: number
-- isLoading: boolean
-- isLoadingMore: boolean
-- totalOrders: number
-- lockedOrders: Map<number, string>
-- isProcessingLock: boolean
-- isBalanceSufficient: boolean
-- summarySelectedOrders: any[]
-- onOrderClick: (index: number) => void
-- onSliderChange: (value: number) => void
-- onLoadMore: () => void
-- onBuy: () => void
-- mode: "buy" | "sell"
-- isFetching: boolean
-- assetInfo: { assetName, assetLogo, AssetId, floorPrice }
