@@ -32,12 +32,12 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
         n: '1000',
         mintAmtPerSat: '1',
         limit: '',
-        launchRatio: '60',
+        launchRatio: '90',
         maxSupply: '',
         startBlock: '0',
         endBlock: '0',
         assetSymbol: '',
-        reserveRation: '0',
+        reserveRation: '10',
     });
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showLargePoolWarning, setShowLargePoolWarning] = useState(false);
@@ -97,7 +97,7 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
 
         // 验证 reserveRation 范围
         const reserveRation = Number(formData.reserveRation);
-        if (reserveRation < 0 || reserveRation > 100) {
+        if (reserveRation < 10 || reserveRation > 95) {
             toast.error(t('pages.createPool.reserveRationError'));
             return;
         }
@@ -481,18 +481,18 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
                             <Input
                                 placeholder={t('pages.createPool.reserveRation')}
                                 type="number"
-                                min="0"
-                                max="100"
+                                min="10"
+                                max="95"
                                 value={formData.reserveRation}
                                 onChange={(e) => {
                                     const value = Number(e.target.value);
-                                    if (value >= 0 && value <= 100) {
+                                    if (value >= 10 && value <= 95) {
                                         handleInputChange('reserveRation', e.target.value);
                                     }
                                 }}
                             />
                             <p className="mt-1 text-xs text-gray-400">
-                                {t('pages.createPool.reserveRation')}: 0-100
+                                {t('pages.createPool.reserveRation')}: 10-95
                             </p>
                             <p className="mt-1 text-xs text-purple-400">
                                 {t('pages.createPool.reserveRationNote')}

@@ -321,7 +321,7 @@
     "reserveRation": "Reserve Ratio",
     "reserveRationTips": "Reserved asset ratio. Setting to 10 means 10% of assets will be reserved and sent directly to the deployer address upon successful launch. Note that Reserve Ratio × 5% will be sent to the boot node address.",
     "reserveRationNote": "Reserved assets will be sent to the deployer address upon successful launch, with Reserve Ratio × 5% sent to the boot node address.",
-    "reserveRationError": "Reserve ratio must be between 0 and 100",
+    "reserveRationError": "Reserve ratio must be between 10 and 95",
     "mintAmtPerSat": "Mint Amount Per Sat(SatoshiNet)",
     "mintAmtPerSatTip": "The amount of asset distributed per satoshi. Usually 10-1000 times smaller than the binding sat. For example, if binding sat is 1000, mint amount per sat is typically 1-100.",
     "mintAmtPerSatSuggest": "Suggested: {{min}} ~ {{max}} (based on binding sat)",
