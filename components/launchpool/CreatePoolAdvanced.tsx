@@ -37,7 +37,7 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
         startBlock: '0',
         endBlock: '0',
         assetSymbol: '',
-        reserveRation: '10',
+        reserveRation: '0',
     });
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showLargePoolWarning, setShowLargePoolWarning] = useState(false);
@@ -90,14 +90,14 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
 
         // 验证 launchRatio 范围
         const launchRatio = Number(formData.launchRatio);
-        if (launchRatio < 60 || launchRatio > 90) {
+        if (launchRatio < 10 || launchRatio > 95) {
             toast.error(t('pages.createPool.launchRatioError'));
             return;
         }
 
         // 验证 reserveRation 范围
         const reserveRation = Number(formData.reserveRation);
-        if (reserveRation < 10 || reserveRation > 95) {
+        if (reserveRation < 0 || reserveRation > 80) {
             toast.error(t('pages.createPool.reserveRationError'));
             return;
         }
@@ -419,13 +419,13 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
                             <Input
                                 placeholder={t('pages.createPool.launchRatio')}
                                 type="number"
-                                min="60"
-                                max="90"
+                                min="10"
+                                max="95"
                                 value={formData.launchRatio}
                                 onChange={(e) => handleInputChange('launchRatio', e.target.value)}
                             />
                             <p className="mt-1 text-xs text-gray-400">
-                                {t('pages.createPool.launchRatio')} {t('pages.createPool.range')}: 60-90
+                                {t('pages.createPool.launchRatio')} {t('pages.createPool.range')}: 10-95
                             </p>
 
                             <p className="mt-1 text-xs text-gray-400">
@@ -481,18 +481,18 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
                             <Input
                                 placeholder={t('pages.createPool.reserveRation')}
                                 type="number"
-                                min="10"
-                                max="95"
+                                min="0"
+                                max="80"
                                 value={formData.reserveRation}
                                 onChange={(e) => {
                                     const value = Number(e.target.value);
-                                    if (value >= 10 && value <= 95) {
+                                    if (value >= 0 && value <= 80) {
                                         handleInputChange('reserveRation', e.target.value);
                                     }
                                 }}
                             />
                             <p className="mt-1 text-xs text-gray-400">
-                                {t('pages.createPool.reserveRation')}: 10-95
+                                {t('pages.createPool.reserveRation')}: 0-80
                             </p>
                             <p className="mt-1 text-xs text-purple-400">
                                 {t('pages.createPool.reserveRationNote')}
