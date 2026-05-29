@@ -7,6 +7,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useQueryKey } from '@/lib/hooks/useQueryKey';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import { useCommonStore } from '@/store';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface DepositProps {
   asset: string;
@@ -33,17 +34,17 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
   const { address } = useReactWalletStore();
   const queryClient = useQueryClient();
   const divisibility = tickerInfo?.divisibility || 0;
-  
+
   const queryKey = useQueryKey(['assetBalance', address, asset]);
 
   const { data: assetBalance } = useQuery({
     queryKey,
     queryFn: async () => {
       if (!address || !asset) return { availableAmt: 0, lockedAmt: 0 };
-      const res = await window.sat20.getAssetAmount(address, asset);
-      return { 
-        availableAmt: Number(res.availableAmt), 
-        lockedAmt: Number(res.lockedAmt) 
+      const res = await getWalletAdapter().getAssetAmount(address, asset);
+      return {
+        availableAmt: Number(res.availableAmt),
+        lockedAmt: Number(res.lockedAmt)
       };
     },
     enabled: !!address && !!asset,
@@ -62,8 +63,8 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
           amt: amount
         })
       };
-      
-      const result = await window.sat20.invokeContractV2(
+
+      const result = await getWalletAdapter().invokeContractV2(
         contractUrl,
         JSON.stringify(params),
         asset,
@@ -127,12 +128,12 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
       toast.error(t('common.liquidityOpen'));
       return;
     }
-    
+
     if (!amount || !asset || !contractUrl) {
       toast.error("Please enter a valid amount");
       return;
     }
-    
+
     depositMutation.mutate({ amount, asset, contractUrl });
   };
 
@@ -178,7 +179,7 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
               value={amount}
               onChange={e => handleAmountChange(e.target.value)}
               className="w-full input-swap bg-transparent border-none rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16 mb-4"
-              placeholder={t('common.enterAssetAmount')} 
+              placeholder={t('common.enterAssetAmount')}
               min={1}
               step={divisibility === 0 ? "1" : `0.${"0".repeat(divisibility-1)}1`}
               onKeyDown={(e) => {
@@ -190,19 +191,19 @@ const Deposit: React.FC<DepositProps> = ({ contractUrl, asset, ticker, refresh, 
             />
             <p className='text-xs font-medium text-zinc-500 mb-2'><span className='bg-zinc-800 hover:bg-purple-500 text-zinc-500 hover:text-white p-1 px-2 mr-1 rounded-md'>L 1</span>{t('common.balance')}: {displayAssetBalance.toLocaleString()} {ticker}</p>
           </div>
-        </div>        
+        </div>
       </div>
-      <Button 
-        type="button" 
-        size="lg" 
-        className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient" 
+      <Button
+        type="button"
+        size="lg"
+        className="w-full my-4 text-sm font-semibold transition-all duration-200 btn-gradient"
         onClick={handleDeposit}
         disabled={depositMutation.isPending}
       >
         {depositMutation.isPending ? t('common.depositing') : t('common.deposit')}
-      </Button> 
+      </Button>
     </div>
   );
 };
 
-export default Deposit; 
+export default Deposit;

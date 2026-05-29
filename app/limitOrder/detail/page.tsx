@@ -23,6 +23,7 @@ import dynamic from 'next/dynamic';
 import { Icon } from '@iconify/react';
 import { AssetInfoCardLimitOrder } from '@/components/satoshinet/AssetInfoCardLimitOrder';
 import { TikcerHoldersList } from '@/components/satoshinet/swap/TickerHoldersList';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 const LightweightKline = dynamic(() => import('@/components/satoshinet/LightweightKline').then(m => m.LightweightKline), { ssr: false });
 
@@ -93,7 +94,7 @@ function OrderPageContent() {
       action: 'refund',
     };
 
-    const result = await window.sat20.invokeContract_SatsNet(
+    const result = await getWalletAdapter().invokeContractSatsNet(
       contractUrl,
       JSON.stringify(params),
       btcFeeRate.value.toString(),

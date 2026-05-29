@@ -10,6 +10,7 @@ import { generateMempoolUrl } from "@/utils/url";
 import { Chain } from "@/types";
 import { hideStr } from "@/utils";
 import { Copy, Check } from "lucide-react";
+import { getWalletAdapter } from "@/lib/walletAdapter";
 
 interface ClaimProfitsProps {
   asset: string;
@@ -332,7 +333,7 @@ const ClaimProfits: React.FC<ClaimProfitsProps> = ({
         }),
       };
 
-      window.sat20.invokeContractV2_SatsNet(
+      await getWalletAdapter().invokeContractV2SatsNet(
         contractUrl,
         JSON.stringify(params),
         asset,

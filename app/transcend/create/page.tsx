@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { clientApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useRouter } from 'next/navigation';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 
 
@@ -67,13 +68,13 @@ const CreateTranscend = () => {
       const tickerAsset = `${formData.protocol}:f:${formData.ticker}`;
       const tickerInfo = await clientApi.getTickerInfo(tickerAsset);
       console.log('tickerInfo', tickerInfo);
-      
+
       // 检查返回的数据结构，code为-1表示ticker不存在
       if (tickerInfo && tickerInfo.code === -1) {
         toast.error(t('notification.ticker_not_exist', { ticker: formData.ticker }));
         return;
       }
-      
+
       // 检查data是否为null
       if (!tickerInfo || !tickerInfo.data) {
         toast.error(t('notification.ticker_not_exist', { ticker: formData.ticker }));
@@ -97,7 +98,7 @@ const CreateTranscend = () => {
       assetName,
     };
     try {
-      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
+      const result = await getWalletAdapter().deployContractRemote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
     } catch (error) {
       toast.error(t('notification.contract_deployment_failed'));
     }
@@ -118,7 +119,7 @@ const CreateTranscend = () => {
       assetName,
     };
     try {
-      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
+      const result = await getWalletAdapter().deployContractRemote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
       console.log('result:', result);
       router.back();
     } catch (error) {
@@ -152,7 +153,7 @@ const CreateTranscend = () => {
       </div>
 
       <hr className="mb-6 h-1" />
-      
+
       {/* 创建白聪的独立框 */}
       <div className="p-6 max-w-[1360px] mx-auto bg-zinc-800/50 border border-zinc-800 rounded-lg shadow-lg mb-6">
         <h3 className="text-lg font-semibold mb-4 text-gray-300">⚡ 快速创建白聪</h3>

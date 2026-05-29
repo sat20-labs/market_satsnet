@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import { useCommonStore } from '@/store/common';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface WithDrawProps {
   contractUrl: string;
@@ -52,7 +53,7 @@ const WithDraw: React.FC<WithDrawProps> = ({
   const withdrawMutation = useMutation({
     mutationFn: async ({ amount, assetName, contractUrl }: WithdrawParams) => {
       // 获取合约参数
-      const paramsResult = await window.sat20.getParamForInvokeContract('amm.tc', 'withdraw');
+      const paramsResult = await getWalletAdapter().getParamForInvokeContract('amm.tc', 'withdraw');
       console.log('paramsResult', paramsResult);
 
       const params = {
@@ -64,7 +65,7 @@ const WithDraw: React.FC<WithDrawProps> = ({
         })
       };
 
-      const result = await window.sat20.invokeContractV2_SatsNet(
+      const result = await getWalletAdapter().invokeContractV2SatsNet(
         contractUrl,
         JSON.stringify(params),
         assetName,
@@ -125,7 +126,7 @@ const WithDraw: React.FC<WithDrawProps> = ({
       toast.error(t('common.liquidityOpen'));
       return;
     }
-    
+
     if (!amount || !asset || !contractUrl) {
       toast.error("Please enter a valid amount");
       return;
@@ -159,7 +160,7 @@ const WithDraw: React.FC<WithDrawProps> = ({
         <div className="mb-2 mx-4 py-2 rounded-lg relative">
           <div className="flex justify-between items-center text-xs text-zinc-500 mb-1 mx-2">
             <span className="py-2 uppercase">{t('common.withdraw')}</span>
-            
+
             <span className="flex items-center text-xs text-zinc-500">
               {/* {t('common.balance')}: {displayAssetBalance.toLocaleString()} {ticker} */}
               <button
@@ -210,4 +211,4 @@ const WithDraw: React.FC<WithDrawProps> = ({
   );
 };
 
-export default WithDraw; 
+export default WithDraw;

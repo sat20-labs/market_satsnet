@@ -32,7 +32,7 @@ export const Header = () => {
   const [mounted, setMounted] = useState(false); // hydration guard
   useEffect(() => { setMounted(true); }, []);
   const { address, network } = useReactWalletStore();
-  const { setHeight, setBtcPrice, runtimeEnv, setEnv, chain } = useCommonStore();
+  const { setHeight, setBtcPrice, runtimeEnv, setEnv, chain, setNetwork } = useCommonStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t, i18n } = useTranslation();
   const pathname = usePathname();
@@ -48,6 +48,13 @@ export const Header = () => {
       setBtcPrice(btcData?.data?.amount);
     }
   }, [btcData, setBtcPrice]);
+
+  useEffect(() => {
+    const networkParam = new URLSearchParams(window.location.search).get('network');
+    if (networkParam === 'mainnet' || networkParam === 'testnet') {
+      setNetwork(networkParam);
+    }
+  }, [setNetwork]);
 
   const isActive = (href: string) => {
     if (!href || href.startsWith('http')) {

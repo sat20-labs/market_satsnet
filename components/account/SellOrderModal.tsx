@@ -8,6 +8,7 @@ import {
 
 import SellOrder from "@/components/satoshinet/orderbook/SellOrder";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
+import { getWalletAdapter } from "@/lib/walletAdapter";
 interface SellOrderAssetInfo {
   assetLogo: string;
   assetName: string;
@@ -32,7 +33,7 @@ const SellOrderModal = ({
   tickerInfo,
 }: SellOrderModalProps) => {
   console.log("tickerInfo", tickerInfo);
-  
+
   const { address } = useReactWalletStore();
   const handleCloseModal = () => {
     onOpenChange(false);
@@ -42,7 +43,7 @@ const SellOrderModal = ({
   useEffect(() => {
     if (!address || !assetInfo.assetName) return;
     setBalanceLoading(true);
-    window.sat20.getAssetAmount_SatsNet(address, assetInfo.assetName)
+    getWalletAdapter().getAssetAmountSatsNet(address, assetInfo.assetName)
       .then(res => setAssetBalance({ availableAmt: Number(res.availableAmt), lockedAmt: Number(res.lockedAmt) }))
       .finally(() => setBalanceLoading(false));
   }, [address, assetInfo.assetName]);
@@ -54,9 +55,9 @@ const SellOrderModal = ({
         </DialogHeader>
         <div className="pt-4">
           <SellOrder assetInfo={assetInfo}
-           onSellSuccess={handleCloseModal} 
-           assetBalance={assetBalance} 
-           balanceLoading={balanceLoading} 
+           onSellSuccess={handleCloseModal}
+           assetBalance={assetBalance}
+           balanceLoading={balanceLoading}
            tickerInfo={tickerInfo}
            />
         </div>

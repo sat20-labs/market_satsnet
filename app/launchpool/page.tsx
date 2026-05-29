@@ -34,6 +34,7 @@ import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { isAddressInAssetEditWhitelist } from '@/utils';
 import ClosePoolDialog from '@/components/launchpool/ClosePoolDialog';
 import { toast } from 'sonner';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 // 每页显示的数量
 const PAGE_SIZE = 10;
@@ -409,7 +410,7 @@ export default function LaunchPoolProgressSortTest() {
       const params = {
         action: 'close'
       };
-      await window.sat20.invokeContract_SatsNet(
+      await getWalletAdapter().invokeContractSatsNet(
         contractUrl,
         JSON.stringify(params),
         btcFeeRate.value.toString()

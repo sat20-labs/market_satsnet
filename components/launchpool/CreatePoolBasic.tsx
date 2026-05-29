@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useCommonStore } from '@/store/common';
 import { BtcPrice } from '../BtcPrice';
 import { useRouter } from 'next/navigation';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface Props {
     closeModal: () => void;
@@ -81,7 +82,7 @@ export default function CreatePoolBasic({ closeModal }: Props) {
                 params.bindingSat = FIXED.bindingSat;
             }
 
-            const result = await window.sat20.deployContract_Remote(
+            const result = await getWalletAdapter().deployContractRemote(
                 'launchpool.tc',
                 JSON.stringify(params),
                 String(btcFeeRate.value),

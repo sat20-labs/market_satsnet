@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 const ReferrerBind = () => {
   const { t } = useTranslation();
@@ -20,7 +21,7 @@ const ReferrerBind = () => {
 
     setLoading(true);
     try {
-      const result = await window.sat20.bindReferrerForServer(referrerName, serverPubKey);
+      const result = await getWalletAdapter().bindReferrerForServer(referrerName, serverPubKey);
       if (result) {
         toast.success(t('common.bind_success'));
         setReferrerName('');
@@ -71,4 +72,4 @@ const ReferrerBind = () => {
   );
 };
 
-export default ReferrerBind; 
+export default ReferrerBind;

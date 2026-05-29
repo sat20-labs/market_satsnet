@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Slider } from "@/components/ui/slider"
+import { getWalletAdapter } from "@/lib/walletAdapter";
 
 interface BuyOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
@@ -88,9 +89,9 @@ const handleNumericInput = (
 };
 
 // Helper function: Prepare buy data (split UTXO and get info)
-const prepareBuyData = async (amount: number, price: number, targetAsset: AssetInfo, batchQuantity: number): Promise<[SellUtxoInfo[], string[]]> => {
+const prepareBuyData = async (amount: number, price: number, targetAsset: AssetInfo, batchQuantity: number, btcWallet: any): Promise<[SellUtxoInfo[], string[]]> => {
   const totalPrice = amount * price;
-  const splitRes = await window.sat20.batchSendAssets_SatsNet('::', totalPrice, batchQuantity);
+  const splitRes = await getWalletAdapter(btcWallet).batchSendAssetsSatsNet('::', totalPrice, batchQuantity);
 
   if (!splitRes?.txId) {
     toast.error('Failed to split asset.');
@@ -138,7 +139,8 @@ const buildAndSignBuyOrder = async (
   btcWallet: any
 ): Promise<string[]> => {
   console.log('Building buy order...');
-  const sat20BuyOrder = await window.sat20.buildBatchSellOrder_SatsNet(
+  const walletAdapter = getWalletAdapter(btcWallet);
+  const sat20BuyOrder = await walletAdapter.buildBatchSellOrderSatsNet(
     buyUtxoInfos.map((v) => JSON.stringify(v)),
     address,
     network,
@@ -149,12 +151,12 @@ const buildAndSignBuyOrder = async (
     throw new Error('Failed to build buy order or PSBT missing.');
   }
   toast.info("Please sign the transaction in your wallet.");
-  const signedPsbt = await btcWallet.signPsbt(psbt, { chain: 'sat20' });
+  const signedPsbt = await walletAdapter.signPsbt(psbt, { chain: 'sat20' });
   if (!signedPsbt) {
     toast.error('Transaction signing failed or was cancelled.');
     throw new Error('Failed to sign PSBT.');
   }
-  const batchSignedPsbts = await window.sat20.splitBatchSignedPsbt_SatsNet(signedPsbt, network);
+  const batchSignedPsbts = await walletAdapter.splitBatchSignedPsbtSatsNet(signedPsbt, network);
   return batchSignedPsbts?.data?.psbts;
 };
 
@@ -235,7 +237,7 @@ const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, balanceLoading }:
     [quantity, price, totalQuantity, balance.availableAmt, balanceLoading]);
 
   const lockBuyUtxo = async (utxo: string) => {
-    const res = await window.sat20.lockUtxo_SatsNet(address, utxo, 'buy')
+    const res = await getWalletAdapter(btcWallet).lockUtxoSatsNet(address, utxo, 'buy')
     console.log(res);
     await getBalance();
   }
@@ -281,7 +283,7 @@ const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, balanceLoading }:
         BindingSat: tickerInfo.n,
         Precision: tickerInfo.divisibility || 0
       }
-      const [buyUtxoInfos, utxos] = await prepareBuyData(buyQuantity, buyPrice, targetAsset, batchQuantity);
+      const [buyUtxoInfos, utxos] = await prepareBuyData(buyQuantity, buyPrice, targetAsset, batchQuantity, btcWallet);
       const signedPsbts = await buildAndSignBuyOrder(buyUtxoInfos, address, network, btcWallet);
       const submissionSuccess = await submitSignedBuyOrder(address, assetInfo.assetName, signedPsbts, t);
       if (submissionSuccess) {
@@ -448,7 +450,7 @@ const BuyOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, balanceLoading }:
         )}
         {price !== "" && Number(price) <= 0 && (
           <p className="text-red-500 font-medium mt-2">
-            {t('common.pricePositive')} 
+            {t('common.pricePositive')}
           </p>
         )}
         {calculatedBTC > 0 && !isLoading && (

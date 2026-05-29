@@ -6,6 +6,7 @@ import type { Network } from '@/store';
 import { Icon } from '@iconify/react'; // 引入 Iconify 图标
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { toast } from 'sonner';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 
 export const NetworkSelect = () => {
@@ -48,7 +49,7 @@ export const NetworkSelect = () => {
     const _v = value === 'mainnet' ? 'livenet' : 'testnet';
     if (connected && walletNetwork !== _v) {
       try {
-        await window.sat20.switchNetwork(_v);
+        await getWalletAdapter().switchNetwork(_v);
         setNetwork(value); // 更新网络的值
       } catch (error) {
         toast.error('Switch network failed');

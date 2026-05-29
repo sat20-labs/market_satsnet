@@ -11,10 +11,11 @@ import { useQuery } from '@tanstack/react-query';
 import { clientApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useRouter } from 'next/navigation';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 const CreateStack = () => {
   const { t, i18n } = useTranslation();
-  const router = useRouter(); 
+  const router = useRouter();
   const [bol, setBol] = useState(false);
   const [formData, setFormData] = useState({
     protocol: 'ordx',
@@ -80,7 +81,7 @@ const CreateStack = () => {
       assetName,
     };
     try {
-      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
+      const result = await getWalletAdapter().deployContractRemote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
       console.log('result:', result);
       router.back();
       // const { txId } = result;

@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Slider } from "@/components/ui/slider"
+import { getWalletAdapter } from "@/lib/walletAdapter";
 
 interface SellOrderProps {
   assetInfo: { assetLogo: string; assetName: string; AssetId: string; floorPrice: number };
@@ -81,9 +82,10 @@ const handleNumericInput = (
 };
 
 // Helper function: Prepare sell data (split UTXO and get info)
-const prepareSellData = async (assetName: string, quantity: number, price: number, batchQuantity: number): Promise<[SellUtxoInfo[], string[]]> => {
+const prepareSellData = async (assetName: string, quantity: number, price: number, batchQuantity: number, btcWallet: any): Promise<[SellUtxoInfo[], string[]]> => {
+  const walletAdapter = getWalletAdapter(btcWallet);
   console.log(`Splitting asset ${assetName} for quantity ${quantity}`);
-  const splitRes = await window.sat20.batchSendAssets_SatsNet(assetName, quantity, batchQuantity);
+  const splitRes = await walletAdapter.batchSendAssetsSatsNet(assetName, quantity, batchQuantity);
   console.log('splitRes', splitRes);
 
   if (!splitRes?.txId) {
@@ -131,7 +133,8 @@ const buildAndSignOrder = async (
   btcWallet: any
 ): Promise<string[]> => {
   console.log('Building sell order...');
-  const sat20SellOrder = await window.sat20.buildBatchSellOrder_SatsNet(
+  const walletAdapter = getWalletAdapter(btcWallet);
+  const sat20SellOrder = await walletAdapter.buildBatchSellOrderSatsNet(
     sellUtxoInfos.map((v) => JSON.stringify(v)),
     address,
     network,
@@ -143,12 +146,12 @@ const buildAndSignOrder = async (
   }
   console.log('Sell order built, signing PSBT...');
   toast.info("Please sign the transaction in your wallet.");
-  const signedPsbt = await btcWallet.signPsbt(psbt, { chain: 'sat20' });
+  const signedPsbt = await walletAdapter.signPsbt(psbt, { chain: 'sat20' });
   if (!signedPsbt) {
     toast.error('Transaction signing failed or was cancelled.');
     throw new Error('Failed to sign PSBT.');
   }
-  const batchSignedPsbts = await window.sat20.splitBatchSignedPsbt_SatsNet(signedPsbt, network);
+  const batchSignedPsbts = await walletAdapter.splitBatchSignedPsbtSatsNet(signedPsbt, network);
   return batchSignedPsbts?.data?.psbts;
 };
 
@@ -255,7 +258,7 @@ const SellOrder = ({ assetInfo, onSellSuccess, tickerInfo = {}, assetBalance, ba
     const sellPrice = Number(price);
 
     try {
-      const [sellUtxoInfos, utxos] = await prepareSellData(assetInfo.assetName, sellQuantity, sellPrice, batchQuantity);
+      const [sellUtxoInfos, utxos] = await prepareSellData(assetInfo.assetName, sellQuantity, sellPrice, batchQuantity, btcWallet);
       const signedPsbts = await buildAndSignOrder(sellUtxoInfos, address, network, btcWallet);
       const submissionSuccess = await submitSignedOrder(address, assetInfo.assetName, signedPsbts, t);
 

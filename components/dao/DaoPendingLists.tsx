@@ -163,10 +163,6 @@ export function DaoPendingLists({
             toast.error(t('pages.dao.pending.missing_contract_url'));
             return;
         }
-        if (!window.sat20?.invokeContract_SatsNet) {
-            toast.error(t('pages.dao.pending.wallet_api_unavailable'));
-            return;
-        }
         if (!ids.length) {
             toast.error(t('pages.dao.pending.no_selected_items'));
             return;
@@ -206,10 +202,6 @@ export function DaoPendingLists({
         }
         if (!contractUrl) {
             toast.error(t('pages.dao.pending.missing_contract_url'));
-            return;
-        }
-        if (!window.sat20?.invokeContract_SatsNet) {
-            toast.error(t('pages.dao.pending.wallet_api_unavailable'));
             return;
         }
         if (!ids.length) {

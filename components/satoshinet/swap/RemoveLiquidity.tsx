@@ -11,6 +11,7 @@ import { useCommonStore } from '@/store/common';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain, LptAmount } from '@/types';
 import { hideStr } from '@/utils';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface RemoveLiquidityProps {
   contractUrl: string;
@@ -122,7 +123,7 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
         })
       };
 
-      window.sat20.invokeContractV2_SatsNet(
+      await getWalletAdapter().invokeContractV2SatsNet(
         contractUrl,
         JSON.stringify(params),
         assetName,
@@ -165,7 +166,7 @@ const RemoveLiquidity: React.FC<RemoveLiquidityProps> = ({
       toast.error(t('common.liquidityOpen'));
       return;
     }
-    
+
     if (!hasLpt || !asset || !contractUrl) {
       toast.error("No liquidity to remove");
       return;

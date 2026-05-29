@@ -14,6 +14,7 @@ import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { contractService } from "@/domain/services/contract";
 import { BtcPrice } from "@/components/BtcPrice";
 import { getValueFromPrecision } from '@/utils';
+import { getWalletAdapter } from "@/lib/walletAdapter";
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 
 interface SwapProps {
@@ -289,7 +290,7 @@ const Swap = ({
       };
 
       if (swapType === 'sats-to-asset') {
-        window.sat20.invokeContractV2_SatsNet(
+        await getWalletAdapter().invokeContractV2SatsNet(
           contractUrl,
           JSON.stringify(params),
           "::",
@@ -310,7 +311,7 @@ const Swap = ({
         );
       } else {
         // 用资产换聪
-        window.sat20.invokeContractV2_SatsNet(
+        await getWalletAdapter().invokeContractV2SatsNet(
           contractUrl,
           JSON.stringify(params),
           asset,

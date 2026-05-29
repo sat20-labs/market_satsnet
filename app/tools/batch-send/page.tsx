@@ -15,20 +15,21 @@ import { clientApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 const BatchSendPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { address } = useReactWalletStore();
   const { network, btcFeeRate } = useCommonStore();
-  
+
   const [formData, setFormData] = useState({
     protocol: 'ordx',
     ticker: '',
     amount: '',
     addresses: '',
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
 
   // 获取用户资产列表
@@ -65,7 +66,7 @@ const BatchSendPage = () => {
   // 解析地址输入
   const parseAddresses = (addressInput: string): string[] => {
     if (!addressInput.trim()) return [];
-    
+
     return addressInput
       .split(/[\n,;]/) // 支持换行符、逗号、分号分隔
       .map(addr => addr.trim())
@@ -90,7 +91,7 @@ const BatchSendPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!address) {
       toast.error(t('pages.tools.batch_send.connect_wallet'));
       return;
@@ -116,7 +117,7 @@ const BatchSendPage = () => {
       const amountList = parsedAddresses.map(() => formData.amount);
 
       // 调用 sat20 批量发送方法
-      const result = await window.sat20.batchSendAssetsV2_SatsNet(
+      const result = await getWalletAdapter().batchSendAssetsV2SatsNet(
         parsedAddresses,
         assetName,
         amountList
@@ -129,7 +130,7 @@ const BatchSendPage = () => {
           duration: 6000,
         });
       }
-      
+
       // 清空表单数据（保留协议和资产选择）
       setFormData(prev => ({
         ...prev,
@@ -146,9 +147,9 @@ const BatchSendPage = () => {
 
   const isFormValid = !!(
     address && // 必须连接钱包
-    formData.protocol && 
-    formData.ticker && 
-    formData.amount && 
+    formData.protocol &&
+    formData.ticker &&
+    formData.amount &&
     parsedAddresses.length > 0
   );
 
@@ -190,12 +191,12 @@ const BatchSendPage = () => {
                 <label className="text-sm font-medium text-gray-300">
                   {t('pages.tools.batch_send.protocol')}
                 </label>
-                <Select 
-                  onValueChange={(value) => handleInputChange('protocol', value)} 
+                <Select
+                  onValueChange={(value) => handleInputChange('protocol', value)}
                   value={formData.protocol}
                 >
                   <SelectTrigger className="w-full">
-                    {formData.protocol === 'ordx' ? 'SAT20 (ordx)' : 
+                    {formData.protocol === 'ordx' ? 'SAT20 (ordx)' :
                      formData.protocol === 'runes' ? 'Runes' : 'BTC'}
                   </SelectTrigger>
                   <SelectContent>

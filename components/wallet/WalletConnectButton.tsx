@@ -13,6 +13,7 @@ import {
   WalletConnectReact,
   useReactWalletStore,
 } from '@sat20/btc-connect/dist/react';
+import type { WalletConnectReactProps } from '@sat20/btc-connect/dist/react';
 import { Copy, ChevronDown, Bitcoin } from 'lucide-react';
 import { Icon } from '@iconify/react'; // Assuming Icon comes from @iconify/react
 import { useTheme } from 'next-themes';
@@ -25,6 +26,24 @@ import clientApi from '@/api/clientApi';
 import { useQuery } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query';
 import { useHeight } from '@/lib/hooks/useHeight';
+import { installSat20PwaProvider, isSat20PwaEmbedded } from '@/lib/sat20PwaProvider';
+import { getWalletAdapter } from '@/lib/walletAdapter';
+
+const isPwaWallet = (wallet: unknown) => {
+  return !!(wallet as { isSat20Pwa?: boolean } | null)?.isSat20Pwa;
+};
+
+const toMarketNetwork = (walletNetwork?: string) =>
+  walletNetwork === 'livenet' || walletNetwork === 'mainnet' ? 'mainnet' : 'testnet';
+
+const walletConnectConfig: WalletConnectReactProps['config'] = {
+  network: 'mainnet' as any,
+  enabledConnectors: ['sat20'],
+};
+
+const walletConnectUi: WalletConnectReactProps['ui'] = {
+  connectClass: 'bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-red-500 focus:ring-0 focus-visible:ring-0',
+};
 
 const WalletConnectButton = () => {
 
@@ -45,7 +64,78 @@ const WalletConnectButton = () => {
   const [isCopied, setIsCopied] = useState(false);
   const { setSignature, signature } = useCommonStore((state) => state);
   const [mounted, setMounted] = useState(false);
+  const [pwaEmbedded, setPwaEmbedded] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    const provider = installSat20PwaProvider();
+    setPwaEmbedded(isSat20PwaEmbedded() && !!provider);
+
+    if (!provider) {
+      return;
+    }
+
+    const syncEmbeddedWallet = async (payload?: any) => {
+      let accounts = Array.isArray(payload?.accounts) ? payload.accounts : [];
+      let nextPublicKey = payload?.publicKey || '';
+      let nextNetwork = payload?.network || walletNetwork;
+
+      if (!accounts.length) {
+        try {
+          accounts = await provider.getAccounts();
+          nextPublicKey = await provider.getPublicKey();
+          nextNetwork = await provider.getNetwork();
+        } catch (error) {
+          console.warn('SAT20 PWA wallet sync failed:', error);
+        }
+      }
+
+      if (nextNetwork) {
+        setNetwork(toMarketNetwork(nextNetwork));
+        (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
+          network: nextNetwork,
+        });
+      }
+
+      const nextAddress = accounts[0] || '';
+
+      if (nextAddress) {
+        (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
+          connected: true,
+          address: nextAddress,
+          publicKey: nextPublicKey,
+          network: nextNetwork,
+          btcWallet: provider,
+        });
+      } else {
+        (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
+          connected: false,
+          address: '',
+          publicKey: '',
+          network: nextNetwork,
+          btcWallet: provider,
+        });
+        resetBalance();
+      }
+    };
+
+    provider.on('ready', syncEmbeddedWallet);
+    provider.on('accountChanged', syncEmbeddedWallet);
+    provider.on('networkChanged', syncEmbeddedWallet);
+    const syncTimer = setTimeout(() => {
+      syncEmbeddedWallet();
+    }, 300);
+
+    return () => {
+      clearTimeout(syncTimer);
+      provider.removeListener('ready', syncEmbeddedWallet);
+      provider.removeListener('accountChanged', syncEmbeddedWallet);
+      provider.removeListener('networkChanged', syncEmbeddedWallet);
+    };
+  }, [mounted, resetBalance, setNetwork, walletNetwork]);
 
 
   const { data: balanceData } = useQuery({
@@ -69,7 +159,14 @@ const WalletConnectButton = () => {
   const initCheck = async () => {
     console.log('initCheck');
     setTimeout(() => {
-      check();
+      const currentWallet = useReactWalletStore.getState().btcWallet;
+      if (isPwaWallet(currentWallet) || typeof currentWallet?.check !== 'function') {
+        return;
+      }
+
+      Promise.resolve(check()).catch((error: unknown) => {
+        console.log('Wallet check failed:', error);
+      });
     }, 500);
   };
 
@@ -91,7 +188,7 @@ const WalletConnectButton = () => {
     // }
     if (walletNetwork !== network) {
       try {
-        await window.sat20.switchNetwork(network === 'mainnet' ? 'livenet' : 'testnet');
+        await getWalletAdapter(wallet).switchNetwork(network === 'mainnet' ? 'livenet' : 'testnet');
       } catch (error) {
         toast.error('Switch network failed');
       }
@@ -113,17 +210,58 @@ const WalletConnectButton = () => {
   const handlerDisconnect = async () => {
     console.log('disconnect success');
     setSignature('');
+    if (isPwaWallet(useReactWalletStore.getState().btcWallet)) {
+      (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
+        connected: false,
+        address: '',
+        publicKey: '',
+        btcWallet: undefined,
+      });
+      resetBalance();
+      return;
+    }
+
     await disconnect();
     // 清空已持久化的余额，避免未连接时显示历史余额
     resetBalance();
   };
-  const networkChange = () => {
+  const networkChange = (payload?: any) => {
+    if (isPwaWallet(btcWallet) && payload?.network) {
+      (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
+        network: payload.network,
+      });
+      setNetwork(toMarketNetwork(payload.network));
+      return;
+    }
+
     initCheck()
   };
-  const accountAndNetworkChange = async () => {
+  const accountAndNetworkChange = async (payload?: any) => {
     console.log('accountAndNetworkChange');
     console.log('connected', connected);
     console.log('btcWallet', btcWallet);
+    if (isPwaWallet(btcWallet)) {
+      const accounts = Array.isArray(payload?.accounts)
+        ? payload.accounts
+        : Array.isArray(payload)
+          ? payload
+          : typeof payload === 'string'
+            ? [payload]
+            : [];
+      const nextAddress = accounts[0] || '';
+
+      (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
+        connected: !!nextAddress,
+        address: nextAddress,
+        publicKey: payload?.publicKey || '',
+      });
+
+      if (!nextAddress) {
+        resetBalance();
+      }
+      return;
+    }
+
     const windowState =
       document.visibilityState === 'visible' || !document.hidden;
     try {
@@ -193,15 +331,18 @@ const WalletConnectButton = () => {
       }, 1000);
       btcWallet?.on('accountsChanged', accountAndNetworkChange);
       btcWallet?.on('networkChanged', networkChange);
+      (btcWallet as any)?.on?.('disconnect', handlerDisconnect);
     } else {
       btcWallet?.removeListener('accountsChanged', accountAndNetworkChange);
       btcWallet?.removeListener('networkChanged', networkChange);
+      (btcWallet as any)?.removeListener?.('disconnect', handlerDisconnect);
       // 未连接状态下重置余额，避免显示缓存中的余额
       resetBalance();
     }
     return () => {
       btcWallet?.removeListener('accountsChanged', accountAndNetworkChange);
       btcWallet?.removeListener('networkChanged', networkChange);
+      (btcWallet as any)?.removeListener?.('disconnect', handlerDisconnect);
     };
   }, [connected, address, network, publicKey, signature]);
 
@@ -217,70 +358,74 @@ const WalletConnectButton = () => {
     return <Button variant="outline" className="px-4 h-9 btn-gradient opacity-0 pointer-events-none" aria-hidden>...</Button>;
   }
 
-  return (
-    <WalletConnectReact
+  const walletConnectProps: WalletConnectReactProps = {
+    config: walletConnectConfig,
+    ui: walletConnectUi,
+    theme: theme === 'dark' ? 'dark' : 'light',
+    onConnectSuccess,
+    onConnectError,
+  };
 
-      config={{
-        network: 'mainnet' as any,
-        enabledConnectors: ['sat20']
-      }}
-      ui={{
-        connectClass: 'bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-red-500 focus:ring-0 focus-visible:ring-0',
-      }}
-      theme={theme === 'dark' ? 'dark' : 'light'}
-      onConnectSuccess={onConnectSuccess}
-      onConnectError={onConnectError}
-    >
-      <>
-        {connected && address ? (
-          <Popover>
-            <div className="relative">
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="px-0 bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-gray-200 focus:ring-0 focus-visible:ring-0"
-                >
-                  <div className="flex items-center gap-1 pl-1">
-                    {/* <Bitcoin className="w-4 h-4 text-orange-400" /> */}
-                    <Icon icon="cryptocurrency:btc" className="text-sm custom-btc-icon" />
-                    <span className='text-gray-200 text-xs sm:text-sm'>
-                      {showAmount}
-                    </span>
-                  </div>
-                  <div className="px-2 h-full flex justify-center items-center text-gray-300 bg-transparent ml-1">
-                    {address?.slice(-4)}
-                    <ChevronDown className="text-gray-400 text-sm w-4 h-4 ml-1" />
-                  </div>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2 bg-background border-border z-[100]">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted">
-                    <span className="text-base font-thin text-muted-foreground">
-                      {hideStr(address, 4)}
-                    </span>
-                    <Button variant="ghost" size="icon" onClick={copyAddress} className="h-6 w-6">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Button variant="outline" className="w-full" onClick={toHistory}>
-                    {t('buttons.to_history')}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={handlerDisconnect}
-                  >
-                    {t('buttons.disconnect')}
-                  </Button>
-                </div>
-              </PopoverContent>
+  const walletStatus = connected && address ? (
+    <Popover>
+      <div className="relative">
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="px-0 bg-[#181819] border-[#282828] hover:bg-[#1f1f20] text-gray-200 focus:ring-0 focus-visible:ring-0"
+          >
+            <div className="flex items-center gap-1 pl-1">
+              {/* <Bitcoin className="w-4 h-4 text-orange-400" /> */}
+              <Icon icon="cryptocurrency:btc" className="text-sm custom-btc-icon" />
+              <span className='text-gray-200 text-xs sm:text-sm'>
+                {showAmount}
+              </span>
             </div>
-          </Popover>
-        ) : (
-          <Button>{t('buttons.connect_wallet')} 12</Button>
-        )}
-      </>
+            <div className="px-2 h-full flex justify-center items-center text-gray-300 bg-transparent ml-1">
+              {address?.slice(-4)}
+              <ChevronDown className="text-gray-400 text-sm w-4 h-4 ml-1" />
+            </div>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2 bg-background border-border z-[100]">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted">
+              <span className="text-base font-thin text-muted-foreground">
+                {hideStr(address, 4)}
+              </span>
+              <Button variant="ghost" size="icon" onClick={copyAddress} className="h-6 w-6">
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button variant="outline" className="w-full" onClick={toHistory}>
+              {t('buttons.to_history')}
+            </Button>
+            {!pwaEmbedded && !isPwaWallet(btcWallet) ? (
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={handlerDisconnect}
+              >
+                {t('buttons.disconnect')}
+              </Button>
+            ) : null}
+          </div>
+        </PopoverContent>
+      </div>
+    </Popover>
+  ) : (
+    <Button>{t('buttons.connect_wallet')}</Button>
+  );
+
+  if (pwaEmbedded) {
+    return connected && address
+      ? walletStatus
+      : <Button variant="outline" className="px-4 h-9 btn-gradient opacity-0 pointer-events-none" aria-hidden>...</Button>;
+  }
+
+  return (
+    <WalletConnectReact {...walletConnectProps}>
+      <>{walletStatus}</>
     </WalletConnectReact>
   );
 };

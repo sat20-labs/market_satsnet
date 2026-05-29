@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useNsList } from '@/lib/hooks/useNsList';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 const ReferrerRegister = () => {
   const { t } = useTranslation();
@@ -22,7 +23,7 @@ const ReferrerRegister = () => {
 
     setLoading(true);
     try {
-      const result = await window.sat20.registerAsReferrer(name, 1);
+      const result = await getWalletAdapter().registerAsReferrer(name, 1);
       if (result) {
         toast.success(t('common.register_success'));
         setName('');
@@ -70,4 +71,4 @@ const ReferrerRegister = () => {
   );
 };
 
-export default ReferrerRegister; 
+export default ReferrerRegister;

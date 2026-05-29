@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useContractStore } from "@/store/contract";
+import { getWalletAdapter } from "@/lib/walletAdapter";
 
 const getSupportedContracts = async () => {
-  const result = await window.sat20.getSupportedContracts();
+  const result = await getWalletAdapter().getSupportedContracts();
   const { contractContents = [] } = result;
   const list = contractContents.filter(Boolean).map((item) => {
     try {

@@ -11,6 +11,7 @@ import { useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { clientApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 
 const CreateLimitOrder = ({ closeModal }: { closeModal: () => void }) => {
@@ -70,7 +71,7 @@ const CreateLimitOrder = ({ closeModal }: { closeModal: () => void }) => {
       assetName,
     };
     try {
-      const result = await window.sat20.deployContract_Remote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
+      const result = await getWalletAdapter().deployContractRemote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
       console.log('result:', result);
       const { txId } = result;
       if (txId) {

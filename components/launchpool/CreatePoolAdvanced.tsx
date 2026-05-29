@@ -16,6 +16,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { Icon } from '@iconify/react';
 import { BtcPrice } from '../BtcPrice';
 import { useRouter } from 'next/navigation';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface Props {
     closeModal: () => void;
@@ -66,7 +67,7 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
         queryKey: ['poolStatus', contractURL],
         queryFn: async () => {
             if (!contractURL || step !== 3) return null;
-            const result = await window.sat20.getDeployedContractStatus(contractURL);
+            const result = await getWalletAdapter().getDeployedContractStatus(contractURL);
             if (result && result.contractStatus) {
                 return JSON.parse(result.contractStatus);
             }
@@ -141,7 +142,7 @@ export default function CreatePoolAdvanced({ closeModal }: Props) {
             ...(formData.protocol === 'ordx' ? { bindingSat: Number(formData.n) } : {}),
         };
 
-        const result = await window.sat20.deployContract_Remote(
+        const result = await getWalletAdapter().deployContractRemote(
             contractType,
             JSON.stringify(params),
             btcFeeRate.value.toString(),

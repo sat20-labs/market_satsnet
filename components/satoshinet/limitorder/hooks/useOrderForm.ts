@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { contractService } from '@/domain/services/contract';
 import { useCommonStore } from '@/store/common';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface OrderFormState {
   orderType: string;
@@ -213,7 +214,7 @@ export const useOrderForm = ({
     };
 
     try {
-      await window.sat20.invokeContractV2_SatsNet(
+      await getWalletAdapter().invokeContractV2SatsNet(
         contractURL,
         JSON.stringify(params),
         _asset,
@@ -231,7 +232,7 @@ export const useOrderForm = ({
           networkFee: 10,
         }
       );
-      
+
       // invokeContractV2_SatsNet 没有返回值，提交就当作成功
       // toast.success(t('common.order_placed_successfully'));
       updateState({ isPlacingOrder: false, price: "", quantity: "" });
@@ -262,4 +263,4 @@ export const useOrderForm = ({
     handleSubmitClick,
     handleConfirm,
   };
-}; 
+};

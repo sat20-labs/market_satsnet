@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { tryit } from "radash";
 import TakeOrderUI from "@/components/satoshinet/orderbook/TakeOrderUI";
 import BuySellToggle from "@/components/satoshinet/orderbook/BuySellToggle";
+import { getWalletAdapter } from "@/lib/walletAdapter";
 // --- Start: Define types locally (Consider moving to types/market.ts later) ---
 export interface MarketOrderAsset {
   assets_name: {
@@ -143,11 +144,12 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
         : process.env.NEXT_PUBLIC_SERVICE_ADDRESS;
     const intendedOrderIds = selectedOrdersData.map((order) => order.order_id);
     try {
+      const walletAdapter = getWalletAdapter(btcWallet);
       // === UTXO和PSBT处理逻辑 ===
       const buyUtxoInfos: any[] = [];
 
       // 获取UTXO
-      const utxoRes = await window.sat20.getUtxosWithAsset_SatsNet(address, "::", summary.totalPay);
+      const utxoRes = await walletAdapter.getUtxosWithAssetSatsNet(address, "::", summary.totalPay);
       const { utxos = [] } = utxoRes;
       if (utxos.length === 0) {
         throw new Error("No valid UTXOs available for this transaction. Please check your wallet.");
@@ -169,13 +171,13 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
 
       // === 合并PSBT ===
       const orderRaws = selectedOrdersData.map(order => order.raw).filter(Boolean);
-      const mergeRaw = await window.sat20.mergeBatchSignedPsbt_SatsNet(orderRaws, network);
+      const mergeRaw = await walletAdapter.mergeBatchSignedPsbtSatsNet(orderRaws, network);
       if (!mergeRaw.data.psbt) {
         throw new Error("Failed to merge PSBTs.");
       }
 
       // Finalize PSBT
-      const finalizeRes = await window.sat20.finalizeSellOrder_SatsNet(
+      const finalizeRes = await walletAdapter.finalizeSellOrderSatsNet(
         mergeRaw.data.psbt,
         buyUtxoInfos.map((v) => JSON.stringify(v)),
         address,
@@ -189,12 +191,12 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
         throw new Error("Failed to finalize buy order.");
       }
 
-      const signedPsbt = await btcWallet?.signPsbt(finalizeRes.psbt, { chain: 'sat20' });
+      const signedPsbt = await walletAdapter.signPsbt(finalizeRes.psbt, { chain: 'sat20' });
       if (!signedPsbt) {
         throw new Error('Failed to sign PSBT.');
       }
 
-      const buyRaw = await window.sat20?.extractTxFromPsbt(signedPsbt, chain);
+      const buyRaw = await walletAdapter.extractTxFromPsbt(signedPsbt, chain);
       if (!buyRaw) {
         throw new Error('Failed to extract transaction from PSBT.');
       }
@@ -209,7 +211,7 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
         toast.success("Buy order placed successfully!", { id: toastId });
         setPage(1);
         for (const utxo of buyUtxoInfos) {
-          await window.sat20.lockUtxo_SatsNet(address, utxo.Outpoint, 'buy');
+          await walletAdapter.lockUtxoSatsNet(address, utxo.Outpoint, 'buy');
         }
         await getBalance();
         queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });
@@ -232,11 +234,12 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
         : process.env.NEXT_PUBLIC_SERVICE_ADDRESS;
     const intendedOrderIds = selectedOrdersData.map((order) => order.order_id);
     try {
+      const walletAdapter = getWalletAdapter(btcWallet);
       // === UTXO和PSBT处理逻辑 ===
       const buyUtxoInfos: any[] = [];
 
       // 获取资产UTXO
-      const utxoRes = await window.sat20.getUtxosWithAsset_SatsNet(address, assetInfo.assetName, summary.totalPay);
+      const utxoRes = await walletAdapter.getUtxosWithAssetSatsNet(address, assetInfo.assetName, summary.totalPay);
       const { utxos = [] } = utxoRes;
       if (utxos.length === 0) {
         throw new Error(`No valid ${assetInfo.assetName} UTXOs available for this transaction. Please check your wallet.`);
@@ -258,13 +261,13 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
 
       // === 合并PSBT ===
       const orderRaws = selectedOrdersData.map(order => order.raw).filter(Boolean);
-      const mergeRaw = await window.sat20.mergeBatchSignedPsbt_SatsNet(orderRaws, network);
+      const mergeRaw = await walletAdapter.mergeBatchSignedPsbtSatsNet(orderRaws, network);
       if (!mergeRaw.data.psbt) {
         throw new Error("Failed to merge PSBTs.");
       }
 
       // Finalize PSBT
-      const finalizeRes = await window.sat20.finalizeSellOrder_SatsNet(
+      const finalizeRes = await walletAdapter.finalizeSellOrderSatsNet(
         mergeRaw.data.psbt,
         buyUtxoInfos.map((v) => JSON.stringify(v)),
         address,
@@ -278,12 +281,12 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
         throw new Error("Failed to finalize sell order.");
       }
 
-      const signedPsbt = await btcWallet?.signPsbt(finalizeRes.psbt, { chain: 'sat20' });
+      const signedPsbt = await walletAdapter.signPsbt(finalizeRes.psbt, { chain: 'sat20' });
       if (!signedPsbt) {
         throw new Error('Failed to sign PSBT.');
       }
 
-      const buyRaw = await window.sat20?.extractTxFromPsbt(signedPsbt, chain);
+      const buyRaw = await walletAdapter.extractTxFromPsbt(signedPsbt, chain);
       if (!buyRaw) {
         throw new Error('Failed to extract transaction from PSBT.');
       }
@@ -298,7 +301,7 @@ const TakeOrderContainer = forwardRef<TakeOrderRef, TakeOrderProps>(({ assetInfo
         toast.success("Sell order placed successfully!", { id: toastId });
         setPage(1);
         for (const utxo of buyUtxoInfos) {
-          await window.sat20.lockUtxo_SatsNet(address, utxo.Outpoint, 'sell');
+          await walletAdapter.lockUtxoSatsNet(address, utxo.Outpoint, 'sell');
         }
         await getBalance();
         queryClient.invalidateQueries({ queryKey: ['orders', assetInfo.assetName, chain, network, 1, size, mode] });

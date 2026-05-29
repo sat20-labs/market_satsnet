@@ -9,6 +9,7 @@ import { ButtonRefresh } from "@/components/buttons/ButtonRefresh";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useCommonStore } from "@/store/common";
+import { getWalletAdapter } from "@/lib/walletAdapter";
 
 interface MyOrdersProps {
   contractURL: string;
@@ -59,7 +60,7 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
       action: 'refund',
     };
 
-    const result = await window.sat20.invokeContract_SatsNet(
+    const result = await getWalletAdapter().invokeContractSatsNet(
       contractURL,
       JSON.stringify(params),
       btcFeeRate.value.toString(),
@@ -102,4 +103,4 @@ export default function MyOrders({ contractURL, type, asset }: MyOrdersProps) {
       />
     </div>
   );
-} 
+}

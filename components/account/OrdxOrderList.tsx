@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { CustomPagination } from "@/components/ui/CustomPagination";
 import { getLabelForAssets } from '@/utils';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface OrdxOrderListProps {
   address?: string;
@@ -98,11 +99,16 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
       toast.error('Cancel order failed, The order is locked, please wait unlock it first');
       return;
     }
+    const walletAddress = storeAddress || address;
+    if (!walletAddress) {
+      toast.error('Wallet not connected');
+      return;
+    }
     try {
-      const res = await marketApi.cancelOrder({ address: storeAddress || address, order_id: item.order_id });
+      const res = await marketApi.cancelOrder({ address: walletAddress, order_id: item.order_id });
       if (res.code === 200) {
         toast.success('Cancel order successfully!');
-        await window.sat20.unlockUtxo_SatsNet(address, item.utxo);
+        await getWalletAdapter().unlockUtxoSatsNet(walletAddress, item.utxo);
         refetch();
       } else {
         toast.error('Cancel order failed');
@@ -240,4 +246,3 @@ export const OrdxOrderList = ({ address }: OrdxOrderListProps) => {
     </div>
   );
 };
-

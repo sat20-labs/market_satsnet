@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { contractService } from '@/domain/services/contract';
 import { useCommonStore } from '@/store/common';
 import { getValueFromPrecision } from '@/utils';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 interface JoinPoolProps {
   closeModal: () => void;
   poolData: any;
@@ -18,21 +19,21 @@ interface JoinPoolProps {
 const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   const { t } = useTranslation(); // Specify the namespace
   const { btcFeeRate } = useCommonStore((state) => state);
-  
+
   // 计算铸造额度：当limit为null或0时，使用maxSupply减去TotalMinted
   const calculateMintLimit = () => {
     const limit = Number(poolData?.limit);
     const maxSupply = Number(poolData?.maxSupply) || 0;
-    
+
     // 如果limit为null或0，使用maxSupply减去TotalMinted（TotalMinted为null时当作0）
     if (!limit || limit === 0) {
       const totalMinted = Number(poolData?.TotalMinted) || 0;
       return maxSupply - totalMinted;
     }
-    
+
     return limit;
   };
-  
+
   const limit = calculateMintLimit();
   const [amount, setAmount] = useState('');
   const [satsCost, setSatsCost] = useState(0);
@@ -76,7 +77,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
           }, 0);
         }
         setMinted(totalMinted);
-        
+
         // 重新计算可铸造额度
         const currentLimit = calculateMintLimit();
         setMaxJoin(Math.max(currentLimit - totalMinted, 0));
@@ -119,7 +120,7 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
       action: 'mint',
       param: amount.toString()
     };
-    await window.sat20.invokeContract_SatsNet(poolData.contractURL, JSON.stringify(params), btcFeeRate.value.toString());
+    await getWalletAdapter().invokeContractSatsNet(poolData.contractURL, JSON.stringify(params), btcFeeRate.value.toString());
     closeModal();
   };
 

@@ -1,4 +1,5 @@
 import { useCommonStore } from '@/store/common';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 export const DAO_ACTION_REGISTER = 'register' as const;
 export const DAO_ACTION_DONATE = 'donate' as const;
@@ -73,12 +74,9 @@ export function buildValidateParaFromIds(ids: Array<number | string | bigint>): 
 }
 
 export async function invokeDaoContractSatsNet(contractUrl: string, invoke: DaoInvokeParam) {
-  if (!window.sat20?.invokeContract_SatsNet) {
-    throw new Error('sat20 wallet API not available');
-  }
   const { btcFeeRate } = useCommonStore.getState();
   const feeRate = (btcFeeRate?.value ?? 0).toString();
-  return window.sat20.invokeContract_SatsNet(contractUrl, JSON.stringify(invoke), feeRate);
+  return getWalletAdapter().invokeContractSatsNet(contractUrl, JSON.stringify(invoke), feeRate);
 }
 
 // Donate needs transfer, so it must use invokeContractV2_SatsNet.
@@ -88,15 +86,12 @@ export async function invokeDaoContractDonateSatsNet(
   assetName: string,
   amt: string,
 ) {
-  if (!window.sat20?.invokeContractV2_SatsNet) {
-    throw new Error('sat20 wallet API not available');
-  }
   const { btcFeeRate } = useCommonStore.getState();
   const feeRate = (btcFeeRate?.value ?? 0).toString();
 
   // invokeContractV2_SatsNet(contractUrl, params, asset, amt, feeRate, customData?)
   // It returns no txid; treat submission as success.
-  return window.sat20.invokeContractV2_SatsNet(
+  return getWalletAdapter().invokeContractV2SatsNet(
     contractUrl,
     JSON.stringify(invoke),
     assetName,

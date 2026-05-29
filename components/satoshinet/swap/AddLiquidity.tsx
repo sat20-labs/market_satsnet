@@ -9,6 +9,7 @@ import { useCommonStore } from '@/store';
 import { generateMempoolUrl } from '@/utils/url';
 import { Chain } from '@/types';
 import { hideStr, getValueFromPrecision } from '@/utils';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface AddLiquidityProps {
   asset: string;
@@ -57,7 +58,7 @@ const AddLiquidity: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker,
           value: parseInt(value)
         })
       };
-      window.sat20.invokeContractV2_SatsNet(
+      await getWalletAdapter().invokeContractV2SatsNet(
         contractUrl,
         JSON.stringify(params),
         asset,

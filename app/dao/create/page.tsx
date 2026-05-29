@@ -14,6 +14,7 @@ import { useCommonStore } from '@/store/common';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getDefaultDaoTimeout } from '@/lib/utils/dao';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 type Protocol = 'brc20' | 'ordx' | 'runes';
 
@@ -93,10 +94,6 @@ export default function DaoCreatePage() {
             toast.error(tp('toast_invalid_parameters'));
             return;
         }
-        if (!window.sat20?.deployContract_Remote) {
-            toast.error(tp('toast_wallet_api_not_available'));
-            return;
-        }
 
         setSubmitting(true);
         try {
@@ -124,7 +121,7 @@ export default function DaoCreatePage() {
             };
 
             const feeRate = (btcFeeRate?.value ?? 0).toString();
-            const res: any = await window.sat20.deployContract_Remote(
+            const res: any = await getWalletAdapter().deployContractRemote(
                 contractType,
                 JSON.stringify(params),
                 feeRate,

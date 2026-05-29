@@ -2,12 +2,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { clientApi } from '@/api';
 import { useAssetBalanceStore, AssetBalance } from '@/stores/assetBalanceStore';
 import { useEffect, useMemo } from 'react';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 // 你需要实现 getAssetAmount_SatsNet API 适配器
 // 这里假设它返回 { availableAmt, lockedAmt }
 async function getAssetAmount_SatsNet(address: string, assetName: string): Promise<AssetBalance> {
-  // @ts-ignore
-  return await window.sat20.getAssetAmount_SatsNet(address, assetName);
+  return await getWalletAdapter().getAssetAmountSatsNet(address, assetName);
 }
 
 export function useAssetBalance(address: string, assetName: string) {
@@ -50,4 +50,4 @@ export function useAssetBalance(address: string, assetName: string) {
     };
   }, [list, assetName]);
   return { balance, isLoading, isFetching, refetch };
-} 
+}

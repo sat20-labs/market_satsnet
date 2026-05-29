@@ -21,8 +21,7 @@ export const WalletConnectBus = ({
   const { connected, setModalVisible } = useReactWalletStore((state) => state);
 
   const handleConnectClick = (event: React.MouseEvent<any>) => {
-    // Prevent default behavior if it's wrapping a link, for example.
-    // event.preventDefault(); // Optional: uncomment if needed
+    event.preventDefault();
     setModalVisible(true);
   };
 
@@ -35,21 +34,15 @@ export const WalletConnectBus = ({
       console.warn(
         'WalletConnectBus: The `asChild` prop requires a single valid React element child.'
       );
-      // Fallback or throw error if necessary, returning null for now
       return null;
     }
 
-    const child = children as React.ReactElement<any>; // Type assertion
+    const child = children as React.ReactElement<any>;
 
-    // 替换child的内容为"Connect Wallet"，保持原有props
     return React.cloneElement(child, {
-      onClick: (e: React.MouseEvent<any>) => {
-        handleConnectClick(e); // Call our connect logic
-        // child.props.onClick?.(e); // Call original onClick if it exists
-      },
-      // Merge className if provided to the wrapper
+      onClick: handleConnectClick,
       className: className ? `${child.props.className || ''} ${className}`.trim() : child.props.className,
-      children: text || t('buttons.connect')
+      children: text || t('buttons.connect'),
     });
   }
 

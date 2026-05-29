@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import { useCommonStore } from '@/store';
+import { getWalletAdapter } from '@/lib/walletAdapter';
 
 interface AddLiquidityProps {
   asset: string;
@@ -52,7 +53,7 @@ const Stack: React.FC<AddLiquidityProps> = ({ contractUrl, asset, ticker, refres
         })
       };
 
-      window.sat20.invokeContractV2_SatsNet(
+      await getWalletAdapter().invokeContractV2SatsNet(
         contractUrl,
         JSON.stringify(params),
         asset,
