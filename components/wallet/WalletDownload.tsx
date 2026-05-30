@@ -1,5 +1,8 @@
+'use client';
+
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { isSat20PwaEmbedded } from "@/lib/sat20PwaProvider";
 
 interface WalletDownloadProps {
   className?: string;
@@ -7,16 +10,11 @@ interface WalletDownloadProps {
   showLabel?: boolean;
 }
 
-const chromeUrl =
-  "https://github.com/sat20-labs/sat20wallet/releases/download/0.0.1/sat20wallet-chrome.zip";
 const googlePlayUrl =
   "https://chromewebstore.google.com/detail/sat20-wallet/dfdlimjfgcjlgghagidokgkdgcdggpjm?hl=zh-CN&utm_source=ext_sidebar";
-const androidUrl =
-  "https://github.com/sat20-labs/sat20wallet/releases/download/0.0.1/app.apk";
-const iosUrl = "/files/app-debug.ipk";
+const pwaWalletUrl = "https://sat20.org/pwa/?install=1";
 
 const WALLET_ITEMS = [
-  //   { key: 'apple', lines: ['Download on the', 'App Store'], src: '/wallet/apple.svg', href: iosUrl },
   {
     key: "google-play",
     lines: ["Download wallet", "Google Play"],
@@ -24,16 +22,10 @@ const WALLET_ITEMS = [
     href: googlePlayUrl,
   },
   {
-    key: "android",
-    lines: ["Download wallet", "Android APK"],
-    src: "/wallet/android.svg",
-    href: androidUrl,
-  },
-  {
-    key: "chrome",
-    lines: ["Download wallet", "Chrome extension"],
-    src: "/wallet/chrome.svg",
-    href: chromeUrl,
+    key: "pwa",
+    lines: ["Download PWA", "Wallet"],
+    src: "/logo.png",
+    href: pwaWalletUrl,
   },
 ];
 
@@ -42,6 +34,16 @@ export const WalletDownload: React.FC<WalletDownloadProps> = ({
   iconSize = 22,
   showLabel = false,
 }) => {
+  const [pwaEmbedded, setPwaEmbedded] = useState(false);
+
+  useEffect(() => {
+    setPwaEmbedded(isSat20PwaEmbedded());
+  }, []);
+
+  if (pwaEmbedded) {
+    return null;
+  }
+
   return (
     <div className={`w-full ${className}`}>
       {showLabel && (
