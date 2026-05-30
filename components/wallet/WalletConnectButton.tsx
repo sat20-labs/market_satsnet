@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from '@/components/ui/popover';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   WalletConnectReact,
   useReactWalletStore,
@@ -31,6 +31,135 @@ import { getWalletAdapter } from '@/lib/walletAdapter';
 
 const isPwaWallet = (wallet: unknown) => {
   return !!(wallet as { isSat20Pwa?: boolean } | null)?.isSat20Pwa;
+};
+
+const SHARED_CONNECTOR_COOKIE = 'sat20_wallet_connector';
+const SHARED_SIGNATURE_COOKIE = 'sat20_wallet_signature';
+const SHARED_DISCONNECT_COOKIE = 'sat20_wallet_disconnected';
+const SHARED_IDENTITY_COOKIE = 'sat20_wallet_identity';
+
+type SharedWalletIdentity = {
+  address?: string;
+  publicKey?: string;
+  network?: string;
+  connectorId?: string;
+  updatedAt?: number;
+};
+
+const getSharedCookieDomain = () => {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+  return window.location.hostname.endsWith('.ordx.market')
+    ? '; domain=.ordx.market'
+    : '';
+};
+
+const setSharedCookie = (name: string, value: string, maxAge = 2592000) => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax${getSharedCookieDomain()}`;
+};
+
+const getSharedCookie = (name: string) => {
+  if (typeof document === 'undefined') {
+    return '';
+  }
+  const value = document.cookie
+    .split('; ')
+    .find((item) => item.startsWith(`${name}=`))
+    ?.split('=')[1];
+  return value ? decodeURIComponent(value) : '';
+};
+
+const getSharedConnectorId = () => {
+  return getSharedCookie(SHARED_CONNECTOR_COOKIE);
+};
+
+const setSharedConnectorId = (connectorId?: string) => {
+  if (!connectorId) {
+    return;
+  }
+  setSharedCookie(SHARED_CONNECTOR_COOKIE, connectorId);
+  setSharedCookie(SHARED_DISCONNECT_COOKIE, '', 0);
+};
+
+const getSharedSignature = () => {
+  return getSharedCookie(SHARED_SIGNATURE_COOKIE);
+};
+
+const setSharedSignature = (signature?: string) => {
+  if (signature) {
+    setSharedCookie(SHARED_SIGNATURE_COOKIE, signature);
+  }
+};
+
+const getSharedWalletIdentity = (): SharedWalletIdentity | null => {
+  const value = getSharedCookie(SHARED_IDENTITY_COOKIE);
+  if (!value) {
+    return null;
+  }
+  try {
+    return JSON.parse(value) as SharedWalletIdentity;
+  } catch {
+    return null;
+  }
+};
+
+const setSharedWalletIdentity = (identity: SharedWalletIdentity) => {
+  if (!identity.address || !identity.publicKey) {
+    return;
+  }
+  setSharedCookie(SHARED_IDENTITY_COOKIE, JSON.stringify({
+    ...identity,
+    updatedAt: Date.now(),
+  }));
+  setSharedCookie(SHARED_DISCONNECT_COOKIE, '', 0);
+};
+
+const getReusableSharedSignature = (publicKey?: string) => {
+  const sharedSignature = getSharedSignature();
+  if (!sharedSignature) {
+    return '';
+  }
+  const sharedIdentity = getSharedWalletIdentity();
+  if (publicKey && sharedIdentity?.publicKey && sharedIdentity.publicKey !== publicKey) {
+    return '';
+  }
+  return sharedSignature;
+};
+
+const saveSharedWalletState = (state: {
+  address?: string;
+  publicKey?: string;
+  network?: string;
+  connectorId?: string;
+  signature?: string;
+}) => {
+  setSharedWalletIdentity({
+    address: state.address,
+    publicKey: state.publicKey,
+    network: state.network,
+    connectorId: state.connectorId,
+  });
+  if (state.connectorId) {
+    setSharedConnectorId(state.connectorId);
+  }
+  if (state.signature) {
+    setSharedSignature(state.signature);
+  }
+};
+
+const isSharedDisconnected = () => {
+  return getSharedCookie(SHARED_DISCONNECT_COOKIE) === '1';
+};
+
+const markSharedDisconnected = () => {
+  setSharedCookie(SHARED_DISCONNECT_COOKIE, '1');
+  setSharedCookie(SHARED_CONNECTOR_COOKIE, '', 0);
+  setSharedCookie(SHARED_SIGNATURE_COOKIE, '', 0);
+  setSharedCookie(SHARED_IDENTITY_COOKIE, '', 0);
 };
 
 const toMarketNetwork = (walletNetwork?: string) =>
@@ -58,6 +187,7 @@ const WalletConnectButton = () => {
     disconnect,
     btcWallet,
     network: walletNetwork,
+    initStatus,
   } = useReactWalletStore((state) => state);
   const { getBalance, balance, resetBalance } = useWalletStore();
   const { refreshAssets } = useAssetStore();
@@ -65,6 +195,14 @@ const WalletConnectButton = () => {
   const { setSignature, signature } = useCommonStore((state) => state);
   const [mounted, setMounted] = useState(false);
   const [pwaEmbedded, setPwaEmbedded] = useState(false);
+  const restoreTimeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const restoreInProgressRef = useRef(false);
+
+  const clearRestoreTimers = () => {
+    restoreTimeoutRefs.current.forEach((timer) => clearTimeout(timer));
+    restoreTimeoutRefs.current = [];
+  };
+
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
     if (!mounted) {
@@ -156,36 +294,156 @@ const WalletConnectButton = () => {
       refreshAssets();
     }
   }, [address, connected]);
-  const initCheck = async () => {
-    console.log('initCheck');
-    setTimeout(() => {
-      const currentWallet = useReactWalletStore.getState().btcWallet;
-      if (isPwaWallet(currentWallet) || typeof currentWallet?.check !== 'function') {
-        return;
+  const restoreWalletConnection = async () => {
+    if (restoreInProgressRef.current) {
+      return false;
+    }
+    if (isSat20PwaEmbedded()) {
+      return false;
+    }
+    if (isSharedDisconnected()) {
+      return false;
+    }
+
+    restoreInProgressRef.current = true;
+
+    try {
+      const walletState = useReactWalletStore.getState() as any;
+      if (!walletState.btcWallet) {
+        return false;
       }
 
-      Promise.resolve(check()).catch((error: unknown) => {
-        console.log('Wallet check failed:', error);
-      });
-    }, 500);
+      const sharedIdentity = getSharedWalletIdentity();
+      const connectorId = walletState.localConnectorId
+        || walletState.connectorId
+        || sharedIdentity?.connectorId
+        || getSharedConnectorId();
+      if (connectorId) {
+        const connector = walletState.connectors?.find(
+          (item: any) => item.id === connectorId && item.installed,
+        );
+        if (!connector) {
+          return false;
+        }
+        if (!walletState.connectorId && typeof walletState.switchConnector === 'function') {
+          walletState.switchConnector(connectorId);
+        }
+      } else {
+        const installedConnectors = walletState.connectors?.filter(
+          (connector: any) => connector.installed,
+        ) || [];
+        if (installedConnectors.length !== 1 || typeof walletState.switchConnector !== 'function') {
+          return false;
+        }
+        walletState.switchConnector(installedConnectors[0].id);
+      }
+
+      await walletState.check();
+      let nextState = useReactWalletStore.getState();
+      if (!nextState.connected && sharedIdentity?.address && sharedIdentity?.publicKey) {
+        (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
+          connected: true,
+          address: sharedIdentity.address,
+          publicKey: sharedIdentity.publicKey,
+          ...(sharedIdentity.network ? { network: sharedIdentity.network } : {}),
+        });
+        nextState = useReactWalletStore.getState();
+      }
+      if (nextState.connected && nextState.publicKey) {
+        const nextConnectorId = (nextState as any).localConnectorId || (nextState as any).connectorId || connectorId;
+        const nextSignature = getReusableSharedSignature(nextState.publicKey)
+          || useCommonStore.getState().signature
+          || '';
+        setSignature(nextSignature);
+        saveSharedWalletState({
+          address: nextState.address,
+          publicKey: nextState.publicKey,
+          network: (nextState as any).network || sharedIdentity?.network,
+          connectorId: nextConnectorId,
+          signature: nextSignature,
+        });
+        clearRestoreTimers();
+        return true;
+      }
+      return false;
+    } finally {
+      restoreInProgressRef.current = false;
+    }
+  };
+
+  const initCheck = async () => {
+    if (restoreInProgressRef.current || useReactWalletStore.getState().connected) {
+      return;
+    }
+    console.log('initCheck');
+    clearRestoreTimers();
+    const restoreDelays = [0, 300, 1000, 2000, 4000];
+    restoreDelays.forEach((delay) => {
+      const timer = setTimeout(() => {
+        if (
+          restoreInProgressRef.current
+          || isSat20PwaEmbedded()
+          || useReactWalletStore.getState().connected
+        ) {
+          return;
+        }
+        restoreWalletConnection()
+          .then((restored) => {
+            if (restored) {
+              console.log('Wallet restore check succeeded');
+            }
+          })
+          .catch((error: unknown) => {
+            console.log('Wallet check failed:', error);
+          });
+      }, delay);
+      restoreTimeoutRefs.current.push(timer);
+    });
   };
 
   useEffect(() => {
-    initCheck();
-  }, []);
+    if (initStatus) {
+      initCheck();
+    }
+
+    return () => {
+      clearRestoreTimers();
+    };
+  }, [initStatus]);
 
   const onConnectSuccess = async (wallet: any) => {
-    // if (!signature) {
-    //   console.log('signature text', process.env.NEXT_PUBLIC_SIGNATURE_TEXT);
-    //   try {
-    //     const _s = await wallet.signMessage(
-    //       process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
-    //     );
-    //     setSignature(_s);
-    //   } catch (error) {
-    //     await disconnect();
-    //   }
-    // }
+    if (!signature) {
+      console.log('signature text', process.env.NEXT_PUBLIC_SIGNATURE_TEXT);
+      try {
+        const walletState = useReactWalletStore.getState() as any;
+        const connectorId = walletState.localConnectorId || walletState.connectorId;
+        const sharedSignature = getReusableSharedSignature(walletState.publicKey);
+        if (sharedSignature) {
+          setSignature(sharedSignature);
+          saveSharedWalletState({
+            address: walletState.address,
+            publicKey: walletState.publicKey,
+            network: walletState.network,
+            connectorId,
+            signature: sharedSignature,
+          });
+        } else {
+          const _s = await wallet.signMessage(
+            process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
+          );
+          setSignature(_s);
+          saveSharedWalletState({
+            address: walletState.address,
+            publicKey: walletState.publicKey,
+            network: walletState.network,
+            connectorId,
+            signature: _s,
+          });
+        }
+      } catch (error) {
+        await disconnect();
+      }
+    }
     if (walletNetwork !== network) {
       try {
         await getWalletAdapter(wallet).switchNetwork(network === 'mainnet' ? 'livenet' : 'testnet');
@@ -210,7 +468,11 @@ const WalletConnectButton = () => {
   const handlerDisconnect = async () => {
     console.log('disconnect success');
     setSignature('');
-    if (isPwaWallet(useReactWalletStore.getState().btcWallet)) {
+    const currentWallet = useReactWalletStore.getState().btcWallet;
+    if (!isSat20PwaEmbedded() && !isPwaWallet(currentWallet)) {
+      markSharedDisconnected();
+    }
+    if (isPwaWallet(currentWallet)) {
       (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
         connected: false,
         address: '',
@@ -267,24 +529,37 @@ const WalletConnectButton = () => {
     try {
       await initCheck();
       if (process.env.NEXT_PUBLIC_SIGNATURE_TEXT && connected) {
-        // try {
-        //   console.log('checkSignature');
-        //   console.log(windowState);
-        //   if (windowState) {
-        //     const _s = await btcWallet?.signMessage(
-        //       process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
-        //     );
-        //     if (_s) {
-        //       setSignature(_s);
-        //     } else {
-        //       await handlerDisconnect();
-        //     }
-        //   } else {
-        //     handlerDisconnect();
-        //   }
-        // } catch (error) {
-        //   await handlerDisconnect();
-        // }
+        try {
+          console.log('checkSignature');
+          console.log(windowState);
+          if (windowState) {
+            const currentState = useReactWalletStore.getState();
+            const sharedSignature = getReusableSharedSignature(currentState.publicKey);
+            if (sharedSignature) {
+              setSignature(sharedSignature);
+              return;
+            }
+            const _s = await btcWallet?.signMessage(
+              process.env.NEXT_PUBLIC_SIGNATURE_TEXT,
+            );
+            if (_s) {
+              setSignature(_s);
+              saveSharedWalletState({
+                address: currentState.address,
+                publicKey: currentState.publicKey,
+                network: (currentState as any).network,
+                connectorId: (currentState as any).localConnectorId || (currentState as any).connectorId,
+                signature: _s,
+              });
+            } else {
+              await handlerDisconnect();
+            }
+          } else {
+            handlerDisconnect();
+          }
+        } catch (error) {
+          await handlerDisconnect();
+        }
       }
     } catch (error) {
       console.log('Account/Network change check error:', error);

@@ -87,7 +87,7 @@ export const request = async (
       }
     }
   }
-  if (ctxConnected && ctxSignature && ctxPublicKey) {
+  if (method !== 'GET' && ctxConnected && ctxSignature && ctxPublicKey) {
     headers.set('Publickey', ctxPublicKey);
     headers.set('Signature', ctxSignature);
   }
@@ -558,14 +558,12 @@ export const requestContract = async (
   options: RequestOptions = {},
   customContext?: Partial<RequestContext>,
 ) => {
-  const { publicKey, connected } = useReactWalletStore.getState();
-  const { signature } = useCommonStore.getState();
   const { chain, network } = useCommonStore.getState();
-  let context: RequestContext = { publicKey, signature, chain, network, connected };
+  let context: RequestContext = { chain, network } as RequestContext;
   if (customContext) {
     context = { ...context, ...customContext };
   }
-  const { publicKey: ctxPublicKey, signature: ctxSignature, chain: ctxChain, network: ctxNetwork, connected: ctxConnected } = context;
+  const { chain: ctxChain, network: ctxNetwork } = context;
   const {
     headers: customHeaders = {},
     method = 'GET',
@@ -598,10 +596,6 @@ export const requestContract = async (
         headers.set('Content-Type', 'application/json');
       }
     }
-  }
-  if (ctxConnected && ctxSignature && ctxPublicKey) {
-    headers.set('Publickey', ctxPublicKey);
-    headers.set('Signature', ctxSignature);
   }
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -943,4 +937,3 @@ export const getMarketKline = async ({ contract, interval, start, end, limit }: 
 // Backwards compatibility alias
 export const getContractKline = getMarketKline;
 // === End Unified Market Endpoints ===
-
