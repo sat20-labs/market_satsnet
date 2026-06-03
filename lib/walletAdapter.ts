@@ -140,7 +140,7 @@ const callSat20 = async <T = any>(method: string, ...args: unknown[]): Promise<T
     throw new Error(`SAT20 wallet method ${method} is not available`);
   }
 
-  return await fn(...args);
+  return await fn.apply(sat20, args);
 };
 
 const normalizeExtractedTx = (result: unknown): string | null => {

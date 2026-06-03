@@ -39,6 +39,7 @@ interface SwapProps {
 }
 
 type SwapType = 'asset-to-sats' | 'sats-to-asset';
+const AMM_UNIT_PRICE_DECIMALS = 10;
 
 const Swap = ({
   asset,
@@ -62,7 +63,19 @@ const Swap = ({
   const [slippage, setSlippage] = useState<string>("0");
   const { satsnetHeight, btcFeeRate } = useCommonStore();
   const assetAmtInPool = useMemo(() => getValueFromPrecision(swapData?.AssetAmtInPool), [swapData?.AssetAmtInPool]);
-  const divisibility = tickerInfo?.divisibility || 0;
+  const assetPrecision = Number(tickerInfo?.divisibility ?? swapData?.AssetAmtInPool?.Precision ?? 0);
+  const ammAssetDecimals = Math.min(assetPrecision, AMM_UNIT_PRICE_DECIMALS);
+
+  const normalizeAmmAssetAmount = (value: string): string => {
+    if (!value) return "";
+    try {
+      return new Decimal(value)
+        .toDecimalPlaces(ammAssetDecimals, Decimal.ROUND_DOWN)
+        .toFixed();
+    } catch {
+      return value;
+    }
+  };
 
   const satValue = useMemo(() => swapData?.SatsValueInPool || 0, [swapData?.SatsValueInPool]);
   console.log('swapData', swapData);
@@ -104,7 +117,7 @@ const Swap = ({
     const parts = value.split('.');
     if (parts.length === 1) return parts[0];
     if (parts.length === 2) {
-      const decimalPart = parts[1].slice(0, divisibility);
+      const decimalPart = parts[1].slice(0, Math.min(assetPrecision, AMM_UNIT_PRICE_DECIMALS));
       return decimalPart ? `${parts[0]}.${decimalPart}` : parts[0];
     }
     return parts[0];
@@ -121,7 +134,7 @@ const Swap = ({
       const newSatValue = satValueDecimal.add(amtNum);
       const newAssetAmt = contractK.div(newSatValue);
       const assetOut = assetAmt.sub(newAssetAmt);
-      console.log('calcToAmount divisibility', divisibility);
+      console.log('calcToAmount assetPrecision', assetPrecision);
       console.log('calcToAmount satValue', satValue);
       console.log('calcToAmount assetAmtInPool', assetAmt.toString());
       console.log('calcToAmount contractK', contractK.toString());
@@ -131,10 +144,10 @@ const Swap = ({
       console.log('calcToAmount assetOut', assetOut.toString());
 
       if (assetOut.lte(0)) return "0";
-      if (divisibility === 0) {
+      if (assetPrecision === 0) {
         return assetOut.floor().toString();
       }
-      return assetOut.toFixed(divisibility);
+      return assetOut.toFixed(assetPrecision);
     } else {
       // 用资产换聪
       const newAssetAmt = assetAmt.add(amtNum);
@@ -180,7 +193,7 @@ const Swap = ({
       orderType: swapType === 'sats-to-asset' ? 2 : 1,
       assetName: asset,
       amt: '0',
-      unitPrice: amount,
+      unitPrice: swapType === 'asset-to-sats' ? normalizeAmmAssetAmount(amount) : amount,
     };
 
     const params = {
@@ -222,7 +235,11 @@ const Swap = ({
     const formattedValue = formatAmount(val, swapType === 'sats-to-asset');
     if (formattedValue === toAmount) return;
     setToAmount(formattedValue);
-    setFromAmount(calcFromAmount(formattedValue));
+    const calculatedFromAmount = calcFromAmount(formattedValue);
+    setFromAmount(swapType === 'asset-to-sats'
+      ? normalizeAmmAssetAmount(calculatedFromAmount)
+      : calculatedFromAmount
+    );
   };
 
   // 滑点保护下的最小可接受数量
@@ -275,11 +292,15 @@ const Swap = ({
         throw new Error("Insufficient asset balance");
       }
 
+      const normalizedFromAmount = swapType === 'asset-to-sats'
+        ? normalizeAmmAssetAmount(fromAmount)
+        : fromAmount;
+
       const paramObj: any = {
         orderType: swapType === 'sats-to-asset' ? 2 : 1,
         assetName: asset,
         amt: '0',
-        unitPrice: fromAmount.toString(),
+        unitPrice: normalizedFromAmount.toString(),
       };
       if (Number(slippage) > 0) {
         paramObj.amt = minReceiveValue.toString();
@@ -294,7 +315,7 @@ const Swap = ({
           contractUrl,
           JSON.stringify(params),
           "::",
-          fromAmount,
+          normalizedFromAmount,
           btcFeeRate.value.toString(),
           {
             action: "swap",
@@ -315,16 +336,16 @@ const Swap = ({
           contractUrl,
           JSON.stringify(params),
           asset,
-          fromAmount.toString(),
+          normalizedFromAmount.toString(),
           btcFeeRate.value.toString(),
           {
             action: "swap",
             orderType: 1,
             assetName: asset,
-            amt: fromAmount,
+            amt: normalizedFromAmount,
             unitPrice: lastDealPrice.value.toString(),
             sats: toAmount,
-            quantity: fromAmount,
+            quantity: normalizedFromAmount,
             slippage: slippage,
             networkFee: networkFee,
             serviceFee: serviceFee,
@@ -448,10 +469,10 @@ const Swap = ({
               className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-4 py-2 text-xl sm:text-3xl font-bold text-white pr-16"
               placeholder={swapType === 'sats-to-asset' ? t('common.enterSatsAmount') : t('common.enterAssetAmount')}
               min={1}
-              step={swapType === 'sats-to-asset' ? "1" : divisibility === 0 ? "1" : `0.${"0".repeat(divisibility - 1)}1`}
+              step={swapType === 'sats-to-asset' ? "1" : assetPrecision === 0 ? "1" : `0.${"0".repeat(Math.min(assetPrecision, AMM_UNIT_PRICE_DECIMALS) - 1)}1`}
               onKeyDown={(e) => {
                 // 当输入sats或divisibility为0时，阻止输入小数点
-                if ((swapType === 'sats-to-asset' || (swapType === 'asset-to-sats' && divisibility === 0)) && e.key === '.') {
+                if ((swapType === 'sats-to-asset' || (swapType === 'asset-to-sats' && assetPrecision === 0)) && e.key === '.') {
                   e.preventDefault();
                 }
               }}
@@ -496,10 +517,10 @@ const Swap = ({
               className="w-full input-swap bg-transparent border-none border-zinc-900 rounded-lg px-1 py-2 text-xl sm:text-3xl font-bold text-white"
               placeholder={swapType === 'sats-to-asset' ? t('common.estimatedAssetAmount') : t('common.estimatedSatsAmount')}
               min={1}
-              step={swapType === 'sats-to-asset' ? (divisibility === 0 ? "1" : `0.${"0".repeat(divisibility - 1)}1`) : "1"}
+              step={swapType === 'sats-to-asset' ? (assetPrecision === 0 ? "1" : `0.${"0".repeat(Math.min(assetPrecision, AMM_UNIT_PRICE_DECIMALS) - 1)}1`) : "1"}
               onKeyDown={(e) => {
                 // 当输入sats或divisibility为0时，阻止输入小数点
-                if ((swapType === 'asset-to-sats' || (swapType === 'sats-to-asset' && divisibility === 0)) && e.key === '.') {
+                if ((swapType === 'asset-to-sats' || (swapType === 'sats-to-asset' && assetPrecision === 0)) && e.key === '.') {
                   e.preventDefault();
                 }
               }}
