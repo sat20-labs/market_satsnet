@@ -197,11 +197,13 @@ const BatchSendPage = () => {
                 >
                   <SelectTrigger className="w-full">
                     {formData.protocol === 'ordx' ? 'SAT20 (ordx)' :
-                     formData.protocol === 'runes' ? 'Runes' : 'BTC'}
+                     formData.protocol === 'runes' ? 'Runes' :
+                     formData.protocol === 'brc20' ? 'BRC20' : 'BTC'}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ordx">SAT20 (ordx)</SelectItem>
                     <SelectItem value="runes">Runes</SelectItem>
+                    <SelectItem value="brc20">BRC20</SelectItem>
                     <SelectItem value="btc">BTC</SelectItem>
                   </SelectContent>
                 </Select>
