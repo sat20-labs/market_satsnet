@@ -96,6 +96,10 @@ export const Header = () => {
         label: t('pages.launchpool.title'), // LaunchPool 菜单
         href: '/launchpool',
       },
+      {
+        label: 'Prediction',
+        href: '/prediction',
+      },
 
       // Merge Transcend, Explorer, Wallet into Tools group
       {

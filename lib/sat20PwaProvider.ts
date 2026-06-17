@@ -30,6 +30,7 @@ type Sat20PwaProvider = {
   unlockUtxo_SatsNet: (...args: unknown[]) => Promise<unknown>;
   deployContract_Remote: (...args: unknown[]) => Promise<unknown>;
   invokeContract_SatsNet: (...args: unknown[]) => Promise<unknown>;
+  invokeUnifiedContract: (...args: unknown[]) => Promise<unknown>;
   invokeContractV2: (...args: unknown[]) => Promise<unknown>;
   invokeContractV2_SatsNet: (...args: unknown[]) => Promise<unknown>;
   getDeployedContractStatus: (...args: unknown[]) => Promise<unknown>;
@@ -191,6 +192,10 @@ const handleMessage = (event: MessageEvent) => {
 
 const createProvider = (): Sat20PwaProvider => {
   const requestMethod = (method: string) => (...args: unknown[]) => sendRequest(method, args);
+  const requestJsonMethod = (method: string) => (req: unknown) => {
+    const normalized = typeof req === 'string' ? JSON.parse(req) : req;
+    return sendRequest(method, [normalized]);
+  };
 
   const provider: Sat20PwaProvider = {
     isSat20Pwa: true,
@@ -213,6 +218,7 @@ const createProvider = (): Sat20PwaProvider => {
     unlockUtxo_SatsNet: requestMethod('unlockUtxo_SatsNet'),
     deployContract_Remote: requestMethod('deployContract_Remote'),
     invokeContract_SatsNet: requestMethod('invokeContract_SatsNet'),
+    invokeUnifiedContract: requestJsonMethod('invokeUnifiedContract'),
     invokeContractV2: requestMethod('invokeContractV2'),
     invokeContractV2_SatsNet: requestMethod('invokeContractV2_SatsNet'),
     getDeployedContractStatus: requestMethod('getDeployedContractStatus'),

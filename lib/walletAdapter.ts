@@ -32,6 +32,7 @@ export interface WalletAdapter {
   switchNetwork: (network: string) => Promise<any>;
   deployContractRemote: (contractType: string, params: string, feeRate: string, broadcast: boolean) => Promise<any>;
   invokeContractSatsNet: (contractUrl: string, params: string, feeRate: string) => Promise<any>;
+  invokeUnifiedContract: (req: Record<string, unknown>) => Promise<any>;
   invokeContractV2: (...args: unknown[]) => Promise<any>;
   invokeContractV2SatsNet: (
     contractUrl: string,
@@ -339,6 +340,9 @@ export const getWalletAdapter = (btcWallet?: any): WalletAdapter => {
     },
     invokeContractSatsNet: (contractUrl: string, params: string, feeRate: string) => {
       return callSat20('invokeContract_SatsNet', contractUrl, params, feeRate);
+    },
+    invokeUnifiedContract: (req: Record<string, unknown>) => {
+      return callSat20('invokeUnifiedContract', JSON.stringify(req));
     },
     invokeContractV2: (...args: unknown[]) => {
       return callSat20('invokeContractV2', ...args);

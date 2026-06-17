@@ -5,6 +5,7 @@ REMOTE_HOST="103.103.245.177"
 REMOTE_PATH="/var/www/satsnet.ordx.market"
 LOCAL_PATH="./out"
 SSH_USER="root"
+SSH_PORT="${DEPLOY_SSH_PORT:-20222}"
 SSH_KEY="${DEPLOY_SSH_KEY:-}"  # 如果有SSH密钥，可以通过 DEPLOY_SSH_KEY 指定路径
 USE_SSHPASS="${DEPLOY_USE_SSHPASS:-0}"
 BACKUP_DIR="${DEPLOY_BACKUP_DIR:-/var/backups/satsnet.ordx.market}"
@@ -50,6 +51,7 @@ show_usage() {
     echo "  DEPLOY_BACKUP_DIR           备份目录，默认: $BACKUP_DIR"
     echo "  DEPLOY_BACKUP_KEEP          保留最近 N 份备份，默认: $BACKUP_KEEP"
     echo "  DEPLOY_SKIP_BACKUP=1        跳过备份"
+    echo "  DEPLOY_SSH_PORT=20222       指定 SSH 端口，默认: $SSH_PORT"
     echo "  DEPLOY_SSH_KEY=/path/key    指定 SSH key"
     echo "  DEPLOY_USE_SSHPASS=1        使用 scripts/.password 和 sshpass 登录"
 }
@@ -141,11 +143,11 @@ build_rsync_command() {
 
     # 如果有SSH密钥，添加密钥参数；否则默认使用本机ssh配置
     if [ -n "$SSH_KEY" ] && [ -f "$SSH_KEY" ]; then
-        rsync_args="$rsync_args -e \"ssh -i $SSH_KEY\""
+        rsync_args="$rsync_args -e \"ssh -p $SSH_PORT -i $SSH_KEY\""
     elif [ "$USE_SSHPASS" = "1" ]; then
-        rsync_args="$rsync_args -e \"sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no\""
+        rsync_args="$rsync_args -e \"sshpass -p '$PASSWORD' ssh -p $SSH_PORT -o StrictHostKeyChecking=no\""
     else
-        rsync_args="$rsync_args -e \"ssh\""
+        rsync_args="$rsync_args -e \"ssh -p $SSH_PORT\""
     fi
 
     echo "rsync $rsync_args $LOCAL_PATH/ $SSH_USER@$REMOTE_HOST:$REMOTE_PATH/"
@@ -172,11 +174,11 @@ backup_remote_path() {
     remote_command="set -e; if [ -d '$REMOTE_PATH' ]; then mkdir -p '$BACKUP_DIR'; tar -C '$remote_parent' -czf '$BACKUP_DIR/$backup_file' '$remote_name'; ls -lh '$BACKUP_DIR/$backup_file'; if [ '$BACKUP_KEEP' -gt 0 ] 2>/dev/null; then find '$BACKUP_DIR' -maxdepth 1 -type f -name '${remote_name}-*.tar.gz' -printf '%T@ %p\n' | sort -rn | awk 'NR > '$BACKUP_KEEP' {print \$2}' | xargs -r rm -f; fi; else echo '远端目录不存在，跳过备份。'; fi"
 
     if [ -n "$SSH_KEY" ] && [ -f "$SSH_KEY" ]; then
-        ssh -i "$SSH_KEY" "$SSH_USER@$REMOTE_HOST" "$remote_command"
+        ssh -p "$SSH_PORT" -i "$SSH_KEY" "$SSH_USER@$REMOTE_HOST" "$remote_command"
     elif [ "$USE_SSHPASS" = "1" ]; then
-        sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$REMOTE_HOST" "$remote_command"
+        sshpass -p "$PASSWORD" ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$SSH_USER@$REMOTE_HOST" "$remote_command"
     else
-        ssh "$SSH_USER@$REMOTE_HOST" "$remote_command"
+        ssh -p "$SSH_PORT" "$SSH_USER@$REMOTE_HOST" "$remote_command"
     fi
 
     if [ $? -eq 0 ]; then

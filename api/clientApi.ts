@@ -1,5 +1,4 @@
 import { useCommonStore } from '../store/common';
-import { Chain } from '@/types';
 interface RequestParams {
   address?: string;
   network?: string;
@@ -14,6 +13,7 @@ interface RequestParams {
   pagesize?: number;
   hex?: string;
   utxos?: string[];
+  [key: string]: any;
 }
 
 class ClientApi {
@@ -177,6 +177,49 @@ class ClientApi {
   };
   getBestHeight = async (): Promise<any> => {
     return this.request(`bestheight`);
+  };
+  getContracts = async (params: RequestParams = {}): Promise<any> => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.set(key, String(value));
+      }
+    });
+    const suffix = query.toString();
+    return this.request(
+      `v3/contracts${suffix ? `?${suffix}` : ''}`,
+      {},
+      'GET',
+      { chain: 'SatoshiNet' },
+    );
+  };
+  getContract = async (contract: string): Promise<any> => {
+    return this.request(
+      `v3/contracts/${encodeURIComponent(contract)}`,
+      {},
+      'GET',
+      { chain: 'SatoshiNet' },
+    );
+  };
+  getContractHistory = async (
+    contract: string,
+    start: number = 0,
+    limit: number = 0,
+  ): Promise<any> => {
+    return this.request(
+      `v3/contracts/${encodeURIComponent(contract)}/history?start=${start}&limit=${limit}`,
+      {},
+      'GET',
+      { chain: 'SatoshiNet' },
+    );
+  };
+  getContractAnalytics = async (contract: string): Promise<any> => {
+    return this.request(
+      `v3/contracts/${encodeURIComponent(contract)}/analytics`,
+      {},
+      'GET',
+      { chain: 'SatoshiNet' },
+    );
   };
   getNsListByAddress = async (address: string): Promise<any> => {
     return this.request(`ns/address/${address}`);
