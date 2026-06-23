@@ -1,6 +1,7 @@
 import { getWalletAdapter } from '@/lib/walletAdapter';
 
 const CONTRACT_TYPE_AGENT = 'agent';
+const CONTRACT_SUBTYPE_PREDICTION = 'prediction';
 const PREDICTION_BET_ACTION = 'bet';
 const DEFAULT_AGENT_GAS_LIMIT = 100000;
 
@@ -32,13 +33,12 @@ export function buildPredictionBetRequest(
 ) {
   return {
     ContractType: CONTRACT_TYPE_AGENT,
-    Agent: {
-      ContractAddress: contractAddress,
-      JSONInvokeParam: buildPredictionBetInvokeParam(outcomeID),
-      BetAssetName: betAssetName,
-      BetAmount: betAmount,
-      GasLimit: DEFAULT_AGENT_GAS_LIMIT,
-    },
+    SubType: CONTRACT_SUBTYPE_PREDICTION,
+    ContractAddress: contractAddress,
+    Action: PREDICTION_BET_ACTION,
+    Param: JSON.stringify({ outcome_id: outcomeID }),
+    Assets: [{ AssetName: betAssetName, Amount: betAmount }],
+    GasLimit: DEFAULT_AGENT_GAS_LIMIT,
   };
 }
 

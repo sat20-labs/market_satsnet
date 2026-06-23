@@ -201,6 +201,14 @@ class ClientApi {
       { chain: 'SatoshiNet' },
     );
   };
+  getContractState = async (contract: string): Promise<any> => {
+    return this.request(
+      `v3/contracts/${encodeURIComponent(contract)}/state`,
+      {},
+      'GET',
+      { chain: 'SatoshiNet' },
+    );
+  };
   getContractHistory = async (
     contract: string,
     start: number = 0,

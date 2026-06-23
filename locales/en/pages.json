@@ -63,6 +63,18 @@
     "load_failed": "Failed to load prediction contracts.",
     "prediction": "Prediction",
     "status": "Status",
+    "statuses": {
+      "Unknown": "Unknown",
+      "PendingReady": "Pending Review",
+      "Ready": "Ready",
+      "Betting": "Betting",
+      "ClosedForBet": "Closed for Bets",
+      "PendingResult": "Pending Result",
+      "Confirmed": "Confirmed",
+      "Settled": "Settled",
+      "Refundable": "Refundable",
+      "Rejected": "Rejected"
+    },
     "bet_asset": "Bet Asset",
     "outcomes": "Bet Options",
     "event_time": "Event Time",

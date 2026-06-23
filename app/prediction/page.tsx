@@ -58,6 +58,7 @@ type PredictionRow = {
   title: string;
   description: string;
   status: string;
+  settledOutcomeID?: string;
   deployTime: number;
   deployTimeText: string;
   eventTimeText: string;
@@ -77,11 +78,13 @@ type SelectedBet = {
 
 type PredictionContractDetails = {
   summary: any;
+  state?: any;
   analytics: any;
   history: any[];
   historyTotal: number;
   rawResponses: {
     summary?: any;
+    state?: any;
     analytics?: any;
     history?: any;
   };
@@ -100,6 +103,11 @@ type PredictionDetailSummary = {
 type OutcomeStats = {
   amount: string;
   bets: string;
+};
+
+type OutcomeMetricMaps = {
+  outcomes: Record<string, any>;
+  outcomeBets: Record<string, any>;
 };
 
 function getField(source: any, ...keys: string[]) {
@@ -175,18 +183,140 @@ function firstDisplayValue(...values: any[]) {
   return '-';
 }
 
+function outcomeMetricValue<T = any>(source: Record<string, T>, outcomeID: string): T | undefined {
+  return source[outcomeID] || source[outcomeID.toUpperCase()] || source[outcomeID.toLowerCase()];
+}
+
+function predictionOutcomeMetrics(analytics: any): OutcomeMetricMaps {
+  const metrics = getField(analytics, 'metrics', 'Metrics') || {};
+  return {
+    outcomes:
+      getField(analytics, 'outcomes', 'Outcomes') ||
+      getField(metrics, 'outcomes', 'Outcomes') ||
+      {},
+    outcomeBets:
+      getField(analytics, 'outcomeBets', 'OutcomeBets') ||
+      getField(metrics, 'outcomeBets', 'OutcomeBets') ||
+      {},
+  };
+}
+
 function getDetails(status: any) {
   return getField(status, 'details', 'Details') || {};
 }
 
 function getPrediction(status: any): PredictionContract | null {
   const details = getDetails(status);
+  const state = getField(status, 'state', 'State') || {};
+  const stateDetails = getDetails(state);
   return (
     getField(status, 'prediction', 'Prediction') ||
     getField(details, 'prediction', 'Prediction') ||
+    getField(details, 'contract', 'Contract') ||
+    getField(details, 'content', 'Content') ||
+    getField(state, 'prediction', 'Prediction') ||
+    getField(stateDetails, 'prediction', 'Prediction') ||
+    getField(stateDetails, 'contract', 'Contract') ||
+    getField(stateDetails, 'content', 'Content') ||
     getField(status?.Contract, 'prediction', 'Prediction') ||
     null
   );
+}
+
+function getRuntimeState(status: any) {
+  return getField(status, 'state', 'State') || status || {};
+}
+
+function predictionStatusText(status: any) {
+  const runtimeState = getRuntimeState(status);
+  const runtimeStateDetails = getDetails(runtimeState);
+  const runtimePrediction =
+    getField(runtimeState, 'prediction', 'Prediction') ||
+    getField(runtimeStateDetails, 'prediction', 'Prediction');
+  return String(
+    getField(runtimePrediction, 'status', 'Status') ||
+      getField(runtimeState, 'predictionStatus', 'PredictionStatus') ||
+      getField(runtimeState, 'status', 'Status') ||
+      getField(status, 'status', 'Status') ||
+      'Unknown',
+  );
+}
+
+function predictionSettledOutcomeIDFromState(status: any): string {
+  const runtimeState = getRuntimeState(status);
+  const runtimeDetails = getDetails(runtimeState);
+  const runtimePrediction =
+    getField(runtimeState, 'prediction', 'Prediction') ||
+    getField(runtimeDetails, 'prediction', 'Prediction') ||
+    getField(status, 'prediction', 'Prediction') ||
+    getField(getDetails(status), 'prediction', 'Prediction');
+  const confirmations =
+    getField(runtimePrediction, 'confirmations', 'Confirmations') ||
+    getField(runtimeState, 'confirmations', 'Confirmations') ||
+    getField(status, 'confirmations', 'Confirmations');
+  if (Array.isArray(confirmations) && confirmations.length > 0) {
+    const latest = confirmations[confirmations.length - 1];
+    const outcomeID = getField(latest, 'outcome_id', 'outcomeId', 'OutcomeID');
+    if (outcomeID !== undefined && outcomeID !== null && outcomeID !== '') {
+      return String(outcomeID);
+    }
+  }
+  return '';
+}
+
+function predictionSettledOutcomeIDFromAnalytics(analytics: any): string {
+  const metrics = getField(analytics, 'metrics', 'Metrics') || {};
+  const outcomeID = getField(
+    analytics,
+    'outcomeId',
+    'outcomeID',
+    'OutcomeID',
+    'outcome_id',
+    'OutcomeId',
+  ) || getField(metrics, 'outcomeId', 'outcomeID', 'OutcomeID', 'outcome_id', 'OutcomeId');
+  return outcomeID !== undefined && outcomeID !== null && outcomeID !== '' ? String(outcomeID) : '';
+}
+
+function predictionSettledOutcomeID(...sources: any[]): string {
+  for (const source of sources) {
+    const fromState = predictionSettledOutcomeIDFromState(source);
+    if (fromState) return fromState;
+    const fromAnalytics = predictionSettledOutcomeIDFromAnalytics(source);
+    if (fromAnalytics) return fromAnalytics;
+  }
+  return '';
+}
+
+function outcomeMatchesID(outcome: PredictionOutcome, outcomeID?: string) {
+  if (!outcomeID || !outcome.id) {
+    return false;
+  }
+  return String(outcome.id).toLowerCase() === String(outcomeID).toLowerCase();
+}
+
+function mergePredictionRuntimeState(summary: any, stateResponse: any) {
+  const runtime = responseData(stateResponse);
+  if (!runtime || getField(runtime, 'code', 'Code') === -1) {
+    return summary;
+  }
+
+  const summaryDetails = getDetails(summary);
+  const runtimeState = getRuntimeState(runtime);
+  const runtimeDetails = getDetails(runtimeState);
+  const summaryPrediction = getPrediction(summary);
+  const runtimePrediction = getPrediction(runtime);
+
+  return {
+    ...summary,
+    runtimeState,
+    status: predictionStatusText(runtime),
+    prediction: runtimePrediction || summaryPrediction,
+    details: {
+      ...summaryDetails,
+      ...runtimeDetails,
+      prediction: runtimePrediction || summaryPrediction,
+    },
+  };
 }
 
 function isPredictionStatus(status: any, contractURL: string) {
@@ -253,6 +383,9 @@ function statusBadgeClass(status: string) {
   if (normalized.includes('ready') || normalized.includes('betting')) {
     return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
   }
+  if (normalized.includes('closed') || normalized.includes('pendingresult')) {
+    return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+  }
   if (normalized.includes('reject') || normalized.includes('invalid')) {
     return 'bg-red-500/15 text-red-300 border-red-500/30';
   }
@@ -273,7 +406,7 @@ function adaptPredictionRow(status: any, contractURL: string): PredictionRow | n
   const deployTime = numericValue(
     getField(status, 'deployTime', 'DeployTime', 'createdHeight', 'CreatedHeight'),
   );
-  const statusText = String(getField(status, 'status', 'Status') || 'Unknown');
+  const statusText = predictionStatusText(status);
   const outcomes = prediction?.outcomes;
 
   return {
@@ -281,6 +414,7 @@ function adaptPredictionRow(status: any, contractURL: string): PredictionRow | n
     title: prediction?.title || getField(status, 'name', 'Name') || 'Prediction',
     description: prediction?.description || '',
     status: statusText,
+    settledOutcomeID: predictionSettledOutcomeID(status),
     deployTime,
     deployTimeText: formatDeployText(status),
     eventTimeText: formatPredictionTime(prediction?.event_time, timeBase),
@@ -306,20 +440,24 @@ async function settleContractRequest(request: Promise<any>) {
 }
 
 async function loadPredictionContractDetails(contractURL: string): Promise<PredictionContractDetails> {
-  const [summaryResponse, analyticsResponse, historyResponse] = await Promise.all([
+  const [summaryResponse, stateResponse, analyticsResponse, historyResponse] = await Promise.all([
     settleContractRequest(clientApi.getContract(contractURL)),
+    settleContractRequest(clientApi.getContractState(contractURL)),
     settleContractRequest(clientApi.getContractAnalytics(contractURL)),
     settleContractRequest(clientApi.getContractHistory(contractURL, 0, 0)),
   ]);
 
+  const summary = mergePredictionRuntimeState(responseData(summaryResponse), stateResponse);
   const historyData = getField(historyResponse, 'data', 'Data');
   return {
-    summary: responseData(summaryResponse),
+    summary,
+    state: responseData(stateResponse),
     analytics: responseData(analyticsResponse),
     history: Array.isArray(historyData) ? historyData : [],
     historyTotal: numericValue(getField(historyResponse, 'total', 'Total')),
     rawResponses: {
       summary: summaryResponse,
+      state: stateResponse,
       analytics: analyticsResponse,
       history: historyResponse,
     },
@@ -405,13 +543,17 @@ function getOutcomeStats(analytics: any, outcome: PredictionOutcome): OutcomeSta
     return { amount: '-', bets: '-' };
   }
 
-  const outcomes = getField(analytics, 'outcomes', 'Outcomes') || {};
-  const outcomeBets = getField(analytics, 'outcomeBets', 'OutcomeBets') || {};
-  const current = outcomes[outcome.id] || outcomes[String(outcome.id).toUpperCase()] || {};
+  const outcomeID = String(outcome.id);
+  const { outcomes, outcomeBets } = predictionOutcomeMetrics(analytics);
+  const current = outcomeMetricValue(outcomes, outcomeID) || {};
 
   return {
     amount: firstDisplayValue(getField(current, 'amount', 'Amount'), '0'),
-    bets: firstDisplayValue(getField(current, 'bets', 'Bets'), outcomeBets[outcome.id], '0'),
+    bets: firstDisplayValue(
+      outcomeMetricValue(outcomeBets, outcomeID),
+      getField(current, 'bets', 'Bets', 'count', 'Count'),
+      '0',
+    ),
   };
 }
 
@@ -419,7 +561,7 @@ function formatOutcomeAmount(amount: string, asset: string) {
   if (amount === '-' || !asset || asset === '-') {
     return amount;
   }
-  return `${amount} ${asset}`;
+  return `${amount}\n${asset}`;
 }
 
 async function loadPredictionContracts() {
@@ -437,7 +579,18 @@ async function loadPredictionContracts() {
   }
 
   const summaries = response?.data || response?.Data || [];
-  return summaries
+  const summariesWithState = await Promise.all(
+    summaries.map(async (summary: any) => {
+      const address = getField(summary, 'address', 'Address') || '';
+      if (!address) {
+        return summary;
+      }
+      const stateResponse = await settleContractRequest(clientApi.getContractState(address));
+      return mergePredictionRuntimeState(summary, stateResponse);
+    }),
+  );
+
+  return summariesWithState
     .map((summary: any) => adaptPredictionRow(summary, getField(summary, 'address', 'Address') || ''))
     .filter(Boolean)
     .sort((a, b) => (b?.deployTime || 0) - (a?.deployTime || 0)) as PredictionRow[];
@@ -536,6 +689,22 @@ export default function PredictionContractsPage() {
     () => (selectedContract ? buildPredictionDetailSummary(selectedContract, contractDetails) : null),
     [selectedContract, contractDetails],
   );
+  const selectedSettledOutcomeID = useMemo(
+    () =>
+      predictionSettledOutcomeID(
+        contractDetails?.summary,
+        contractDetails?.state,
+        contractDetails?.analytics,
+        selectedContract?.rawStatus,
+      ) || selectedContract?.settledOutcomeID || '',
+    [contractDetails, selectedContract],
+  );
+
+  const statusLabel = (status: string) => {
+    const key = `pages.prediction.statuses.${status}`;
+    const translated = t(key);
+    return translated === key ? status : translated;
+  };
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
@@ -612,6 +781,9 @@ export default function PredictionContractsPage() {
 
   const renderOutcomeAction = (item: PredictionRow, outcome: PredictionOutcome) => {
     const stats = getOutcomeStats(analyticsByContract[item.contractURL], outcome);
+    const settledOutcomeID =
+      item.settledOutcomeID || predictionSettledOutcomeID(analyticsByContract[item.contractURL]);
+    const isSettledOutcome = outcomeMatchesID(outcome, settledOutcomeID);
     return (
       <div
         key={outcome.id || outcome.text}
@@ -619,19 +791,36 @@ export default function PredictionContractsPage() {
       >
         <Button
           size="sm"
-          className="group min-h-9 w-full rounded-md border border-primary/70 bg-primary/15 px-3 text-xs font-semibold text-primary shadow-[0_0_0_1px_rgba(59,130,246,0.18)] transition-all hover:-translate-y-0.5 hover:border-primary hover:bg-primary hover:text-white hover:shadow-lg hover:shadow-primary/20 active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary/70"
+          className={`group min-h-9 w-full rounded-md border px-3 text-xs font-semibold shadow-[0_0_0_1px_rgba(59,130,246,0.18)] transition-all hover:-translate-y-0.5 hover:text-white hover:shadow-lg active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 ${
+            isSettledOutcome
+              ? 'border-emerald-400/80 bg-emerald-500/20 text-emerald-200 shadow-emerald-500/20 hover:border-emerald-300 hover:bg-emerald-500 focus-visible:ring-emerald-400/70'
+              : 'border-primary/70 bg-primary/15 text-primary hover:border-primary hover:bg-primary hover:shadow-primary/20 focus-visible:ring-primary/70'
+          }`}
           onClick={() => openBetDialog(item, outcome)}
         >
-          <Icon icon="lucide:mouse-pointer-click" className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+          <Icon
+            icon={isSettledOutcome ? 'lucide:check-circle-2' : 'lucide:mouse-pointer-click'}
+            className="mr-1.5 h-3.5 w-3.5 shrink-0"
+          />
           <span className="min-w-0 flex-1 truncate text-left">{outcomeLabel(outcome)}</span>
-          <span className="ml-2 shrink-0 rounded-sm bg-primary/20 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-primary transition-colors group-hover:bg-white/20 group-hover:text-white">
+          <span
+            className={`ml-2 shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] uppercase tracking-wide transition-colors group-hover:bg-white/20 group-hover:text-white ${
+              isSettledOutcome ? 'bg-emerald-400/20 text-emerald-100' : 'bg-primary/20 text-primary'
+            }`}
+          >
             {t('pages.prediction.bet_action')}
           </span>
         </Button>
-        <div className="mt-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1 text-[10px] leading-snug text-zinc-400">
+        <div
+          className={`mt-1 rounded-md border px-2 py-1 text-[10px] leading-snug text-zinc-400 ${
+            isSettledOutcome
+              ? 'border-emerald-400/30 bg-emerald-500/10'
+              : 'border-primary/20 bg-primary/5'
+          }`}
+        >
           <div className="flex items-center justify-between gap-2">
             <span>{t('pages.prediction.outcome_amount')}</span>
-            <span className="truncate text-zinc-200">
+            <span className="min-w-0 whitespace-pre-line break-words text-right text-zinc-200">
               {formatOutcomeAmount(stats.amount, item.betAsset)}
             </span>
           </div>
@@ -707,7 +896,7 @@ export default function PredictionContractsPage() {
                 </div>
               </div>
               <Badge className={`shrink-0 border ${statusBadgeClass(item.status)}`}>
-                {item.status}
+                {statusLabel(item.status)}
               </Badge>
             </div>
             {item.description && (
@@ -790,7 +979,7 @@ export default function PredictionContractsPage() {
                 </TableCell>
                 <TableCell className="px-4 py-4">
                   <Badge className={`border ${statusBadgeClass(item.status)}`}>
-                    {item.status}
+                    {statusLabel(item.status)}
                   </Badge>
                 </TableCell>
                 <TableCell className="px-4 py-4">
@@ -886,7 +1075,7 @@ export default function PredictionContractsPage() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-md border border-zinc-800 bg-zinc-950/40 p-3">
                   <div className="text-xs text-zinc-500">{t('pages.prediction.status')}</div>
-                  <div className="mt-1 font-medium text-zinc-100">{selectedContract.status}</div>
+                  <div className="mt-1 font-medium text-zinc-100">{statusLabel(selectedContract.status)}</div>
                 </div>
                 <div className="rounded-md border border-zinc-800 bg-zinc-950/40 p-3">
                   <div className="text-xs text-zinc-500">{t('pages.prediction.deployer')}</div>
@@ -932,14 +1121,24 @@ export default function PredictionContractsPage() {
                     {t('pages.prediction.outcomes')}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {selectedContract.outcomes.map((outcome) => (
-                      <Badge
-                        key={outcome.id || outcome.text}
-                        className="border border-zinc-700 bg-zinc-800 text-zinc-100"
-                      >
-                        {outcomeLabel(outcome)}
-                      </Badge>
-                    ))}
+                    {selectedContract.outcomes.map((outcome) => {
+                      const isSettledOutcome = outcomeMatchesID(outcome, selectedSettledOutcomeID);
+                      return (
+                        <Badge
+                          key={outcome.id || outcome.text}
+                          className={`gap-1 border ${
+                            isSettledOutcome
+                              ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-100'
+                              : 'border-zinc-700 bg-zinc-800 text-zinc-100'
+                          }`}
+                        >
+                          {isSettledOutcome && (
+                            <Icon icon="lucide:check-circle-2" className="h-3 w-3" />
+                          )}
+                          {outcomeLabel(outcome)}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </div>
               )}

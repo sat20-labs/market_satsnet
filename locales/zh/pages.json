@@ -63,6 +63,18 @@
     "load_failed": "Prediction 合约加载失败。",
     "prediction": "Prediction",
     "status": "状态",
+    "statuses": {
+      "Unknown": "未知",
+      "PendingReady": "待审核",
+      "Ready": "已就绪",
+      "Betting": "投注中",
+      "ClosedForBet": "停止投注",
+      "PendingResult": "等待结果",
+      "Confirmed": "已确认",
+      "Settled": "已结算",
+      "Refundable": "可退款",
+      "Rejected": "已拒绝"
+    },
     "bet_asset": "投注资产",
     "outcomes": "投注选项",
     "event_time": "事件时间",
