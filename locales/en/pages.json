@@ -79,6 +79,7 @@
     "outcomes": "Bet Options",
     "event_time": "Event Time",
     "bet_deadline": "Bet Deadline",
+    "confirm_after": "Confirm After",
     "deploy_time": "Deploy Time",
     "source": "Source",
     "source_link": "Source",

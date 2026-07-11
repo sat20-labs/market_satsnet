@@ -79,6 +79,7 @@
     "outcomes": "投注选项",
     "event_time": "事件时间",
     "bet_deadline": "投注截止",
+    "confirm_after": "可确认时间",
     "deploy_time": "部署时间",
     "source": "来源",
     "source_link": "来源",

@@ -230,13 +230,22 @@ function getRuntimeState(status: any) {
 function predictionStatusText(status: any) {
   const runtimeState = getRuntimeState(status);
   const runtimeStateDetails = getDetails(runtimeState);
+  const runtimeStatus = getField(runtimeState, 'status', 'Status');
   const runtimePrediction =
     getField(runtimeState, 'prediction', 'Prediction') ||
     getField(runtimeStateDetails, 'prediction', 'Prediction');
+
+  // The outer runtime status gates the prediction lifecycle.  A prediction is
+  // initialized as PendingResult internally, but it is not awaiting a result
+  // until the oracle has accepted it and the runtime reaches Ready.
+  if (runtimeStatus !== undefined && runtimeStatus !== null && String(runtimeStatus) !== 'Ready') {
+    return String(runtimeStatus);
+  }
+
   return String(
     getField(runtimePrediction, 'status', 'Status') ||
       getField(runtimeState, 'predictionStatus', 'PredictionStatus') ||
-      getField(runtimeState, 'status', 'Status') ||
+      runtimeStatus ||
       getField(status, 'status', 'Status') ||
       'Unknown',
   );
@@ -250,6 +259,16 @@ function predictionSettledOutcomeIDFromState(status: any): string {
     getField(runtimeDetails, 'prediction', 'Prediction') ||
     getField(status, 'prediction', 'Prediction') ||
     getField(getDetails(status), 'prediction', 'Prediction');
+  const latestConfirm = getField(runtimePrediction, 'latestConfirm', 'LatestConfirm');
+  const latestOutcomeID = getField(
+    latestConfirm,
+    'outcome_id',
+    'outcomeId',
+    'OutcomeID',
+  );
+  if (latestOutcomeID !== undefined && latestOutcomeID !== null && latestOutcomeID !== '') {
+    return String(latestOutcomeID);
+  }
   const confirmations =
     getField(runtimePrediction, 'confirmations', 'Confirmations') ||
     getField(runtimeState, 'confirmations', 'Confirmations') ||
@@ -908,6 +927,7 @@ export default function PredictionContractsPage() {
               <div>{t('pages.prediction.asset')}: {item.betAsset}</div>
               <div>{t('pages.prediction.min')}: {item.minBetUnit}</div>
               <div>{t('pages.prediction.event')}: {item.eventTimeText}</div>
+              <div>{t('pages.prediction.confirm_after')}: {item.confirmAfterText}</div>
               <div>{t('pages.prediction.deploy')}: {item.deployTimeText}</div>
             </div>
             <div className="mt-3 flex flex-wrap gap-1">
@@ -923,7 +943,7 @@ export default function PredictionContractsPage() {
       </div>
 
       <div className="relative overflow-x-auto w-full px-3 py-3 bg-zinc-900/80 rounded-lg hidden sm:block">
-        <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[1100px] bg-zinc-900/50">
+        <Table className="w-full table-auto border-collapse rounded-lg shadow-md min-w-[1220px] bg-zinc-900/50">
           <TableHeader>
             <TableRow>
               <TableHead className="px-4 py-2 bg-zinc-900 text-muted-foreground">
@@ -943,6 +963,9 @@ export default function PredictionContractsPage() {
               </TableHead>
               <TableHead className="px-4 py-2 bg-zinc-900 text-muted-foreground">
                 {t('pages.prediction.bet_deadline')}
+              </TableHead>
+              <TableHead className="px-4 py-2 bg-zinc-900 text-muted-foreground">
+                {t('pages.prediction.confirm_after')}
               </TableHead>
               <TableHead className="px-4 py-2 bg-zinc-900 text-muted-foreground">
                 {t('pages.prediction.deploy_time')}
@@ -1000,6 +1023,9 @@ export default function PredictionContractsPage() {
                 </TableCell>
                 <TableCell className="px-4 py-4 whitespace-nowrap">
                   {item.betDeadlineText}
+                </TableCell>
+                <TableCell className="px-4 py-4 whitespace-nowrap">
+                  {item.confirmAfterText}
                 </TableCell>
                 <TableCell className="px-4 py-4 whitespace-nowrap">
                   {item.deployTimeText}
@@ -1104,6 +1130,10 @@ export default function PredictionContractsPage() {
                 <div className="rounded-md border border-zinc-800 bg-zinc-950/40 p-3">
                   <div className="text-xs text-zinc-500">{t('pages.prediction.bet_deadline')}</div>
                   <div className="mt-1 font-medium text-zinc-100">{selectedContract.betDeadlineText}</div>
+                </div>
+                <div className="rounded-md border border-zinc-800 bg-zinc-950/40 p-3">
+                  <div className="text-xs text-zinc-500">{t('pages.prediction.confirm_after')}</div>
+                  <div className="mt-1 font-medium text-zinc-100">{selectedContract.confirmAfterText}</div>
                 </div>
                 <div className="rounded-md border border-zinc-800 bg-zinc-950/40 p-3">
                   <div className="text-xs text-zinc-500">{t('pages.prediction.bet_asset')}</div>
