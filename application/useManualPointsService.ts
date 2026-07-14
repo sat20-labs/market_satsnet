@@ -23,24 +23,12 @@ export interface ManualPointsPage {
 }
 
 const BASE = process.env.NEXT_PUBLIC_POINTS_API_BASE || '';
-const ENV_TOKEN = process.env.NEXT_PUBLIC_POINTS_API_TOKEN || 'sat20@satoshinet@satswap';
-
-function getAuthToken(): string {
-  if (typeof window === 'undefined') return ENV_TOKEN;
-  const key = 'points_api_token';
-  let token = localStorage.getItem(key) || sessionStorage.getItem(key) || '';
-  if (!token) token = ENV_TOKEN;
-  return token;
-}
-
-function getAuthHeaders(): Record<string, string> {
-  const token = getAuthToken();
-  return { 'Authorization': `Bearer ${token}`, 'X-API-Token': token };
-}
+const MANUAL_POINTS_ADMIN_DISABLED =
+  'Manual points administration requires an authenticated server-side endpoint';
 
 async function fetchJson<T>(path: string): Promise<T | undefined> {
   try {
-    const res = await fetch(`${BASE}${path}`, { cache: 'no-store', headers: getAuthHeaders() });
+    const res = await fetch(`${BASE}${path}`, { cache: 'no-store' });
     if (!res.ok) return undefined;
     return res.json();
   } catch { return undefined; }
@@ -48,7 +36,9 @@ async function fetchJson<T>(path: string): Promise<T | undefined> {
 
 // Create manual points record (add or subtract). One of points or points_x100 is required.
 export async function addManualPoints(payload: { address: string; points?: number; points_x100?: number; reason?: string; operator?: string; ref_id?: string | number }): Promise<{ record: ManualPointRecord; created: boolean } | undefined> {
-  try {
+  throw new Error(MANUAL_POINTS_ADMIN_DISABLED);
+	/*
+	try {
     const body: any = { address: payload.address };
     if (typeof payload.points_x100 === 'number') {
       body.points_x100 = Math.trunc(payload.points_x100);
@@ -63,7 +53,7 @@ export async function addManualPoints(payload: { address: string; points?: numbe
 
     const res = await fetch(`${BASE}/api/v1/points/manual/add`, {
       method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (!res.ok) return undefined;
@@ -92,11 +82,15 @@ export async function addManualPoints(payload: { address: string; points?: numbe
   } catch {
     return undefined;
   }
+	*/
 }
 
 // Reverse a manual record by id
 export async function reverseManualPoints(payload: { id: number | string; operator?: string; reason?: string; ref_id?: string | number }): Promise<ManualPointRecord | undefined> {
-  try {
+  throw new Error(MANUAL_POINTS_ADMIN_DISABLED);
+
+	/*
+	try {
     const body: any = { id: payload.id };
     if (payload.operator) body.operator = payload.operator;
     if (payload.reason) body.reason = payload.reason;
@@ -104,7 +98,7 @@ export async function reverseManualPoints(payload: { id: number | string; operat
 
     const res = await fetch(`${BASE}/api/v1/points/manual/reverse`, {
       method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (!res.ok) return undefined;
@@ -130,6 +124,7 @@ export async function reverseManualPoints(payload: { id: number | string; operat
   } catch {
     return undefined;
   }
+	*/
 }
 
 export async function getManualPoints(address: string, cursor?: string, limit: number = 50): Promise<ManualPointsPage | undefined> {

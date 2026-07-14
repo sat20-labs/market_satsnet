@@ -7,13 +7,9 @@ LOCAL_PATH="./out"
 SSH_USER="root"
 SSH_PORT="${DEPLOY_SSH_PORT:-20222}"
 SSH_KEY="${DEPLOY_SSH_KEY:-}"  # 如果有SSH密钥，可以通过 DEPLOY_SSH_KEY 指定路径
-USE_SSHPASS="${DEPLOY_USE_SSHPASS:-0}"
 BACKUP_DIR="${DEPLOY_BACKUP_DIR:-/var/backups/satsnet.ordx.market}"
 BACKUP_KEEP="${DEPLOY_BACKUP_KEEP:-10}"
 SKIP_BACKUP="${DEPLOY_SKIP_BACKUP:-0}"
-
-# 密码文件路径
-PASSWORD_FILE="$(dirname "$0")/.password"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -52,8 +48,7 @@ show_usage() {
     echo "  DEPLOY_BACKUP_KEEP          保留最近 N 份备份，默认: $BACKUP_KEEP"
     echo "  DEPLOY_SKIP_BACKUP=1        跳过备份"
     echo "  DEPLOY_SSH_PORT=20222       指定 SSH 端口，默认: $SSH_PORT"
-    echo "  DEPLOY_SSH_KEY=/path/key    指定 SSH key"
-    echo "  DEPLOY_USE_SSHPASS=1        使用 scripts/.password 和 sshpass 登录"
+    echo "  DEPLOY_SSH_KEY=/path/key    指定 SSH key（未指定时使用 SSH agent/配置）"
 }
 
 # 解析命令行参数
@@ -75,24 +70,6 @@ parse_args() {
         esac
         shift
     done
-}
-
-# 读取密码文件
-read_password() {
-    if [ -f "$PASSWORD_FILE" ]; then
-        # 读取密码文件的第一行，去除前后空格和换行符
-        PASSWORD=$(head -n 1 "$PASSWORD_FILE" | tr -d '\r\n' | xargs)
-        if [ -n "$PASSWORD" ]; then
-            log_success "已从密码文件读取密码"
-            return 0
-        else
-            log_error "密码文件为空"
-            return 1
-        fi
-    else
-        log_error "密码文件不存在: $PASSWORD_FILE"
-        return 1
-    fi
 }
 
 # 清空out目录并重新构建
@@ -141,13 +118,11 @@ build_rsync_command() {
     rsync_args="$rsync_args --exclude=.git"
     rsync_args="$rsync_args --exclude=.DS_Store"
 
-    # 如果有SSH密钥，添加密钥参数；否则默认使用本机ssh配置
+    # 如果有SSH密钥，添加密钥参数；否则使用本机 SSH agent/配置。
     if [ -n "$SSH_KEY" ] && [ -f "$SSH_KEY" ]; then
-        rsync_args="$rsync_args -e \"ssh -p $SSH_PORT -i $SSH_KEY\""
-    elif [ "$USE_SSHPASS" = "1" ]; then
-        rsync_args="$rsync_args -e \"sshpass -p '$PASSWORD' ssh -p $SSH_PORT -o StrictHostKeyChecking=no\""
+        rsync_args="$rsync_args -e \"ssh -p $SSH_PORT -i $SSH_KEY -o StrictHostKeyChecking=yes\""
     else
-        rsync_args="$rsync_args -e \"ssh -p $SSH_PORT\""
+        rsync_args="$rsync_args -e \"ssh -p $SSH_PORT -o StrictHostKeyChecking=yes\""
     fi
 
     echo "rsync $rsync_args $LOCAL_PATH/ $SSH_USER@$REMOTE_HOST:$REMOTE_PATH/"
@@ -174,11 +149,9 @@ backup_remote_path() {
     remote_command="set -e; if [ -d '$REMOTE_PATH' ]; then mkdir -p '$BACKUP_DIR'; tar -C '$remote_parent' -czf '$BACKUP_DIR/$backup_file' '$remote_name'; ls -lh '$BACKUP_DIR/$backup_file'; if [ '$BACKUP_KEEP' -gt 0 ] 2>/dev/null; then find '$BACKUP_DIR' -maxdepth 1 -type f -name '${remote_name}-*.tar.gz' -printf '%T@ %p\n' | sort -rn | awk 'NR > '$BACKUP_KEEP' {print \$2}' | xargs -r rm -f; fi; else echo '远端目录不存在，跳过备份。'; fi"
 
     if [ -n "$SSH_KEY" ] && [ -f "$SSH_KEY" ]; then
-        ssh -p "$SSH_PORT" -i "$SSH_KEY" "$SSH_USER@$REMOTE_HOST" "$remote_command"
-    elif [ "$USE_SSHPASS" = "1" ]; then
-        sshpass -p "$PASSWORD" ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$SSH_USER@$REMOTE_HOST" "$remote_command"
+        ssh -p "$SSH_PORT" -o StrictHostKeyChecking=yes -i "$SSH_KEY" "$SSH_USER@$REMOTE_HOST" "$remote_command"
     else
-        ssh -p "$SSH_PORT" "$SSH_USER@$REMOTE_HOST" "$remote_command"
+        ssh -p "$SSH_PORT" -o StrictHostKeyChecking=yes "$SSH_USER@$REMOTE_HOST" "$remote_command"
     fi
 
     if [ $? -eq 0 ]; then
@@ -197,17 +170,6 @@ check_dependencies() {
         exit 1
     fi
 
-    # 只有显式启用密码模式时才检查sshpass
-    if [ "$USE_SSHPASS" = "1" ]; then
-        if ! command -v sshpass &> /dev/null; then
-            log_error "sshpass 未安装，请先安装 sshpass"
-            log_info "安装方法:"
-            echo "  macOS: brew install sshpass"
-            echo "  Ubuntu/Debian: sudo apt-get install sshpass"
-            echo "  CentOS/RHEL: sudo yum install sshpass"
-            exit 1
-        fi
-    fi
 }
 
 # 执行部署
@@ -219,14 +181,6 @@ deploy() {
 
     # 构建项目
     build_project
-
-    # 读取密码（仅密码模式需要）
-    if [ "$USE_SSHPASS" = "1" ]; then
-        if ! read_password; then
-            log_error "无法读取密码，部署终止"
-            exit 1
-        fi
-    fi
 
     # 部署前备份远端目录
     backup_remote_path
@@ -248,7 +202,7 @@ deploy() {
         echo "2. 检查SSH连接是否正常"
         echo "3. 确认远程目录权限"
         echo "4. 如果使用SSH密钥，请检查密钥文件路径"
-        echo "5. 检查密码是否正确"
+        echo "5. 检查 SSH key 或 SSH agent 是否已配置"
         exit 1
     fi
 }
@@ -275,11 +229,8 @@ main() {
     fi
     if [ -n "$SSH_KEY" ]; then
         echo "  SSH密钥: $SSH_KEY"
-    elif [ "$USE_SSHPASS" = "1" ]; then
-        echo "  SSH认证: sshpass"
-        echo "  密码文件: $PASSWORD_FILE"
     else
-        echo "  SSH认证: 系统ssh配置"
+        echo "  SSH认证: SSH agent/系统 ssh 配置"
     fi
     echo ""
 

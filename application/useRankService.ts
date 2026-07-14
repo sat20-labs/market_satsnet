@@ -19,39 +19,15 @@ export interface RankPage {
 }
 
 const BASE = (process.env.NEXT_PUBLIC_POINTS_API_BASE || '').replace(/\/$/, '');
-const DEFAULT_TOKEN = 'sat20@satoshinet@satswap';
-const ENV_TOKEN = process.env.NEXT_PUBLIC_POINTS_API_TOKEN || DEFAULT_TOKEN;
-
-function getToken(): string {
-  if (typeof window === 'undefined') return ENV_TOKEN;
-  return (
-    localStorage.getItem('points_api_token') ||
-    sessionStorage.getItem('points_api_token') ||
-    ENV_TOKEN ||
-    DEFAULT_TOKEN
-  );
-}
-
-function withApiToken(url: string, token?: string) {
-  if (!token) return url;
-  const hasQuery = url.includes('?');
-  const hasToken = /[?&]api_token=/.test(url);
-  if (hasToken) return url;
-  return `${url}${hasQuery ? '&' : '?'}api_token=${encodeURIComponent(token)}`;
-}
 
 async function fetchRank(kind: RankKind, period: RankPeriod, limit = 20, cursor?: string): Promise<RankPage | undefined> {
   try {
-    const tk = getToken();
-    const headers: Record<string, string> = {};
-    if (tk) { headers['Authorization'] = `Bearer ${tk}`; headers['X-API-Token'] = tk; }
     const qs = new URLSearchParams();
     qs.set('period', period);
     if (limit) qs.set('limit', String(limit));
     if (cursor) qs.set('cursor', cursor);
-    let url = `${BASE}/api/v1/points/rank/${kind}?${qs.toString()}`;
-    url = withApiToken(url, tk);
-    const res = await fetch(url, { headers, cache: 'no-store' });
+    const url = `${BASE}/api/v1/points/rank/${kind}?${qs.toString()}`;
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return undefined;
     const env = await res.json() as ApiEnvelope<any>;
     if (!env || env.code !== 0) return undefined;

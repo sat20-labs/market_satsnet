@@ -13,37 +13,11 @@ export interface EmissionInfo {
 }
 
 const BASE = (process.env.NEXT_PUBLIC_POINTS_API_BASE || '').replace(/\/$/, '');
-// Provide safe default token matching backend sample if env/storage missing
-const DEFAULT_TOKEN = 'sat20@satoshinet@satswap';
-const ENV_TOKEN = process.env.NEXT_PUBLIC_POINTS_API_TOKEN || DEFAULT_TOKEN;
-
-function getToken(): string {
-  if (typeof window === 'undefined') return ENV_TOKEN;
-  return (
-    localStorage.getItem('points_api_token') ||
-    sessionStorage.getItem('points_api_token') ||
-    ENV_TOKEN ||
-    DEFAULT_TOKEN
-  );
-}
-
-function withApiToken(url: string, token?: string) {
-  if (!token) return url;
-  const hasQuery = url.includes('?');
-  const hasToken = /[?&]api_token=/.test(url);
-  if (hasToken) return url;
-  return `${url}${hasQuery ? '&' : '?'}api_token=${encodeURIComponent(token)}`;
-}
 
 async function fetchEmission(): Promise<EmissionInfo | undefined> {
   try {
-    const tk = getToken();
-    const headers: Record<string, string> = {};
-    if (tk) { headers['Authorization'] = `Bearer ${tk}`; headers['X-API-Token'] = tk; }
-    // Build URL and also include api_token as query for compatibility
-    let url = `${BASE}/api/v1/points/emission`;
-    url = withApiToken(url, tk);
-    const resp = await fetch(url, { headers, cache: 'no-store' });
+    const url = `${BASE}/api/v1/points/emission`;
+    const resp = await fetch(url, { cache: 'no-store' });
     if (!resp.ok) return undefined;
     const env = await resp.json();
     if (!env || env.code !== 0) return undefined;

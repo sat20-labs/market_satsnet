@@ -735,63 +735,10 @@ export const getContractInvokeFee = async (url: string, parameter: string) => {
 };
 
 // === Points (Asset Metadata) Base & Helper ===
-const POINTS_TOKEN_KEY = 'points_api_token';
-const LEGACY_POINTS_TOKEN_KEYS = ['POINTS_API_TOKEN'];
-
-const migrateLegacyPointsToken = (): string | '' => {
-  if (typeof window === 'undefined') return '';
-  let latest = '';
-  for (const k of LEGACY_POINTS_TOKEN_KEYS) {
-    const val = localStorage.getItem(k) || sessionStorage.getItem(k) || '';
-    if (val) {
-      latest = val;
-      // remove legacy
-      localStorage.removeItem(k);
-      sessionStorage.removeItem(k);
-    }
-  }
-  if (latest) {
-    // store under new key (persist in localStorage by default)
-    localStorage.setItem(POINTS_TOKEN_KEY, latest);
-  }
-  return latest;
-};
-
 const getPointsBaseUrl = (): string => {
   const base = (process.env.NEXT_PUBLIC_POINTS_API_BASE || '').replace(/\/$/, '');
   return base;
 };
-
-// Getter now prefers unified key, falls back to legacy migration, then env.
-const getPointsAuthToken = (): string => {
-  if (typeof window === 'undefined') {
-    return process.env.NEXT_PUBLIC_POINTS_API_TOKEN || '';
-  }
-  let token = localStorage.getItem(POINTS_TOKEN_KEY) || sessionStorage.getItem(POINTS_TOKEN_KEY) || '';
-  if (!token) {
-    token = migrateLegacyPointsToken();
-  }
-  if (!token) {
-    token = process.env.NEXT_PUBLIC_POINTS_API_TOKEN || '';
-  }
-  return token;
-};
-
-export const setPointsAuthToken = (token: string, persist: boolean = true) => {
-  if (typeof window === 'undefined') return;
-  // cleanup any legacy keys
-  for (const k of LEGACY_POINTS_TOKEN_KEYS) {
-    localStorage.removeItem(k);
-    sessionStorage.removeItem(k);
-  }
-  localStorage.removeItem(POINTS_TOKEN_KEY);
-  sessionStorage.removeItem(POINTS_TOKEN_KEY);
-  if (token) {
-    (persist ? localStorage : sessionStorage).setItem(POINTS_TOKEN_KEY, token);
-  }
-  window.dispatchEvent(new CustomEvent('points:token-updated', { detail: { token } }));
-};
-export const clearPointsAuthToken = () => setPointsAuthToken('', true);
 
 interface PointsRequestOptions {
   method?: string;
@@ -814,9 +761,6 @@ const pointsRequest = async (path: string, options: PointsRequestOptions = {}) =
   const baseUrl = getPointsBaseUrl();
   let url = `${baseUrl}${path}`;
   const fetchOptions: RequestInit = { method, headers: { ...customHeaders } };
-  const apiToken = getPointsAuthToken();
-
-  // 调整: 仅通过 Header 发送 token，不再放入 query/body (?api_token=)  —— 2025-09-18
   if (method === 'GET' && data) {
     const qsParams = removeObjectEmptyValue(data);
     const qs = new URLSearchParams(qsParams as Record<string, string>).toString();
@@ -828,11 +772,6 @@ const pointsRequest = async (path: string, options: PointsRequestOptions = {}) =
     (fetchOptions.headers as Record<string, string>)['Content-Type'] = 'application/json';
   }
 
-  if (apiToken) {
-    (fetchOptions.headers as Record<string, string>)['Authorization'] = `Bearer ${apiToken}`;
-    (fetchOptions.headers as Record<string, string>)['X-API-Token'] = apiToken;
-  }
-
   const controller = new AbortController();
   const to = setTimeout(() => controller.abort(), timeout);
   fetchOptions.signal = controller.signal;
@@ -842,13 +781,7 @@ const pointsRequest = async (path: string, options: PointsRequestOptions = {}) =
 
     if (resp.status === 401) {
       console.warn('Points API unauthorized 401:', url);
-      const hadToken = !!apiToken;
-      clearPointsAuthToken();
       window.dispatchEvent(new CustomEvent('points:unauthorized', { detail: { path, url } }));
-      // If we had a token and not retried yet, do a single silent retry (maybe env default token)
-      if (hadToken && !_retried) {
-        return pointsRequest(path, { ...options, _retried: true });
-      }
       throw new Error('Unauthorized (401)');
     }
 

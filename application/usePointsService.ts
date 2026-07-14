@@ -67,17 +67,9 @@ const MIN_RATE_WITH_REF = DEFAULT_RATE_BASE + REFERRAL_BONUS; // 0.37
 
 // Resolve backend base path (relative by default -> same origin proxy)
 const POINTS_API_BASE = process.env.NEXT_PUBLIC_POINTS_API_BASE || '';
-// API token (front-end build time). For higher security configure via environment variable.
-const API_TOKEN = process.env.NEXT_PUBLIC_POINTS_API_TOKEN || 'sat20@satoshinet@satswap';
-const AUTH_HEADERS: Record<string, string> = {
-  'Authorization': `Bearer ${API_TOKEN}`,
-  'X-API-Token': API_TOKEN,
-};
-
 async function fetchJson<T = any>(path: string, init?: RequestInit): Promise<T | undefined> {
   try {
     const mergedHeaders: Record<string, string> = {
-      ...AUTH_HEADERS,
       ...(init?.headers as any || {}),
     };
     const res = await fetch(`${POINTS_API_BASE}${path}`, { cache: 'no-store', ...init, headers: mergedHeaders });

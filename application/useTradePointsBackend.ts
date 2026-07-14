@@ -4,8 +4,6 @@ import { useState, useCallback } from 'react';
 interface ApiEnvelope<T> { code: number; msg?: string; data?: T }
 
 const BASE = process.env.NEXT_PUBLIC_POINTS_API_BASE || '';
-const API_TOKEN = process.env.NEXT_PUBLIC_POINTS_API_TOKEN || 'sat20@satoshinet@satswap';
-const AUTH_HEADERS: Record<string,string> = { 'Authorization': `Bearer ${API_TOKEN}`, 'X-API-Token': API_TOKEN };
 
 function shortenContract(c?: string): { short?: string; full?: string } {
   if (!c) return { short: undefined, full: undefined };
@@ -25,7 +23,7 @@ function deriveModeFromContract(short?: string, explicit?: string): string | und
 
 async function fetchJson<T>(path: string): Promise<T | undefined> {
   try {
-    const res = await fetch(`${BASE}${path}`, { cache: 'no-store', headers: { ...AUTH_HEADERS } });
+    const res = await fetch(`${BASE}${path}`, { cache: 'no-store' });
     if (!res.ok) return undefined;
     return res.json();
   } catch { return undefined; }

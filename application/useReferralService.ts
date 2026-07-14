@@ -23,12 +23,10 @@ export interface ReferralDetailsPage {
 }
 
 const BASE = process.env.NEXT_PUBLIC_POINTS_API_BASE || '';
-const API_TOKEN = process.env.NEXT_PUBLIC_POINTS_API_TOKEN || 'sat20@satoshinet@satswap';
-const AUTH_HEADERS: Record<string,string> = { 'Authorization': `Bearer ${API_TOKEN}`, 'X-API-Token': API_TOKEN };
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T | undefined> {
   try {
-    const headers = { ...AUTH_HEADERS, ...(init?.headers as any || {}) };
+    const headers = { ...(init?.headers as any || {}) };
     const res = await fetch(`${BASE}${path}`, { cache: 'no-store', ...init, headers });
     if (!res.ok) return undefined;
     return res.json();
@@ -72,7 +70,7 @@ export async function getReferralDetails(referrerOrAddress: string, cursor?: str
 
 export async function refreshReferralBinding(address: string): Promise<{ address?: string; referrer?: string; bindBlock?: number; found?: boolean } | undefined> {
   try {
-    const res = await fetch(`${BASE}/api/v1/referral/refresh?address=${address}`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...AUTH_HEADERS } });
+    const res = await fetch(`${BASE}/api/v1/referral/refresh?address=${address}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
     if (!res.ok) return undefined;
     const env: ApiEnvelope<any> = await res.json();
     if (env.code !== 0) return undefined;
