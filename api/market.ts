@@ -1,5 +1,5 @@
 import { removeObjectEmptyValue } from '@/utils';
-import { useCommonStore } from '@/store';
+import { getConfiguredNetwork, useCommonStore } from '@/store';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
 // Define an interface for the context needed by the request function
@@ -48,7 +48,8 @@ export const request = async (
 ) => {
   const { publicKey, connected } = useReactWalletStore.getState();
   const { signature } = useCommonStore.getState();
-  const { chain, network } = useCommonStore.getState();
+  const { chain, network: storedNetwork } = useCommonStore.getState();
+  const network = getConfiguredNetwork() ?? storedNetwork;
   let context: RequestContext = { publicKey, signature, chain, network, connected };
   if (customContext) {
     context = { ...context, ...customContext };
@@ -558,7 +559,8 @@ export const requestContract = async (
   options: RequestOptions = {},
   customContext?: Partial<RequestContext>,
 ) => {
-  const { chain, network } = useCommonStore.getState();
+  const { chain, network: storedNetwork } = useCommonStore.getState();
+  const network = getConfiguredNetwork() ?? storedNetwork;
   let context: RequestContext = { chain, network } as RequestContext;
   if (customContext) {
     context = { ...context, ...customContext };

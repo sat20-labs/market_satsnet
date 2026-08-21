@@ -220,6 +220,8 @@ const WalletConnectButton = () => {
       let accounts = Array.isArray(payload?.accounts) ? payload.accounts : [];
       let nextPublicKey = payload?.publicKey || '';
       let nextNetwork = payload?.network || walletNetwork;
+      const urlNetwork = new URLSearchParams(window.location.search).get('network');
+      const hasExplicitNetwork = urlNetwork === 'mainnet' || urlNetwork === 'testnet';
 
       if (!accounts.length) {
         try {
@@ -232,7 +234,9 @@ const WalletConnectButton = () => {
       }
 
       if (nextNetwork) {
-        setNetwork(toMarketNetwork(nextNetwork));
+        if (!hasExplicitNetwork) {
+          setNetwork(toMarketNetwork(nextNetwork));
+        }
         (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
           network: nextNetwork,
         });
@@ -263,12 +267,9 @@ const WalletConnectButton = () => {
     provider.on('ready', syncEmbeddedWallet);
     provider.on('accountChanged', syncEmbeddedWallet);
     provider.on('networkChanged', syncEmbeddedWallet);
-    const syncTimer = setTimeout(() => {
-      syncEmbeddedWallet();
-    }, 300);
+    provider.requestReady();
 
     return () => {
-      clearTimeout(syncTimer);
       provider.removeListener('ready', syncEmbeddedWallet);
       provider.removeListener('accountChanged', syncEmbeddedWallet);
       provider.removeListener('networkChanged', syncEmbeddedWallet);

@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CustomPagination } from "@/components/ui/CustomPagination";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
-import { useCommonStore } from "@/store/common";
+import { getConfiguredNetwork, useCommonStore } from "@/store/common";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
@@ -222,11 +222,20 @@ const TickerName = ({
 const Swap = () => {
   const { t } = useTranslation(); // Specify the namespace
   const { satsnetHeight, network } = useCommonStore();
+  const effectiveNetwork = getConfiguredNetwork() ?? network;
   const { btcPrice } = useCommonStore();
   const { address } = useReactWalletStore();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const PAGE_SIZES = [10, 20, 50, 100];
+
+  const swapDetailHref = (assetName: string, contractUrl?: string) => {
+    const query = new URLSearchParams({ asset: assetName, network: effectiveNetwork });
+    if (contractUrl) {
+      query.set('contractUrl', contractUrl);
+    }
+    return `/swap/detail?${query.toString()}`;
+  };
 
   // 判断资产是否在维护中
   const isUnderMaintenance = (pool: any) => {
@@ -676,7 +685,10 @@ const Swap = () => {
             <div className="flex-1 min-w-0 flex flex-col gap-1">
               <div className="flex items-start justify-between gap-2">
                 <Link
-                  href={`/swap/detail?asset=${p.assetNameObj?.Protocol}:f:${p.assetNameObj?.Ticker}`}
+                  href={swapDetailHref(
+                    `${p.assetNameObj?.Protocol}:f:${p.assetNameObj?.Ticker}`,
+                    p.contractURL,
+                  )}
                   className="flex flex-col justify-start text-primary font-medium text-left max-w-[200px]"
                   title={p?.assetName}
                   onClick={(e) => handleMaintenanceClick(e, p)}
@@ -694,7 +706,10 @@ const Swap = () => {
 
                 {p.poolStatus === PoolStatus.ACTIVE ? (
                   <Link
-                    href={`/swap/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
+                    href={swapDetailHref(
+                      `${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`,
+                      p.contractURL,
+                    )}
                     className={`${statusColorMap[p.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
                     onClick={(e) => handleMaintenanceClick(e, p)}
                   >
@@ -887,7 +902,10 @@ const Swap = () => {
                         </Avatar>
                       )}
                       <Link
-                        href={`/swap/detail?asset=${adaptedPool.assetNameObj?.Protocol}:f:${adaptedPool.assetNameObj?.Ticker}`}
+                        href={swapDetailHref(
+                          `${adaptedPool.assetNameObj?.Protocol}:f:${adaptedPool.assetNameObj?.Ticker}`,
+                          adaptedPool.contractURL,
+                        )}
                         className={`cursor-pointer text-primary hover:underline leading-snug ${adaptedPool.protocol !== "runes" ? "max-w-[220px]" : "max-w-[240px]"}`}
                         prefetch={true}
                         title={adaptedPool.assetName}
@@ -1029,7 +1047,10 @@ const Swap = () => {
                     <TableCell className="px-4 py-4">
                       {adaptedPool.poolStatus === PoolStatus.ACTIVE ? (
                         <Link
-                          href={`/swap/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                          href={swapDetailHref(
+                            `${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`,
+                            adaptedPool.contractURL,
+                          )}
                           className={`${statusColorMap[adaptedPool.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
                           onClick={(e) =>
                             handleMaintenanceClick(e, adaptedPool)

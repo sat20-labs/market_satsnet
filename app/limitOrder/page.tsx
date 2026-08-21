@@ -317,7 +317,7 @@ export default function LimitOrderPage() {
                 const ticker = p?.Contract?.assetName?.Ticker;
                 if (!proto || !ticker) return '';
                 return `${proto}:f:${ticker}`;
-            }).filter(Boolean)
+            }).filter((asset): asset is string => asset.length > 0)
         ));
     }, [poolList]);
 

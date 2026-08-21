@@ -4,6 +4,14 @@ import { devtools, persist } from 'zustand/middleware';
 export type Chain = 'Bitcoin' | 'SatoshiNet';
 export type Network = 'mainnet' | 'testnet';
 
+export const getNetworkFromUrl = (): Network | undefined => {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  const value = new URLSearchParams(window.location.search).get('network');
+  return value === 'mainnet' || value === 'testnet' ? value : undefined;
+};
+
 interface CommonState {
   feeRate: {
     value: number;
@@ -52,7 +60,7 @@ export const useCommonStore = create<CommonState>()(
           type: 'custom',
         },
         chain: 'SatoshiNet',
-        network: 'mainnet', // 默认值改为 mainnet
+        network: 'mainnet', // 保持服务端与客户端首次渲染一致
         btcHeight: 0,
         satsnetHeight: 0,
         runtimeEnv: 'dev',
@@ -137,9 +145,42 @@ export const useCommonStore = create<CommonState>()(
               !['isServicePaused', 'servicePauseMessage'].includes(key),
             ),
           ),
+        merge: (persistedState, currentState) => {
+          const persisted = persistedState as Partial<CommonState>;
+          const urlNetwork = getNetworkFromUrl();
+          return {
+            ...currentState,
+            ...persisted,
+            network: urlNetwork ?? persisted.network ?? currentState.network,
+          };
+        },
       },
     ),
   ),
 );
 
+const readPersistedNetwork = (): Network | undefined => {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
 
+  try {
+    const raw = window.localStorage.getItem('common-store');
+    if (!raw) return undefined;
+
+    const persisted = JSON.parse(raw);
+    const network = persisted?.state?.network;
+    return network === 'mainnet' || network === 'testnet' ? network : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+// Resolve the network before the persisted Zustand state has finished hydrating.
+// An explicit URL network is used for embedded PWA pages; otherwise use the
+// locally persisted Market setting before falling back to the in-memory store.
+export const getConfiguredNetwork = (): Network => {
+  return getNetworkFromUrl()
+    ?? readPersistedNetwork()
+    ?? useCommonStore.getState().network;
+};

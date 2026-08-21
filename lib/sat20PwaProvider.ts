@@ -40,6 +40,7 @@ type Sat20PwaProvider = {
   bindReferrerForServer: (...args: unknown[]) => Promise<unknown>;
   batchSendAssets_SatsNet: (...args: unknown[]) => Promise<unknown>;
   batchSendAssetsV2_SatsNet: (...args: unknown[]) => Promise<unknown>;
+  requestReady: () => void;
   on: (event: string, handler: (...args: unknown[]) => void) => void;
   removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
   [method: string]: unknown;
@@ -228,6 +229,7 @@ const createProvider = (): Sat20PwaProvider => {
     bindReferrerForServer: requestMethod('bindReferrerForServer'),
     batchSendAssets_SatsNet: requestMethod('batchSendAssets_SatsNet'),
     batchSendAssetsV2_SatsNet: requestMethod('batchSendAssetsV2_SatsNet'),
+    requestReady: requestWalletReady,
     on: (event: string, handler: (...args: unknown[]) => void) => {
       const handlers = listeners.get(event) ?? new Set();
       handlers.add(handler);

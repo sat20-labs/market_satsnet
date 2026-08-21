@@ -5,6 +5,7 @@ const nextConfig = {
   output: 'export',
   distDir: 'out',
   trailingSlash: true,
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   webpack: (config, { isServer }) => {
     // 启用 WebAssembly 实验特性
     config.resolve.alias['bitcore-lib'] = path.resolve(

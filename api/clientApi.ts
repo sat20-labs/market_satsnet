@@ -1,4 +1,4 @@
-import { useCommonStore } from '../store/common';
+import { getConfiguredNetwork, useCommonStore } from '../store/common';
 interface RequestParams {
   address?: string;
   network?: string;
@@ -50,7 +50,8 @@ class ClientApi {
     method: 'GET' | 'POST' = 'GET',
     option?: any,
   ): Promise<T> => {
-    const { chain, network } = useCommonStore.getState();
+    const { chain } = useCommonStore.getState();
+    const network = getConfiguredNetwork();
     let _chain = chain;
     if (option?.chain) {
       _chain = option.chain;

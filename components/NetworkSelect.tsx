@@ -16,8 +16,6 @@ export const NetworkSelect = () => {
   const {
     network: walletNetwork,
     connected,
-    disconnect,
-    switchNetwork,
   } = useReactWalletStore((state) => state);
   const handleMouseEnter = () => {
     if (window.innerWidth > 768) {
@@ -47,15 +45,23 @@ export const NetworkSelect = () => {
   const handleSelectionChange = async (value: Network) => {
     setIsOpen(false); // 选择后关闭菜单
     const _v = value === 'mainnet' ? 'livenet' : 'testnet';
+
+    const commitNetwork = () => {
+      setNetwork(value);
+      const url = new URL(window.location.href);
+      url.searchParams.set('network', value);
+      window.history.replaceState(null, '', url.href);
+    };
+
     if (connected && walletNetwork !== _v) {
       try {
         await getWalletAdapter().switchNetwork(_v);
-        setNetwork(value); // 更新网络的值
+        commitNetwork();
       } catch (error) {
         toast.error('Switch network failed');
       }
     } else {
-      setNetwork(value); // 更新网络的值
+      commitNetwork();
     }
   };
 

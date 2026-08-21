@@ -3,10 +3,11 @@ import { clientApi, marketApi } from "@/api";
 import { contractService } from "@/domain/services/contract";
 import { getContractStatusByAddress } from "@/api/market";
 import { useMemo } from "react";
-import { useCommonStore, useWalletStore } from "@/store";
+import { getConfiguredNetwork, useCommonStore, useWalletStore } from "@/store";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { LptAmount, UserContractStatus, ParsedContractStatus } from "@/types";
+import { resolveSwapContractUrl } from "@/components/satoshinet/swap/swapContract";
 
 interface TickerInfo {
   name: {
@@ -31,6 +32,7 @@ interface TickerInfo {
 export const useSwapDetailData = (asset: string, initialContractUrl?: string) => {
   console.log('asset', asset);
   const { network } = useCommonStore();
+  const effectiveNetwork = getConfiguredNetwork() ?? network;
 
   // ticker 仅用于展示；合约匹配必须基于完整 asset，避免 ordxordi 误命中 ordi
   const ticker = useMemo(() => asset?.split(':')?.[2] ?? '', [asset]);
@@ -38,12 +40,12 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
 
   const { address } = useReactWalletStore();
   const tickerQuery = useQuery<any>({
-    queryKey: ['ticker', asset, network],
+    queryKey: ['ticker', asset, effectiveNetwork],
     queryFn: () => clientApi.getTickerInfo(asset),
     enabled: !!asset,
   });
   const holdersQuery = useQuery<any>({
-    queryKey: ['ticker', 'holders', asset, network],
+    queryKey: ['ticker', 'holders', asset, effectiveNetwork],
     queryFn: () => clientApi.getTickerHolders(asset, 1, 10),
     enabled: !!asset,
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
@@ -51,32 +53,20 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
     refetchOnWindowFocus: false,
   });
 
-  // 当外部已经提供 contractUrl 时，不再发起获取全量合约列表的请求
+  // 查询参数中的 contractUrl 只是提示；始终用当前网络的部署列表验证。
   const contractUrlQuery = useQuery({
-    queryKey: ['contractUrl', network],
+    queryKey: ['contractUrl', effectiveNetwork],
     queryFn: () => contractService.getDeployedContractInfo(),
-    enabled: !initialContractUrl && !!asset,
+    enabled: !!asset,
   });
 
   const contractUrl = useMemo(() => {
-    if (initialContractUrl) return initialContractUrl; // 直接复用外部传入的合约 URL
-
     const list: string[] = contractUrlQuery.data ?? [];
-    if (!asset || list.length === 0) return undefined;
-
-    // 期望 suffix：_{asset}_amm.tc，例如 _brc20:f:ordi_amm.tc
-    const expectedSuffix = `_${asset}_amm.tc`;
-
-    // 优先 suffix 精确匹配，避免 ordx:f:ordxordi_amm.tc 误匹配到 ordi
-    const exact = list.find((url) => typeof url === 'string' && url.endsWith(expectedSuffix));
-    if (exact) return exact;
-
-    // 兜底：仍然用完整 asset 匹配（比 `${ticker}_amm.tc` 更安全）
-    return list.find((url) => typeof url === 'string' && url.includes(expectedSuffix));
+    return resolveSwapContractUrl(list, asset, initialContractUrl);
   }, [contractUrlQuery.data, asset, initialContractUrl]);
 
   const { data: swapStatus, isPending: isSwapStatusPending, isLoading: isSwapStatusLoading, refetch: refetchStatus } = useQuery({
-    queryKey: ["amm", 'status', contractUrl, network],
+    queryKey: ["amm", 'status', contractUrl, effectiveNetwork],
     queryFn: () => contractService.getContractStatus(contractUrl!),
     refetchInterval: 15000, // 增加到15秒，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
@@ -85,7 +75,7 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
   });
 
   const { data: analytics, isPending: isAnalyticsPending, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
-    queryKey: ["amm", 'analytics', contractUrl, network],
+    queryKey: ["amm", 'analytics', contractUrl, effectiveNetwork],
     queryFn: () => contractService.getContractAnalytics(contractUrl!),
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
@@ -95,7 +85,7 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
 
   // 获取用户合约状态（包含 lptAmt）- 只在测试网环境下启用
   const { data: userContractStatus, isPending: isUserContractStatusPending, isLoading: isUserContractStatusLoading, refetch: refetchUserContractStatus } = useQuery({
-    queryKey: ["amm", 'userStatus', contractUrl, address, network],
+    queryKey: ["amm", 'userStatus', contractUrl, address, effectiveNetwork],
     queryFn: () => getContractStatusByAddress(contractUrl!, address),
     refetchInterval: 15000, // 15秒刷新一次
     refetchIntervalInBackground: false, // 禁止后台刷新

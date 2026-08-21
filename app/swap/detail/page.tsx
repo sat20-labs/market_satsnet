@@ -24,7 +24,6 @@ import LptHoldersList from "@/components/satoshinet/swap/LptHoldersList";
 import { AssetInfo } from "@/components/satoshinet/AssetInfo";
 import { AssetInfoCard } from "@/components/AssetInfoCard";
 import { useSwapDetailData } from "@/hooks/pages/useSwapDetailData";
-import { useCommonStore } from "@/store";
 import HistorySwapOrders from "@/components/satoshinet/common/HistorySwapOrders";
 import { Loading } from "@/components/Loading";
 import MyOrders from "@/components/satoshinet/common/MySwapOrders";
@@ -55,8 +54,8 @@ const WHITELIST_ADDRESSES = [
 function OrderPageContent() {
   const params = useSearchParams();
   const asset = params.get("asset");
+  const requestedContractUrl = params.get("contractUrl");
   const { t } = useTranslation();
-  const { network } = useCommonStore();
 
   const {
     tickerInfo,
@@ -77,7 +76,7 @@ function OrderPageContent() {
     refreshAnalytics,
     refreshBalances,
     refreshAll,
-  } = useSwapDetailData(asset ?? "");
+  } = useSwapDetailData(asset ?? "", requestedContractUrl ?? undefined);
   const protocol = useMemo(
     () => swapStatusData?.Contract?.assetName?.Protocol || "",
     [swapStatusData],

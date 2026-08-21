@@ -16,6 +16,7 @@ import { BtcPrice } from "@/components/BtcPrice";
 import { getValueFromPrecision } from '@/utils';
 import { getWalletAdapter } from "@/lib/walletAdapter";
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
+import { evaluateSwapQuote } from './swapQuote';
 
 interface SwapProps {
   asset: string;
@@ -209,13 +210,17 @@ const Swap = ({
       return Number(fee) || 0;
     } catch (error) {
       console.error('Failed to get fee:', error);
-      return 0;
+      throw error;
     }
   }, [asset, swapType, contractUrl]);
 
   // 使用 React Query 获取服务费
-  const { data: serviceFee = 0 } = useQuery({
-    queryKey: ['serviceFee', fromAmount, swapType],
+  const {
+    data: serviceFee = 0,
+    isFetching: isServiceFeeFetching,
+    isError: isServiceFeeError,
+  } = useQuery({
+    queryKey: ['serviceFee', contractUrl, asset, fromAmount, swapType],
     queryFn: () => getFee(fromAmount),
     enabled: Boolean(fromAmount) && Number(fromAmount) > 0,
   });
@@ -266,6 +271,18 @@ const Swap = ({
       : serviceFee + networkFee;
   }, [fromAmount, serviceFee, networkFee, swapType]);
 
+  const quote = useMemo(() => evaluateSwapQuote({
+    direction: swapType,
+    grossReceive: minReceiveValue,
+    serviceFee,
+    networkFee,
+  }), [swapType, minReceiveValue, serviceFee, networkFee]);
+
+  const canSubmitQuote = Boolean(fromAmount) &&
+    !isServiceFeeFetching &&
+    !isServiceFeeError &&
+    quote.canSubmit;
+
   // 切换上下币种
   const handleSwitch = () => {
     setSwapType(swapType === 'sats-to-asset' ? 'asset-to-sats' : 'sats-to-asset');
@@ -284,6 +301,17 @@ const Swap = ({
       }
       if (!fromAmount || Number(fromAmount) <= 0) {
         throw new Error("Please enter a valid amount");
+      }
+      if (isServiceFeeFetching) {
+        throw new Error("Please wait for the fee quote");
+      }
+      if (isServiceFeeError) {
+        throw new Error("Unable to quote the service fee");
+      }
+      if (!quote.canSubmit) {
+        throw new Error(swapType === 'asset-to-sats'
+          ? "Swap output must exceed service and network fees"
+          : "Swap output is too small");
       }
       if (swapType === 'sats-to-asset' && Number(fromAmount) > displaySatsBalance) {
         throw new Error("Insufficient sats balance");
@@ -574,7 +602,7 @@ const Swap = ({
             <span>{t('common.totalPay')}: <span className="text-white ml-1">~ {totalFee || ''}</span> sats</span>
           )}
           {swapType === 'asset-to-sats' && (
-            <span>{t('common.totalReceive')}: <span className="text-white ml-1">~ {(minReceiveValue - serviceFee - networkFee) || ''}</span> sats</span>
+            <span>{t('common.totalReceive')}: <span className="text-white ml-1">~ {fromAmount ? quote.netReceive : ''}</span> sats</span>
           )}
           <span className="flex items-center gap-2">
             {swapType === 'sats-to-asset' && (
@@ -584,7 +612,7 @@ const Swap = ({
             )}
             {swapType === 'asset-to-sats' && (
               <span className="text-sm text-zinc-500">
-                ~ $<BtcPrice btc={(minReceiveValue - serviceFee - networkFee) / 100000000} />
+                ~ $<BtcPrice btc={quote.netReceive / 100000000} />
               </span>
             )}
             <button
@@ -616,7 +644,7 @@ const Swap = ({
           onClick={handleSwap}
           className={`w-[98%] sm:w-full px-2 my-4 text-sm font-semibold transition-all duration-200 btn-gradient`}
           size="lg"
-          disabled={swapMutation.isPending}
+          disabled={swapMutation.isPending || !canSubmitQuote}
         >
           {swapMutation.isPending ? 'Swapping...' : 'SWAP'}
         </Button>
