@@ -1,31 +1,38 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownUp, ChevronDown, ChevronUp } from 'lucide-react';
-import { BtcPrice } from "../../BtcPrice";
+import { BtcPrice } from '../../BtcPrice';
+import Decimal from 'decimal.js';
+import {
+  calculateLimitOrderValue,
+  decimalToSafeInteger,
+} from './limitOrderQuote';
 
 interface OrderSummaryProps {
   orderType: string;
   price: string;
   quantity: string;
-  serviceFee: number;
+  serviceFee: string | null;
   balance: { availableAmt: number };
   displayAvailableAmt: number;
   ticker: string;
 }
 
 interface BuySummaryData {
-  totalVal: number;
-  serviceFee: number;
-  networkFee: number;
-  totalPay: number;
+  totalVal: string;
+  serviceFee: string;
+  networkFee: string;
+  totalPay: string;
+  btcTotal: number | null;
   type: 'buy';
 }
 
 interface SellSummaryData {
-  totalVal: number;
-  totalReceive: number;
-  serviceFee: number;
-  networkFee: number;
+  totalVal: string;
+  totalReceive: string;
+  serviceFee: string;
+  networkFee: string;
+  btcTotal: number | null;
   type: 'sell';
 }
 
@@ -44,32 +51,40 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   const [isDetailsVisible, setIsDetailsVisible] = useState(false); // 控制详细信息显示状态
 
   const summaryData = useMemo<SummaryData | null>(() => {
-    const priceNum = Number(price);
-    const quantityNum = Number(quantity);
-    if (isNaN(priceNum) || isNaN(quantityNum) || priceNum <= 0 || quantityNum <= 0) {
+    const quote = calculateLimitOrderValue(price, quantity);
+    if (!quote?.isAtLeastOneSat || serviceFee === null) {
       return null;
     }
 
-    const totalVal = Math.ceil(quantityNum * priceNum);
-    const networkFee = 10;
+    const totalVal = quote.roundedSats;
+    const serviceFeeValue = new Decimal(serviceFee).toFixed(0);
+    const networkFee = '10';
 
     if (orderType === 'buy') {
-      const totalPay = totalVal + serviceFee + networkFee;
+      const totalPay = new Decimal(totalVal)
+        .plus(serviceFeeValue)
+        .plus(networkFee)
+        .toFixed(0);
       return {
         totalVal,
-        serviceFee,
+        serviceFee: serviceFeeValue,
         networkFee,
         totalPay,
+        btcTotal: decimalToSafeInteger(totalPay),
         type: 'buy' as const,
       };
     } else {
-      const totalReceive = totalVal - serviceFee - networkFee;
-      return {        
+      const totalReceive = new Decimal(totalVal)
+        .minus(serviceFeeValue)
+        .minus(networkFee)
+        .toFixed(0);
+      return {
         totalVal,
         totalReceive,
-        serviceFee,
+        serviceFee: serviceFeeValue,
         networkFee,
         type: 'sell' as const,
+        btcTotal: decimalToSafeInteger(totalReceive),
       };
     }
   }, [orderType, price, quantity, serviceFee]);
@@ -80,29 +95,41 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
     <div className="gap-2 mb-4 bg-zinc-800/50 rounded-lg p-4 text-sm">
       {/* 默认显示预估收入或预估支付 */}
       <p className="flex justify-between font-medium text-gray-400">
-        {summaryData.type === 'buy' && (
-          <>
-            {t('common.estPay')}
-
-          </>
-        )}
-        {summaryData.type === 'sell' && (
-          <>
-            {t('common.estReceive')}
-          </>
-        )}
+        {summaryData.type === 'buy' && <>{t('common.estPay')}</>}
+        {summaryData.type === 'sell' && <>{t('common.estReceive')}</>}
         <span className="flex items-center gap-2">
           {summaryData.type === 'buy' && (
             <>
               <span className="font-semibold text-zinc-200 gap-2">
-                {summaryData.totalPay.toLocaleString()}<span className="text-zinc-500"> {t('common.sats')} ($<BtcPrice btc={summaryData.totalPay / 1e8} /> )</span>
+                {summaryData.totalPay}
+                <span className="text-zinc-500">
+                  {' '}
+                  {t('common.sats')}
+                  {summaryData.btcTotal !== null && (
+                    <>
+                      {' '}
+                      ($
+                      <BtcPrice btc={summaryData.btcTotal / 1e8} /> )
+                    </>
+                  )}
+                </span>
               </span>
             </>
           )}
           {summaryData.type === 'sell' && (
             <>
               <span className="font-semibold text-zinc-300 gap-2">
-                {summaryData.totalReceive.toLocaleString()} <span className="text-zinc-500">{t('common.sats')} ($<BtcPrice btc={summaryData.totalReceive / 1e8} /> )</span>
+                {summaryData.totalReceive}{' '}
+                <span className="text-zinc-500">
+                  {t('common.sats')}
+                  {summaryData.btcTotal !== null && (
+                    <>
+                      {' '}
+                      ($
+                      <BtcPrice btc={summaryData.btcTotal / 1e8} /> )
+                    </>
+                  )}
+                </span>
               </span>
             </>
           )}
@@ -112,7 +139,11 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             className="ml-2 text-gray-400 hover:text-white"
             onClick={() => setIsDetailsVisible((prev) => !prev)}
           >
-            {isDetailsVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {isDetailsVisible ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
           </button>
         </span>
       </p>
@@ -123,19 +154,22 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           <p className="flex justify-between font-medium text-zinc-500">
             {t('common.value')}
             <span className="font-semibold text-zinc-400 gap-2">
-              {summaryData.totalVal.toLocaleString()} <span className="text-zinc-500">{t('common.sats')}</span>
+              {summaryData.totalVal}{' '}
+              <span className="text-zinc-500">{t('common.sats')}</span>
             </span>
           </p>
           <p className="flex justify-between font-medium text-zinc-500">
             {t('common.serviceFee')}
             <span className="font-semibold text-zinc-400 gap-2">
-              {summaryData.serviceFee.toLocaleString()} <span className="text-zinc-500">{t('common.sats')}</span>
+              {summaryData.serviceFee}{' '}
+              <span className="text-zinc-500">{t('common.sats')}</span>
             </span>
           </p>
           <p className="flex justify-between font-medium text-zinc-500">
             {t('common.networkFee')}
             <span className="font-semibold text-zinc-400 gap-2">
-              {summaryData.networkFee.toLocaleString()} <span className="text-zinc-500">{t('common.sats')}</span>
+              {summaryData.networkFee}{' '}
+              <span className="text-zinc-500">{t('common.sats')}</span>
             </span>
           </p>
         </div>
@@ -144,4 +178,4 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   );
 };
 
-export default OrderSummary; 
+export default OrderSummary;

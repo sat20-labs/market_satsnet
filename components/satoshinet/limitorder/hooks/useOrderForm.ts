@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { contractService } from '@/domain/services/contract';
 import { useCommonStore } from '@/store/common';
 import { getWalletAdapter } from '@/lib/walletAdapter';
+import { calculateLimitOrderValue } from '../limitOrderQuote';
+import Decimal from 'decimal.js';
 
 interface OrderFormState {
   orderType: string;
@@ -19,6 +21,7 @@ interface OrderFormState {
     netFeeSats: string;
     walletSats: string;
     value: string;
+    quoteIdentity: string;
   };
 }
 
@@ -46,11 +49,11 @@ export const useOrderForm = ({
   onOrderSuccess,
 }: UseOrderFormProps) => {
   const { t } = useTranslation();
-  const { btcFeeRate } = useCommonStore((state) => state);
+  const { btcFeeRate, network } = useCommonStore((state) => state);
   const [state, setState] = useState<OrderFormState>({
-    orderType: "buy",
-    price: "",
-    quantity: "",
+    orderType: 'buy',
+    price: '',
+    quantity: '',
     isPlacingOrder: false,
     showConfirm: false,
     confirmData: {
@@ -60,72 +63,129 @@ export const useOrderForm = ({
       netFeeSats: '',
       walletSats: '',
       value: '',
+      quoteIdentity: '',
     },
   });
 
   const updateState = useCallback((updates: Partial<OrderFormState>) => {
-    setState(prev => ({ ...prev, ...updates }));
+    setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
   // 处理数量输入，限制小数位数
-  const handleQuantityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleQuantityChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
 
-    // 如果 divisibility 为 0，不允许输入小数点
-    if (divisibility === 0) {
-      const intValue = parseInt(value) || '';
-      updateState({ quantity: intValue.toString() });
-      return;
-    }
+      // 如果 divisibility 为 0，不允许输入小数点
+      if (divisibility === 0) {
+        const intValue = parseInt(value) || '';
+        updateState({ quantity: intValue.toString() });
+        return;
+      }
 
-    // 检查小数位数
-    const parts = value.split('.');
-    if (parts.length === 2 && parts[1].length > divisibility) {
-      return;
-    }
+      // 检查小数位数
+      const parts = value.split('.');
+      if (parts.length === 2 && parts[1].length > divisibility) {
+        return;
+      }
 
-    updateState({ quantity: value });
-  }, [divisibility, updateState]);
+      updateState({ quantity: value });
+    },
+    [divisibility, updateState],
+  );
 
   // 格式化数量，去除多余小数位
-  const formatQuantity = useCallback((value: string): number => {
-    const num = parseFloat(value);
-    if (isNaN(num)) return 0;
-    return Number(num.toFixed(divisibility));
-  }, [divisibility]);
+  const formatQuantity = useCallback(
+    (value: string): string => {
+      try {
+        const quantity = new Decimal(value);
+        if (!quantity.isFinite() || quantity.lte(0)) return '';
+        return quantity
+          .toDecimalPlaces(divisibility, Decimal.ROUND_DOWN)
+          .toString();
+      } catch {
+        return '';
+      }
+    },
+    [divisibility],
+  );
 
   // 获取服务费
-  const getFee = useCallback(async (orderType: string, priceNum: number, quantityNum: number) => {
-    if (!priceNum || !quantityNum || priceNum <= 0 || quantityNum <= 0) return 0;
+  const getFee = useCallback(
+    async (orderType: string, priceValue: string, quantityValue: string) => {
+      if (!priceValue || !quantityValue) return '0';
 
-    const params = {
-      action: 'swap',
-      param: JSON.stringify({
-        orderType: orderType === 'buy' ? 2 : 1,
-        assetName: asset,
-        amt: quantityNum.toString(),
-        unitPrice: priceNum.toString()
-      })
-    };
+      const params = {
+        action: 'swap',
+        param: JSON.stringify({
+          orderType: orderType === 'buy' ? 2 : 1,
+          assetName: asset,
+          amt: quantityValue,
+          unitPrice: priceValue,
+        }),
+      };
 
+      try {
+        const fee = await contractService.getFeeForInvokeContract(
+          contractURL,
+          JSON.stringify(params),
+        );
+        const parsedFee = new Decimal(String(fee));
+        if (
+          !parsedFee.isFinite() ||
+          parsedFee.lt(0) ||
+          !parsedFee.isInteger()
+        ) {
+          throw new Error('Invalid service fee');
+        }
+        return parsedFee.toFixed(0);
+      } catch (error) {
+        console.error('Failed to get fee:', error);
+        throw error;
+      }
+    },
+    [asset, contractURL],
+  );
+
+  const normalizedPrice = (() => {
     try {
-      const fee = await contractService.getFeeForInvokeContract(
-        contractURL,
-        JSON.stringify(params)
-      );
-      return Number(fee) || 0;
-    } catch (error) {
-      console.error('Failed to get fee:', error);
-      return 0;
+      const price = new Decimal(state.price);
+      return price.isFinite() && price.gt(0) ? price.toString() : '';
+    } catch {
+      return '';
     }
-  }, [asset, contractURL]);
+  })();
+  const normalizedQuantity = formatQuantity(state.quantity);
+  const quoteIdentity = JSON.stringify([
+    network,
+    contractURL,
+    asset,
+    divisibility,
+    state.orderType,
+    normalizedPrice,
+    normalizedQuantity,
+  ]);
 
   // 使用 React Query 获取服务费
-  const { data: serviceFee = 0 } = useQuery({
-    queryKey: ['serviceFee', state.orderType, state.price, state.quantity],
-    queryFn: () => getFee(state.orderType, parseFloat(state.price), formatQuantity(state.quantity)),
-    enabled: Boolean(state.price) && Boolean(state.quantity) && Number(state.price) > 0 && Number(state.quantity) > 0,
+  const {
+    data: queriedServiceFee,
+    error: serviceFeeError,
+    isFetching: isServiceFeeFetching,
+  } = useQuery({
+    queryKey: [
+      'serviceFee',
+      network,
+      contractURL,
+      asset,
+      divisibility,
+      state.orderType,
+      normalizedPrice,
+      normalizedQuantity,
+    ],
+    queryFn: () => getFee(state.orderType, normalizedPrice, normalizedQuantity),
+    enabled: Boolean(normalizedPrice) && Boolean(normalizedQuantity),
   });
+  const serviceFee = queriedServiceFee ?? null;
 
   const handleSubmitClick = useCallback(async () => {
     if (satsnetHeight < depthData?.enableBlock) {
@@ -133,47 +193,69 @@ export const useOrderForm = ({
       return;
     }
 
-    const priceNum = parseFloat(state.price);
     const quantityNum = formatQuantity(state.quantity);
 
-    if (!state.price || isNaN(priceNum) || priceNum <= 0) {
+    if (!normalizedPrice) {
       toast.error(t('common.price_must_be_positive'));
       return;
     }
-    if (!state.quantity || isNaN(quantityNum) || quantityNum <= 0) {
+    if (!quantityNum) {
       toast.error(t('common.quantity_must_be_positive'));
+      return;
+    }
+    const orderValue = calculateLimitOrderValue(state.price, quantityNum);
+    if (!orderValue?.isAtLeastOneSat) {
+      toast.error('Order value must be at least 1 sat.');
+      return;
+    }
+    if (isServiceFeeFetching) {
+      toast.error('Service fee is still loading.');
+      return;
+    }
+    if (serviceFeeError || serviceFee === null) {
+      toast.error(
+        serviceFeeError instanceof Error
+          ? serviceFeeError.message
+          : 'Unable to query service fee.',
+      );
       return;
     }
 
     // 计算订单金额和费用
-    const unitPrice = priceNum.toString();
+    const unitPrice = normalizedPrice;
     if (state.orderType === 'buy') {
-      const value = Math.ceil(priceNum * quantityNum);
+      const value = orderValue.roundedSats;
       const networkFee = 10;
       updateState({
         showConfirm: true,
         confirmData: {
-          value: value.toString(),
+          value,
+          quoteIdentity,
           bidPrice: unitPrice,
-          feeSats: serviceFee.toString(),
+          feeSats: serviceFee,
           netFeeSats: networkFee.toString(),
-          paySats: (value + serviceFee + networkFee).toString(),
-          walletSats: balance.availableAmt.toString()
-        }
+          paySats: new Decimal(value)
+            .plus(serviceFee)
+            .plus(networkFee)
+            .toFixed(0),
+          walletSats: balance.availableAmt.toString(),
+        },
       });
-    } else { // sell
-      const value = Math.ceil(priceNum * quantityNum);
+    } else {
+      // sell
+      const value = orderValue.roundedSats;
       const networkFee = 10;
       updateState({
         showConfirm: true,
         confirmData: {
-          value: value.toString(),
+          value,
+          quoteIdentity,
           bidPrice: unitPrice,
-          feeSats: serviceFee.toString(),
+          feeSats: serviceFee,
           netFeeSats: networkFee.toString(),
-          paySats: "",
-          walletSats: displayAvailableAmt.toString()
-        }
+          paySats: '',
+          walletSats: displayAvailableAmt.toString(),
+        },
       });
     }
   }, [
@@ -182,22 +264,41 @@ export const useOrderForm = ({
     state.price,
     state.quantity,
     state.orderType,
+    quoteIdentity,
+    normalizedPrice,
     serviceFee,
+    serviceFeeError,
+    isServiceFeeFetching,
     balance.availableAmt,
     displayAvailableAmt,
     formatQuantity,
     t,
-    updateState
+    updateState,
   ]);
 
   const handleConfirm = useCallback(async () => {
     updateState({ showConfirm: false, isPlacingOrder: true });
 
-    const priceNum = parseFloat(state.price);
     const quantityNum = formatQuantity(state.quantity);
+    if (
+      !normalizedPrice ||
+      !quantityNum ||
+      state.confirmData.quoteIdentity !== quoteIdentity
+    ) {
+      toast.error('Order quote changed. Please review it again.');
+      updateState({ isPlacingOrder: false, showConfirm: false });
+      return;
+    }
     const _asset = state.orderType === 'buy' ? '::' : asset;
-    const unitPrice = priceNum.toString();
-    const amt = state.orderType === 'buy' ? Math.ceil(quantityNum * priceNum) : quantityNum;
+    const unitPrice = normalizedPrice;
+    const orderValue = calculateLimitOrderValue(state.price, quantityNum);
+    if (!orderValue?.isAtLeastOneSat) {
+      toast.error('Order value must be at least 1 sat.');
+      updateState({ isPlacingOrder: false });
+      return;
+    }
+    const amt =
+      state.orderType === 'buy' ? orderValue.roundedSats : quantityNum;
 
     const paramObj = {
       orderType: state.orderType === 'buy' ? 2 : 1,
@@ -206,10 +307,10 @@ export const useOrderForm = ({
       unitPrice: unitPrice,
     };
 
-    paramObj.amt = quantityNum.toString();
+    paramObj.amt = quantityNum;
 
     const params = {
-      action: "swap",
+      action: 'swap',
       param: JSON.stringify(paramObj),
     };
 
@@ -221,43 +322,49 @@ export const useOrderForm = ({
         amt.toString(),
         btcFeeRate.value.toString(),
         {
-          action: "swap",
+          action: 'swap',
           orderType: state.orderType === 'buy' ? 2 : 1,
           assetName: state.orderType === 'buy' ? ticker : asset,
-          amt: quantityNum.toString(),
-          sats: state.orderType === 'buy' ? amt.toString() : Math.ceil(quantityNum * priceNum).toString(),
+          amt: quantityNum,
+          sats: orderValue.roundedSats,
           unitPrice: unitPrice,
           quantity: quantityNum,
-          slippage: "0",
+          slippage: '0',
           networkFee: 10,
-        }
+        },
       );
 
       // invokeContractV2_SatsNet 没有返回值，提交就当作成功
       // toast.success(t('common.order_placed_successfully'));
-      updateState({ isPlacingOrder: false, price: "", quantity: "" });
+      updateState({ isPlacingOrder: false, price: '', quantity: '' });
       if (onOrderSuccess) onOrderSuccess();
     } catch (error) {
       console.log('error', error);
       toast.error(t('common.order_placement_failed'));
-      updateState({ isPlacingOrder: false, price: "", quantity: "" });
+      updateState({ isPlacingOrder: false, price: '', quantity: '' });
     }
   }, [
     state.price,
     state.quantity,
     state.orderType,
+    state.confirmData.quoteIdentity,
+    quoteIdentity,
+    normalizedPrice,
     asset,
     contractURL,
     ticker,
+    btcFeeRate.value,
     formatQuantity,
     onOrderSuccess,
     t,
-    updateState
+    updateState,
   ]);
 
   return {
     state,
     serviceFee,
+    serviceFeeError,
+    isServiceFeeFetching,
     updateState,
     handleQuantityChange,
     handleSubmitClick,

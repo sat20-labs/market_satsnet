@@ -2,12 +2,13 @@
 
 # 部署配置
 REMOTE_HOST="103.103.245.177"
-REMOTE_PATH="/var/www/satsnet.ordx.market"
+DEPLOY_PROFILE=""
+REMOTE_PATH=""
 LOCAL_PATH="./out"
 SSH_USER="root"
 SSH_PORT="${DEPLOY_SSH_PORT:-20222}"
 SSH_KEY="${DEPLOY_SSH_KEY:-}"  # 如果有SSH密钥，可以通过 DEPLOY_SSH_KEY 指定路径
-BACKUP_DIR="${DEPLOY_BACKUP_DIR:-/var/backups/satsnet.ordx.market}"
+BACKUP_DIR=""
 BACKUP_KEEP="${DEPLOY_BACKUP_KEEP:-10}"
 SKIP_BACKUP="${DEPLOY_SKIP_BACKUP:-0}"
 
@@ -37,14 +38,16 @@ log_warning() {
 
 # 显示帮助信息
 show_usage() {
-    echo "用法: $0 [--skip-backup|--no-backup]"
+    echo "用法: $0 <prod|test> [--skip-backup|--no-backup]"
     echo ""
     echo "选项:"
+    echo "  prod                        部署到 satsnet.ordx.market"
+    echo "  test                        部署到 test-satsnet.ordx.market"
     echo "  --skip-backup, --no-backup  跳过部署前远端备份"
     echo "  -h, --help                  显示帮助信息"
     echo ""
     echo "环境变量:"
-    echo "  DEPLOY_BACKUP_DIR           备份目录，默认: $BACKUP_DIR"
+    echo "  DEPLOY_BACKUP_DIR           备份目录，默认按 prod/test 目标选择"
     echo "  DEPLOY_BACKUP_KEEP          保留最近 N 份备份，默认: $BACKUP_KEEP"
     echo "  DEPLOY_SKIP_BACKUP=1        跳过备份"
     echo "  DEPLOY_SSH_PORT=20222       指定 SSH 端口，默认: $SSH_PORT"
@@ -55,6 +58,13 @@ show_usage() {
 parse_args() {
     while [ $# -gt 0 ]; do
         case "$1" in
+            prod|test)
+                if [ -n "$DEPLOY_PROFILE" ]; then
+                    log_error "只能指定一个部署环境"
+                    exit 1
+                fi
+                DEPLOY_PROFILE="$1"
+                ;;
             --skip-backup|--no-backup)
                 SKIP_BACKUP="1"
                 ;;
@@ -70,6 +80,22 @@ parse_args() {
         esac
         shift
     done
+
+    if [ -z "$DEPLOY_PROFILE" ]; then
+        log_error "必须明确指定 prod 或 test"
+        show_usage
+        exit 1
+    fi
+}
+
+configure_deployment() {
+    if [ "$DEPLOY_PROFILE" = "prod" ]; then
+        REMOTE_PATH="/var/www/satsnet.ordx.market"
+        BACKUP_DIR="${DEPLOY_BACKUP_DIR:-/var/backups/satsnet.ordx.market}"
+    else
+        REMOTE_PATH="/var/www/test-satsnet.ordx.market"
+        BACKUP_DIR="${DEPLOY_BACKUP_DIR:-/var/backups/test-satsnet.ordx.market}"
+    fi
 }
 
 # 清空out目录并重新构建
@@ -83,23 +109,32 @@ build_project() {
         log_success "out目录已清空"
     fi
     
-    local build_cmd
+    if [ "$DEPLOY_PROFILE" = "test" ]; then
+        if [ ! -f ".env.test" ]; then
+            log_error "缺少测试环境配置: .env.test"
+            exit 1
+        fi
+        set -a
+        . ./.env.test
+        set +a
+    fi
+
     if command -v bun >/dev/null 2>&1; then
-        build_cmd="bun run build"
+        log_info "执行构建命令: bun run build ($DEPLOY_PROFILE)"
+        bun run build
     elif command -v npm >/dev/null 2>&1; then
-        build_cmd="npm run build"
+        log_info "执行构建命令: npm run build ($DEPLOY_PROFILE)"
+        npm run build
     else
         log_error "未检测到 Bun 或 npm，请先安装 Node.js/npm 或 Bun"
         exit 1
     fi
 
-    log_info "执行构建命令: $build_cmd"
-    if eval "$build_cmd"; then
-        log_success "项目构建成功"
-    else
+    if [ $? -ne 0 ]; then
         log_error "项目构建失败"
         exit 1
     fi
+    log_success "项目构建成功"
     
     # 检查构建后的out目录
     if [ ! -d "$LOCAL_PATH" ]; then
@@ -210,12 +245,14 @@ deploy() {
 # 主函数
 main() {
     parse_args "$@"
+    configure_deployment
 
     echo "🚀 开始部署到远程服务器..."
     echo ""
 
     # 显示配置信息
     log_info "部署配置:"
+    echo "  部署环境: $DEPLOY_PROFILE"
     echo "  远程主机: $REMOTE_HOST"
     echo "  远程路径: $REMOTE_PATH"
     echo "  本地路径: $LOCAL_PATH"

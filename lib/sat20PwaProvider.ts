@@ -11,7 +11,10 @@ type PendingRequest = {
 
 type Sat20PwaProvider = {
   isSat20Pwa: true;
-  requestAccounts: () => Promise<string[]>;
+  requestAccounts: (options?: {
+    capabilities?: string[];
+    sessionOnly?: boolean;
+  }) => Promise<string[]>;
   getAccounts: () => Promise<string[]>;
   getPublicKey: () => Promise<string>;
   getNetwork: () => Promise<string>;
@@ -116,13 +119,14 @@ const installLocationReporter = () => {
   window.addEventListener('pageshow', report);
 };
 
-const sendRequest = (action: string, params: unknown[] = []) => {
+const sendRequest = (action: string, params: unknown = []) => {
   if (!isSat20PwaEmbedded()) {
     return Promise.reject(new Error('SAT20 PWA wallet is not available'));
   }
 
   const requestId = createRequestId();
-  const expiresAt = Date.now() + REQUEST_TIMEOUT;
+  const now = Date.now();
+  const expiresAt = now + REQUEST_TIMEOUT;
 
   return new Promise<unknown>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -140,6 +144,7 @@ const sendRequest = (action: string, params: unknown[] = []) => {
       action,
       params,
       nonce: createNonce(),
+      timestamp: String(now),
       expiresAt,
     }, walletOrigin);
   });
@@ -200,7 +205,7 @@ const createProvider = (): Sat20PwaProvider => {
 
   const provider: Sat20PwaProvider = {
     isSat20Pwa: true,
-    requestAccounts: () => sendRequest('requestAccounts') as Promise<string[]>,
+    requestAccounts: (options) => sendRequest('requestAccounts', options ?? []) as Promise<string[]>,
     getAccounts: () => sendRequest('getAccounts') as Promise<string[]>,
     getPublicKey: () => sendRequest('getPublicKey') as Promise<string>,
     getNetwork: () => sendRequest('getNetwork') as Promise<string>,

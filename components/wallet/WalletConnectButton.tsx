@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from '@/components/ui/popover';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   WalletConnectReact,
   useReactWalletStore,
@@ -28,6 +28,25 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useHeight } from '@/lib/hooks/useHeight';
 import { installSat20PwaProvider, isSat20PwaEmbedded } from '@/lib/sat20PwaProvider';
 import { getWalletAdapter } from '@/lib/walletAdapter';
+
+const SAT20_PWA_MARKET_CAPABILITIES = [
+  'accounts:read',
+  'public-key:read',
+  'network:read',
+  'network:switch',
+  'balance:read',
+  'utxo:read',
+  'utxo:lock',
+  'utxo:unlock',
+  'transaction:prepare',
+  'transaction:sign',
+  'transaction:broadcast',
+  'asset:send',
+  'contract:read',
+  'contract:write',
+  'identity:read',
+  'identity:write',
+] as const;
 
 const isPwaWallet = (wallet: unknown) => {
   return !!(wallet as { isSat20Pwa?: boolean } | null)?.isSat20Pwa;
@@ -195,6 +214,7 @@ const WalletConnectButton = () => {
   const { setSignature, signature } = useCommonStore((state) => state);
   const [mounted, setMounted] = useState(false);
   const [pwaEmbedded, setPwaEmbedded] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const restoreTimeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
   const restoreInProgressRef = useRef(false);
 
@@ -217,19 +237,20 @@ const WalletConnectButton = () => {
     }
 
     const syncEmbeddedWallet = async (payload?: any) => {
-      let accounts = Array.isArray(payload?.accounts) ? payload.accounts : [];
+      const hasAccountSnapshot = Array.isArray(payload?.accounts);
+      let accounts = hasAccountSnapshot ? payload.accounts : [];
       let nextPublicKey = payload?.publicKey || '';
       let nextNetwork = payload?.network || walletNetwork;
       const urlNetwork = new URLSearchParams(window.location.search).get('network');
       const hasExplicitNetwork = urlNetwork === 'mainnet' || urlNetwork === 'testnet';
 
-      if (!accounts.length) {
+      if (!hasAccountSnapshot) {
         try {
           accounts = await provider.getAccounts();
           nextPublicKey = await provider.getPublicKey();
           nextNetwork = await provider.getNetwork();
-        } catch (error) {
-          console.warn('SAT20 PWA wallet sync failed:', error);
+        } catch {
+          return;
         }
       }
 
@@ -459,6 +480,34 @@ const WalletConnectButton = () => {
       description: error.message,
     });
   };
+  const handlePwaConnect = useCallback(async () => {
+    const provider = installSat20PwaProvider();
+    if (!provider || isProcessing) return;
+
+    setIsProcessing(true);
+    try {
+      const accounts = await provider.requestAccounts({
+        capabilities: [...SAT20_PWA_MARKET_CAPABILITIES],
+        sessionOnly: true,
+      });
+      const [nextPublicKey, nextNetwork] = await Promise.all([
+        provider.getPublicKey(),
+        provider.getNetwork(),
+      ]);
+      const nextAddress = accounts[0] || '';
+      (useReactWalletStore.setState as (partial: Record<string, unknown>) => void)({
+        connected: !!nextAddress,
+        address: nextAddress,
+        publicKey: nextPublicKey,
+        network: nextNetwork,
+        btcWallet: provider,
+      });
+    } catch (error) {
+      onConnectError(error);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [isProcessing, onConnectError]);
   const toHistory = () => {
     const url = generateMempoolUrl({
       network,
@@ -696,7 +745,7 @@ const WalletConnectButton = () => {
   if (pwaEmbedded) {
     return connected && address
       ? walletStatus
-      : <Button variant="outline" className="px-4 h-9 btn-gradient opacity-0 pointer-events-none" aria-hidden>...</Button>;
+	  : <Button variant="outline" className="px-4 h-9 btn-gradient" disabled={isProcessing} onClick={handlePwaConnect}>{t('buttons.connect')}</Button>;
   }
 
   return (

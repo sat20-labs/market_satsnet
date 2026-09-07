@@ -59,7 +59,7 @@ export default function DepthPanel({
     //console.log(`Selected Price: ${price}, Adjusted Quantity: ${quantity}`);
   };
 
-  const { state, serviceFee, updateState, handleQuantityChange, handleSubmitClick, handleConfirm } = useOrderForm({
+  const { state, serviceFee, serviceFeeError, isServiceFeeFetching, updateState, handleQuantityChange, handleSubmitClick, handleConfirm } = useOrderForm({
     asset,
     ticker,
     contractURL,
@@ -285,7 +285,7 @@ export default function DepthPanel({
             ticker={ticker}
           />
           <WalletConnectBus asChild>
-            <Button onClick={handleSubmitClick} disabled={state.isPlacingOrder} className="min-w-[80px] btn-gradient h-11">
+            <Button onClick={handleSubmitClick} disabled={state.isPlacingOrder || isServiceFeeFetching || !!serviceFeeError} className="min-w-[80px] btn-gradient h-11">
               {state.isPlacingOrder ? t('common.submitting') : t('common.submit')}
             </Button>
           </WalletConnectBus>
@@ -346,4 +346,4 @@ export default function DepthPanel({
       </Dialog>
     </>
   );
-} 
+}

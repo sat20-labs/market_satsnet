@@ -41,6 +41,8 @@ interface SwapProps {
 
 type SwapType = 'asset-to-sats' | 'sats-to-asset';
 const AMM_UNIT_PRICE_DECIMALS = 10;
+// SDK AMM charges 8/1000 of the input before applying the pool formula.
+const AMM_NET_INPUT_RATIO = new Decimal('0.992');
 
 const Swap = ({
   asset,
@@ -132,7 +134,7 @@ const Swap = ({
 
     if (swapType === 'sats-to-asset') {
       // 用聪买资产
-      const newSatValue = satValueDecimal.add(amtNum);
+      const newSatValue = satValueDecimal.add(amtNum.mul(AMM_NET_INPUT_RATIO));
       const newAssetAmt = contractK.div(newSatValue);
       const assetOut = assetAmt.sub(newAssetAmt);
       console.log('calcToAmount assetPrecision', assetPrecision);
@@ -148,10 +150,10 @@ const Swap = ({
       if (assetPrecision === 0) {
         return assetOut.floor().toString();
       }
-      return assetOut.toFixed(assetPrecision);
+      return assetOut.toFixed(ammAssetDecimals, Decimal.ROUND_DOWN);
     } else {
       // 用资产换聪
-      const newAssetAmt = assetAmt.add(amtNum);
+      const newAssetAmt = assetAmt.add(amtNum.mul(AMM_NET_INPUT_RATIO));
       const newSatValue = contractK.div(newAssetAmt);
       const satsOut = satValueDecimal.sub(newSatValue);
       return satsOut.gt(0) ? satsOut.floor().toString() : "0";
@@ -171,18 +173,18 @@ const Swap = ({
       const newAssetAmt = assetAmt.sub(assetOut);
       if (newAssetAmt.lte(0)) return ""; // 确保 newAssetAmt 有效
       const newSatValue = contractK.div(newAssetAmt);
-      const satsIn = newSatValue.sub(satValueDecimal);
+      const satsIn = newSatValue.sub(satValueDecimal).div(AMM_NET_INPUT_RATIO);
       console.log('satsIn', satsIn.toString());
-      return satsIn.gt(0) ? satsIn.floor().toString() : "0";
+      return satsIn.gt(0) ? satsIn.ceil().toString() : "0";
     } else {
       const satsOut = amtNum;
       if (satsOut.gt(satValueDecimal)) return ""; // 防止 satsOut 超过池内聪
       const newSatValue = satValueDecimal.sub(satsOut);
       if (newSatValue.lte(0)) return ""; // 确保 newSatValue 有效
       const newAssetAmt = contractK.div(newSatValue);
-      const assetIn = newAssetAmt.sub(assetAmt);
+      const assetIn = newAssetAmt.sub(assetAmt).div(AMM_NET_INPUT_RATIO);
       if (assetIn.lte(0)) return "0";
-      return assetIn.toFixed(swapData?.AssetAmtInPool?.Precision || 8);
+      return assetIn.toFixed(ammAssetDecimals, Decimal.ROUND_UP);
     }
   };
 
