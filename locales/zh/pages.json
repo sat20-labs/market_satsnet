@@ -38,6 +38,7 @@
     "create_pool": "创建池子",
     "asset_name": "资产名称",
     "pool_status": "池子状态",
+    "closing": "关闭中",
     "total_supply": "总供应量",
     "market_cap": "市值",
     "launch_ratio": "启动比例",

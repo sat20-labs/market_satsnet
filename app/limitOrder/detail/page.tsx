@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { marketApi } from '@/api';
 import { Suspense } from 'react';
 import { ChartModule } from '@/components/satoshinet/ChartModule';
 import { AssetInfo } from '@/components/satoshinet/AssetInfo';
@@ -34,20 +32,8 @@ function OrderPageContent() {
   const { btcFeeRate } = useCommonStore((state) => state);
 
   const [total, setTotal] = useState(0);
-  // Fetch asset summary
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['assetSummary', asset],
-    queryFn: () => marketApi.getAssetsSummary({ assets_name: asset ?? '' }),
-    enabled: !!asset,
-  });
   const { ticker, assetBalance, contractData, tickerInfo, isAnalyticsLoading, analyticsData, contractUrl, isContractStatusLoading, refresh, holders } = useLimitOrderDetailData(asset ?? '');
   //console.log('tickerInfo', tickerInfo);
-
-  useEffect(() => {
-    if (data) {
-      setTotal(data.total);
-    }
-  }, [data]);
 
   const refreshHandler = () => {
     setTimeout(() => {
@@ -80,15 +66,6 @@ function OrderPageContent() {
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
   }
-  if (isLoading) {
-    return <Loading />;
-  }
-  if (error) {
-    // 兼容 404 资产未找到的友好提示
-    const isNotFound = (typeof error === 'object' && error !== null && 'response' in error && (error as any).response?.status === 404) || error?.message?.includes('404');
-    return <div className="p-4 bg-black text-white w-full">{isNotFound ? 'Asset not found' : `failed to load: ${error.message}`}</div>;
-  }
-
   const cancelOrder = async () => {
     const params = {
       action: 'refund',

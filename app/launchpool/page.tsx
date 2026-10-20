@@ -513,7 +513,7 @@ export default function LaunchPoolProgressSortTest() {
                   <Badge
                     className={`${statusColorMap[p.poolStatus]} text-white flex-shrink-0 mt-1`}
                   >
-                    {statusTextMap[p.poolStatus]}
+                    {Number(p.status) === 200 ? t('pages.launchpool.closing') : statusTextMap[p.poolStatus]}
                   </Badge>
                 </div>
               </div>
@@ -674,7 +674,7 @@ export default function LaunchPoolProgressSortTest() {
                   <Badge
                     className={`${statusColorMap[adaptedPool.poolStatus]} text-white`}
                   >
-                    {statusTextMap[adaptedPool.poolStatus]}
+                    {Number(adaptedPool.status) === 200 ? t('pages.launchpool.closing') : statusTextMap[adaptedPool.poolStatus]}
                   </Badge>
                 </TableCell>
 

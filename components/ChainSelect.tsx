@@ -1,5 +1,5 @@
 'use client';
-import { useCommonStore } from '@/store';
+import { getConfiguredNetwork, useCommonStore } from '@/store';
 import type { Chain } from '@/store';
 import { Icon } from '@iconify/react'; 
 
@@ -12,14 +12,7 @@ const resolveBitcoinMarketUrl = () => {
     || `${window.location.protocol}//${window.location.hostname}:3001/market/`;
 
   const url = new URL(baseUrl, window.location.href);
-  const networkParam = new URLSearchParams(window.location.search).get('network');
-  const currentNetwork = useCommonStore.getState().network;
-  const network = networkParam === 'mainnet' || networkParam === 'testnet'
-    ? networkParam
-    : currentNetwork;
-  if (network === 'mainnet' || network === 'testnet') {
-    url.searchParams.set('network', network);
-  }
+  url.searchParams.set('network', getConfiguredNetwork());
   return url.href;
 };
 

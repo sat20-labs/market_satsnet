@@ -13,13 +13,15 @@ import { usePathname } from 'next/navigation';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { clientApi, marketApi } from '@/api';
-import { useCommonStore } from '@/store';
+import { getConfiguredNetwork, useCommonStore } from '@/store';
 import { Icon } from '@iconify/react';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { ChainSelect } from '@/components/ChainSelect';
 import { NetworkSelect } from '@/components/NetworkSelect';
 import WalletConnectButton from '@/components/wallet/WalletConnectButton';
 import { useToolsEnabled } from '@/lib/toolsAccess';
+import { generateMempoolUrl } from '@/utils/url';
+import { Chain } from '@/types';
 // Add dropdown menu imports for desktop Tools grouping
 import {
   DropdownMenu,
@@ -32,6 +34,7 @@ export const Header = () => {
   const [mounted, setMounted] = useState(false); // hydration guard
   useEffect(() => { setMounted(true); }, []);
   const { address, network } = useReactWalletStore();
+  const isRegtest = String(network) === 'regtest';
   const { setHeight, setBtcPrice, runtimeEnv, setEnv, chain, setNetwork } = useCommonStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t, i18n } = useTranslation();
@@ -50,9 +53,14 @@ export const Header = () => {
   }, [btcData, setBtcPrice]);
 
   useEffect(() => {
-    const networkParam = new URLSearchParams(window.location.search).get('network');
-    if (networkParam === 'mainnet' || networkParam === 'testnet') {
-      setNetwork(networkParam);
+    const configuredNetwork = getConfiguredNetwork();
+    setNetwork(configuredNetwork);
+    if (process.env.NEXT_PUBLIC_NETWORK === 'regtest') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('network') !== configuredNetwork) {
+        url.searchParams.set('network', configuredNetwork);
+        window.history.replaceState(null, '', url.href);
+      }
     }
   }, [setNetwork]);
 
@@ -119,18 +127,20 @@ export const Header = () => {
           },
           {
             label: t('pages.mempool.title'),
-            href: network === 'testnet'
+            href: isRegtest
+              ? generateMempoolUrl({ network, chain: Chain.SATNET })
+              : network === 'testnet'
               ? 'https://mempool.sat20.org/testnet/'
               : 'https://mempool.sat20.org/',
             target: '_blank',
           },
-          {
+          ...(isRegtest ? [] : [{
             label: t('pages.explorer.title'),
             href: network === 'testnet'
               ? 'https://testnet.sat20.org/browser/app/'
               : 'https://mainnet.sat20.org/browser/app/',
             target: '_blank',
-          },
+          }]),
           {
             label: (
               <>
@@ -150,7 +160,7 @@ export const Header = () => {
       },
     ];
     return menus as any;
-  }, [i18n.language, network, t, address, mounted, toolsEnabled]);
+  }, [i18n.language, network, isRegtest, t, address, mounted, toolsEnabled]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

@@ -397,5 +397,7 @@
   "retry": "Retry",
   "search": "Search",
   "submitted_waiting": "Submitted, waiting for review/confirmation",
-  "invoke_failed": "Invoke failed"
+  "invoke_failed": "Invoke failed",
+  "asset_metadata_not_configured": "Extended metadata service is not configured.",
+  "asset_metadata_unavailable": "Extended metadata is temporarily unavailable."
 }

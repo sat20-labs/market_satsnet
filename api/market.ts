@@ -7,7 +7,7 @@ interface RequestContext {
   publicKey?: string | null;
   signature?: string | null;
   chain: 'Bitcoin' | 'SatoshiNet'; // Use specific types if possible
-  network: 'mainnet' | 'testnet';
+  network: 'mainnet' | 'testnet' | 'regtest';
   connected: boolean;
 }
 
@@ -20,6 +20,11 @@ type RequestOptions = Omit<RequestInit, 'body' | 'signal'> & {
 
 // Function to determine the base URL based on chain and network
 const getBaseUrl = (chain: RequestContext['chain'], network: RequestContext['network']): string => {
+  if (network === 'regtest') {
+    const base = chain === 'Bitcoin' ? process.env.NEXT_PUBLIC_REGTEST_L1_INDEXER_URL : process.env.NEXT_PUBLIC_REGTEST_L2_INDEXER_URL;
+    if (!base) throw new Error('Regtest indexer URL is not configured');
+    return base.replace(/\/$/, '');
+  }
   let baseUrl = '';
   console.log('request chain/network:', chain, network);
   if (chain === 'Bitcoin') {
@@ -346,6 +351,9 @@ export const bulkBuyOrder = async ({ address, order_ids, raw }: any) => {
 };
 
 export const getBTCPrice = async () => {
+  if (process.env.NEXT_PUBLIC_NETWORK === 'regtest') {
+    return { code: 0, data: { amount: '100000' } };
+  }
   const res = await request('/ordx/GetBTCPrice', {});
   return res;
 };
@@ -540,6 +548,11 @@ export const getTwitterActivity = async ({ address, activity_id }) => {
 
 // Function to determine the base URL based on chain and network
 const getContractBaseUrl = (chain: RequestContext['chain'], network: RequestContext['network']): string => {
+  if (network === 'regtest') {
+    const base = process.env.NEXT_PUBLIC_REGTEST_STP_URL;
+    if (!base) throw new Error('Regtest STP URL is not configured');
+    return base.replace(/\/$/, '');
+  }
   let baseUrl = '';
   baseUrl = process.env.NEXT_PUBLIC_SATESTNET_HOST as string;
   baseUrl += network === 'testnet' ? '/stp/testnet' : '/stp/mainnet';

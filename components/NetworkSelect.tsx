@@ -44,7 +44,8 @@ export const NetworkSelect = () => {
 
   const handleSelectionChange = async (value: Network) => {
     setIsOpen(false); // 选择后关闭菜单
-    const _v = value === 'mainnet' ? 'livenet' : 'testnet';
+    const _v = value === 'mainnet' ? 'livenet' : value;
+    if (process.env.NEXT_PUBLIC_NETWORK === 'regtest' && value !== 'regtest') return;
 
     const commitNetwork = () => {
       setNetwork(value);
@@ -76,7 +77,7 @@ export const NetworkSelect = () => {
         className="flex items-center px-4 py-2 bg-[#181819] text-gray-300 text-xs sm:text-sm rounded-xl"
         onClick={handleClick}
       >
-        {network === ('mainnet' as Network) ? 'Mainnet' : 'Testnet'}
+        {network === 'regtest' ? 'Regtest · BTC ref $100,000' : network === 'mainnet' ? 'Mainnet' : 'Testnet'}
         <span className="ml-2">
           {isOpen ? (
             <Icon icon="mdi-light:chevron-up" className="text-gray-400 text-lg" />
@@ -87,7 +88,7 @@ export const NetworkSelect = () => {
       </button>
 
       {/* 下拉菜单 */}
-      {isOpen && (
+      {isOpen && process.env.NEXT_PUBLIC_NETWORK !== 'regtest' && (
         <div
           className="absolute top-full left-0 py-2 mt-1 w-36 bg-[#272727] shadow-xl rounded-lg z-10"
           onMouseEnter={handleMouseEnter} // 鼠标移到菜单时保持打开

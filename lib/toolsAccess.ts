@@ -1,6 +1,6 @@
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 
-const TESTNET_NETWORKS = new Set(['testnet', 'testnet4']);
+const TESTNET_NETWORKS = new Set(['testnet', 'testnet4', 'regtest']);
 
 /**
  * Tools 功能开关：

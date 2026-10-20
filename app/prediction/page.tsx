@@ -536,6 +536,7 @@ function buildPredictionDetailSummary(
       getField(summaryDetails, 'deployer', 'Deployer', 'creator', 'Creator', 'owner', 'Owner'),
       getField(deployRecord, 'actor', 'Actor', 'deployer', 'Deployer'),
       getField(deployDetails, 'actor', 'Actor', 'deployer', 'Deployer'),
+      getField(getField(summary, 'runtimeState', 'RuntimeState'), 'deployer', 'Deployer', 'creator', 'Creator', 'owner', 'Owner'),
     ),
     invokeCount: invokeCount ? String(invokeCount) : '-',
     totalBets: firstDisplayValue(getField(analytics, 'totalBets', 'TotalBets')),
@@ -731,6 +732,7 @@ export default function PredictionContractsPage() {
   };
 
   const openBetDialog = (contract: PredictionRow, outcome: PredictionOutcome) => {
+    if (contract.status !== 'Betting') return;
     if (!connected || !address) {
       toast.error(t('pages.prediction.connect_wallet'));
       return;
@@ -763,6 +765,13 @@ export default function PredictionContractsPage() {
     const outcomeID = selectedBet.outcome.id;
     if (!outcomeID) return;
     const { contract } = selectedBet;
+    const latestContract = predictionList.find((item) => item.contractURL === contract.contractURL);
+    if (latestContract?.status !== 'Betting') {
+      toast.error(t('pages.prediction.bet_failed'));
+      setSelectedBet(null);
+      setBetAmount('');
+      return;
+    }
     const trimmedAmount = betAmount.trim();
 
     if (!connected || !address) {
@@ -815,6 +824,7 @@ export default function PredictionContractsPage() {
               ? 'border-emerald-400/80 bg-emerald-500/20 text-emerald-200 shadow-emerald-500/20 hover:border-emerald-300 hover:bg-emerald-500 focus-visible:ring-emerald-400/70'
               : 'border-primary/70 bg-primary/15 text-primary hover:border-primary hover:bg-primary hover:shadow-primary/20 focus-visible:ring-primary/70'
           }`}
+          disabled={item.status !== 'Betting'}
           onClick={() => openBetDialog(item, outcome)}
         >
           <Icon

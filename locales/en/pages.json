@@ -38,6 +38,7 @@
     "create_pool": "Create Pool",
     "asset_name": "Asset Name",
     "pool_status": "Pool Status",
+    "closing": "Closing",
     "total_supply": "Total Supply",
     "market_cap": "Market Cap",
     "launch_ratio": "Launch Ratio",

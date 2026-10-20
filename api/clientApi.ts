@@ -33,6 +33,13 @@ class ClientApi {
     chain: string,
     network: string,
   ): string => {
+    if (network === 'regtest') {
+      const base = chain === 'SatoshiNet'
+        ? process.env.NEXT_PUBLIC_REGTEST_L2_INDEXER_URL
+        : process.env.NEXT_PUBLIC_REGTEST_L1_INDEXER_URL;
+      if (!base) throw new Error('Regtest indexer URL is not configured');
+      return `${base.replace(/\/$/, '')}/${path}`;
+    }
     if (chain === 'SatoshiNet') {
       return `${this.BASE_URL}/satsnet${
         network === 'testnet' ? '/testnet' : '/mainnet'
@@ -145,8 +152,7 @@ class ClientApi {
 
     // 3. 都没有则请求接口
     const { network } = useCommonStore.getState();
-    const baseUrl = `${this.BASE_URL}${network === 'testnet' ? '/btc/testnet' : '/btc/mainnet'}`;
-    const url = `${baseUrl}/v3/tick/info/${ticker}`;
+    const url = this.generatePath(`v3/tick/info/${ticker}`, 'Bitcoin', getConfiguredNetwork());
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -307,6 +313,11 @@ class ClientApi {
   getRecommendedFees = async (): Promise<any> => {
     const store = useCommonStore.getState();
     const { network } = store;
+    if (getConfiguredNetwork() === 'regtest') {
+      const result: any = await this.request('v3/bitcoin/fee-rate', {}, 'GET', {chain: 'Bitcoin'});
+      if (result.code !== 0 || result.data?.unit !== 'sat/vB') throw new Error(result.msg || 'Regtest fee rate unavailable');
+      return { fastestFee: result.data.fast, halfHourFee: result.data.normal, hourFee: result.data.slow };
+    }
     const url = `https://apiprd.ordx.market/${
       network === 'mainnet' ? '' : 'testnet/'
     }ordx/GetRecommendedFees`;
@@ -326,6 +337,13 @@ class ClientApi {
 
   getLptHolders = async (contractUrl: string): Promise<any> => {
     const { network } = useCommonStore.getState();
+    if (getConfiguredNetwork() === 'regtest') {
+      const base = process.env.NEXT_PUBLIC_REGTEST_STP_URL;
+      if (!base) throw new Error('Regtest STP URL is not configured');
+      const response = await fetch(`${base}/info/contract/liqprovider/${contractUrl}`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    }
     const baseUrl = 'https://apiprd.sat20.org/stp';
     const networkPath = network === 'mainnet' ? 'mainnet' : 'testnet';
     const url = `${baseUrl}/${networkPath}/info/contract/liqprovider/${contractUrl}`;

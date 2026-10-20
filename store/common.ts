@@ -2,14 +2,14 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 export type Chain = 'Bitcoin' | 'SatoshiNet';
-export type Network = 'mainnet' | 'testnet';
+export type Network = 'mainnet' | 'testnet' | 'regtest';
 
 export const getNetworkFromUrl = (): Network | undefined => {
   if (typeof window === 'undefined') {
     return undefined;
   }
   const value = new URLSearchParams(window.location.search).get('network');
-  return value === 'mainnet' || value === 'testnet' ? value : undefined;
+  return value === 'mainnet' || value === 'testnet' || value === 'regtest' ? value : undefined;
 };
 
 interface CommonState {
@@ -60,7 +60,7 @@ export const useCommonStore = create<CommonState>()(
           type: 'custom',
         },
         chain: 'SatoshiNet',
-        network: 'mainnet', // 保持服务端与客户端首次渲染一致
+        network: process.env.NEXT_PUBLIC_NETWORK === 'regtest' ? 'regtest' : 'mainnet',
         btcHeight: 0,
         satsnetHeight: 0,
         runtimeEnv: 'dev',
@@ -82,7 +82,7 @@ export const useCommonStore = create<CommonState>()(
         },
         setNetwork: (network) => {
           set({
-            network,
+            network: process.env.NEXT_PUBLIC_NETWORK === 'regtest' ? 'regtest' : network,
           });
         },
         setAppVersion: (version) => {
@@ -151,7 +151,7 @@ export const useCommonStore = create<CommonState>()(
           return {
             ...currentState,
             ...persisted,
-            network: urlNetwork ?? persisted.network ?? currentState.network,
+            network: process.env.NEXT_PUBLIC_NETWORK === 'regtest' ? 'regtest' : urlNetwork ?? persisted.network ?? currentState.network,
           };
         },
       },
@@ -170,7 +170,7 @@ const readPersistedNetwork = (): Network | undefined => {
 
     const persisted = JSON.parse(raw);
     const network = persisted?.state?.network;
-    return network === 'mainnet' || network === 'testnet' ? network : undefined;
+    return network === 'mainnet' || network === 'testnet' || network === 'regtest' ? network : undefined;
   } catch {
     return undefined;
   }
@@ -180,6 +180,7 @@ const readPersistedNetwork = (): Network | undefined => {
 // An explicit URL network is used for embedded PWA pages; otherwise use the
 // locally persisted Market setting before falling back to the in-memory store.
 export const getConfiguredNetwork = (): Network => {
+  if (process.env.NEXT_PUBLIC_NETWORK === 'regtest') return 'regtest';
   return getNetworkFromUrl()
     ?? readPersistedNetwork()
     ?? useCommonStore.getState().network;

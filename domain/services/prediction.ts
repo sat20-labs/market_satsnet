@@ -31,13 +31,20 @@ export function buildPredictionBetRequest(
   betAssetName: string,
   betAmount: string,
 ) {
+  const value = Number(betAmount);
+  if (betAssetName === '::' && (!Number.isSafeInteger(value) || value <= 0)) {
+    throw new Error('Satoshi bet amount must be a positive safe integer');
+  }
+  const funding = betAssetName === '::'
+    ? { Value: value }
+    : { Assets: [{ AssetName: betAssetName, Amount: betAmount }] };
   return {
     ContractType: CONTRACT_TYPE_AGENT,
     SubType: CONTRACT_SUBTYPE_PREDICTION,
     ContractAddress: contractAddress,
     Action: PREDICTION_BET_ACTION,
     Param: JSON.stringify({ outcome_id: outcomeID }),
-    Assets: [{ AssetName: betAssetName, Amount: betAmount }],
+    ...funding,
     GasLimit: DEFAULT_AGENT_GAS_LIMIT,
   };
 }

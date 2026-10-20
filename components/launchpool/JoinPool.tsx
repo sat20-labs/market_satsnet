@@ -43,8 +43,8 @@ const JoinPool = ({ closeModal, poolData }: JoinPoolProps) => {
   const [loading, setLoading] = useState(false);
 
   const infoList = [
-    { label: t('pages.joinPool.asset_name'), value: poolData?.assetName.Ticker },
-    { label: t('pages.joinPool.asset_protocol'), value: poolData?.assetName.Protocol },
+    { label: t('pages.joinPool.asset_name'), value: poolData?.assetNameObj?.Ticker },
+    { label: t('pages.joinPool.asset_protocol'), value: poolData?.assetNameObj?.Protocol },
     { label: t('pages.joinPool.binding_sat'), value: poolData?.bindingSat },
     { label: t('pages.poolDetail.mint_amt_per_sat'), value: poolData?.mintAmtPerSat },
     { label: t('pages.joinPool.contract_type'), value: poolData?.contractType },

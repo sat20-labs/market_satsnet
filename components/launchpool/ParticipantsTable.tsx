@@ -112,7 +112,7 @@ const fetchParticipantsWithPagination = async (
       sats = Math.floor((amount + bindingSat - 1) / bindingSat);
       
       // 计算退款数量
-      refundSats = v.invalid?.MintHistory?.reduce((acc: number, item: any) => acc + item.OutValue, 0) || 0;
+      refundSats = v.invalid?.Settled && v.invalid?.TotalAmt ? Number(v.invalid.TotalAmt.Value) / Math.pow(10, v.invalid.TotalAmt.Precision) : 0;
       
       return {
         ...v,
@@ -297,11 +297,11 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                     <TableRow>
                       <TableCell colSpan={showIndex ? 4 : 3} className="bg-zinc-800 p-3 text-sm text-zinc-300">
                         <div className="mb-1 font-semibold">Valid Txids:</div>
-                        {participant.valid?.MintHistory?.length === 0 || !participant.valid?.MintHistory ? (
+                        {participant.valid?.History?.length === 0 || !participant.valid?.History ? (
                           <div className="text-zinc-400">No Valid MintHistory</div>
                         ) : (
                           <ul className="space-y-1 mb-2">
-                            {participant.valid.MintHistory.map((item: any, i: number) => {
+                            {participant.valid.History.map((item: any, i: number) => {
                               const txid = item.InUtxo?.split(':')[0];
                               const amt = item.InValue;
                               return (
@@ -325,11 +325,11 @@ const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                           </ul>
                         )}
                         <div className="mb-1 font-semibold mt-2">Invalid Txids:</div>
-                        {participant.invalid?.MintHistory?.length === 0 || !participant.invalid?.MintHistory ? (
+                        {participant.invalid?.History?.length === 0 || !participant.invalid?.History ? (
                           <div className="text-zinc-400">No Invalid MintHistory</div>
                         ) : (
                           <ul className="space-y-1">
-                            {participant.invalid.MintHistory.map((item: any, i: number) => {
+                            {participant.invalid.History.map((item: any, i: number) => {
                               const txid = item.InUtxo?.split(':')[0];
                               const amt = item.RemainingValue;
                               return (

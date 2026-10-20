@@ -401,5 +401,7 @@
   "retry": "重试",
   "search": "搜索",
   "submitted_waiting": "已提交，等待审核/确认",
-  "invoke_failed": "调用失败"
+  "invoke_failed": "调用失败",
+  "asset_metadata_not_configured": "扩展资料服务未配置。",
+  "asset_metadata_unavailable": "扩展资料暂不可用。"
 }

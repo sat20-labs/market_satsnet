@@ -92,7 +92,7 @@ const LaunchPoolDetails = ({
                       <td className="p-3 font-bold text-zinc-400 w-1/3 whitespace-nowrap">{t('pages.poolDetail.status_label')}</td>
                       <td className="p-2 whitespace-nowrap">
                         <Badge className={`${statusColorMap[poolDetails.poolStatus]} text-white`}>
-                          {statusTextMap[poolDetails.poolStatus]}
+                          {Number(poolDetails.status) === 200 ? t('pages.launchpool.closing') : statusTextMap[poolDetails.poolStatus]}
                         </Badge>
                       </td>
                     </tr>
@@ -207,7 +207,7 @@ const LaunchPoolDetails = ({
                                   href={generateMempoolUrl({
                                     network: network,
                                     path: `tx/${txid}`,
-                                    chain: Chain.BTC,
+                                    chain: Chain.SATNET,
                                     env: 'dev',
                                   })}
                                   target="_blank"
@@ -237,7 +237,7 @@ const LaunchPoolDetails = ({
                                   href={generateMempoolUrl({
                                     network: network,
                                     path: `tx/${txid}`,
-                                    chain: Chain.BTC,
+                                    chain: Chain.SATNET,
                                     env: 'dev',
                                   })}
                                   target="_blank"

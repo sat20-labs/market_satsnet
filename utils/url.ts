@@ -36,6 +36,11 @@ export const generateMempoolUrl = ({
   chain?: Chain;
   env?: Env;
 }) => {
+  if (network === 'regtest') {
+    const base = chain === Chain.SATNET ? process.env.NEXT_PUBLIC_REGTEST_L2_MEMPOOL_URL : process.env.NEXT_PUBLIC_REGTEST_L1_MEMPOOL_URL;
+    if (!base) throw new Error('Regtest explorer URL is not configured');
+    return `${base.replace(/\/$/, '')}${path ? '/' + path : ''}`;
+  }
   const satMempoolUrl: Record<Env, string> = {
     dev: 'https://mempool.sat20.org',
     test: 'https://mempool.sat20.org',

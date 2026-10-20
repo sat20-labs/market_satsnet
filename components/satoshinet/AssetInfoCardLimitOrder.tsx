@@ -24,16 +24,16 @@ export function AssetInfoCardLimitOrder({
     isRefreshing
 }: AssetInfoCardLimitOrderProps) {
     const { t } = useTranslation();
-    // 格式化 symbol 显示为 satdog(ordx)
+    const metadataConfigured = Boolean(process.env.NEXT_PUBLIC_POINTS_API_BASE?.trim());
 
     const { data: assetMetaResp, error: assetMetaError } = useQuery({
         queryKey: ['assetMeta', asset],
         queryFn: () => getAsset(asset ?? ''),
-        enabled: !!asset,
+        enabled: !!asset && metadataConfigured,
         staleTime: 5 * 60 * 1000,
         refetchOnWindowFocus: false,
     });
-    const assetMeta: any = assetMetaResp?.data || assetMetaResp || {};
+    const assetMeta: any = metadataConfigured ? (assetMetaResp?.data || assetMetaResp || {}) : {};
     const website = assetMeta?.website as string | undefined;
     const twitter = assetMeta?.twitter as string | undefined;
     const telegram = assetMeta?.telegram as string | undefined;
@@ -44,23 +44,6 @@ export function AssetInfoCardLimitOrder({
         const s = description.trim();
         return s.length > 240 ? s.slice(0, 240) + '...' : s;
     }, [description]);
-
-    // 处理资产未找到（404）情况，类型守卫防止 ts 报错
-    if (
-        assetMetaError &&
-        (
-            (typeof assetMetaError === 'object' && assetMetaError !== null && 'response' in assetMetaError && (assetMetaError as any).response?.status === 404) ||
-            assetMetaError?.message?.includes('404')
-        )
-    ) {
-        return (
-            <div className="flex items-center gap-3 mb-2 pb-2">
-                <div className="bg-zinc-900 rounded-xl p-4 flex flex-col text-sm w-full border border-zinc-700 shadow-lg relative">
-                    <div className="text-red-400 text-center py-4">Asset not found.</div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="flex items-center gap-3 mb-2 pb-2">
@@ -141,6 +124,11 @@ export function AssetInfoCardLimitOrder({
                         </p>
                     </div>
                 </div>
+                {(!metadataConfigured || assetMetaError) && (
+                    <p role="status" className="ml-2 mb-2 text-xs text-zinc-500">
+                        {t(metadataConfigured ? 'common.asset_metadata_unavailable' : 'common.asset_metadata_not_configured')}
+                    </p>
+                )}
                 {shortDesc && (
                     <div className="ml-2 mb-2 text-sm text-zinc-500" title={description}>
                         {shortDesc}
