@@ -666,6 +666,16 @@ export const getSupportedContracts = async () => {
   return requestContract('/info/contracts/support', {});
 };
 
+// Registration is a separate, idempotent technical operation. The caller
+// verifies the signed public readback before it starts deployment.
+export const registerRGB11PublicContract = async (contentBase64: string) => {
+  return requestContract('/v3/rgb11/contracts/register', {
+    method: 'POST',
+    data: { contract_consignment_base64: contentBase64 },
+    timeout: 30000,
+  });
+};
+
 // 获取已部署合约信息
 export const getDeployedContractInfo = async () => {
   return requestContract('/info/contracts/deployed', {});

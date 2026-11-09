@@ -32,6 +32,10 @@ type Sat20PwaProvider = {
   lockUtxo_SatsNet: (...args: unknown[]) => Promise<unknown>;
   unlockUtxo_SatsNet: (...args: unknown[]) => Promise<unknown>;
   deployContract_Remote: (...args: unknown[]) => Promise<unknown>;
+  exportPublicRGB11Contract: (contractId: string) => Promise<unknown>;
+  getTickerInfo: (assetName: string) => Promise<unknown>;
+  listRGB11Tickers: () => Promise<unknown>;
+  verifyRGB11PublicContract: (contractId: string, contentBase64: string) => Promise<unknown>;
   invokeContract_SatsNet: (...args: unknown[]) => Promise<unknown>;
   invokeUnifiedContract: (...args: unknown[]) => Promise<unknown>;
   invokeContractV2: (...args: unknown[]) => Promise<unknown>;
@@ -223,6 +227,10 @@ const createProvider = (): Sat20PwaProvider => {
     lockUtxo_SatsNet: requestMethod('lockUtxo_SatsNet'),
     unlockUtxo_SatsNet: requestMethod('unlockUtxo_SatsNet'),
     deployContract_Remote: requestMethod('deployContract_Remote'),
+    exportPublicRGB11Contract: requestMethod('exportPublicRGB11Contract'),
+    getTickerInfo: requestMethod('getTickerInfo'),
+    listRGB11Tickers: requestMethod('listRGB11Tickers'),
+    verifyRGB11PublicContract: requestMethod('verifyRGB11PublicContract'),
     invokeContract_SatsNet: requestMethod('invokeContract_SatsNet'),
     invokeUnifiedContract: requestJsonMethod('invokeUnifiedContract'),
     invokeContractV2: requestMethod('invokeContractV2'),

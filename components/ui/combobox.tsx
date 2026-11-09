@@ -40,21 +40,9 @@ export function Combobox({
   disabled = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState("")
-
-  const handleInputChange = (newValue: string) => {
-    setInputValue(newValue)
-    // 如果输入的值不在选项中，直接更新外部值
-    const isOptionValue = options.some(option => option.value === newValue)
-    if (!isOptionValue) {
-      onValueChange(newValue)
-    }
-  }
 
   const handleSelect = (selectedValue: string) => {
-    const newValue = selectedValue === value ? "" : selectedValue
-    setInputValue("") // 清空输入框
-    onValueChange(newValue)
+    onValueChange(selectedValue)
     setOpen(false)
   }
 
@@ -72,7 +60,7 @@ export function Combobox({
           )}
           disabled={disabled}
         >
-          {value || placeholder}
+          {options.find(option => option.value === value)?.label || value || placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -80,7 +68,7 @@ export function Combobox({
         <Command>
           <CommandInput 
             placeholder={searchPlaceholder}
-            onValueChange={handleInputChange}
+            onValueChange={onValueChange}
           />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
@@ -89,6 +77,7 @@ export function Combobox({
                 <CommandItem
                   key={option.value}
                   value={option.value}
+                  keywords={[option.label]}
                   onSelect={handleSelect}
                 >
                   <Check

@@ -125,7 +125,7 @@ export const Header = () => {
             label: 'Batch Send',
             href: '/tools/batch-send',
           },
-          {
+          ...(!isRegtest || process.env.NEXT_PUBLIC_REGTEST_L2_MEMPOOL_URL ? [{
             label: t('pages.mempool.title'),
             href: isRegtest
               ? generateMempoolUrl({ network, chain: Chain.SATNET })
@@ -133,7 +133,7 @@ export const Header = () => {
               ? 'https://mempool.sat20.org/testnet/'
               : 'https://mempool.sat20.org/',
             target: '_blank',
-          },
+          }] : []),
           ...(isRegtest ? [] : [{
             label: t('pages.explorer.title'),
             href: network === 'testnet'

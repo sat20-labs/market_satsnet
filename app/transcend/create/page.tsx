@@ -8,13 +8,76 @@ import { Combobox } from '@/components/ui/combobox';
 import { Modal } from '@/components/ui/modal';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { useCommonStore } from '@/store/common';
+import { getConfiguredNetwork, useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { clientApi } from '@/api';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { useRouter } from 'next/navigation';
 import { getWalletAdapter } from '@/lib/walletAdapter';
+import { registerRGB11PublicContract } from '@/api/market';
 
+type RGB11TickerExt = {
+  asset_name: { Protocol: string; Type: string; Ticker: string };
+  contract_id: string;
+  schema_id: string;
+};
+
+const rgb11TickerContract = (tickerInfo: any, ticker: string): RGB11TickerExt => {
+  const expected = { Protocol: 'rgb11', Type: 'f', Ticker: ticker };
+  const name = tickerInfo?.data?.name;
+  const content = tickerInfo?.data?.content;
+  if (!name || name.Protocol !== expected.Protocol || name.Type !== expected.Type ||
+      name.Ticker !== expected.Ticker || typeof content !== 'string') {
+    throw new Error('RGB11 ticker identity is unavailable');
+  }
+  const raw = Uint8Array.from(atob(content), (char) => char.charCodeAt(0));
+  const ext = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(raw)) as RGB11TickerExt;
+  if (ext?.asset_name?.Protocol !== expected.Protocol || ext.asset_name.Type !== expected.Type ||
+      ext.asset_name.Ticker !== expected.Ticker || !ext.contract_id || !ext.schema_id) {
+    throw new Error('RGB11 ticker contract identity does not match the selected asset');
+  }
+  return ext;
+};
+
+const requireRGB11Registration = async (contract: RGB11TickerExt) => {
+  const wallet = getWalletAdapter();
+  const expectedNetwork = getConfiguredNetwork();
+  if (await wallet.getNetwork() !== expectedNetwork) {
+    throw new Error('Market and wallet networks do not match');
+  }
+  const publicContract = await wallet.exportPublicRGB11Contract(contract.contract_id);
+  if (!publicContract || !/^[0-9a-f]{64}$/.test(publicContract.contract_id) ||
+      publicContract.schema_id !== contract.schema_id ||
+      typeof publicContract.contract_consignment_base64 !== 'string') {
+    throw new Error('Validated public RGB11 contract is unavailable in this wallet');
+  }
+  let registrationError: unknown;
+  try {
+    const submitted = await registerRGB11PublicContract(publicContract.contract_consignment_base64);
+    if (submitted?.code !== 0 || submitted?.registration?.contract_id !== publicContract.contract_id ||
+        submitted?.registration?.schema_id !== publicContract.schema_id) {
+      throw new Error('RGB11 technical registration returned a different contract identity');
+    }
+  } catch (error) {
+    // An HTTP timeout can happen after Core commits. Only the wallet's
+    // authenticated public readback can resolve that unknown outcome.
+    registrationError = error;
+  }
+  let readback: any;
+  try {
+    readback = await wallet.verifyRGB11PublicContract(
+      contract.contract_id, publicContract.contract_consignment_base64);
+  } catch (error) {
+    throw registrationError ?? error;
+  }
+  if (readback?.contract_id !== publicContract.contract_id ||
+      readback?.schema_id !== publicContract.schema_id) {
+    throw new Error('RGB11 public contract readback does not match the selected contract');
+  }
+  if (getConfiguredNetwork() !== expectedNetwork || await wallet.getNetwork() !== expectedNetwork) {
+    throw new Error('Market or wallet network changed during RGB11 registration');
+  }
+};
 
 
 const CreateTranscend = () => {
@@ -33,16 +96,23 @@ const CreateTranscend = () => {
   const { network, btcFeeRate } = useCommonStore();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const router = useRouter();
+  const isRGB11 = formData.protocol === 'rgb11';
   const { data: summaryData } = useQuery({
     queryKey: ['summary', address, network],
     queryFn: () => clientApi.getAddressSummary(address, Chain.BTC),
     refetchInterval: 15000, // 增加到15秒，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
-    enabled: !!address,
+    enabled: !!address && !isRGB11,
   });
-  console.log('summaryData 123', summaryData);
-  const assetList = summaryData?.data || [];
-  console.log('summaryQuery data', assetList);
+  const rgbTickers = useQuery({
+    queryKey: ['wallet-rgb11-tickers', address, network],
+    queryFn: () => getWalletAdapter().listRGB11Tickers(),
+    enabled: !!address && isRGB11,
+    retry: false,
+  });
+  useEffect(() => {
+    setFormData(prev => prev.protocol === 'rgb11' && prev.ticker ? { ...prev, ticker: '' } : prev);
+  }, [address, network]);
 
   const { satsnetHeight } = useCommonStore();
   const contractType = 'transcend.tc';
@@ -64,9 +134,14 @@ const CreateTranscend = () => {
     }
 
     // 验证ticker是否存在
+    let rgb11Contract: RGB11TickerExt | undefined;
     try {
       const tickerAsset = `${formData.protocol}:f:${formData.ticker}`;
-      const tickerInfo = await clientApi.getTickerInfo(tickerAsset);
+      // RGB11 identity and validated metadata are wallet-local, not an L1
+      // indexer ticker. Keep the existing public registration/readback below.
+      const tickerInfo = formData.protocol === 'rgb11'
+        ? { code: 0, data: JSON.parse((await getWalletAdapter().getTickerInfo(tickerAsset)).ticker) }
+        : await clientApi.getTickerInfo(tickerAsset);
       console.log('tickerInfo', tickerInfo);
 
       // 检查返回的数据结构，code为-1表示ticker不存在
@@ -80,8 +155,12 @@ const CreateTranscend = () => {
         toast.error(t('notification.ticker_not_exist', { ticker: formData.ticker }));
         return;
       }
+      if (formData.protocol === 'rgb11') {
+        rgb11Contract = rgb11TickerContract(tickerInfo, formData.ticker);
+      }
     } catch (error) {
-      toast.error(t('notification.ticker_not_exist', { ticker: formData.ticker }));
+      toast.error(formData.protocol === 'rgb11' && error instanceof Error
+        ? error.message : t('notification.ticker_not_exist', { ticker: formData.ticker }));
       return;
     }
 
@@ -98,9 +177,12 @@ const CreateTranscend = () => {
       assetName,
     };
     try {
+      if (rgb11Contract) {
+        await requireRGB11Registration(rgb11Contract);
+      }
       const result = await getWalletAdapter().deployContractRemote(contractType, JSON.stringify(params), btcFeeRate.value.toString(), bol);
     } catch (error) {
-      toast.error(t('notification.contract_deployment_failed'));
+      toast.error(error instanceof Error ? error.message : t('notification.contract_deployment_failed'));
     }
 
   }
@@ -127,18 +209,15 @@ const CreateTranscend = () => {
     }
   }
 
-  const isFormComplete = !!(formData.protocol && formData.ticker);
-
-  // 在组件内部 return 之前，插入过滤ticker的逻辑
-  // 根据protocol过滤assetList，且Type为'f'且Ticker非空
-  console.log('assetList', assetList);
-  const filteredTickerOptions = assetList.filter(
-    (item) =>
-      item.Name &&
-      item.Name.Protocol === formData.protocol &&
-      item.Name.Type === 'f' &&
-      item.Name.Ticker
-  );
+  const isFormComplete = isRGB11 ? /^[0-9a-f]{64}$/.test(formData.ticker) : !!(formData.protocol && formData.ticker);
+  const tickerOptions = isRGB11
+    ? (rgbTickers.data ?? []).map(({ ticker, displayName }) => ({
+        value: ticker,
+        label: displayName === ticker ? ticker : `${displayName} (${ticker.slice(0, 8)}…${ticker.slice(-6)})`,
+      }))
+    : (summaryData?.data ?? [])
+        .filter(({ Name }) => Name?.Protocol === formData.protocol && Name.Type === 'f' && Name.Ticker)
+        .map(({ Name }) => ({ value: Name.Ticker, label: Name.Ticker }));
 
   return (
     <div className="p-6 max-w-[1360px] mx-auto rounded-lg shadow-md">
@@ -180,11 +259,12 @@ const CreateTranscend = () => {
           <div className="flex items-center gap-4">
             <label className="block text-sm font-medium text-gray-300">{t('pages.createPool.protocol.title')}</label>
             <Select onValueChange={(value) => handleInputChange('protocol', value)} value={formData.protocol}>
-              <SelectTrigger className="w-56 py-4 h-12">{t(`pages.createPool.protocol.${formData.protocol}`) || t('pages.createPool.selectProtocol')}</SelectTrigger>
+              <SelectTrigger className="w-56 py-4 h-12">{formData.protocol === 'rgb11' ? 'RGB11' : t(`pages.createPool.protocol.${formData.protocol}`) || t('pages.createPool.selectProtocol')}</SelectTrigger>
               <SelectContent className="max-h-60 overflow-y-auto">
                 <SelectItem value="ordx" className="h-9 py-2">{t('pages.createPool.protocol.ordx')}</SelectItem>
                 <SelectItem value="runes" className="h-9 py-2">{t('pages.createPool.protocol.runes')}</SelectItem>
                 <SelectItem value="brc20" className="h-9 py-2">{t('pages.createPool.protocol.brc20')}</SelectItem>
+                <SelectItem value="rgb11" className="h-9 py-2">RGB11</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -192,15 +272,13 @@ const CreateTranscend = () => {
           <Combobox
             value={formData.ticker}
             onValueChange={(value) => handleInputChange('ticker', value)}
-            options={filteredTickerOptions.map((item) => ({
-              value: item.Name.Ticker,
-              label: item.Name.Ticker
-            }))}
+            options={tickerOptions}
             placeholder={t('pages.createPool.selectTicker')}
             searchPlaceholder="Search or type ticker..."
             emptyText="No ticker found. You can type a custom ticker."
             className="w-full"
           />
+          {isRGB11 && rgbTickers.isError && <p role="alert">{rgbTickers.error.message}</p>}
           {formData.protocol === 'runes' && (
             <p className="mt-1 text-xs text-gray-400">
               {t('pages.createPool.runesTickerNote')}

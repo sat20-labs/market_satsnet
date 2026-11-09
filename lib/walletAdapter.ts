@@ -28,9 +28,13 @@ export interface WalletAdapter {
   getAssetAmount: (address: string, assetName: string) => Promise<any>;
   getDeployedContractStatus: (contractUrl: string) => Promise<any>;
   getSupportedContracts: () => Promise<any>;
+  getTickerInfo: (assetName: string) => Promise<any>;
+  listRGB11Tickers: () => Promise<{ ticker: string; displayName: string }[]>;
   getParamForInvokeContract: (contractType: string, method: string) => Promise<any>;
   switchNetwork: (network: string) => Promise<any>;
   deployContractRemote: (contractType: string, params: string, feeRate: string, broadcast: boolean) => Promise<any>;
+  exportPublicRGB11Contract: (contractId: string) => Promise<any>;
+  verifyRGB11PublicContract: (contractId: string, contentBase64: string) => Promise<any>;
   invokeContractSatsNet: (contractUrl: string, params: string, feeRate: string) => Promise<any>;
   invokeUnifiedContract: (req: Record<string, unknown>) => Promise<any>;
   invokeContractV2: (...args: unknown[]) => Promise<any>;
@@ -329,6 +333,11 @@ export const getWalletAdapter = (btcWallet?: any): WalletAdapter => {
       return callSat20('getSupportedContracts')
         .then((result) => withTopLevelData(result, ['contractContents']));
     },
+    getTickerInfo: (assetName: string) => {
+      return callSat20('getTickerInfo', assetName)
+        .then((result) => withTopLevelData(result, ['ticker']));
+    },
+    listRGB11Tickers: () => callSat20('listRGB11Tickers'),
     getParamForInvokeContract: (contractType: string, method: string) => {
       return callSat20('getParamForInvokeContract', contractType, method);
     },
@@ -337,6 +346,12 @@ export const getWalletAdapter = (btcWallet?: any): WalletAdapter => {
     },
     deployContractRemote: (contractType: string, params: string, feeRate: string, broadcast: boolean) => {
       return callSat20('deployContract_Remote', contractType, params, feeRate, broadcast);
+    },
+    exportPublicRGB11Contract: (contractId: string) => {
+      return callSat20('exportPublicRGB11Contract', contractId);
+    },
+    verifyRGB11PublicContract: (contractId: string, contentBase64: string) => {
+      return callSat20('verifyRGB11PublicContract', contractId, contentBase64);
     },
     invokeContractSatsNet: (contractUrl: string, params: string, feeRate: string) => {
       return callSat20('invokeContract_SatsNet', contractUrl, params, feeRate);

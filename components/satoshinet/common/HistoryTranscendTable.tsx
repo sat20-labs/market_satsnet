@@ -187,6 +187,30 @@ export default function HistorySwapTable({
         return <div className="text-center py-2 text-gray-500">{noDataMessage}</div>;
     }
 
+    const renderTransactionReference = (value: string | undefined, transactionChain: Chain) => {
+        if (!value) return "-";
+
+        const regtestExplorerUrl = transactionChain === Chain.SATNET
+            ? process.env.NEXT_PUBLIC_REGTEST_L2_MEMPOOL_URL
+            : process.env.NEXT_PUBLIC_REGTEST_L1_MEMPOOL_URL;
+        if (network === 'regtest' && !regtestExplorerUrl) {
+            return <span className="break-all font-mono text-xs">{value}</span>;
+        }
+
+        const txid = value.split(':')[0];
+        return (
+            <a
+                href={generateMempoolUrl({ network, path: `tx/${txid}`, chain: transactionChain, env: 'dev' })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center hover:text-primary"
+                title={value}
+            >
+                <ExternalLink className="h-4 w-4" />
+            </a>
+        );
+    };
+
 
     return (
         <div className="max-w-full">
@@ -259,32 +283,10 @@ export default function HistorySwapTable({
                                     </TableCell>
 
                                     <TableCell className="text-center">
-                                        {order.rawData.OutTxId ? (
-                                            <a
-                                                href={generateMempoolUrl({ network: network, path: `tx/${order.rawData.OutTxId}`, chain: order.rawData?.ToL1 ? Chain.BTC : Chain.SATNET, env: 'dev' })}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center justify-center hover:text-primary"
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                            </a>
-                                        ) : (
-                                            "-"
-                                        )}
+                                        {renderTransactionReference(order.rawData.OutTxId, order.rawData.ToL1 ? Chain.BTC : Chain.SATNET)}
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        {order.rawData.InUtxo ? (
-                                            <a
-                                                href={generateMempoolUrl({ network: network, path: `tx/${order.rawData.InUtxo}`, chain: order.rawData.FromL1 ? Chain.BTC : Chain.SATNET, env: 'dev' })}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center justify-center hover:text-primary"
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                            </a>
-                                        ) : (
-                                            "-"
-                                        )}
+                                        {renderTransactionReference(order.rawData.InUtxo, order.rawData.FromL1 ? Chain.BTC : Chain.SATNET)}
                                     </TableCell>
                                     <TableCell className="text-center">{order.reason}</TableCell>
                                 </TableRow>
@@ -301,4 +303,4 @@ export default function HistorySwapTable({
             </div>
         </div>
     );
-} 
+}
