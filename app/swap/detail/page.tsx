@@ -57,10 +57,12 @@ function OrderPageContent() {
   const requestedContractUrl = params.get("contractUrl");
   const { t } = useTranslation();
 
+  const [chartMode, setChartMode] = useState<"line" | "lw">("lw");
   const {
     tickerInfo,
     swapData: swapStatusData,
     isLoading,
+    loadError,
     contractUrl,
     satsBalance,
     assetBalance,
@@ -76,7 +78,7 @@ function OrderPageContent() {
     refreshAnalytics,
     refreshBalances,
     refreshAll,
-  } = useSwapDetailData(asset ?? "", requestedContractUrl ?? undefined);
+  } = useSwapDetailData(asset ?? "", requestedContractUrl ?? undefined, chartMode === "line");
   const protocol = useMemo(
     () => swapStatusData?.Contract?.assetName?.Protocol || "",
     [swapStatusData],
@@ -147,7 +149,7 @@ function OrderPageContent() {
   };
 
   // Hydration-safe chart mode (avoid SSR/CSR text mismatch)
-  const [chartMode, setChartMode] = useState<"line" | "lw">("lw");
+
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     setHydrated(true);
@@ -172,10 +174,11 @@ function OrderPageContent() {
       </div>
     );
   }
+  if (loadError) return <div role="alert" className="p-4">{t("common.fetch_failed")}</div>;
   if (isLoading) {
     return <Loading />;
   }
-  if (!swapStatusData) {
+  if (!contractUrl) {
     return (
       <div className="w-full mt-4">
         <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
@@ -185,14 +188,7 @@ function OrderPageContent() {
     );
   }
 
-  // contractUrl 尚未解析出来时，避免向需要 string 的子组件传 undefined
-  if (!contractUrl) {
-    return (
-      <div className="w-full flex items-center justify-center py-10" suppressHydrationWarning>
-        <Loading />
-      </div>
-    );
-  }
+  if (!swapStatusData) return <div role="alert" className="p-4">{t("common.fetch_failed")}</div>;
 
   // Global hydration guard: avoid SSR/CSR text mismatch (translations, store-derived text, wallet state)
   if (!hydrated) {
@@ -238,6 +234,8 @@ function OrderPageContent() {
               <div className={`w-full ${chartHeights_div}`}>
                 {hydrated && chartMode === "line" && (
                   <ChartModule
+                    lastPrice={swapStatusData?.lastDealPrice}
+                    pct24h={swapStatusData?.pct24h}
                     asset={asset}
                     ticker={ticker}
                     isLoading={isAnalyticsLoading}
@@ -256,7 +254,7 @@ function OrderPageContent() {
                 )} */}
                 {hydrated && chartMode === "lw" && (
                   <div className="w-full h-full">
-                    <LightweightKline
+                    <LightweightKline lastPrice={swapStatusData?.lastDealPrice} change24h={swapStatusData?.pct24h}
                       symbol={contractUrl}
                       initialResolution="4H"
                       chartHeights={{ volumeRatio: 0.3, height: cHeights }}

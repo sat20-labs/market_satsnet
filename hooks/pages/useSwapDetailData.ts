@@ -1,35 +1,16 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { clientApi, marketApi } from "@/api";
+import { marketDetail } from "@/api/marketView";
+import { useQuery } from "@tanstack/react-query";
+import { clientApi } from "@/api";
 import { contractService } from "@/domain/services/contract";
 import { getContractStatusByAddress } from "@/api/market";
 import { useMemo } from "react";
 import { getConfiguredNetwork, useCommonStore, useWalletStore } from "@/store";
 import { useAssetBalance } from '@/application/useAssetBalanceService';
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
-import { LptAmount, UserContractStatus, ParsedContractStatus } from "@/types";
-import { resolveSwapContractUrl } from "@/components/satoshinet/swap/swapContract";
+import { LptAmount, ParsedContractStatus } from "@/types";
 
-interface TickerInfo {
-  name: {
-    Protocol: string;
-    Type: string;
-    Ticker: string;
-  };
-  displayname: string;
-  id: number;
-  selfmint: number;
-  deployHeight: number;
-  deployBlockTime: number;
-  deployTx: string;
-  limit: string;
-  n: number;
-  totalMinted: string;
-  mintTimes: number;
-  maxSupply: string;
-  holdersCount: number;
-}
 
-export const useSwapDetailData = (asset: string, initialContractUrl?: string) => {
+export const useSwapDetailData = (asset: string, initialContractUrl?: string, showAnalytics = false) => {
   console.log('asset', asset);
   const { network } = useCommonStore();
   const effectiveNetwork = getConfiguredNetwork() ?? network;
@@ -46,40 +27,27 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
   });
   const holdersQuery = useQuery<any>({
     queryKey: ['ticker', 'holders', asset, effectiveNetwork],
-    queryFn: () => clientApi.getTickerHolders(asset, 1, 10),
+    queryFn: () => clientApi.getTickerHolders(asset, 1, 1),
     enabled: !!asset,
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
     refetchOnWindowFocus: false,
   });
 
-  // 查询参数中的 contractUrl 只是提示；始终用当前网络的部署列表验证。
-  const contractUrlQuery = useQuery({
-    queryKey: ['contractUrl', effectiveNetwork],
-    queryFn: () => contractService.getDeployedContractInfo(),
-    enabled: !!asset,
+  const detail = useQuery({
+    queryKey: ['marketDetail', 'amm', asset, initialContractUrl, effectiveNetwork],
+    queryFn: () => marketDetail('amm', asset, initialContractUrl),
+    enabled: !!asset, staleTime: 10_000, refetchInterval: 15_000,
+    refetchOnWindowFocus: false, refetchIntervalInBackground: false,
   });
+  const contractUrl = detail.data?.contractURL;
 
-  const contractUrl = useMemo(() => {
-    const list: string[] = contractUrlQuery.data ?? [];
-    return resolveSwapContractUrl(list, asset, initialContractUrl);
-  }, [contractUrlQuery.data, asset, initialContractUrl]);
-
-  const { data: swapStatus, isPending: isSwapStatusPending, isLoading: isSwapStatusLoading, refetch: refetchStatus } = useQuery({
-    queryKey: ["amm", 'status', contractUrl, effectiveNetwork],
-    queryFn: () => contractService.getContractStatus(contractUrl!),
-    refetchInterval: 15000, // 增加到15秒，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
-    enabled: !!contractUrl,
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: analytics, isPending: isAnalyticsPending, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
+  const { data: analytics, isLoading: isAnalyticsLoading, refetch: refetchAnalytics } = useQuery({
     queryKey: ["amm", 'analytics', contractUrl, effectiveNetwork],
     queryFn: () => contractService.getContractAnalytics(contractUrl!),
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
-    enabled: !!contractUrl,
+    enabled: !!contractUrl && showAnalytics,
     refetchOnWindowFocus: false,
   });
 
@@ -92,64 +60,14 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string) =>
     enabled: !!contractUrl && !!address,
     refetchOnWindowFocus: false,
   });
-// console.log('analytics', analytics);
-//   console.log('tickerQuery', tickerQuery);
-//   console.log('isSwapStatusPending', isSwapStatusPending);
-//   console.log('isAnalyticsPending', isAnalyticsPending);
-//   console.log('userContractStatus', userContractStatus);
-  
+  const isLoading = detail.isLoading;
 
-// console.log('analytics', analytics);
-//   console.log('tickerQuery', tickerQuery);
-//   console.log('isSwapStatusPending', isSwapStatusPending);
-//   console.log('isAnalyticsPending', isAnalyticsPending);
-//   console.log('userContractStatus', userContractStatus);
-  
-  // 只有在有 contractUrl 时才考虑 swapStatus 和 analytics 的 loading 状态
-  // 只有在有 address 且在测试网时才考虑 userContractStatus 的 loading 状态
-  const isLoading = tickerQuery.isPending || 
-    (!!contractUrl && isSwapStatusPending) || 
-    (!!contractUrl && isAnalyticsPending) || 
-    (address && isUserContractStatusPending
-  // 调试信息
-  // console.log('Loading states:', {
-  //   tickerQuery: tickerQuery.isPending,
-  //   isSwapStatusPending,
-  //   isAnalyticsPending,
-  //   isUserContractStatusPending,
-  //   address,
-  //   network,
-  //   ticker,
-  //   contractUrl,
-  //   contractUrlQueryData: contractUrlQuery.data,
-  //   finalIsLoading: isLoading,
-  //   initialContractUrl
-  // });
-
-);
-
-  // 调试信息
-  // console.log('Loading states:', {
-  //   tickerQuery: tickerQuery.isPending,
-  //   isSwapStatusPending,
-  //   isAnalyticsPending,
-  //   isUserContractStatusPending,
-  //   address,
-  //   network,
-  //   ticker,
-  //   contractUrl,
-  //   contractUrlQueryData: contractUrlQuery.data,
-  //   finalIsLoading: isLoading,
-  //   initialContractUrl
-  // });
-
-  
   const { balance: satsBalance, getBalance } = useWalletStore();
   const { balance: assetBalance, refetch: refreshAssetBalance } = useAssetBalance(address, asset);
 
   // 分别导出不同的刷新函数
   const refreshSwapStatus = () => {
-    refetchStatus();
+    detail.refetch();
   };
 
   const refreshAnalytics = () => {
@@ -222,14 +140,15 @@ console.log('parsedStatus', parsedStatus)
   return {
     ticker,
     isTickerLoading: tickerQuery.isLoading,
-    isSwapStatusLoading,
+    isSwapStatusLoading: detail.isLoading,
     isAnalyticsLoading,
     isUserContractStatusLoading,
     tickerInfo: tickerQuery.data?.data || {},
     holders: holdersQuery.data?.data || {},
     isLoading,
+    loadError: detail.error,
     contractUrl,
-    swapData: swapStatus,
+    swapData: detail.data,
     satsBalance,
     assetBalance,
     analyticsData: analytics,

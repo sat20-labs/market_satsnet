@@ -1,3 +1,14 @@
+import { getDeployedContractInfo } from "@/api/market";
+
+export async function getSwapDirectory(): Promise<string[]> {
+  const res = await getDeployedContractInfo();
+  const urls = res?.url ?? res?.data?.url;
+  if (!Array.isArray(urls) || !urls.every((url) => typeof url === "string")) {
+    throw new Error("Invalid contract directory");
+  }
+  return urls;
+}
+
 export const resolveSwapContractUrl = (
   deployedContracts: unknown,
   asset: string,

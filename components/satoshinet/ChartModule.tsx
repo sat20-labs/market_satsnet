@@ -7,10 +7,8 @@ import { ContentLoading } from '@/components/ContentLoading';
 import { ButtonRefresh } from '@/components/buttons/ButtonRefresh';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AssetLogo from '@/components/AssetLogo';
-import { getAsset, getContractPriceChange } from '@/api/market';
 import Link from 'next/link';
 import { t } from 'i18next';
-import { useQuery } from '@tanstack/react-query';
 import { Icon } from '@iconify/react';
 
 interface ChartModuleProps {
@@ -21,7 +19,9 @@ interface ChartModuleProps {
   refresh?: () => void;
   isRefreshing?: boolean;
   chartHeight?: string; // NEW: optional height classes for chart container
-  contractUrl?: string; // NEW: contract url for price change API
+  contractUrl?: string;
+  lastPrice?: number | string;
+  pct24h?: number | null;
   onSwitchToKline?: () => void; // NEW: callback to switch to TradingView Kline mode
 }
 
@@ -33,7 +33,7 @@ export const ChartModule = ({
   refresh,
   isRefreshing = false,
   chartHeight = '', // default empty so existing layouts unaffected
-  contractUrl,
+  contractUrl, lastPrice, pct24h,
   onSwitchToKline,
 }: ChartModuleProps) => {
   const [type, setType] = useState('15m');
@@ -163,21 +163,6 @@ export const ChartModule = ({
   ];
   const protocol = asset?.split(':')[0] || '';
 
-  const { data: priceChangeData } = useQuery({
-    queryKey: ['chartPriceChange', contractUrl],
-    enabled: !!contractUrl,
-    queryFn: async () => {
-      if (!contractUrl) return null;
-      const d = await getContractPriceChange(contractUrl);
-      return d;
-    },
-    gcTime: 60 * 1000,
-    refetchInterval: 60 * 1000,
-  });
-
-  const lastPrice = priceChangeData?.last_price;
-  // 价格涨跌幅始终显示24h
-  const pct24h = priceChangeData?.pct_24h;
   const pctSign = pct24h && pct24h > 0 ? '+' : '';
   const ptcPrice = pct24h != null ? `${pctSign}${(pct24h * 100).toFixed(2)}%` : '--';
   const pctClass = pct24h == null ? 'text-zinc-400' : pct24h > 0 ? 'text-green-500' : pct24h < 0 ? 'text-red-500' : 'text-zinc-400';

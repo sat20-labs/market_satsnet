@@ -15,21 +15,16 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CustomPagination } from "@/components/ui/CustomPagination";
 import { useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
 import { getConfiguredNetwork, useCommonStore } from "@/store/common";
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { useReactWalletStore } from "@sat20/btc-connect/dist/react";
 import { BtcPrice } from "@/components/BtcPrice";
-import {
-  getDeployedContractInfo,
-  getContractStatus,
-  getContractPriceChange,
-} from "@/api/market";
+import { marketList } from "@/api/marketView";
 import { Button } from "@/components/ui/button";
 import { WalletConnectBus } from "@/components/wallet/WalletConnectBus";
-import AssetLogo from "@/components/AssetLogo";
-import { useSwapDetailData } from "@/hooks/pages/useSwapDetailData";
+import { AssetLogoImage } from "@/components/AssetLogo";
+import { getAssetLogos } from "@/api/market";
 import { getValueFromPrecision, formatLargeNumber } from "@/utils";
 import { clientApi } from "@/api";
 // import { Icon } from 'lucide-react';
@@ -122,11 +117,6 @@ function adaptPoolData(pool, satsnetHeight) {
   const lastDealPrice = Number(pool.LastDealPrice ?? pool.lastDealPrice ?? 0);
   const derivedDealPrice =
     assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0; // latest pool price
-  let effectivePoolPrice = derivedDealPrice;
-  if (effectivePoolPrice === 0) {
-    if (rawDealPrice > 0) effectivePoolPrice = rawDealPrice;
-    else if (lastDealPrice > 0) effectivePoolPrice = lastDealPrice;
-  }
   const finalDealPrice =
     rawDealPrice > 0
       ? rawDealPrice
@@ -135,23 +125,10 @@ function adaptPoolData(pool, satsnetHeight) {
         : lastDealPrice > 0
           ? lastDealPrice
           : 0;
-  const volume24hBtc = Number(pool?.["24hour"]?.volume ?? 0);
+  const volume24hBtc = Number(pool.volume24h ?? pool?.["24hour"]?.volume ?? 0);
 
   const maxSupply = getMaxSupply(pool);
-  const marketCap = maxSupply > 0 ? effectivePoolPrice * maxSupply : 0;
-  if (marketCap === 0) {
-    console.debug("[Swap MarketCap Debug]", {
-      id: pool?.contractURL,
-      maxSupply,
-      effectivePoolPrice,
-      satsValueInPool,
-      assetAmtInPool,
-      rawDealPrice,
-      lastDealPrice,
-      derivedDealPrice,
-      supplyKeys: Object.keys(pool || {}).filter((k) => /supply/i.test(k)),
-    });
-  }
+  const marketCap = maxSupply > 0 ? finalDealPrice * maxSupply : 0;
 
   return {
     ...pool,
@@ -218,6 +195,40 @@ const TickerName = ({
     </div>
   );
 };
+
+function LinkPending() {
+  const { pending } = useLinkStatus();
+  const { t } = useTranslation();
+  return pending ? <span role="status" className="text-xs">{t("common.loading")}</span> : null;
+}
+
+function sortPools(list: any[], sortKey: string, sortOrder: "asc" | "desc") {
+    return list.slice().sort((a, b) => {
+      let vA = a[sortKey] ?? 0;
+      let vB = b[sortKey] ?? 0;
+      // assetName 字符串排序
+      if (sortKey === "assetName") {
+        vA = String(vA).toLowerCase();
+        vB = String(vB).toLowerCase();
+        if (vA < vB) return sortOrder === "asc" ? -1 : 1;
+        if (vA > vB) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      }
+      vA = Number(vA);
+      vB = Number(vB);
+      if (vA !== vB) return sortOrder === "asc" ? vA - vB : vB - vA;
+      // 次级排序：成交笔数、部署时间
+      const cA = Number(a.totalDealCount ?? 0);
+      const cB = Number(b.totalDealCount ?? 0);
+      if (cA !== cB) return cB - cA;
+      return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
+    });
+}
+
+function assetKey(pool: { assetNameObj: { Protocol: string; Type: string; Ticker: string } }) {
+  const { Protocol, Type, Ticker } = pool.assetNameObj;
+  return [Protocol, Type, Ticker].join(":");
+}
 
 const Swap = () => {
   const { t } = useTranslation(); // Specify the namespace
@@ -303,95 +314,11 @@ const Swap = () => {
     setSortOrder(order as "asc" | "desc");
   }, [sortDropdownValue]);
 
-  // 获取所有合约URL列表
-  const { data: contractURLsData, error: contractURLsError } = useQuery({
-    queryKey: ["ammContractURLs", network],
-    queryFn: async () => {
-      try {
-        const deployed = await getDeployedContractInfo();
-        const contractURLs =
-          deployed?.url || (deployed?.data && deployed.data.url) || [];
-
-        // 验证返回的数据是否为数组
-        if (!Array.isArray(contractURLs)) {
-          console.warn("Contract URLs data is not an array:", contractURLs);
-          return [];
-        }
-
-        return contractURLs.filter((c: string) => {
-          // 确保 c 是字符串且包含 'amm.tc'
-          return typeof c === "string" && c.indexOf("amm.tc") > -1;
-        });
-      } catch (error) {
-        console.error("Failed to get deployed contract info:", error);
-        throw error;
-      }
-    },
-    gcTime: 0,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
-    retry: 2, // 失败重试2次
-    retryDelay: 1000, // 重试间隔1秒
+  const {data: poolList = [], isLoading: poolsLoading, error: poolsError} = useQuery({
+    queryKey: ["marketList", "amm", effectiveNetwork],
+    queryFn: () => marketList("amm"),
+    staleTime: 60_000, refetchInterval: 120_000, refetchIntervalInBackground: false,
   });
-
-  // 全量获取合约状态（全局排序，前端分页）
-  const getSwapList = async () => {
-    if (!contractURLsData || contractURLsData.length === 0) {
-      return { pools: [], totalCount: 0 };
-    }
-
-    const statusList = await Promise.all(
-      contractURLsData.map(async (item: string) => {
-        try {
-          const { status } = await getContractStatus(item);
-          if (status) {
-            try {
-              const parsedStatus = JSON.parse(status);
-              return {
-                ...parsedStatus,
-                contractURL: item,
-              };
-            } catch (parseError) {
-              console.error(
-                `Failed to parse status for ${item}:`,
-                parseError,
-                "Raw status:",
-                status,
-              );
-              return null;
-            }
-          }
-          return null;
-        } catch (error) {
-          console.error(`Failed to get contract status for ${item}:`, error);
-          return null;
-        }
-      }),
-    );
-
-    const validPools = statusList.filter(Boolean);
-    return {
-      pools: validPools,
-      totalCount: validPools.length,
-    };
-  };
-
-  const {
-    data: poolListData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["ammList", network],
-    queryFn: () => getSwapList(),
-    enabled: !!contractURLsData,
-    gcTime: 0,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
-    retry: 2, // 失败重试2次
-    retryDelay: 1000, // 重试间隔1秒
-  });
-  //console.log('poolListData', poolListData);
-  const poolList = poolListData?.pools || [];
 
   const adaptedPoolList = useMemo(() => {
     return poolList
@@ -399,79 +326,34 @@ const Swap = () => {
       .filter(Boolean); // 过滤掉 null 值
   }, [poolList, satsnetHeight]);
 
-  // 获取价格涨跌幅
-  const priceChangeContracts = useMemo(
-    () => adaptedPoolList.map((p) => p.contractURL).filter(Boolean),
-    [adaptedPoolList],
-  );
-  const { data: priceChangeMap } = useQuery({
-    queryKey: ["swapPriceChanges", network, priceChangeContracts],
-    enabled: priceChangeContracts.length > 0,
-    gcTime: 60 * 1000,
-    queryFn: async () => {
-      const entries = await Promise.all(
-        priceChangeContracts.map(async (c: string) => {
-          const d = await getContractPriceChange(c);
-          return [c, d] as const;
-        }),
-      );
-      return Object.fromEntries(entries);
-    },
-  });
-
-  // 组装资产标识，用于获取 ticker 详情（参照 ticker/detail/page.tsx 使用的接口）
+  const [protocol, setProtocol] = useState("all");
+  const candidates = useMemo(() => protocol === "all" ? adaptedPoolList :
+    adaptedPoolList.filter((p) => p.protocol === protocol), [adaptedPoolList, protocol]);
+  const missingSupply = useMemo(() => new Set(candidates.filter(p => !p.maxSupply).map(assetKey)), [candidates]);
+  const testnetHolders = effectiveNetwork === "testnet";
+  const globalStats = (testnetHolders && sortKey === "holders") || (sortKey === "marketCap" && missingSupply.size > 0);
   const assetKeys = useMemo(() => {
-    return Array.from(
-      new Set(
-        (poolList || [])
-          .map((p: any) => {
-            const proto = p?.Contract?.assetName?.Protocol;
-            const ticker = p?.Contract?.assetName?.Ticker;
-            if (!proto || !ticker) return "";
-            return `${proto}:f:${ticker}`;
-          })
-          .filter(Boolean),
-      ),
-    );
-  }, [poolList]);
+    const start = (currentPage - 1) * pageSize;
+    const rows = globalStats ? candidates :
+      sortPools(candidates, sortKey, sortOrder).slice(start, start + pageSize);
+    return [...new Set<string>(rows.map(assetKey))];
+  }, [candidates, sortKey, sortOrder, currentPage, pageSize, globalStats]);
 
-  // 获取各资产 ticker 信息（含 maxSupply）
-  const { data: tickerInfoMap } = useQuery({
-    queryKey: ["ammTickerInfos", network, assetKeys],
-    enabled: assetKeys.length > 0,
+  const supplyKeys = assetKeys.filter(key => missingSupply.has(key));
+  // 仅补节点没有的资产资料。
+  const { data: tickerInfoMap, error: tickerError } = useQuery({
+    queryKey: ["ammTickerInfos", effectiveNetwork, supplyKeys],
+    enabled: supplyKeys.length > 0,
     gcTime: 10 * 60 * 1000,
     queryFn: async () => {
       const results = await Promise.all(
-        assetKeys.map(async (asset) => {
+        supplyKeys.map(async (asset) => {
           try {
             const res = await clientApi.getTickerInfo(asset);
             return [asset, res?.data || null] as const;
           } catch (e) {
             console.warn("getTickerInfo failed for", asset, e);
-            return [asset, null] as const;
-          }
-        }),
-      );
-      return Object.fromEntries(results);
-    },
-  });
-
-  // NEW: 获取各资产 holders 总数（使用 holders 接口 total，避免使用 tickerInfo.holdersCount 可能不准确）
-  const { data: holdersTotalsMap } = useQuery({
-    queryKey: ["holdersTotals", network, assetKeys],
-    enabled: assetKeys.length > 0,
-    gcTime: 60 * 1000,
-    staleTime: 30 * 1000,
-    queryFn: async () => {
-      const results = await Promise.all(
-        assetKeys.map(async (asset) => {
-          try {
-            const res = await clientApi.getTickerHolders(asset, 1, 1); // limit=1 取 total 即可
-            const total = res?.data?.total ?? 0;
-            return [asset, total] as const;
-          } catch (e) {
-            console.warn("getTickerHolders failed for", asset, e);
-            return [asset, 0] as const;
+            throw e;
           }
         }),
       );
@@ -481,9 +363,7 @@ const Swap = () => {
 
   // 将 ticker 的 maxSupply 应用到池子数据，优先使用 tickerInfo.maxSupply
   const mergedPoolList = useMemo(() => {
-    if (!adaptedPoolList || adaptedPoolList.length === 0)
-      return adaptedPoolList;
-    return adaptedPoolList.map((p: any) => {
+    return candidates.map((p: any) => {
       const ak = `${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`;
       const ti = tickerInfoMap?.[ak];
       let maxSupply = p.maxSupply;
@@ -505,16 +385,45 @@ const Swap = () => {
         maxSupply > 0
           ? (Number(p.dealPrice || 0) > 0 ? Number(p.dealPrice) : 0) * maxSupply
           : 0;
-      // NEW: 优先使用 holdersTotalsMap 的准确 total
-      const holders =
-        holdersTotalsMap?.[ak] ?? ti?.holdersCount ?? p.holders ?? 0;
-
-      return { ...p, maxSupply, marketCap, holders };
+      return { ...p, assetName: p.protocol === "brc20" ? (ti?.displayname || p.assetName) : p.assetName, maxSupply, marketCap };
     });
-  }, [adaptedPoolList, tickerInfoMap, holdersTotalsMap]);
+  }, [candidates, tickerInfoMap]);
 
-  const [protocol, setProtocol] = useState("all");
-  const protocolChange = (newProtocol) => setProtocol(newProtocol);
+  const holderKeys = useMemo(() => {
+    if (!testnetHolders) return [];
+    const start = (currentPage - 1) * pageSize;
+    const rows = sortKey === "holders" ? mergedPoolList :
+      sortPools(mergedPoolList, sortKey, sortOrder).slice(start, start + pageSize);
+    return [...new Set<string>(rows.map(assetKey))];
+  }, [testnetHolders, mergedPoolList, sortKey, sortOrder, currentPage, pageSize]);
+  // 测试网节点仍提供旧目录接口。
+  const { data: holdersTotalsMap, error: holdersError } = useQuery({
+    queryKey: ["holdersTotals", effectiveNetwork, holderKeys],
+    enabled: testnetHolders && holderKeys.length > 0,
+    gcTime: 60 * 1000,
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const results = await Promise.all(
+        holderKeys.map(async (asset) => {
+          try {
+            const res = await clientApi.getTickerHolders(asset, 1, 1); // limit=1 取 total 即可
+            const total = res?.data?.total ?? 0;
+            return [asset, total] as const;
+          } catch (e) {
+            console.warn("getTickerHolders failed for", asset, e);
+            throw e;
+          }
+        }),
+      );
+      return Object.fromEntries(results);
+    },
+  });
+
+  const listedPools = useMemo(() => testnetHolders
+    ? mergedPoolList.map(p => ({ ...p, holders: holdersTotalsMap?.[assetKey(p)] }))
+    : mergedPoolList, [mergedPoolList, holdersTotalsMap, testnetHolders]);
+
+  const protocolChange = (newProtocol) => { setProtocol(newProtocol); setCurrentPage(1); };
 
   const protocolTabs = [
     { label: t("pages.launchpool.all"), key: "all" },
@@ -523,37 +432,24 @@ const Swap = () => {
     { label: t("pages.launchpool.brc20"), key: "brc20" },
   ];
 
-  const sortedPoolList = useMemo(() => {
-    let list =
-      protocol === "all"
-        ? mergedPoolList
-        : mergedPoolList.filter((pool) => pool.protocol === protocol);
-    return list.slice().sort((a, b) => {
-      let vA = a[sortKey] ?? 0;
-      let vB = b[sortKey] ?? 0;
-      // assetName 字符串排序
-      if (sortKey === "assetName") {
-        vA = String(vA).toLowerCase();
-        vB = String(vB).toLowerCase();
-        if (vA < vB) return sortOrder === "asc" ? -1 : 1;
-        if (vA > vB) return sortOrder === "asc" ? 1 : -1;
-        return 0;
-      }
-      vA = Number(vA);
-      vB = Number(vB);
-      if (vA !== vB) return sortOrder === "asc" ? vA - vB : vB - vA;
-      // 次级排序：成交笔数、部署时间
-      const cA = Number(a.totalDealCount ?? 0);
-      const cB = Number(b.totalDealCount ?? 0);
-      if (cA !== cB) return cB - cA;
-      return Number(b.deployTime ?? 0) - Number(a.deployTime ?? 0);
-    });
-  }, [mergedPoolList, protocol, sortKey, sortOrder]);
-  console.log('sortedPoolList', sortedPoolList)
+  const sortedPoolList = useMemo(() => sortPools(listedPools, sortKey, sortOrder),
+    [listedPools, sortKey, sortOrder]);
+  const rankData = sortKey === "marketCap" ? tickerInfoMap : holdersTotalsMap;
+  const error = poolsError ?? (sortKey === "marketCap" ? tickerError : sortKey === "holders" ? holdersError : null);
+  const waitForRank = globalStats && candidates.length > 0 && !rankData;
+  const isLoading = poolsLoading || (waitForRank && !error);
   const pagedPoolList = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return sortedPoolList.slice(start, start + pageSize);
-  }, [sortedPoolList, currentPage, pageSize]);
+    return waitForRank ? [] : sortedPoolList.slice(start, start + pageSize);
+  }, [sortedPoolList, currentPage, pageSize, waitForRank]);
+
+  const logoKeys = useMemo(() => [...new Set<string>(pagedPoolList.map(assetKey))].sort(), [pagedPoolList]);
+  const { data: logos } = useQuery({
+    queryKey: ["assetLogos", effectiveNetwork, logoKeys],
+    queryFn: () => getAssetLogos(logoKeys),
+    enabled: !!process.env.NEXT_PUBLIC_POINTS_API_BASE && logoKeys.length > 0,
+    staleTime: 5 * 60_000, refetchOnWindowFocus: false, retry: false,
+  });
 
   const totalCount = sortedPoolList.length;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -599,13 +495,12 @@ const Swap = () => {
       </div>
 
       {/* 错误状态 */}
-      {(error || contractURLsError) && (
+      {error && (
         <div className="flex flex-col items-center justify-center py-8">
           <div className="text-red-500 mb-4">
             <h3 className="text-lg font-semibold">Loading failed</h3>
             <p className="text-sm text-gray-400 mt-1">
               {error?.message ||
-                contractURLsError?.message ||
                 "Network connection error, please check your network and try again."}
             </p>
           </div>
@@ -619,7 +514,7 @@ const Swap = () => {
       )}
 
       {/* 加载状态 */}
-      {(isLoading || !contractURLsData) && !error && !contractURLsError && (
+      {isLoading && !error && (
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <span className="ml-2 text-muted-foreground">
@@ -646,9 +541,8 @@ const Swap = () => {
           >
             <div className="flex-shrink-0 flex flex-col items-center justify-start w-12">
               <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                <AssetLogo
-                  protocol={p?.Contract?.assetName?.Protocol}
-                  ticker={p?.Contract?.assetName?.Ticker}
+                <AssetLogoImage
+                  logo={logos?.[assetKey(p)]}
                   className="w-10 h-10"
                 />
                 <AvatarFallback>
@@ -657,7 +551,7 @@ const Swap = () => {
                 </AvatarFallback>
               </Avatar>
               {(() => {
-                const pc = priceChangeMap?.[p.contractURL]?.pct_24h;
+                const pc = p.pct24h;
                 if (typeof pc === "number") {
                   const pct = pc * 100;
                   const up = pct > 0;
@@ -685,6 +579,7 @@ const Swap = () => {
             <div className="flex-1 min-w-0 flex flex-col gap-1">
               <div className="flex items-start justify-between gap-2">
                 <Link
+                  prefetch={false}
                   href={swapDetailHref(
                     `${p.assetNameObj?.Protocol}:f:${p.assetNameObj?.Ticker}`,
                     p.contractURL,
@@ -702,10 +597,12 @@ const Swap = () => {
                   <span className="text-[11px] text-zinc-500 mt-0.5">
                     ({p?.protocol})
                   </span>
+                  <LinkPending />
                 </Link>
 
                 {p.poolStatus === PoolStatus.ACTIVE ? (
                   <Link
+                    prefetch={false}
                     href={swapDetailHref(
                       `${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`,
                       p.contractURL,
@@ -720,7 +617,8 @@ const Swap = () => {
                       className="text-white mr-1"
                     />
                     {t("common.buy")}
-                  </Link>
+                    <LinkPending />
+                </Link>
                 ) : (
                   <span
                     className={`${statusColorMap[p.poolStatus]} !bg-opacity-30 !text-white/70 inline-flex items-center text-xs px-2 py-1 rounded font-medium`}
@@ -762,7 +660,7 @@ const Swap = () => {
                   <span className="ml-0.5 text-[10px] text-zinc-500">BTC</span>
                 </span>
                 <span className="truncate">
-                  {t("common.holder")}: {p.holders}
+                  {t("common.holder")}: {p.holders ?? "—"}
                 </span>
                 <span className="truncate  col-span-2 text-zinc-500">
                   {t("pages.launchpool.deploy_time")}:{" "}
@@ -872,11 +770,8 @@ const Swap = () => {
                     >
                       {adaptedPool.protocol === "runes" ? (
                         <Avatar className="w-10 h-10 bg-zinc-700 flex-shrink-0">
-                          <AssetLogo
-                            protocol={
-                              adaptedPool?.Contract?.assetName?.Protocol
-                            }
-                            ticker={adaptedPool?.Contract?.assetName?.Ticker}
+                          <AssetLogoImage
+                            logo={logos?.[assetKey(adaptedPool)]}
                             className="w-10 h-10"
                           />
                           <AvatarFallback>
@@ -887,11 +782,8 @@ const Swap = () => {
                         </Avatar>
                       ) : (
                         <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700 flex-shrink-0">
-                          <AssetLogo
-                            protocol={
-                              adaptedPool?.Contract?.assetName?.Protocol
-                            }
-                            ticker={adaptedPool?.Contract?.assetName?.Ticker}
+                          <AssetLogoImage
+                            logo={logos?.[assetKey(adaptedPool)]}
                             className="w-10 h-10"
                           />
                           <AvatarFallback>
@@ -902,12 +794,12 @@ const Swap = () => {
                         </Avatar>
                       )}
                       <Link
+                        prefetch={false}
                         href={swapDetailHref(
                           `${adaptedPool.assetNameObj?.Protocol}:f:${adaptedPool.assetNameObj?.Ticker}`,
                           adaptedPool.contractURL,
                         )}
                         className={`cursor-pointer text-primary hover:underline leading-snug ${adaptedPool.protocol !== "runes" ? "max-w-[220px]" : "max-w-[240px]"}`}
-                        prefetch={true}
                         title={adaptedPool.assetName}
                         onClick={(e) => handleMaintenanceClick(e, adaptedPool)}
                       >
@@ -921,7 +813,8 @@ const Swap = () => {
                             ({adaptedPool.protocol})
                           </span>
                         </div>
-                      </Link>
+                        <LinkPending />
+                </Link>
                     </TableCell>
 
                     <TableCell className="px-4 py-4">
@@ -931,7 +824,7 @@ const Swap = () => {
                       </span>
                       {(() => {
                         const pc =
-                          priceChangeMap?.[adaptedPool.contractURL]?.pct_24h;
+                          adaptedPool.pct24h;
                         if (typeof pc === "number") {
                           const pct = pc * 100;
                           const up = pct > 0;
@@ -1025,7 +918,7 @@ const Swap = () => {
 
                     <TableCell className="px-4 py-4">
                       <div className="flex flex-col leading-tight">
-                        <span>{adaptedPool.holders}</span>
+                        <span>{adaptedPool.holders ?? "—"}</span>
                       </div>
                     </TableCell>
 
@@ -1047,6 +940,7 @@ const Swap = () => {
                     <TableCell className="px-4 py-4">
                       {adaptedPool.poolStatus === PoolStatus.ACTIVE ? (
                         <Link
+                          prefetch={false}
                           href={swapDetailHref(
                             `${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`,
                             adaptedPool.contractURL,
@@ -1063,7 +957,8 @@ const Swap = () => {
                             className="text-white mr-1"
                           />{" "}
                           {t("common.buy")}
-                        </Link>
+                          <LinkPending />
+                </Link>
                       ) : (
                         <Badge
                           className={`${statusColorMap[adaptedPool.poolStatus]} !bg-opacity-30 !text-white/70`}

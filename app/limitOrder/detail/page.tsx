@@ -32,7 +32,8 @@ function OrderPageContent() {
   const { btcFeeRate } = useCommonStore((state) => state);
 
   const [total, setTotal] = useState(0);
-  const { ticker, assetBalance, contractData, tickerInfo, isAnalyticsLoading, analyticsData, contractUrl, isContractStatusLoading, refresh, holders } = useLimitOrderDetailData(asset ?? '');
+  const [chartMode, setChartMode] = useState<'line' | 'lw'>('lw');
+  const { ticker, assetBalance, contractData, tickerInfo, isAnalyticsLoading, analyticsData, contractUrl, isContractStatusLoading, refresh, holders, loadError } = useLimitOrderDetailData(asset ?? '', params.get("contractUrl") ?? undefined, chartMode === "line");
   //console.log('tickerInfo', tickerInfo);
 
   const refreshHandler = () => {
@@ -50,7 +51,7 @@ function OrderPageContent() {
 
 
 
-  const [chartMode, setChartMode] = useState<'line' | 'lw'>('lw');
+
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     setHydrated(true);
@@ -63,6 +64,7 @@ function OrderPageContent() {
   }, []);
   const setChartModeAndStore = (m: 'line' | 'lw') => { setChartMode(m); try { window.localStorage.setItem('chartMode', m); } catch { } };
 
+  if (loadError) return <div role="alert" className="p-4">{t("common.fetch_failed")}</div>;
   if (!asset) {
     return <div className="p-4 bg-black text-white w-full">Asset parameter missing.</div>;
   }
@@ -120,6 +122,8 @@ function OrderPageContent() {
               <div className={`relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 ${chartHeights_div}`}>
                 {hydrated && chartMode === 'line' && (
                   <ChartModule
+                    lastPrice={contractData?.lastDealPrice}
+                    pct24h={contractData?.pct24h}
                     asset={asset}
                     ticker={ticker}
                     isLoading={isAnalyticsLoading}
@@ -133,7 +137,7 @@ function OrderPageContent() {
                 )}
                 {hydrated && chartMode === 'lw' && (
                   <div className="w-full h-full">
-                    <LightweightKline symbol={contractUrl} initialResolution="4H" chartHeights={{ volumeRatio: 0.3, height: cHeights }} />
+                    <LightweightKline lastPrice={contractData?.lastDealPrice} change24h={contractData?.pct24h} symbol={contractUrl} initialResolution="4H" chartHeights={{ volumeRatio: 0.3, height: cHeights }} />
                   </div>
                 )}
               </div>

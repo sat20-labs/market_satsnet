@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAsset } from '@/api/market';
+import { getAssetLogos } from '@/api/market';
 import { AvatarImage } from '@/components/ui/avatar';
 
 interface AssetLogoProps {
@@ -37,6 +37,11 @@ const normalizeLogoUrl = (url?: string): string | undefined => {
     }
 };
 
+export function AssetLogoImage({ logo, className }: { logo?: string; className?: string }) {
+    const src = normalizeLogoUrl(logo);
+    return src ? <AvatarImage src={src} alt="Logo" className={className} /> : null;
+}
+
 export const AssetLogo: React.FC<AssetLogoProps> = ({ protocol, ticker, normalizedTicker, className, enabled = true }) => {
     const norm = normalizeTicker(protocol, ticker, normalizedTicker);
     const shouldFetch = !!norm && enabled;
@@ -46,10 +51,8 @@ export const AssetLogo: React.FC<AssetLogoProps> = ({ protocol, ticker, normaliz
         queryFn: async () => {
             if (!shouldFetch) return null;
             try {
-                const res: any = await getAsset(norm);
-                const data = res?.data || res;
-                const logo = data?.logo as string | undefined;
-                return normalizeLogoUrl(logo) || null;
+                const logos = await getAssetLogos([norm]);
+                return logos[norm] || null;
             } catch (e) {
                 // suppress errors for missing assets; just fallback to initial
                 return null;
@@ -72,7 +75,7 @@ export const AssetLogo: React.FC<AssetLogoProps> = ({ protocol, ticker, normaliz
     }
 
     if (!data) return null; // no logo -> let AvatarFallback show
-    return <AvatarImage src={data} alt="Logo" className={className} />;
+    return <AssetLogoImage logo={data} className={className} />;
 };
 
 export default AssetLogo;

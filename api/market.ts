@@ -807,13 +807,11 @@ const pointsRequest = async (path: string, options: PointsRequestOptions = {}) =
     if (resp.status === 401) {
       console.warn('Points API unauthorized 401:', url);
       window.dispatchEvent(new CustomEvent('points:unauthorized', { detail: { path, url } }));
-      throw new Error('Unauthorized (401)');
+      throw Object.assign(new Error('Unauthorized (401)'), { status: 401 });
     }
 
     if (!resp.ok) {
-      let bodyText = '';
-      try { bodyText = await resp.text(); } catch {}
-      throw new Error(`Points API error ${resp.status} ${resp.statusText}: ${bodyText}`);
+      throw Object.assign(new Error(`Points API error ${resp.status}`), { status: resp.status });
     }
     const ct = resp.headers.get('content-type') || '';
     if (ct.includes('application/json')) return resp.json();
@@ -832,6 +830,18 @@ export const upsertAsset = async ({ ticker, name, logo, description, website, tw
     data: { ticker, name, logo, description, website, twitter, telegram, discord },
   });
 };
+export async function getAssetLogos(tickers: string[]): Promise<Record<string, string>> {
+  const body = new URLSearchParams();
+  for (const ticker of tickers) body.append('ticker', ticker);
+  const response = await fetch(getPointsBaseUrl() + '/api/v1/assets/logos', { method: 'POST', body });
+  if (!response.ok) throw new Error('Asset logos HTTP ' + response.status);
+  const result = await response.json();
+  if (result.code !== 0 || !result.data || typeof result.data !== 'object' || Array.isArray(result.data)) {
+    throw new Error('Invalid asset logos response');
+  }
+  return result.data;
+}
+
 export const getAsset = async (ticker: string) => {
   return pointsRequest('/api/v1/assets/get', { data: { ticker } });
 };
@@ -883,14 +893,10 @@ interface GetMarketKlineParams {
   limit?: number;   // max bars
 }
 export const getMarketKline = async ({ contract, interval, start, end, limit }: GetMarketKlineParams) => {
-  if (!contract) return { bars: [] };
-  try {
-    const res: any = await pointsRequest('/api/v1/market/kline', { data: { contract, interval, start, end, limit } });
-    return res?.data || res || { bars: [] };
-  } catch (e) {
-    console.warn('getMarketKline failed', contract, interval, e);
-    return { bars: [] };
-  }
+  const res = await pointsRequest('/api/v1/market/kline', { data: { contract, interval, start, end, limit } });
+  const data = res?.data ?? res;
+  if (!Array.isArray(data?.bars)) throw new Error('Invalid K-line response');
+  return data;
 };
 // Backwards compatibility alias
 export const getContractKline = getMarketKline;

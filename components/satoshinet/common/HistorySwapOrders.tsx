@@ -1,4 +1,5 @@
 import React from "react";
+import { useVisiblePanel } from "@/hooks/useVisiblePanel";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { contractService } from "@/domain/services/contract";
@@ -14,6 +15,7 @@ interface HistoryOrdersProps {
 }
 
 export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrdersProps) {
+  const { ref, visible } = useVisiblePanel();
   const pageSize = 20;
   const { t } = useTranslation();
   const { network } = useCommonStore();
@@ -47,13 +49,13 @@ export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrde
     initialPageParam: 0,
     refetchInterval: 10000, // 增加到10秒，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
-    enabled: !!contractURL,
+    enabled: !!contractURL && visible,
   });
 
   const allOrders = data?.pages.flatMap(page => page.data) ?? [];
   console.log('allOrders', allOrders);
   return (
-    <div className="space-y-4">
+    <div ref={ref} className="space-y-4">
 
       <HistorySwapTable
         rawOrders={allOrders}

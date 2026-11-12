@@ -16,13 +16,14 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { CustomPagination } from '@/components/ui/CustomPagination';
-import { getDeployedContractInfo, getContractStatus, getContractPriceChange } from '@/api/market';
+import { marketList } from '@/api/marketView';
 import { useTranslation } from 'react-i18next';
-import { useCommonStore } from '@/store/common';
+import { getConfiguredNetwork, useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { getValueFromPrecision, formatLargeNumber } from '@/utils';
-import AssetLogo from '@/components/AssetLogo';
+import { AssetLogoImage } from '@/components/AssetLogo';
+import { getAssetLogos } from '@/api/market';
 import { clientApi } from '@/api';
 import { BtcPrice } from '@/components/BtcPrice';
 import { Icon } from '@iconify/react';
@@ -30,6 +31,11 @@ import { SortDropdown } from '@/components/SortDropdown';
 
 // 每页显示数量常量
 const PAGE_SIZE = 10;
+
+function assetKey(pool: any) {
+    const { Protocol, Type, Ticker } = pool.assetNameObj;
+    return [Protocol, Type, Ticker].join(':');
+}
 
 function extractAmount(obj: any): number {
     if (!obj) return 0;
@@ -93,7 +99,7 @@ function adaptPoolData(pool: any, satsnetHeight: number) {
     const derivedDealPrice = assetAmtInPool > 0 ? satsValueInPool / assetAmtInPool : 0;
     const effectivePoolPrice = derivedDealPrice;
     const finalDealPrice = derivedDealPrice;
-    const volume24hBtc = Number(pool?.['24hour']?.volume ?? 0);
+    const volume24hBtc = Number(pool.volume24h ?? pool?.['24hour']?.volume ?? 0);
     const maxSupply = getMaxSupply(pool);
     const marketCap = maxSupply > 0 ? effectivePoolPrice * maxSupply : 0;
 
@@ -221,93 +227,22 @@ export default function LimitOrderPage() {
     const [protocol, setProtocol] = useState('all');
     const protocolChange = (newProtocol: string) => setProtocol(newProtocol);
 
-    // 获取所有合约URL列表 (limitOrder 假设使用 swap.tc 前缀)
-    const { data: contractURLsData, error: contractURLsError } = useQuery({
-        queryKey: ['limitOrderContractURLs', network],
-        queryFn: async () => {
-            const deployed = await getDeployedContractInfo();
-            const contractURLs = deployed?.url || (deployed?.data && deployed.data.url) || [];
-            if (!Array.isArray(contractURLs)) return [];
-            return contractURLs.filter((c: string) => typeof c === 'string' && c.indexOf('swap.tc') > -1);
-        },
-        gcTime: 0,
-        refetchInterval: 120000,
-        refetchIntervalInBackground: false,
-        retry: 2,
-        retryDelay: 1000,
+    const effectiveNetwork = getConfiguredNetwork() ?? network;
+    const {data: poolList = [], isLoading, error} = useQuery({
+        queryKey: ['marketList', 'swap', effectiveNetwork],
+        queryFn: () => marketList('swap'),
+        staleTime: 60_000, refetchInterval: 120_000, refetchIntervalInBackground: false,
     });
-
-    // 全量获取合约状态（前端排序分页）
-    const getLimitOrderList = async () => {
-        if (!contractURLsData || contractURLsData.length === 0) {
-            return { pools: [], totalCount: 0 };
-        }
-
-        const statusList = await Promise.all(
-            contractURLsData.map(async (item: string) => {
-                try {
-                    const { status } = await getContractStatus(item);
-                    if (status) {
-                        try {
-                            const parsedStatus = JSON.parse(status);
-                            return {
-                                ...parsedStatus,
-                                contractURL: item,
-                            };
-                        } catch (parseError) {
-                            console.error(`Failed to parse status for ${item}:`, parseError, 'Raw status:', status);
-                            return null;
-                        }
-                    }
-                    return null;
-                } catch (error) {
-                    console.error(`Failed to get contract status for ${item}:`, error);
-                    return null;
-                }
-            })
-        );
-
-        const validPools = statusList.filter(Boolean);
-        return {
-            pools: validPools,
-            totalCount: validPools.length,
-        };
-    };
-
-    const { data: poolListData, isLoading, error } = useQuery({
-        queryKey: ['limitOrderList', network],
-        queryFn: () => getLimitOrderList(),
-        enabled: !!contractURLsData,
-        gcTime: 0,
-        refetchInterval: 120000,
-        refetchIntervalInBackground: false,
-        retry: 2,
-        retryDelay: 1000,
+    const detailHref = (p: any) => '/limitOrder/detail?' + new URLSearchParams({
+        asset: [p.assetNameObj.Protocol, p.assetNameObj.Type, p.assetNameObj.Ticker].join(':'),
+        contractUrl: p.contractURL, network: effectiveNetwork,
     });
-
-    const poolList = poolListData?.pools || [];
 
     const adaptedPoolList = useMemo(() => {
         return poolList
             .map(pool => adaptPoolData(pool, satsnetHeight))
             .filter(Boolean) as any[];
     }, [poolList, satsnetHeight]);
-
-    // 合约 URL 列表用于获取价格涨跌幅
-    const priceChangeContracts = useMemo(() => adaptedPoolList.map(p => p.contractURL).filter(Boolean), [adaptedPoolList]);
-
-    const { data: priceChangeMap } = useQuery({
-        queryKey: ['limitOrderPriceChanges', network, priceChangeContracts],
-        enabled: priceChangeContracts.length > 0,
-        gcTime: 60 * 1000,
-        queryFn: async () => {
-            const entries = await Promise.all(priceChangeContracts.map(async (c: string) => {
-                const d = await getContractPriceChange(c);
-                return [c, d] as const;
-            }));
-            return Object.fromEntries(entries);
-        }
-    });
 
     // 资产键集合，用于批量获取 ticker 信息
     const assetKeys = useMemo(() => {
@@ -322,7 +257,7 @@ export default function LimitOrderPage() {
     }, [poolList]);
 
     const { data: tickerInfoMap } = useQuery({
-        queryKey: ['limitOrderTickerInfos', network, assetKeys],
+        queryKey: ['limitOrderTickerInfos', effectiveNetwork, assetKeys],
         enabled: assetKeys.length > 0,
         gcTime: 10 * 60 * 1000,
         queryFn: async () => {
@@ -389,6 +324,14 @@ export default function LimitOrderPage() {
         return sortedPoolList.slice(start, start + pageSize);
     }, [sortedPoolList, currentPage, pageSize]);
 
+    const logoKeys = useMemo(() => [...new Set<string>(pagedPoolList.map(assetKey))].sort(), [pagedPoolList]);
+    const { data: logos } = useQuery({
+        queryKey: ['assetLogos', effectiveNetwork, logoKeys],
+        queryFn: () => getAssetLogos(logoKeys),
+        enabled: !!process.env.NEXT_PUBLIC_POINTS_API_BASE && logoKeys.length > 0,
+        staleTime: 5 * 60_000, refetchOnWindowFocus: false, retry: false,
+    });
+
     const totalCount = sortedPoolList.length;
     const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -442,12 +385,12 @@ export default function LimitOrderPage() {
                 />
             </div>
 
-            {(error || contractURLsError) && (
+            {error && (
                 <div className="flex flex-col items-center justify-center py-8">
                     <div className="text-red-500 mb-4">
                         <h3 className="text-lg font-semibold">Loading failed</h3>
                         <p className="text-sm text-gray-400 mt-1">
-                            {error?.message || contractURLsError?.message || 'Network connection error, please check your network and try again.'}
+                            {error?.message || 'Network connection error, please check your network and try again.'}
                         </p>
                     </div>
                     <button
@@ -459,7 +402,7 @@ export default function LimitOrderPage() {
                 </div>
             )}
 
-            {(isLoading || !contractURLsData) && !error && !contractURLsError && (
+            {isLoading && !error && (
                 <div className="flex justify-center items-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     <span className="ml-2 text-muted-foreground">{t('common.loading')}</span>
@@ -472,21 +415,20 @@ export default function LimitOrderPage() {
                     <div key={p.id || idx} className="rounded-lg bg-zinc-900/70 border border-zinc-800 p-3 flex gap-3">
                         <div className="flex-shrink-0 flex flex-col items-center justify-start w-12">
                             <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                                <AssetLogo
-                                    protocol={p?.Contract?.assetName?.Protocol}
-                                    ticker={p?.Contract?.assetName?.Ticker}
+                                <AssetLogoImage
+                                    logo={logos?.[assetKey(p)]}
                                     className="w-10 h-10"
                                 />
                                 <AvatarFallback>
                                     {p?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase() || '₿'}
                                 </AvatarFallback>
                             </Avatar>
-                            {(() => { const pc = priceChangeMap?.[p.contractURL]?.pct_24h; if (typeof pc === 'number') { const pct = pc * 100; const up = pct > 0; const cls = up ? 'text-green-500' : (pct < 0 ? 'text-red-500' : 'text-zinc-500'); return <span className={`mt-8 text-[11px] font-medium leading-none ${cls}`}>{up ? '+' : ''}{pct.toFixed(2)}%</span>; } return <span className='mt-1 text-[11px] text-zinc-600 leading-none'>--</span>; })()}
+                            {(() => { const pc = p.pct24h; if (typeof pc === 'number') { const pct = pc * 100; const up = pct > 0; const cls = up ? 'text-green-500' : (pct < 0 ? 'text-red-500' : 'text-zinc-500'); return <span className={`mt-8 text-[11px] font-medium leading-none ${cls}`}>{up ? '+' : ''}{pct.toFixed(2)}%</span>; } return <span className='mt-1 text-[11px] text-zinc-600 leading-none'>--</span>; })()}
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col gap-1">
                             <div className="flex items-start justify-between gap-2">
                                 <Link
-                                    href={`/limitOrder/detail?asset=${p.assetNameObj?.Protocol}:f:${p.assetNameObj?.Ticker}`}
+                                    href={detailHref(p)}
                                     className="text-primary font-medium text-left leading-tight max-w-[200px]"
                                     title={p.assetName}
                                 >
@@ -499,7 +441,7 @@ export default function LimitOrderPage() {
                                 </Link>
 
                                 <Link
-                                    href={`/limitOrder/detail?asset=${p?.Contract?.assetName?.Protocol}:f:${p?.Contract?.assetName?.Ticker}`}
+                                    href={detailHref(p)}
                                     className={`${statusColorMap[p.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
                                 >
                                     <Icon icon="lucide:zap" width={18} height={18} className="text-white mr-1" />{t('common.buy')}
@@ -578,19 +520,19 @@ export default function LimitOrderPage() {
                                         <TableCell className={`px-4 py-4 flex items-center min-w-[200px] ${adaptedPool.protocol === 'runes' ? 'gap-1' : 'gap-2'}`}>
                                             {adaptedPool.protocol === 'runes' ? (
                                                 <Avatar className="w-10 h-10 bg-zinc-700 flex-shrink-0">
-                                                    <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
+                                                    <AssetLogoImage logo={logos?.[assetKey(adaptedPool)]} className="w-10 h-10" />
                                                     <AvatarFallback>{adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}</AvatarFallback>
                                                 </Avatar>
                                             ) : (
                                                 <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700 flex-shrink-0">
-                                                    <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
+                                                    <AssetLogoImage logo={logos?.[assetKey(adaptedPool)]} className="w-10 h-10" />
                                                     <AvatarFallback>
                                                         {adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
                                             )}
                                             <Link
-                                                href={`/limitOrder/detail?asset=${adaptedPool.assetNameObj?.Protocol}:f:${adaptedPool.assetNameObj?.Ticker}`}
+                                                href={detailHref(adaptedPool)}
                                                 className="cursor-pointer hover:underline"
                                                 prefetch={true}
                                             >
@@ -606,7 +548,7 @@ export default function LimitOrderPage() {
                                         </TableCell>
 
                                         <TableCell className="px-4 py-4">{Number(adaptedPool.dealPrice ?? 0).toFixed(4)}<span className='ml-1 text-xs text-zinc-500 font-medium'>sats</span>
-                                            {(() => { const pc = priceChangeMap?.[adaptedPool.contractURL]?.pct_24h; if (typeof pc === 'number') { const pct = pc * 100; const up = pct > 0; const cls = up ? 'text-green-500' : (pct < 0 ? 'text-red-500' : 'text-zinc-400'); return <div className={`text-[11px] mt-1 font-medium ${cls}`}>{up ? '+' : ''}{pct.toFixed(2)}%</div>; } return <div className='text-[11px] mt-1 text-zinc-600'>--</div>; })()}
+                                            {(() => { const pc = adaptedPool.pct24h; if (typeof pc === 'number') { const pct = pc * 100; const up = pct > 0; const cls = up ? 'text-green-500' : (pct < 0 ? 'text-red-500' : 'text-zinc-400'); return <div className={`text-[11px] mt-1 font-medium ${cls}`}>{up ? '+' : ''}{pct.toFixed(2)}%</div>; } return <div className='text-[11px] mt-1 text-zinc-600'>--</div>; })()}
                                         </TableCell>
 
                                         <TableCell className="px-4 py-4">
@@ -645,7 +587,7 @@ export default function LimitOrderPage() {
                                         <TableCell className="px-4 py-4">
                                             {adaptedPool.poolStatus === PoolStatus.ACTIVE ? (
                                                 <Link
-                                                    href={`/limitOrder/detail?asset=${adaptedPool?.Contract?.assetName?.Protocol}:f:${adaptedPool?.Contract?.assetName?.Ticker}`}
+                                                    href={detailHref(adaptedPool)}
                                                     className={`${statusColorMap[adaptedPool.poolStatus]} inline-flex items-center justify-center gap-1 text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
                                                 >
                                                     <Icon icon="lucide:zap" width={16} height={16} className="text-white mr-1" /> {t('common.buy')}

@@ -4,12 +4,13 @@
 import { createChart, ColorType, UTCTimestamp } from 'lightweight-charts';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getMarketKline, getMarketPriceChanges } from '@/api/market';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getMarketKline } from '@/api/market';
 import AssetLogo from '@/components/AssetLogo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface LightweightKlineProps {
+    change24h?: number | null;
+    lastPrice?: string | number;
     symbol?: string; // contractUrl
     height?: number; // overall chart container height (optional, fallback)
     className?: string;
@@ -36,7 +37,7 @@ interface KlineCacheEntry { key: string; ts: number; data: any; }
 const klineLRU: Map<string, KlineCacheEntry> = new Map();
 function klineCacheGet(key: string) {
     const item = klineLRU.get(key);
-    if (!item) return null;
+    if (!item || Date.now() - item.ts >= 60_000) return null;
     klineLRU.delete(key); klineLRU.set(key, item);
     return item.data;
 }
@@ -56,7 +57,7 @@ const ASSET_SCALE = 1; // no scaling
 async function retryAsync<T>(fn: () => Promise<T>, retries = 3, baseDelay = 300): Promise<T> {
     let lastErr: any;
     for (let i = 0; i <= retries; i++) {
-        try { return await fn(); } catch (e) { lastErr = e; if (i === retries) break; await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, i))); }
+        try { return await fn(); } catch (e) { lastErr = e; const status = (e as { status?: number })?.status; if (status && status >= 400 && status < 500 && status !== 429) throw e; if (i === retries) break; await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, i))); }
     }
     throw lastErr;
 }
@@ -116,7 +117,7 @@ function normalizeResolution(res: string) {
     return res;
 }
 
-export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, height = 505, className = '', initialResolution = '240', theme = 'dark', chartHeights, priceDecimals = 4, changeDecimals = 2, lang: forcedLang }) => {
+export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, change24h, lastPrice, height = 505, className = '', initialResolution = '240', theme = 'dark', chartHeights, priceDecimals = 4, changeDecimals = 2, lang: forcedLang }) => {
     const effectiveHeight = chartHeights?.height ?? height;
 
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -145,7 +146,6 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, heig
     const cacheRef = useRef<Record<string, { bars: typeof barsRef.current; earliest: number | null; ts: number }>>({});
     const earliestTimeRef = useRef<number | null>(null);
     const lastPriceRef = useRef<number | null>(null);
-    const [priceInfo, setPriceInfo] = useState<{ last?: number; pct24h?: number }>({});
     const [hoverInfo, setHoverInfo] = useState<{ time?: number; close?: number; open?: number; high?: number; low?: number; volume?: number; ma5?: number; ma10?: number; ma20?: number }>();
     const [showMA5, setShowMA5] = useState(false); const [showMA10, setShowMA10] = useState(false); const [showMA20, setShowMA20] = useState(false);
     const [fillGaps, setFillGaps] = useState(false);
@@ -176,16 +176,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, heig
 
     const configuredVolumeRatio = Math.min(0.5, Math.max(0.05, chartHeights?.volumeRatio ?? 0.30));
 
-    const { data: priceChangeData } = useQuery({
-        queryKey: ['price_changes', symbol],
-        enabled: !!symbol,
-        refetchInterval: 60_000,
-        queryFn: async () => {
-            if (!symbol) return null;
-            return await getMarketPriceChanges(symbol);
-        },
-    });
-    useEffect(() => { if (priceChangeData) { setPriceInfo({ last: priceChangeData.last_price, pct24h: priceChangeData.pct_24h }); } }, [priceChangeData]);
+
 
     const applyMAs = useCallback(() => {
         // FIX: Preserve exact viewport when toggling MA; do NOT auto scroll to real-time here.
@@ -853,10 +844,10 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
     }, [chartReady, barsRef.current.length, resolution]);
 
     // Percentage display: rise green (with +), fall red
-    const pct24h = priceInfo.pct24h != null ? (priceInfo.pct24h > 0 ? '+' : priceInfo.pct24h < 0 ? '' : '') + (priceInfo.pct24h * 100).toFixed(2) + '%' : '--';
-    const priceStr = (hoverInfo?.close != null ? hoverInfo.close : (priceInfo.last != null ? Number(priceInfo.last) : undefined))?.toFixed(priceDecimals) || '--';
+    const pct24h = change24h != null ? (change24h > 0 ? '+' : change24h < 0 ? '' : '') + (change24h * 100).toFixed(2) + '%' : '--';
+    const priceStr = (hoverInfo?.close != null ? hoverInfo.close : (lastPrice != null ? Number(lastPrice) : undefined))?.toFixed(priceDecimals) || '--';
     // 绿色涨 红色跌
-    const pctClass = priceInfo.pct24h == null ? 'text-zinc-400' : priceInfo.pct24h > 0 ? 'text-green-500' : priceInfo.pct24h < 0 ? 'text-red-500' : 'text-zinc-400';
+    const pctClass = change24h == null ? 'text-zinc-400' : change24h > 0 ? 'text-green-500' : change24h < 0 ? 'text-red-500' : 'text-zinc-400';
 
     const formatTs = (ts?: number) => ts ? new Date(ts * 1000).toISOString().slice(5, 16).replace('T', ' ') : '--';
 
