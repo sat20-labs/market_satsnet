@@ -23,13 +23,14 @@ import { CustomPagination } from '@/components/ui/CustomPagination';
 import { useTranslation } from 'react-i18next';
 import DistributionList from '@/components/launchpool/DistributionList';
 import ActionButtons from '@/components/launchpool/ActionButtons';
-import { useCommonStore } from '@/store/common';
+import { getConfiguredNetwork, useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import { Icon } from '@iconify/react';
 import { useRouter } from 'next/navigation';
-import { getDeployedContractInfo, getContractStatus } from '@/api/market';
+import { getAssetLogos, getContractStatus } from '@/api/market';
+import { marketList } from '@/api/marketView';
 import AssetMetadataEditModal from '@/components/AssetMetadataEditModal';
-import AssetLogo from '@/components/AssetLogo';
+import { AssetLogoImage } from '@/components/AssetLogo';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import { isAddressInAssetEditWhitelist } from '@/utils';
 import ClosePoolDialog from '@/components/launchpool/ClosePoolDialog';
@@ -193,71 +194,24 @@ export default function LaunchPoolProgressSortTest() {
   };
   // ===== 新增结束 =====
 
-  // 获取所有合约URL列表
-  const { data: contractURLsData } = useQuery({
-    queryKey: ['launchpoolContractURLs', network],
-    queryFn: async () => {
-      const deployed = await getDeployedContractInfo();
-      const contractURLs =
-        deployed.url || (deployed.data && deployed.data.url) || [];
-      return contractURLs.filter(
-        (c: string) => c.indexOf('launchpool.tc') > -1,
-      );
-    },
-    gcTime: 0,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
-  });
-
-  // 分页获取合约状态
-  const getLaunchpoolList = async () => {
-    if (!contractURLsData || contractURLsData.length === 0) {
-      return { pools: [], totalCount: 0 };
-    }
-
-    // 获取所有合约状态，不使用分页
-    const statusList = await Promise.all(
-      contractURLsData.map(async (item: string) => {
-        try {
-          const { status } = await getContractStatus(item);
-          if (status) {
-            return {
-              ...JSON.parse(status),
-              contractURL: item,
-            };
-          }
-          return null;
-        } catch (error) {
-          console.error(`Failed to get contract status for ${item}:`, error);
-          return null;
-        }
-      }),
-    );
-
-    const validPools = statusList.filter(Boolean);
-    return {
-      pools: validPools,
-      totalCount: contractURLsData.length,
-    };
-  };
-
+  const effectiveNetwork = getConfiguredNetwork() ?? network;
   const { data: poolListData, isLoading, refetch } = useQuery({
-    queryKey: ['launchpoolList', network],
-    queryFn: getLaunchpoolList,
-    enabled: !!contractURLsData,
-    gcTime: 0,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
+    queryKey: ['marketList', 'launchpool', effectiveNetwork],
+    queryFn: () => marketList('launchpool'),
+    staleTime: 60_000,
+    refetchInterval: 120000,
+    refetchOnWindowFocus: false,
+    refetchIntervalInBackground: false,
   });
 
   // 适配数据
   const adaptedPoolList = useMemo(() => {
     return (
-      poolListData?.pools?.map((pool: any) =>
+      poolListData?.map((pool: any) =>
         adaptPoolData(pool, satsnetHeight),
       ) || []
     );
-  }, [poolListData?.pools, satsnetHeight]);
+  }, [poolListData, satsnetHeight]);
 
   // ===== 新增：排序状态 =====
   const [sortKey, setSortKey] = useState<'progress' | 'deployTime'>('progress');
@@ -319,6 +273,18 @@ export default function LaunchPoolProgressSortTest() {
     return filteredPoolList.slice(start, start + pageSize);
   }, [filteredPoolList, currentPage, pageSize]);
 
+  const logoKeys = useMemo(() => [...new Set<string>(pagedPoolList
+    .filter((p: any) => p.poolStatus === PoolStatus.COMPLETED || p.poolStatus === PoolStatus.CLOSED)
+    .map((p: any) => `${p.assetNameObj.Protocol}:${p.assetNameObj.Type}:${p.assetNameObj.Ticker}`))].sort(), [pagedPoolList]);
+  const { data: logos = {} } = useQuery({
+    queryKey: ['assetLogos', effectiveNetwork, logoKeys],
+    queryFn: () => getAssetLogos(logoKeys),
+    enabled: logoKeys.length > 0,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+
   const totalCount = filteredPoolList.length;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -378,6 +344,15 @@ export default function LaunchPoolProgressSortTest() {
   );
   const [selectedPool, setSelectedPool] = useState<any | null>(null);
   const openModal = async (type: string, pool: any | null = null) => {
+    if (type === 'details' && pool) {
+      try {
+        const { status } = await getContractStatus(pool.contractURL);
+        pool = adaptPoolData({ ...JSON.parse(status), contractURL: pool.contractURL }, satsnetHeight);
+      } catch (error) {
+        toast.error(t('common.error'));
+        return;
+      }
+    }
     setModalType(type);
     if (type === 'template' && pool) setSelectedTemplateId(pool.template);
     setSelectedPool(pool);
@@ -478,14 +453,9 @@ export default function LaunchPoolProgressSortTest() {
           >
             <div className="flex-shrink-0">
               <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                <AssetLogo
-                  protocol={p?.assetNameObj?.Protocol}
-                  ticker={p?.assetNameObj?.Ticker}
+                <AssetLogoImage
+                  logo={logos[`${p.assetNameObj.Protocol}:${p.assetNameObj.Type}:${p.assetNameObj.Ticker}`]}
                   className="w-10 h-10"
-                  enabled={
-                    p.poolStatus === PoolStatus.COMPLETED ||
-                    p.poolStatus === PoolStatus.CLOSED
-                  }
                 />
                 <AvatarFallback>
                   {p?.assetSymbol
@@ -640,15 +610,10 @@ export default function LaunchPoolProgressSortTest() {
               >
                 <TableCell className="flex items-center gap-2 px-4 py-4 min-w-[200px]">
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                    <AssetLogo
-                      protocol={adaptedPool?.assetNameObj?.Protocol}
-                      ticker={adaptedPool?.assetNameObj?.Ticker}
-                      className="w-10 h-10"
-                      enabled={
-                        adaptedPool.poolStatus === PoolStatus.COMPLETED ||
-                        adaptedPool.poolStatus === PoolStatus.CLOSED
-                      }
-                    />
+                    <AssetLogoImage
+                  logo={logos[`${adaptedPool.assetNameObj.Protocol}:${adaptedPool.assetNameObj.Type}:${adaptedPool.assetNameObj.Ticker}`]}
+                  className="w-10 h-10"
+                />
                     <AvatarFallback>
                       {adaptedPool?.assetSymbol
                         ? String.fromCodePoint(adaptedPool.assetSymbol)

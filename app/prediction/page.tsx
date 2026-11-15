@@ -8,7 +8,7 @@ import Decimal from 'decimal.js';
 import { toast } from 'sonner';
 import { useReactWalletStore } from '@sat20/btc-connect/dist/react';
 import clientApi from '@/api/clientApi';
-import { useCommonStore } from '@/store/common';
+import { getConfiguredNetwork, useCommonStore } from '@/store/common';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -616,6 +616,23 @@ async function loadPredictionContracts() {
     .sort((a, b) => (b?.deployTime || 0) - (a?.deployTime || 0)) as PredictionRow[];
 }
 
+async function loadPredictionPage(page: number, size: number) {
+  const start = (page - 1) * size;
+  if (getConfiguredNetwork() === 'testnet') {
+    const all = await loadPredictionContracts();
+    const rows = all.slice(start, start + size);
+    return { rows, total: all.length, analytics: await loadPredictionAnalyticsMap(rows.map(r => r.contractURL)) };
+  }
+  const response = await clientApi.getPredictionMarket(start, size);
+  if (response?.code !== 0) throw new Error(response?.msg || 'Failed to load prediction contracts');
+  const entries = response.data || [];
+  const rows = entries.map((entry: any) => adaptPredictionRow(
+    mergePredictionRuntimeState(entry.summary, entry.state ? { data: entry.state } : { code: -1 }), entry.summary.address,
+  )).filter(Boolean) as PredictionRow[];
+  const analytics = Object.fromEntries(entries.map((entry: any) => [entry.summary.address, entry.analytics]));
+  return { rows, total: response.total, analytics };
+}
+
 function ContractUrl({ value }: { value: string }) {
   const short = value.length > 24 ? `${value.slice(0, 12)}...${value.slice(-10)}` : value;
   return <span title={value}>{short}</span>;
@@ -661,15 +678,17 @@ export default function PredictionContractsPage() {
   const [betSubmitting, setBetSubmitting] = useState(false);
 
   const {
-    data: predictionList = [],
+    data: predictionPage,
     isLoading,
     isFetching,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['predictionContracts', network],
-    queryFn: loadPredictionContracts,
+    queryKey: ['predictionContracts', network, currentPage, pageSize],
+    queryFn: () => loadPredictionPage(currentPage, pageSize),
     gcTime: 0,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
     refetchInterval: 120000,
     refetchIntervalInBackground: false,
   });
@@ -684,26 +703,10 @@ export default function PredictionContractsPage() {
     gcTime: 0,
   });
 
-  const totalPages = Math.ceil(predictionList.length / pageSize);
-  const pagedList = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return predictionList.slice(start, start + pageSize);
-  }, [predictionList, currentPage, pageSize]);
-  const pagedContractURLs = useMemo(
-    () => pagedList.map((item) => item.contractURL).filter(Boolean),
-    [pagedList],
-  );
-
-  const {
-    data: analyticsByContract = {},
-  } = useQuery({
-    queryKey: ['predictionOutcomeAnalytics', network, pagedContractURLs.join('|')],
-    queryFn: () => loadPredictionAnalyticsMap(pagedContractURLs),
-    enabled: pagedContractURLs.length > 0,
-    gcTime: 0,
-    refetchInterval: 120000,
-    refetchIntervalInBackground: false,
-  });
+  const predictionList = predictionPage?.rows || [];
+  const totalPages = Math.ceil((predictionPage?.total || 0) / pageSize);
+  const pagedList = predictionList;
+  const analyticsByContract = predictionPage?.analytics || {};
 
   const selectedDetailSummary = useMemo(
     () => (selectedContract ? buildPredictionDetailSummary(selectedContract, contractDetails) : null),

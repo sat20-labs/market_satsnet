@@ -177,7 +177,7 @@ export const Header = () => {
       <div className="mx-auto flex h-16 items-center space-x-2 px-2 sm:px-4 sm:justify-between sm:space-x-0">
         <div className="flex gap-2 sm:gap-4 items-center">
           <div className="flex items-center gap-[2px] sm:gap-2">
-            <NextLink
+            <NextLink prefetch={false}
               href="https://ordx.market/"
               className="flex items-center justify-start gap-1"
             >
@@ -209,7 +209,7 @@ export const Header = () => {
               return (
                 <li key={item.href ?? item.label} className="relative group py-2">
                   {!item.children ? (
-                    <NextLink
+                    <NextLink prefetch={false}
                       href={item.href}
                       target={item.target}
                       className={`flex items-center text-base font-medium transition-colors ${active ? 'text-foreground' : 'text-muted-foreground'
@@ -231,7 +231,7 @@ export const Header = () => {
                       <DropdownMenuContent align="start">
                         {item.children.map((child: any) => (
                           <DropdownMenuItem key={child.href} asChild>
-                            <NextLink href={child.href} target={child.target}>
+                            <NextLink prefetch={false} href={child.href} target={child.target}>
                               <span className="flex items-center" suppressHydrationWarning>{child.label}</span>
                             </NextLink>
                           </DropdownMenuItem>
@@ -292,7 +292,7 @@ export const Header = () => {
 
                       if (!item.children) {
                         return (
-                          <NextLink
+                          <NextLink prefetch={false}
                             key={item.href}
                             href={item.href}
                             target={item.target}
@@ -338,7 +338,7 @@ export const Header = () => {
                           </button>
                           <div className={`pl-6 pt-2 space-y-2 ${active ? '' : 'hidden'}`}>
                             {item.children.map((child: any) => (
-                              <NextLink
+                              <NextLink prefetch={false}
                                 key={child.href}
                                 href={child.href}
                                 target={child.target}

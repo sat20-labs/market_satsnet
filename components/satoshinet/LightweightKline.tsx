@@ -9,6 +9,7 @@ import AssetLogo from '@/components/AssetLogo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface LightweightKlineProps {
+    asset?: string;
     change24h?: number | null;
     lastPrice?: string | number;
     symbol?: string; // contractUrl
@@ -117,7 +118,7 @@ function normalizeResolution(res: string) {
     return res;
 }
 
-export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, change24h, lastPrice, height = 505, className = '', initialResolution = '240', theme = 'dark', chartHeights, priceDecimals = 4, changeDecimals = 2, lang: forcedLang }) => {
+export const LightweightKline: React.FC<LightweightKlineProps> = ({ asset, symbol, change24h, lastPrice, height = 505, className = '', initialResolution = '240', theme = 'dark', chartHeights, priceDecimals = 4, changeDecimals = 2, lang: forcedLang }) => {
     const effectiveHeight = chartHeights?.height ?? height;
 
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -149,6 +150,8 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, chan
     const [hoverInfo, setHoverInfo] = useState<{ time?: number; close?: number; open?: number; high?: number; low?: number; volume?: number; ma5?: number; ma10?: number; ma20?: number }>();
     const [showMA5, setShowMA5] = useState(false); const [showMA10, setShowMA10] = useState(false); const [showMA20, setShowMA20] = useState(false);
     const [fillGaps, setFillGaps] = useState(false);
+    const activeSeries = useRef('');
+    activeSeries.current = `${symbol}|${resolution}|${fillGaps}`;
     // Mobile adaptation & controls
     const [isMobile, setIsMobile] = useState(false);
     const [showVolume, setShowVolume] = useState(true); // collapsible volume (D)
@@ -202,6 +205,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, chan
     const setAllData = useCallback(() => {
         if (!candleSeriesRef.current) return;
         barsRef.current = sanitizeAndMergeBars(barsRef.current as any) as any;
+        setRangeInfo({ start: barsRef.current[0]?.time, end: barsRef.current.at(-1)?.time });
         const isArea = candleSeriesModeRef.current === 'area';
         if (isArea) {
             const areaData = barsRef.current.map(b => ({ time: b.time, value: b.close }));
@@ -295,6 +299,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, chan
                 klineData = await retryAsync(() => getMarketKline(params));
                 klineCacheSet(key, klineData);
             }
+            if (activeSeries.current !== `${sym}|${res}|${fillGaps}`) return;
             const rawBars = klineData?.bars || [];
             console.debug('[KLINE] loadHistory mode=%s res=%s got rawBars=%d params=%o', mode, res, rawBars.length, params);
             if (!rawBars.length) {
@@ -383,6 +388,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, chan
                                 const backKey = `${sym}|${res}|${start}|${end}|${backParams.limit}`;
                                 let backData = klineCacheGet(backKey);
                                 if (!backData) { backData = await retryAsync(() => getMarketKline(backParams)); klineCacheSet(backKey, backData); }
+                                if (activeSeries.current !== `${sym}|${res}|${fillGaps}`) return;
                                 const backRaw = backData?.bars || [];
                                 if (!backRaw.length) { setHasMore(false); break; }
                                 let backBars = backRaw.map((b: any) => {
@@ -428,7 +434,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, chan
             if (mode === 'init') setLoading(false);
             if (mode === 'prepend') setLoadingMore(false);
         }
-    }, [hasMore, loadingMore, mergeAndSet, setAllData]);
+    }, [hasMore, loadingMore, fillGaps, mergeAndSet, setAllData]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -578,7 +584,24 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, chan
         };
     }, [setAllData, showMA5, showMA10, showMA20]);
 
-    useEffect(() => { if (symbol) { const key = `${symbol}|${resolution}`; const cached = cacheRef.current[key]; if (cached && Date.now() - cached.ts < 60_000) { barsRef.current = [...cached.bars]; earliestTimeRef.current = cached.earliest; setAllData(); } else { barsRef.current = []; earliestTimeRef.current = null; loadHistory(symbol, resolution, 'init'); } } }, [symbol, resolution, loadHistory, setAllData]);
+    useEffect(() => {
+        if (!symbol) return;
+        setHoverInfo(undefined);
+        const key = `${symbol}|${resolution}`;
+        const cached = cacheRef.current[key];
+        if (cached && Date.now() - cached.ts < 60_000) {
+            setError(null);
+            setLoading(false);
+            barsRef.current = [...cached.bars];
+            earliestTimeRef.current = cached.earliest;
+            setAllData();
+        } else {
+            setRangeInfo({});
+            barsRef.current = [];
+            earliestTimeRef.current = null;
+            loadHistory(symbol, resolution, 'init');
+        }
+    }, [symbol, resolution, loadHistory, setAllData]);
 
     useEffect(() => {
         if (!symbol) return; const id = setInterval(async () => {
@@ -591,6 +614,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, chan
                 const intervalSecBase = RES_SECONDS[baseRes];
                 const params: any = { contract: symbol, interval: intervalStr, limit: Math.max(1, factor) };
                 let data = await retryAsync(() => getMarketKline(params));
+                if (activeSeries.current !== `${symbol}|${resolution}|${fillGaps}`) return;
                 const latestArr = data?.bars || [];
                 if (!latestArr.length) return;
                 let baseBars = latestArr.map((b: any) => {
@@ -652,7 +676,7 @@ export const LightweightKline: React.FC<LightweightKlineProps> = ({ symbol, chan
                 lastPriceRef.current = barsRef.current[barsRef.current.length - 1]?.close;
             } catch { }
         }, 10_000); return () => clearInterval(id);
-    }, [symbol, resolution, setAllData, followLatest]);
+    }, [symbol, resolution, fillGaps, setAllData, followLatest]);
 
     // crosshair事件只依赖chartReady和chartRef.current，避免因MA切换等导致事件丢失
     useEffect(() => {
@@ -810,7 +834,6 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
         if (!candleSeriesRef.current) return; const last = barsRef.current.at(-1); if (!last) return;
         if (lastPriceLineRef.current) { try { candleSeriesRef.current.removePriceLine(lastPriceLineRef.current); } catch { } }
         lastPriceLineRef.current = candleSeriesRef.current.createPriceLine({ price: last.close, color: '#e74c4c', lineWidth: 1, lineStyle: 2, axisLabelVisible: true });
-        setRangeInfo(r => ({ start: barsRef.current[0]?.time, end: last.time }));
     }, [barsRef.current.length]);
 
     // 在组件挂载时就创建 tooltip DOM，避免首次 crosshair 事件未触发时无法显示
@@ -830,18 +853,8 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
         }
     }, [containerRef.current]);
 
-    // K线数据加载后，主动触发一次 crosshair 事件，定位到最后一根K线
-    useEffect(() => {
-        if (!chartRef.current || !barsRef.current.length) return;
-        const ts = chartRef.current.timeScale();
-        const lastBar = barsRef.current[barsRef.current.length - 1];
-        if (lastBar) {
-            try {
-                ts.setVisibleRange({ from: lastBar.time - (RES_SECONDS[resolution] || 900) * 50, to: lastBar.time });
-                chartRef.current.crosshair().moveTo(lastBar.time, false);
-            } catch { }
-        }
-    }, [chartReady, barsRef.current.length, resolution]);
+    // The chart's original bar spacing defines the viewport on every resolution.
+    // Keep it stable instead of overwriting it with a competing time range effect.
 
     // Percentage display: rise green (with +), fall red
     const pct24h = change24h != null ? (change24h > 0 ? '+' : change24h < 0 ? '' : '') + (change24h * 100).toFixed(2) + '%' : '--';
@@ -881,7 +894,7 @@ ${candleSeriesModeRef.current === 'candle' && (showMA5 || showMA10 || showMA20) 
             <div className="flex items-center gap-4 px-3 py-3 sm:py-1 border-b border-zinc-700/40 bg-zinc-900/60 text-xs relative">
                 {showAssetHeader && (
                     <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                        <AssetLogo protocol={protocol} ticker={assetName} className="w-10 h-10" />
+                        <AssetLogo normalizedTicker={asset} protocol={protocol} ticker={assetName} metadata={!!asset} className="w-10 h-10" />
                         <AvatarFallback>
                             {assetName?.charAt(0)?.toUpperCase()}
                         </AvatarFallback>

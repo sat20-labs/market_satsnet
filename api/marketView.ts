@@ -2,23 +2,28 @@ import { getContractPriceChange, getContractStatus, getDeployedContractInfo, req
 import { getConfiguredNetwork } from "@/store/common";
 
 type Kind = "amm" | "swap";
+type ListKind = Kind | "launchpool" | "transcend" | "dao";
 
 // The testnet nodes are upgraded independently of the production market.
-async function testnetUrls(kind: Kind) {
+async function testnetUrls(kind: ListKind) {
   const { url } = await getDeployedContractInfo();
   return (url as string[]).filter(u => u.endsWith("_" + kind + ".tc"));
 }
 
-export async function marketList(kind: Kind): Promise<any[]> {
+export async function marketList(kind: ListKind): Promise<any[]> {
   if (getConfiguredNetwork() === "testnet") {
     const urls = await testnetUrls(kind);
     return Promise.all(urls.map(async contractURL => {
+      if (kind !== "amm" && kind !== "swap") {
+        const s = await getContractStatus(contractURL);
+        return { ...JSON.parse(s.status), contractURL };
+      }
       const [s, change] = await Promise.all([getContractStatus(contractURL), getContractPriceChange(contractURL)]);
       return { ...JSON.parse(s.status), contractURL, pct24h: change?.pct_24h };
     }));
   }
   const { data } = await requestContract("/info/market/" + kind);
-  return data.map((row: any) => ({ ...row, Contract: { assetName: row.assetName } }));
+  return kind === "launchpool" || kind === "dao" ? data : data.map((row: any) => ({ ...row, Contract: { assetName: row.assetName } }));
 }
 
 export async function marketDetail(kind: Kind, asset: string, url?: string) {

@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAssetLogos } from '@/api/market';
+import { getAssetLogos, getAssetMetadata } from '@/api/market';
 import { AvatarImage } from '@/components/ui/avatar';
 
 interface AssetLogoProps {
@@ -10,6 +10,7 @@ interface AssetLogoProps {
     normalizedTicker?: string; // if provided, used directly
     className?: string;
     enabled?: boolean; // control whether to fetch logo
+    metadata?: boolean;
 }
 
 const normalizeTicker = (protocol?: string, ticker?: string, normalizedTicker?: string) => {
@@ -42,14 +43,15 @@ export function AssetLogoImage({ logo, className }: { logo?: string; className?:
     return src ? <AvatarImage src={src} alt="Logo" className={className} /> : null;
 }
 
-export const AssetLogo: React.FC<AssetLogoProps> = ({ protocol, ticker, normalizedTicker, className, enabled = true }) => {
+export const AssetLogo: React.FC<AssetLogoProps> = ({ protocol, ticker, normalizedTicker, className, enabled = true, metadata = false }) => {
     const norm = normalizeTicker(protocol, ticker, normalizedTicker);
     const shouldFetch = !!norm && enabled;
 
     const { data, error } = useQuery({
-        queryKey: ['assetLogo', norm],
+        queryKey: [metadata ? 'assetMetadata' : 'assetLogo', norm],
         queryFn: async () => {
             if (!shouldFetch) return null;
+            if (metadata) return (await getAssetMetadata([norm]))[norm] || null;
             try {
                 const logos = await getAssetLogos([norm]);
                 return logos[norm] || null;
@@ -75,7 +77,7 @@ export const AssetLogo: React.FC<AssetLogoProps> = ({ protocol, ticker, normaliz
     }
 
     if (!data) return null; // no logo -> let AvatarFallback show
-    return <AssetLogoImage logo={data} className={className} />;
+    return <AssetLogoImage logo={typeof data === 'string' ? data : data.logo} className={className} />;
 };
 
 export default AssetLogo;

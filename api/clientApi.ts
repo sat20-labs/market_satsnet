@@ -200,6 +200,12 @@ class ClientApi {
       { chain: 'SatoshiNet' },
     );
   };
+  getPredictionMarket = async (start: number, limit: number): Promise<any> => {
+    return this.request(
+      `v3/contracts/market/prediction?start=${start}&limit=${limit}`,
+      {}, 'GET', { chain: 'SatoshiNet' },
+    );
+  };
   getContract = async (contract: string): Promise<any> => {
     return this.request(
       `v3/contracts/${encodeURIComponent(contract)}`,

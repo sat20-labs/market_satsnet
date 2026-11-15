@@ -16,9 +16,9 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CustomPagination } from '@/components/ui/CustomPagination';
-import { getDeployedContractInfo, getContractStatus } from '@/api/market';
+import { marketList } from '@/api/marketView';
 import { useTranslation } from 'react-i18next';
-import { useCommonStore } from '@/store/common';
+import { getConfiguredNetwork, useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
@@ -124,67 +124,17 @@ const MarketPage = () => {
     [t],
   );
 
-  // 获取所有合约URL列表
-  const { data: contractURLsData } = useQuery({
-    queryKey: ['swapContractURLs', network],
-    queryFn: async () => {
-      const deployed = await getDeployedContractInfo();
-      const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
-      return contractURLs.filter((c: string) => c.indexOf('swap.tc') > -1);
-    },
-    gcTime: 0,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
+  const effectiveNetwork = getConfiguredNetwork() ?? network;
+  const { data: pools = [], isLoading } = useQuery({
+    queryKey: ['marketList', 'swap', effectiveNetwork],
+    queryFn: () => marketList('swap'),
+    staleTime: 60_000,
+    refetchInterval: 120000,
+    refetchOnWindowFocus: false,
+    refetchIntervalInBackground: false,
   });
-
-  // 分页获取合约状态
-  const getSwapList = async ({ pageParam = 1 }) => {
-    if (!contractURLsData || contractURLsData.length === 0) {
-      return { pools: [], totalCount: 0 };
-    }
-
-    const startIndex = (pageParam - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const pageURLs = contractURLsData.slice(startIndex, endIndex);
-
-    // 并发请求当前页的合约状态
-    const statusList = await Promise.all(
-      pageURLs.map(async (item: string) => {
-        try {
-          const { status } = await getContractStatus(item);
-          if (status) {
-            return {
-              ...JSON.parse(status),
-              contractURL: item,
-            };
-          }
-          return null;
-        } catch (error) {
-          console.error(`Failed to get contract status for ${item}:`, error);
-          return null;
-        }
-      })
-    );
-
-    const validPools = statusList.filter(Boolean);
-    return {
-      pools: validPools,
-      totalCount: contractURLsData.length,
-      nextPage: endIndex < contractURLsData.length ? pageParam + 1 : undefined,
-    };
-  };
-
-  const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['swapList', currentPage, pageSize, network],
-    queryFn: () => getSwapList({ pageParam: currentPage }),
-    enabled: !!contractURLsData,
-    gcTime: 0,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
-  });
-
-  const poolList = poolListData?.pools || [];
-  const totalCount = poolListData?.totalCount || 0;
+  const poolList = useMemo(() => pools.slice((currentPage - 1) * pageSize, currentPage * pageSize), [pools, currentPage, pageSize]);
+  const totalCount = pools.length;
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const adaptedPoolList = useMemo(() => {
@@ -285,7 +235,7 @@ const MarketPage = () => {
                   <Link
                     href={`/limitOrder/detail?asset=${adaptedPool.assetNameObj?.Protocol}:f:${adaptedPool.assetNameObj?.Ticker}`}
                     className="cursor-pointer hover:underline"
-                    prefetch={true}
+                    prefetch={false}
                   >
                     <TickerName
                       name={adaptedPool.assetName}

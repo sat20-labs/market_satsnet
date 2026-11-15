@@ -15,11 +15,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import AssetLogo from '@/components/AssetLogo';
+import { AssetLogoImage } from '@/components/AssetLogo';
+import { getAssetLogos } from '@/api/market';
 import { CustomPagination } from '@/components/ui/CustomPagination';
-import { getDeployedContractInfo, getContractStatus } from '@/api/market';
+import { marketList } from '@/api/marketView';
 import { useTranslation } from 'react-i18next';
-import { useCommonStore } from '@/store/common';
+import { getConfiguredNetwork, useCommonStore } from '@/store/common';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import AssetMetadataEditModal from '@/components/AssetMetadataEditModal';
@@ -142,79 +143,18 @@ const TranscendPage = () => {
     [t],
   );
 
-  // 获取所有合约URL列表
-  const { data: contractURLsData } = useQuery({
-    queryKey: ['transcendContractURLs', network],
-    queryFn: async () => {
-      const deployed = await getDeployedContractInfo();
-      const contractURLs = deployed.url || (deployed.data && deployed.data.url) || [];
-      return contractURLs.filter((c: string) => c.indexOf('transcend.tc') > -1);
-    },
-    gcTime: 0,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
+  const effectiveNetwork = getConfiguredNetwork() ?? network;
+  const { data: pools = [], isLoading } = useQuery({
+    queryKey: ['marketList', 'transcend', effectiveNetwork],
+    queryFn: () => marketList('transcend'),
+    staleTime: 60_000,
+    refetchInterval: 120000,
+    refetchOnWindowFocus: false,
+    refetchIntervalInBackground: false,
   });
-
-  // 分页获取合约状态
-  const getTranscendList = async ({ pageParam = 1 }) => {
-    if (!contractURLsData || contractURLsData.length === 0) {
-      return { pools: [], totalCount: 0 };
-    }
-
-    const startIndex = (pageParam - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const pageURLs = contractURLsData.slice(startIndex, endIndex);
-
-    // 并发请求当前页的合约状态
-    const statusList = await Promise.all(
-      pageURLs.map(async (item: string) => {
-        try {
-          const { status } = await getContractStatus(item);
-          if (status) {
-            return {
-              ...JSON.parse(status),
-              contractURL: item,
-            };
-          }
-          return null;
-        } catch (error) {
-          console.error(`Failed to get contract status for ${item}:`, error);
-          return null;
-        }
-      })
-    );
-
-    const validPools = statusList.filter(Boolean);
-    return {
-      pools: validPools,
-      totalCount: contractURLsData.length,
-      nextPage: endIndex < contractURLsData.length ? pageParam + 1 : undefined,
-    };
-  };
-
-  const { data: poolListData, isLoading } = useQuery({
-    queryKey: ['transcendList', currentPage, pageSize, network],
-    queryFn: () => getTranscendList({ pageParam: currentPage }),
-    enabled: !!contractURLsData,
-    gcTime: 0,
-    refetchInterval: 120000, // 增加到2分钟，减少刷新频率
-    refetchIntervalInBackground: false, // 禁止后台刷新
-  });
-
-  const poolList = poolListData?.pools || [];
-  const totalCount = poolListData?.totalCount || 0;
+  const poolList = useMemo(() => pools.slice((currentPage - 1) * pageSize, currentPage * pageSize), [pools, currentPage, pageSize]);
+  const totalCount = pools.length;
   const totalPages = Math.ceil(totalCount / pageSize);
-
-  // 添加调试信息
-  console.log('Transcend Page Debug:', {
-    currentPage,
-    pageSize,
-    totalCount,
-    totalPages,
-    poolListLength: poolList.length,
-    contractURLsDataLength: contractURLsData?.length || 0,
-    isLoading
-  });
 
   const adaptedPoolList = useMemo(() => {
     return poolList.map(pool => adaptPoolData(pool, satsnetHeight));
@@ -269,7 +209,17 @@ const TranscendPage = () => {
     return protocol === 'all' ? adaptedPoolList : adaptedPoolList.filter(pool => pool.protocol === protocol);
   }, [adaptedPoolList, protocol]);
 
-  console.log('filteredPoolList', filteredPoolList);
+  const logoKeys = useMemo(() => [...new Set<string>(filteredPoolList
+    .filter(p => p.assetNameObj.Protocol && p.assetNameObj.Ticker)
+    .map(p => `${p.assetNameObj.Protocol}:${p.assetNameObj.Type}:${p.assetNameObj.Ticker}`))].sort(), [filteredPoolList]);
+  const { data: logos = {} } = useQuery({
+    queryKey: ['assetLogos', effectiveNetwork, logoKeys],
+    queryFn: () => getAssetLogos(logoKeys),
+    enabled: logoKeys.length > 0,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
   // 处理分页变化
   const handlePageChange = (page: number) => {
@@ -324,7 +274,7 @@ const TranscendPage = () => {
               >
                 <TableCell className="flex items-center gap-2 px-4 py-2 min-w-[200px]">
                   <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                    <AssetLogo protocol={adaptedPool?.Contract?.assetName?.Protocol} ticker={adaptedPool?.Contract?.assetName?.Ticker} className="w-10 h-10" />
+                    <AssetLogoImage logo={logos[`${adaptedPool.assetNameObj.Protocol}:${adaptedPool.assetNameObj.Type}:${adaptedPool.assetNameObj.Ticker}`]} className="w-10 h-10" />
                     <AvatarFallback>
                       {adaptedPool?.Contract?.assetName?.Ticker
                         ? adaptedPool?.Contract?.assetName?.Ticker?.charAt(0)?.toUpperCase()
@@ -336,7 +286,7 @@ const TranscendPage = () => {
                   <Link
                     href={generateTranscendDetailHref(adaptedPool.assetNameObj)}
                     className="cursor-pointer hover:underline"
-                    prefetch={true}
+                    prefetch={false}
                   >
                     <TickerName
                       name={adaptedPool.assetName}

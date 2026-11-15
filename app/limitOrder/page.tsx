@@ -427,7 +427,7 @@ export default function LimitOrderPage() {
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col gap-1">
                             <div className="flex items-start justify-between gap-2">
-                                <Link
+                                <Link prefetch={false}
                                     href={detailHref(p)}
                                     className="text-primary font-medium text-left leading-tight max-w-[200px]"
                                     title={p.assetName}
@@ -440,7 +440,7 @@ export default function LimitOrderPage() {
                                     />
                                 </Link>
 
-                                <Link
+                                <Link prefetch={false}
                                     href={detailHref(p)}
                                     className={`${statusColorMap[p.poolStatus]} inline-flex items-center  text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
                                 >
@@ -534,7 +534,7 @@ export default function LimitOrderPage() {
                                             <Link
                                                 href={detailHref(adaptedPool)}
                                                 className="cursor-pointer hover:underline"
-                                                prefetch={true}
+                                                prefetch={false}
                                             >
                                                 <div className="flex flex-col items-start leading-tight text-primary">
                                                     <TickerName
@@ -586,7 +586,7 @@ export default function LimitOrderPage() {
 
                                         <TableCell className="px-4 py-4">
                                             {adaptedPool.poolStatus === PoolStatus.ACTIVE ? (
-                                                <Link
+                                                <Link prefetch={false}
                                                     href={detailHref(adaptedPool)}
                                                     className={`${statusColorMap[adaptedPool.poolStatus]} inline-flex items-center justify-center gap-1 text-white text-xs px-2 py-1 rounded font-medium shadow-sm hover:opacity-90 transition-opacity`}
                                                 >

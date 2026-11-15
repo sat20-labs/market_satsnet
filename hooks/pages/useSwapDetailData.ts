@@ -23,12 +23,12 @@ export const useSwapDetailData = (asset: string, initialContractUrl?: string, sh
   const tickerQuery = useQuery<any>({
     queryKey: ['ticker', asset, effectiveNetwork],
     queryFn: () => clientApi.getTickerInfo(asset),
-    enabled: !!asset,
+    enabled: !!asset && effectiveNetwork === 'testnet',
   });
   const holdersQuery = useQuery<any>({
     queryKey: ['ticker', 'holders', asset, effectiveNetwork],
     queryFn: () => clientApi.getTickerHolders(asset, 1, 1),
-    enabled: !!asset,
+    enabled: !!asset && effectiveNetwork === 'testnet',
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
     refetchOnWindowFocus: false,
@@ -139,12 +139,12 @@ console.log('parsedStatus', parsedStatus)
 
   return {
     ticker,
-    isTickerLoading: tickerQuery.isLoading,
+    isTickerLoading: effectiveNetwork === 'testnet' ? tickerQuery.isLoading : detail.isLoading,
     isSwapStatusLoading: detail.isLoading,
     isAnalyticsLoading,
     isUserContractStatusLoading,
-    tickerInfo: tickerQuery.data?.data || {},
-    holders: holdersQuery.data?.data || {},
+    tickerInfo: effectiveNetwork === 'testnet' ? tickerQuery.data?.data || {} : detail.data?.tickerInfo || {},
+    holders: effectiveNetwork === 'testnet' ? holdersQuery.data?.data || {} : { total: detail.data?.holders },
     isLoading,
     loadError: detail.error,
     contractUrl,

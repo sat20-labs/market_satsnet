@@ -830,17 +830,30 @@ export const upsertAsset = async ({ ticker, name, logo, description, website, tw
     data: { ticker, name, logo, description, website, twitter, telegram, discord },
   });
 };
-export async function getAssetLogos(tickers: string[]): Promise<Record<string, string>> {
+export interface AssetMetadata {
+  name?: string;
+  logo?: string;
+  website?: string;
+  twitter?: string;
+  telegram?: string;
+  discord?: string;
+  description?: string;
+}
+
+async function publicAssets<T>(path: string, tickers: string[]): Promise<Record<string, T>> {
   const body = new URLSearchParams();
   for (const ticker of tickers) body.append('ticker', ticker);
-  const response = await fetch(getPointsBaseUrl() + '/api/v1/assets/logos', { method: 'POST', body });
-  if (!response.ok) throw new Error('Asset logos HTTP ' + response.status);
+  const response = await fetch(getPointsBaseUrl() + '/api/v1/assets/' + path, { method: 'POST', body });
+  if (!response.ok) throw Object.assign(new Error('Asset metadata HTTP ' + response.status), { status: response.status });
   const result = await response.json();
   if (result.code !== 0 || !result.data || typeof result.data !== 'object' || Array.isArray(result.data)) {
-    throw new Error('Invalid asset logos response');
+    throw new Error('Invalid asset metadata response');
   }
   return result.data;
 }
+
+export const getAssetLogos = (tickers: string[]) => publicAssets<string>('logos', tickers);
+export const getAssetMetadata = (tickers: string[]) => publicAssets<AssetMetadata>('metadata', tickers);
 
 export const getAsset = async (ticker: string) => {
   return pointsRequest('/api/v1/assets/get', { data: { ticker } });
@@ -892,11 +905,24 @@ interface GetMarketKlineParams {
   end?: number;     // unix seconds
   limit?: number;   // max bars
 }
-export const getMarketKline = async ({ contract, interval, start, end, limit }: GetMarketKlineParams) => {
-  const res = await pointsRequest('/api/v1/market/kline', { data: { contract, interval, start, end, limit } });
-  const data = res?.data ?? res;
-  if (!Array.isArray(data?.bars)) throw new Error('Invalid K-line response');
-  return data;
+const pendingKlines = new Map<string, Promise<any>>();
+
+export const getMarketKline = ({ contract, interval, start, end, limit }: GetMarketKlineParams) => {
+  const key = JSON.stringify([contract, interval, start, end, limit]);
+  const pending = pendingKlines.get(key);
+  if (pending) return pending;
+  const request = (async () => {
+    try {
+      const res = await pointsRequest('/api/v1/market/kline', { data: { contract, interval, start, end, limit } });
+      const data = res?.data ?? res;
+      if (!Array.isArray(data?.bars)) throw new Error('Invalid K-line response');
+      return data;
+    } finally {
+      pendingKlines.delete(key);
+    }
+  })();
+  pendingKlines.set(key, request);
+  return request;
 };
 // Backwards compatibility alias
 export const getContractKline = getMarketKline;

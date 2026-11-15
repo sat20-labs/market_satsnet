@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
-import { getAsset } from '@/api/market';
+import { getAssetMetadata } from '@/api/market';
 import AssetLogo from '@/components/AssetLogo';
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
@@ -27,13 +27,14 @@ export function AssetInfoCardLimitOrder({
     const metadataConfigured = Boolean(process.env.NEXT_PUBLIC_POINTS_API_BASE?.trim());
 
     const { data: assetMetaResp, error: assetMetaError } = useQuery({
-        queryKey: ['assetMeta', asset],
-        queryFn: () => getAsset(asset ?? ''),
+        queryKey: ['assetMetadata', asset],
+        queryFn: async () => (await getAssetMetadata([asset]))[asset] || null,
         enabled: !!asset && metadataConfigured,
         staleTime: 5 * 60 * 1000,
+        retry: false,
         refetchOnWindowFocus: false,
     });
-    const assetMeta: any = metadataConfigured ? (assetMetaResp?.data || assetMetaResp || {}) : {};
+    const assetMeta = metadataConfigured ? assetMetaResp || {} : {};
     const website = assetMeta?.website as string | undefined;
     const twitter = assetMeta?.twitter as string | undefined;
     const telegram = assetMeta?.telegram as string | undefined;
@@ -52,7 +53,7 @@ export function AssetInfoCardLimitOrder({
                     <div className="w-11 h-11 rounded-full bg-zinc-700 flex items-center justify-start text-zinc-300 text-xl font-bold">
                         <div className='text-base'>
                             <Avatar className="w-12 h-12 text-xl text-gray-300 font-medium bg-zinc-700">
-                                <AssetLogo normalizedTicker={asset} className="w-12 h-12" />
+                                <AssetLogo normalizedTicker={asset} metadata className="w-12 h-12" />
                                 <AvatarFallback>
                                     {ticker?.charAt(0)?.toUpperCase()}
                                 </AvatarFallback>
@@ -113,7 +114,7 @@ export function AssetInfoCardLimitOrder({
 
                             )}
                             <Button variant="outline" size="sm" className="ml-2">
-                                <Link href={`/ticker/detail/?asset=${asset}`} prefetch className="text-zinc-400  text-xs sm:text-sm">
+                                <Link href={`/ticker/detail/?asset=${asset}`} prefetch={false} className="text-zinc-400  text-xs sm:text-sm">
                                     Detail
                                 </Link>
                             </Button>

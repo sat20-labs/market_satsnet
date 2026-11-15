@@ -254,7 +254,7 @@ function OrderPageContent() {
                 )} */}
                 {hydrated && chartMode === "lw" && (
                   <div className="w-full h-full">
-                    <LightweightKline lastPrice={swapStatusData?.lastDealPrice} change24h={swapStatusData?.pct24h}
+                    <LightweightKline asset={asset} lastPrice={swapStatusData?.lastDealPrice} change24h={swapStatusData?.pct24h}
                       symbol={contractUrl}
                       initialResolution="4H"
                       chartHeights={{ volumeRatio: 0.3, height: cHeights }}

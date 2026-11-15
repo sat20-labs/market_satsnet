@@ -178,7 +178,7 @@ export const ChartModule = ({
           <div className="flex justify-start items-center">
             <h2 className="flex justify-center items-center text-lg font-bold text-zinc-400 ml-4 py-4 gap-2">
               <Avatar className="w-10 h-10 text-xl text-gray-300 font-medium bg-zinc-700">
-                <AssetLogo protocol={protocol} ticker={ticker} className="w-10 h-10" />
+                <AssetLogo normalizedTicker={asset} metadata className="w-10 h-10" />
                 <AvatarFallback>
                   {ticker?.charAt(0)?.toUpperCase()}
                 </AvatarFallback>

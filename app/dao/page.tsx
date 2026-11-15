@@ -3,8 +3,8 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useCommonStore } from '@/store/common';
-import { getDeployedContractInfo, getContractStatus } from '@/api/market';
+import { getConfiguredNetwork, useCommonStore } from '@/store/common';
+import { marketList } from '@/api/marketView';
 import { Button } from '@/components/ui/button';
 import { CustomPagination } from '@/components/ui/CustomPagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -27,59 +27,17 @@ export default function DaoListPage() {
         router.push(`/dao/detail?contractUrl=${encodeURIComponent(contractUrl)}&tab=${tab}`);
     };
 
-    const { data: contractURLsData } = useQuery({
-        queryKey: ['daoContractURLs', network],
-        queryFn: async () => {
-            const deployed = await getDeployedContractInfo();
-            const urls = deployed.url || (deployed.data && deployed.data.url) || [];
-            return (urls as string[]).filter((c) => c && c.includes('dao.tc'));
-        },
-        gcTime: 0,
+    const effectiveNetwork = getConfiguredNetwork() ?? network;
+    const { data: pools = [], isLoading } = useQuery({
+        queryKey: ['marketList', 'dao', effectiveNetwork],
+        queryFn: () => marketList('dao'),
+        staleTime: 60_000,
         refetchInterval: 120000,
+        refetchOnWindowFocus: false,
         refetchIntervalInBackground: false,
     });
-
-    const getDaoList = async ({ pageParam = 1 }) => {
-        if (!contractURLsData || contractURLsData.length === 0) {
-            return { items: [], totalCount: 0 };
-        }
-
-        const startIndex = (pageParam - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const pageURLs = contractURLsData.slice(startIndex, endIndex);
-
-        const statusList = await Promise.all(
-            pageURLs.map(async (item: string) => {
-                try {
-                    const { status } = await getContractStatus(item);
-                    const parsed = status ? JSON.parse(status) : null;
-                    return parsed ? { ...parsed, contractURL: item } : { contractURL: item };
-                } catch {
-                    return { contractURL: item };
-                }
-            })
-        );
-
-        const valid = statusList.filter(Boolean);
-        return {
-            items: valid,
-            totalCount: contractURLsData.length,
-            nextPage: endIndex < contractURLsData.length ? pageParam + 1 : undefined,
-        };
-    };
-
-    const { data: listData, isLoading } = useQuery({
-        queryKey: ['daoList', currentPage, pageSize, network],
-        queryFn: () => getDaoList({ pageParam: currentPage }),
-        enabled: !!contractURLsData,
-        gcTime: 0,
-        refetchInterval: 120000,
-        refetchIntervalInBackground: false,
-    });
-
-    const items = listData?.items || [];
-    const totalCount = listData?.totalCount || 0;
-    const totalPages = Math.ceil((totalCount || 0) / pageSize);
+    const items = useMemo(() => pools.slice((currentPage - 1) * pageSize, currentPage * pageSize), [pools, currentPage, pageSize]);
+    const totalPages = Math.ceil(pools.length / pageSize);
 
     const rows = useMemo(() => {
         return items.map((it: any) => {
@@ -107,7 +65,7 @@ export default function DaoListPage() {
                     <div className="text-xs text-zinc-500">{t('pages.dao.list.subtitle')}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Link href="/dao/create">
+                    <Link href="/dao/create" prefetch={false}>
                         <Button className="h-10 btn-gradient">{t('pages.dao.list.create')}</Button>
                     </Link>
                 </div>
@@ -125,7 +83,7 @@ export default function DaoListPage() {
                     <div className="text-zinc-200 font-medium">{t('pages.dao.list.no_contracts')}</div>
                     <div className="text-zinc-500 text-sm mt-1">{t('pages.dao.list.create_hint')}</div>
                     <div className="mt-4">
-                        <Link href="/dao/create">
+                        <Link href="/dao/create" prefetch={false}>
                             <Button className="btn-gradient">{t('pages.dao.list.create')}</Button>
                         </Link>
                     </div>
@@ -180,6 +138,7 @@ export default function DaoListPage() {
                                         {r.contractURL ? (
                                             <Link
                                                 href={`/dao/detail?contractUrl=${encodeURIComponent(r.contractURL)}&tab=overview`}
+                                                prefetch={false}
                                                 className="text-blue-400 hover:underline"
                                             >
                                                 {t('pages.dao.list.view_detail')}

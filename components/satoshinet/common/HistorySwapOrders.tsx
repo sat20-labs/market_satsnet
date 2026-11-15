@@ -47,7 +47,9 @@ export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrde
       return allPages.length;
     },
     initialPageParam: 0,
-    refetchInterval: 10000, // 增加到10秒，减少刷新频率
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
     refetchIntervalInBackground: false, // 禁止后台刷新
     enabled: !!contractURL && visible,
   });
@@ -73,4 +75,4 @@ export default function HistoryOrders({ contractURL, type, ticker }: HistoryOrde
       />
     </div>
   );
-} 
+}

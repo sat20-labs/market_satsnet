@@ -14,13 +14,13 @@ export const useLimitOrderDetailData = (asset: string, initialContractUrl?: stri
   const tickerQuery = useQuery<any>({
     queryKey: ['ticker', asset, network],
     queryFn: () => clientApi.getTickerInfo(asset),
-    enabled: !!asset,
+    enabled: !!asset && network === 'testnet',
   });
 
   const holdersQuery = useQuery<any>({
     queryKey: ['ticker', 'holders', asset, network],
     queryFn: () => clientApi.getTickerHolders(asset, 1, 1),
-    enabled: !!asset,
+    enabled: !!asset && network === 'testnet',
     refetchInterval: 120000, // 增加到2分钟，减少刷新频率
     refetchIntervalInBackground: false, // 禁止后台刷新
     refetchOnWindowFocus: false,
@@ -56,18 +56,18 @@ export const useLimitOrderDetailData = (asset: string, initialContractUrl?: stri
   }
   return {
     ticker,
-    isTickerLoading: tickerQuery.isLoading,
+    isTickerLoading: network === 'testnet' ? tickerQuery.isLoading : detail.isLoading,
     isContractStatusLoading: detail.isLoading,
     loadError: detail.error,
     isAnalyticsLoading,
-    tickerInfo: tickerQuery.data?.data || {},
+    tickerInfo: network === 'testnet' ? tickerQuery.data?.data || {} : detail.data?.tickerInfo || {},
     isLoading,
     contractUrl,
     contractData: detail.data,
     satsBalance,
     assetBalance,
     analyticsData: analytics,
-    holders: holdersQuery.data?.data || {},
+    holders: network === 'testnet' ? holdersQuery.data?.data || {} : { total: detail.data?.holders },
     refresh
   }
 };

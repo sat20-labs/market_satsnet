@@ -198,7 +198,7 @@ export default function HistorySwapTable({
     const handle = () => {
       if (!hasNextPage || isFetchingNextPage) return;
       const el = mobileLoadMoreRef.current;
-      if (!el) return;
+      if (!el || el.getClientRects().length === 0) return;
       const rect = el.getBoundingClientRect();
       if (rect.top - window.innerHeight < 100) {
         tryLoadMore();
