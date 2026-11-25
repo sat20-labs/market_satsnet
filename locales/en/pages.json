@@ -35,6 +35,7 @@
     "ordx": "OrdX",
     "runes": "Runes",
     "brc20": "BRC20",
+    "rgb": "RGB",
     "create_pool": "Create Pool",
     "asset_name": "Asset Name",
     "pool_status": "Pool Status",

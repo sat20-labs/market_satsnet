@@ -430,6 +430,7 @@ const Swap = () => {
     { label: t("pages.launchpool.ordx"), key: "ordx" },
     { label: t("pages.launchpool.runes"), key: "runes" },
     { label: t("pages.launchpool.brc20"), key: "brc20" },
+    { label: t("pages.launchpool.rgb"), key: "rgb11" },
   ];
 
   const sortedPoolList = useMemo(() => sortPools(listedPools, sortKey, sortOrder),
@@ -475,7 +476,7 @@ const Swap = () => {
           <WalletDownload showLabel={false} iconSize={24} className="min-w-[260px]" />
         </div>
       </div>
-      <div className="py-2 px-2 sm:px-1 flex justify-between items-center gap-1 border-b border-zinc-800">
+      <div className="py-2 px-2 sm:px-1 flex flex-wrap justify-between items-center gap-2 border-b border-zinc-800">
         <HomeTypeTabs
           value={protocol}
           onChange={protocolChange}

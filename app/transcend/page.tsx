@@ -51,6 +51,14 @@ function adaptPoolData(pool, satsnetHeight) {
   const assetNameObj = pool.Contract.assetName || {};
   const ticker = assetNameObj.Ticker || 'BTC';
   const protocol = assetNameObj.Protocol || '-';
+  let assetName = ticker;
+  if (protocol === 'rgb11') {
+    assetName = /@[0-9a-f]{4}$/.test(ticker)
+      ? `${protocol}:${assetNameObj.Type}:${ticker}`
+      : 'RGB';
+  } else if (protocol.toLowerCase() === 'brc20') {
+    assetName = pool.displayName || ticker;
+  }
   // 状态适配
   let poolStatus = PoolStatus.NOT_STARTED;
   const status = Number(pool.status);
@@ -80,7 +88,7 @@ function adaptPoolData(pool, satsnetHeight) {
   return {
     ...pool,
     id: pool.contractURL ?? pool.id,
-    assetName: protocol.toLowerCase() === 'brc20' ? (pool.displayName || ticker) : ticker,
+    assetName,
     assetNameObj: assetNameObj,
     protocol: protocol,
     poolStatus,

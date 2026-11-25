@@ -225,7 +225,10 @@ export default function LimitOrderPage() {
     };
 
     const [protocol, setProtocol] = useState('all');
-    const protocolChange = (newProtocol: string) => setProtocol(newProtocol);
+    const protocolChange = (newProtocol: string) => {
+        setProtocol(newProtocol);
+        setCurrentPage(1);
+    };
 
     const effectiveNetwork = getConfiguredNetwork() ?? network;
     const {data: poolList = [], isLoading, error} = useQuery({
@@ -352,6 +355,7 @@ export default function LimitOrderPage() {
         { label: t('pages.launchpool.ordx'), key: 'ordx' },
         { label: t('pages.launchpool.runes'), key: 'runes' },
         { label: t('pages.launchpool.brc20'), key: 'brc20' },
+        { label: t('pages.launchpool.rgb'), key: 'rgb11' },
     ];
 
     const handlePageChange = (page: number) => setCurrentPage(page);
@@ -365,7 +369,7 @@ export default function LimitOrderPage() {
             <div className="mb-2 px-2 flex items-center">
                 <span className="text-sm text-gray-400 mr-4">Current Bitcoin Price：<BtcPrice btc={1} className="text-green-500 font-bold" /> USDT</span>
             </div>
-            <div className="my-4 px-2 sm:px-1 flex justify-between items-center gap-1">
+            <div className="my-4 px-2 sm:px-1 flex flex-wrap justify-between items-center gap-2">
                 <HomeTypeTabs value={protocol} onChange={protocolChange} tabs={protocolTabs} />
                 <div className="flex items-center gap-2 mr-4">
                     <WalletConnectBus asChild>

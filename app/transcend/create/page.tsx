@@ -213,7 +213,7 @@ const CreateTranscend = () => {
   const tickerOptions = isRGB11
     ? (rgbTickers.data ?? []).map(({ ticker, displayName }) => ({
         value: ticker,
-        label: displayName === ticker ? ticker : `${displayName} (${ticker.slice(0, 8)}…${ticker.slice(-6)})`,
+        label: displayName,
       }))
     : (summaryData?.data ?? [])
         .filter(({ Name }) => Name?.Protocol === formData.protocol && Name.Type === 'f' && Name.Ticker)

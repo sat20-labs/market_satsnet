@@ -38,6 +38,7 @@ function OrderPageContent() {
     refreshAll
   } = useTranscendDetailData(asset ?? '');
   const protocol = useMemo(() => transcendStatusData?.Contract?.assetName?.Protocol || '', [transcendStatusData]);
+  const displayName = protocol === 'rgb11' ? (asset && /@[0-9a-f]{4}$/.test(asset) ? asset : 'RGB') : ticker;
 
 
   const refreshHandler = () => {
@@ -67,7 +68,7 @@ function OrderPageContent() {
       <div>
         <ChartModule
           asset={asset}
-          ticker={ticker}
+          ticker={displayName}
           isLoading={isAnalyticsLoading}
           analyticsData={analyticsData}
           refresh={refreshAnalytics}
@@ -82,10 +83,10 @@ function OrderPageContent() {
           </TabsList>
 
           <TabsContent value="history" className="-mt-8">
-            <HistoryTranscendOrders ticker={ticker} contractURL={contractUrl} type="transcend" />
+            <HistoryTranscendOrders ticker={displayName} contractURL={contractUrl} type="transcend" />
           </TabsContent>
           <TabsContent value="myOrders" className="-mt-8">
-            <MyTranscendOrders ticker={ticker} contractURL={contractUrl} type="transcend" />
+            <MyTranscendOrders ticker={displayName} contractURL={contractUrl} type="transcend" />
           </TabsContent>
         </Tabs>
       </div>

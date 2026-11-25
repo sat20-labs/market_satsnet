@@ -35,6 +35,7 @@
     "ordx": "OrdX",
     "runes": "Runes",
     "brc20": "BRC20",
+    "rgb": "RGB",
     "create_pool": "创建池子",
     "asset_name": "资产名称",
     "pool_status": "池子状态",
